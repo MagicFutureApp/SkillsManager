@@ -9,7 +9,7 @@
 这组实体可以按三条主线理解：
 
 1. 技能从哪里来：`sources`、`repositories`、`skill_units`、`skill_versions`
-2. 技能要装到哪里：`agent_targets`、`install_instances`
+2. 技能要装到哪里：`agent_targets`、`skill_target_preferences`、`install_instances`
 3. 技能如何同步和分发：`sync_runs`、`distribution_plans`、`distribution_plan_items`
 
 整体关系可以概括为：
@@ -22,7 +22,9 @@ sources
         -> install_instances
               ^
               |
-agent_targets -- distribution_plans / distribution_plan_items
+agent_targets
+  -> skill_target_preferences
+  -> distribution_plans / distribution_plan_items
 
 sync_runs 记录 repositories 的同步和扫描历史
 app_settings 记录全局配置
@@ -33,6 +35,7 @@ app_settings 记录全局配置
 - `skill_units` 管“技能是什么”
 - `skill_versions` 管“技能的确定版本”
 - `agent_targets` 管“要装到哪里”
+- `skill_target_preferences` 管“用户希望哪些技能默认同步到哪些目标”
 - `install_instances` 管“实际装了什么”
 - `distribution_plans` 和 `distribution_plan_items` 管“准备怎么装以及执行结果”
 - `sync_runs` 管“仓库同步扫描过程”
@@ -245,7 +248,91 @@ prompt-basic@abc123 -> custom directory
 
 这就是为什么需要单独的目标表。
 
-## 7. `install_instances`：已安装实例
+## 7. `skill_target_preferences`：技能目标偏好
+
+`skill_target_preferences` 表示用户希望某个 skill unit 默认同步到某个目标。
+
+它主要服务于 UI 勾选状态和批量同步选择。它不表示技能已经安装成功，也不替代 `install_instances`。
+
+比如界面是：
+
+```text
+技能A
+  [x] 目标目录A
+  [ ] 目标目录B
+
+技能B
+  [x] 目标目录A
+  [x] 目标目录C
+```
+
+这些勾选关系应该存到 `skill_target_preferences`：
+
+```text
+skill_target_preferences
+- 技能A -> 目标目录A -> enabled
+- 技能A -> 目标目录B -> disabled 或无记录
+- 技能B -> 目标目录A -> enabled
+- 技能B -> 目标目录C -> enabled
+```
+
+它通常保存：
+
+```text
+id
+skill_unit_id
+agent_target_id
+enabled
+desired_version_mode: latest | pinned
+desired_commit_sha
+created_at
+updated_at
+```
+
+建议增加唯一约束：
+
+```text
+unique(skill_unit_id, agent_target_id)
+```
+
+这样同一个技能和同一个目标目录只会有一条偏好记录。
+
+这里选择 `skill_unit_id`，而不是 `skill_version_id`，是因为勾选偏好通常表达“这个技能以后默认同步到这个目标”。具体同步到哪个 commit，由同步执行时解析出的 `skill_versions` 决定。
+
+如果用户需要锁定某个固定版本，可以使用：
+
+```text
+desired_version_mode: pinned
+desired_commit_sha: abc123
+```
+
+如果用户希望每次同步到最新扫描版本，可以使用：
+
+```text
+desired_version_mode: latest
+desired_commit_sha: null
+```
+
+App 每次启动后，可以通过它恢复 UI Checkbox 状态：
+
+```text
+1. 查询所有 skill_units
+2. 查询所有 enabled agent_targets
+3. 查询 skill_target_preferences，恢复 Checkbox 勾选状态
+4. 查询 install_instances，显示实际安装状态
+```
+
+它和 `install_instances` 的边界是：
+
+```text
+skill_target_preferences:
+  用户想让技能同步到哪里。
+
+install_instances:
+  技能实际上已经安装到了哪里，安装的是哪个 commit，安装状态如何。
+```
+
+## 8. `install_instances`：已安装实例
 
 `install_instances` 记录实际安装结果。
 
@@ -295,7 +382,7 @@ status: installed
 
 这些都可以通过 `install_instances` 做状态追踪。
 
-## 8. `distribution_plans`：分发计划
+## 9. `distribution_plans`：分发计划
 
 `distribution_plans` 表示一次安装、更新或卸载操作的整体计划。
 
@@ -338,7 +425,9 @@ summary: 2 skills x 2 targets = 4 actions
 - 哪些可能覆盖已有文件
 - 使用 symlink 还是 copy
 
-## 9. `distribution_plan_items`：分发计划条目
+批量同步时，系统可以读取所有启用的 `skill_target_preferences`，再生成对应的 `distribution_plan`。
+
+## 10. `distribution_plan_items`：分发计划条目
 
 `distribution_plan_items` 是计划里的每一个动作。
 
@@ -383,7 +472,7 @@ updated_at
 
 这对恢复、重试、审计都很重要。
 
-## 10. `sync_runs`：同步/扫描历史
+## 11. `sync_runs`：同步/扫描历史
 
 `sync_runs` 记录仓库同步和扫描操作的历史。
 
@@ -431,7 +520,7 @@ summary:
 
 `repositories.last_scanned_commit_sha` 是当前状态，`sync_runs` 是历史过程。
 
-## 11. `app_settings`：应用设置
+## 12. `app_settings`：应用设置
 
 `app_settings` 存储本地应用配置。
 
@@ -460,7 +549,7 @@ future_policy_scope
 
 它也可以为未来的 `profile/policy` 控制项留空间。意思是 v1 虽然是个人本地工具，但不要把模型设计死成“永远只有一个用户、一个配置、一个策略”。
 
-## 12. 一次完整流程示例
+## 13. 一次完整流程示例
 
 假设用户添加一个 GitHub 仓库，并安装其中一个技能到 Codex：
 
@@ -470,7 +559,8 @@ future_policy_scope
 4. 扫描仓库里的 `SKILL.md`，写入 `skill_units`
 5. 把某个技能解析到当前 commit，写入 `skill_versions`
 6. 用户配置 Codex 技能目录，写入 `agent_targets`
-7. 用户选择技能并选择 Codex 目标，创建 `distribution_plans`
-8. 系统生成每个安装动作，写入 `distribution_plan_items`
-9. 用户确认执行，更新 plan/item 状态
-10. 安装成功后，写入 `install_instances`
+7. 用户勾选技能要同步到 Codex，写入 `skill_target_preferences`
+8. 用户点击同步，创建 `distribution_plans`
+9. 系统生成每个安装动作，写入 `distribution_plan_items`
+10. 用户确认执行，更新 plan/item 状态
+11. 安装成功后，写入 `install_instances`

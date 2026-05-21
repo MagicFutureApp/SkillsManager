@@ -157,6 +157,7 @@ v1 的 manifest 支持从每个技能根目录一个 manifest 文件开始。
 - `skill_units`
 - `skill_versions`
 - `agent_targets`
+- `skill_target_preferences`
 - `install_instances`
 - `distribution_plans`
 - `distribution_plan_items`
@@ -179,6 +180,9 @@ v1 的 manifest 支持从每个技能根目录一个 manifest 文件开始。
 
 `agent_targets`
 - 存储目标类型、目标路径/配置和默认安装策略
+
+`skill_target_preferences`
+- 记录用户希望某个 skill unit 默认同步到哪些目标；用于恢复 UI 勾选状态，不代表已经安装成功
 
 `install_instances`
 - 记录哪个技能版本以何种方式安装到了哪个目标和位置
@@ -239,11 +243,12 @@ v1 使用系统 Git 和现有系统凭据。
 ### 9.1 计划
 
 1. 用户选择 skill unit
-2. 用户选择目标 agent 或者当前机器的文件目录，支持多选。
-3. 系统解析期望的固定 commit 版本
-4. planner 计算每个目标的操作
-5. planner 将每个条目分类为 install、update、skip、conflict 或 remove
-6. UI 展示 dry-run 预览
+2. 用户选择目标 agent 或者当前机器的文件目录，支持多选
+3. 系统将用户勾选的技能-目标关系写入 `skill_target_preferences`
+4. 系统解析期望的固定 commit 版本
+5. planner 基于用户选择或已保存的 `skill_target_preferences` 计算每个目标的操作
+6. planner 将每个条目分类为 install、update、skip、conflict 或 remove
+7. UI 展示 dry-run 预览
 
 ### 9.2 执行
 
