@@ -8,11 +8,14 @@
     "dev": "pnpm run build:main && node node_modules/electron/cli.js .",
     "electron:version": "node node_modules/electron/cli.js --version",
     "build:main": "tsc -p tsconfig.main.json",
-    "check": "tsc -p tsconfig.main.json --noEmit"
+    "check": "tsc -p tsconfig.main.json --noEmit",
+    "format": "prettier --write package.json tsconfig.main.json pnpm-workspace.yaml src",
+    "format:check": "prettier --check package.json tsconfig.main.json pnpm-workspace.yaml src"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
     "electron": "42.2.0",
+    "prettier": "^3.8.3",
     "typescript": "6.0.3"
   },
   "pnpm": {

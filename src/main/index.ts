@@ -54,6 +54,11 @@ const createMainWindow = (): void => {
         <main>
           <h1>Skills Manager</h1>
           <p>Electron shell initialized. React renderer comes next.</p>
+          <p>
+              We are using Node.js <span id="node-version"></span>,
+              Chromium <span id="chrome-version"></span>,
+              and Electron <span id="electron-version"></span>.
+          </p>
         </main>
       </body>
     </html>
