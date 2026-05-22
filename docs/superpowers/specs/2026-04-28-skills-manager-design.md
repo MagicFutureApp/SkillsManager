@@ -19,6 +19,9 @@ v1 桌面端技术栈为：
 - TypeScript
 - Vite
 - SQLite
+- Drizzle ORM
+- `better-sqlite3`
+- `drizzle-kit`
 - 系统 `git`
 
 v1 有意不引入 Rust，以便在当前团队技能结构下优化实现速度和可维护性。
@@ -137,7 +140,7 @@ v1 的 manifest 支持从每个技能根目录一个 manifest 文件开始。
 - `renderer`：UI、状态展示、用户操作
 - `main`：Electron 生命周期、IPC 边界、任务编排入口
 - `core`：业务逻辑，设计上尽量与 Electron 解耦
-- `db`：SQLite schema 和 repository/query 层
+- `db`：基于 Drizzle ORM 的 SQLite schema、migration 和 repository/query 层
 - `adapters`：来源适配器和目标适配器
 - `workers/tasks`：长时间运行的操作，例如同步、扫描、计划、安装
 
@@ -147,6 +150,8 @@ v1 的 manifest 支持从每个技能根目录一个 manifest 文件开始。
 - 所有会改变状态的操作都必须穿过 IPC 边界
 - 业务逻辑应保持足够可移植，以便以后提取为独立服务
 - 同步和分发操作必须先生成计划，再执行
+- 数据库访问应集中在 `db` 层和后台任务中，renderer 不直接访问 SQLite
+- Drizzle schema 是数据库结构的 TypeScript 单一事实来源，migration 通过 `drizzle-kit` 生成和应用
 
 ## 6. 数据模型
 
@@ -345,7 +350,11 @@ v1 应保持紧凑，并聚焦五个主要区域：
 - Electron 桌面壳
 - React + TypeScript 前端
 - 本地 SQLite 持久化
+- Drizzle ORM + `better-sqlite3` 作为本地数据库访问层
+- `drizzle-kit` 管理 schema migration
 - 与 Electron 专用代码分离的 TypeScript core engine
+
+Drizzle 被选为 v1 的 ORM/query layer，因为它足够轻量，贴近 SQL，适合本地 SQLite 和 TypeScript schema-as-code 工作流。数据库 schema 定义在 `db/schema.ts`，迁移文件由 `drizzle-kit` 生成，业务代码通过 `db/repositories/` 中的 repository/query API 访问数据库。
 
 ## 14. 风险与缓解
 
