@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
+import { registerHealthIpc } from "./ipc/health";
 
 const createMainWindow = (): void => {
   const mainWindow = new BrowserWindow({
@@ -25,6 +26,7 @@ const createMainWindow = (): void => {
 };
 
 void app.whenReady().then(() => {
+  registerHealthIpc();
   createMainWindow();
 
   app.on("activate", () => {

@@ -216,7 +216,7 @@ export default defineConfig({
     emptyOutDir: true
   },
   server: {
-    port: 5173,
+    port: 3700,
     strictPort: true
   }
 });
@@ -328,7 +328,7 @@ if (devServerUrl) {
 ```json
 {
   "scripts": {
-    "dev": "pnpm run build:main && concurrently -k \"pnpm run dev:renderer\" \"cross-env VITE_DEV_SERVER_URL=http://localhost:5173 node node_modules/electron/cli.js .\"",
+    "dev": "pnpm run build:main && concurrently -k \"pnpm run dev:renderer\" \"cross-env VITE_DEV_SERVER_URL=http://localhost:3700 node node_modules/electron/cli.js .\"",
     "dev:renderer": "vite --host 127.0.0.1",
     "build:renderer": "vite build",
     "build": "pnpm run build:main && pnpm run build:renderer",
@@ -376,6 +376,8 @@ git commit -m "Initialize React renderer"
 
 ## 任务 3：类型化 Preload 与 Health IPC
 
+**状态：** 已完成。
+
 **文件：**
 
 - 创建：`src/main/ipc/health.ts`
@@ -384,7 +386,7 @@ git commit -m "Initialize React renderer"
 - 修改：`src/main/preload.ts`
 - 修改：`src/renderer/App.tsx`
 
-- [ ] **步骤 1：添加 health IPC handler**
+- [x] **步骤 1：添加 health IPC handler**
 
 创建 `src/main/ipc/health.ts`：
 
@@ -410,7 +412,7 @@ export const registerHealthIpc = (): void => {
 };
 ```
 
-- [ ] **步骤 2：在 main process 注册 IPC**
+- [x] **步骤 2：在 main process 注册 IPC**
 
 修改 `src/main/index.ts`：
 
@@ -423,7 +425,7 @@ void app.whenReady().then(() => {
 });
 ```
 
-- [ ] **步骤 3：暴露类型化 preload API**
+- [x] **步骤 3：暴露类型化 preload API**
 
 修改 `src/main/preload.ts`：
 
@@ -452,7 +454,7 @@ declare global {
 export {};
 ```
 
-- [ ] **步骤 4：在 React UI 显示 health 信息**
+- [x] **步骤 4：在 React UI 显示 health 信息**
 
 修改 `src/renderer/App.tsx`：
 
@@ -488,7 +490,7 @@ export const App = () => {
 };
 ```
 
-- [ ] **步骤 5：验证 IPC**
+- [x] **步骤 5：验证 IPC**
 
 运行：
 
@@ -505,7 +507,7 @@ pnpm run build
 all commands exit with code 0
 ```
 
-- [ ] **步骤 6：提交并停止**
+- [x] **步骤 6：提交并停止**
 
 运行：
 

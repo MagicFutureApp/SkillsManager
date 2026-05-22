@@ -1,16 +1,6 @@
-import { contextBridge } from "electron";
+import { contextBridge, ipcRenderer } from "electron";
+import type { AppHealth } from "./ipc/health";
 
 contextBridge.exposeInMainWorld("skillsManager", {
-  platform: process.platform
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-  const replaceText = (selector: string, text: string | undefined) => {
-    const element = document.getElementById(selector);
-    if (element && text) element.innerText = text;
-  };
-
-  for (const type of ["chrome", "node", "electron"]) {
-    replaceText(`${type}-version`, process.versions[type]);
-  }
+  getHealth: () => ipcRenderer.invoke("app:getHealth") as Promise<AppHealth>
 });
