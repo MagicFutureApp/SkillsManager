@@ -10,22 +10,123 @@ body {
   min-height: 100vh;
 }
 
-.app-shell {
-  min-height: 100vh;
+button {
+  font: inherit;
+}
+
+.app-layout {
   display: grid;
-  place-items: center;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
 }
 
-.welcome-panel {
-  text-align: center;
+.sidebar {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  border-right: 1px solid #dbe1ec;
+  background: #ffffff;
+  padding: 20px 16px;
 }
 
-.welcome-panel h1 {
-  margin: 0 0 12px;
-  font-size: 32px;
+.sidebar h1 {
+  margin: 0 0 8px;
+  font-size: 18px;
 }
 
-.welcome-panel p {
+.sidebar p {
   margin: 0;
-  color: #5c667a;
+  color: #68758d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sidebar nav {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  margin-top: 24px;
+}
+
+.sidebar button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #33405a;
+  cursor: pointer;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.sidebar button:hover,
+.sidebar button[aria-current="page"] {
+  background: #eef3fb;
+}
+
+.runtime-status {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  color: #68758d;
+  font-size: 12px;
+}
+
+.runtime-status div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.runtime-status dt,
+.runtime-status dd {
+  margin: 0;
+}
+
+.runtime-status dd {
+  color: #33405a;
+}
+
+.workspace {
+  padding: 24px;
+}
+
+.workspace header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.workspace h2 {
+  margin: 0 0 4px;
+  font-size: 24px;
+}
+
+.workspace header p {
+  margin: 0;
+  color: #68758d;
+}
+
+.workspace header button {
+  border: 1px solid #2d6cdf;
+  border-radius: 6px;
+  background: #2d6cdf;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 8px 14px;
+}
+
+.empty-state {
+  border: 1px dashed #c5cfdf;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 32px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #68758d;
 }

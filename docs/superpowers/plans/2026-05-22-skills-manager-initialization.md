@@ -723,13 +723,15 @@ git commit -m "Add Drizzle SQLite schema"
 
 ## 任务 5：第一版 App Shell UI
 
+**状态：** 已完成。
+
 **文件：**
 
 - 创建：`src/renderer/features/shell/AppShell.tsx`
 - 修改：`src/renderer/App.tsx`
 - 修改：`src/renderer/styles.css`
 
-- [ ] **步骤 1：创建 app shell component**
+- [x] **步骤 1：创建 app shell component**
 
 创建 `src/renderer/features/shell/AppShell.tsx`：
 
@@ -764,7 +766,7 @@ export const AppShell = () => {
 };
 ```
 
-- [ ] **步骤 2：将 App 接入 shell**
+- [x] **步骤 2：将 App 接入 shell**
 
 修改 `src/renderer/App.tsx`：
 
@@ -776,7 +778,7 @@ export const App = () => {
 };
 ```
 
-- [ ] **步骤 3：为桌面工具布局添加样式**
+- [x] **步骤 3：为桌面工具布局添加样式**
 
 修改 `src/renderer/styles.css`，使用克制的桌面工具布局：
 
@@ -875,7 +877,7 @@ button {
 }
 ```
 
-- [ ] **步骤 4：验证 UI shell**
+- [x] **步骤 4：验证 UI shell**
 
 运行：
 
@@ -892,7 +894,7 @@ pnpm run build
 all commands exit with code 0
 ```
 
-- [ ] **步骤 5：提交并停止**
+- [x] **步骤 5：提交并停止**
 
 运行：
 
