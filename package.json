@@ -12,16 +12,20 @@
     "build:renderer": "vite build",
     "build": "pnpm run build:main && pnpm run build:renderer",
     "check": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
-    "format": "prettier --write package.json tsconfig.main.json tsconfig.renderer.json vite.config.ts pnpm-workspace.yaml src",
-    "format:check": "prettier --check package.json tsconfig.main.json tsconfig.renderer.json vite.config.ts pnpm-workspace.yaml src"
+    "db:generate": "drizzle-kit generate",
+    "db:check": "drizzle-kit check",
+    "format": "prettier --write package.json tsconfig.main.json tsconfig.renderer.json vite.config.ts drizzle.config.ts pnpm-workspace.yaml src",
+    "format:check": "prettier --check package.json tsconfig.main.json tsconfig.renderer.json vite.config.ts drizzle.config.ts pnpm-workspace.yaml src"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
+    "drizzle-kit": "^0.31.10",
     "electron": "42.2.0",
     "prettier": "^3.8.3",
     "typescript": "6.0.3",
@@ -29,10 +33,13 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "better-sqlite3",
       "electron"
     ]
   },
   "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "drizzle-orm": "^0.45.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   }

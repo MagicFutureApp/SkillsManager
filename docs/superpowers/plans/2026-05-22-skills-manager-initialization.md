@@ -520,6 +520,8 @@ git commit -m "Add typed Electron health IPC"
 
 ## 任务 4：Drizzle SQLite Schema 骨架
 
+**状态：** 已完成。
+
 **文件：**
 
 - 创建：`drizzle.config.ts`
@@ -528,7 +530,7 @@ git commit -m "Add typed Electron health IPC"
 - 创建：`src/db/repositories/appSettingsRepository.ts`
 - 修改：`package.json`
 
-- [ ] **步骤 1：安装数据库依赖**
+- [x] **步骤 1：安装数据库依赖**
 
 运行：
 
@@ -544,7 +546,7 @@ drizzle-orm 和 better-sqlite3 被添加到 dependencies
 drizzle-kit 和 @types/better-sqlite3 被添加到 devDependencies
 ```
 
-- [ ] **步骤 2：添加 Drizzle 配置**
+- [x] **步骤 2：添加 Drizzle 配置**
 
 创建 `drizzle.config.ts`：
 
@@ -561,7 +563,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **步骤 3：添加 schema tables**
+- [x] **步骤 3：添加 schema tables**
 
 创建 `src/db/schema.ts`，包含 v1 表：
 
@@ -658,7 +660,7 @@ export const appSettings = sqliteTable("app_settings", {
 });
 ```
 
-- [ ] **步骤 4：添加数据库 client**
+- [x] **步骤 4：添加数据库 client**
 
 创建 `src/db/client.ts`：
 
@@ -675,7 +677,7 @@ export const createDbClient = (databasePath: string) => {
 };
 ```
 
-- [ ] **步骤 5：添加 migration scripts**
+- [x] **步骤 5：添加 migration scripts**
 
 修改 `package.json` scripts：
 
@@ -688,7 +690,7 @@ export const createDbClient = (databasePath: string) => {
 }
 ```
 
-- [ ] **步骤 6：验证 schema**
+- [x] **步骤 6：验证 schema**
 
 运行：
 
@@ -708,7 +710,7 @@ check passes
 drizzle migration files are generated under drizzle/
 ```
 
-- [ ] **步骤 7：提交并停止**
+- [x] **步骤 7：提交并停止**
 
 运行：
 
