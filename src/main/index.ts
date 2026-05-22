@@ -15,56 +15,13 @@ const createMainWindow = (): void => {
     }
   });
 
-  const html = `
-    <!doctype html>
-    <html lang="zh-CN">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Skills Manager</title>
-        <style>
-          body {
-            margin: 0;
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            font-family: Arial, "Microsoft YaHei", sans-serif;
-            color: #172033;
-            background: #f5f7fb;
-          }
+  const devServerUrl = process.env.VITE_DEV_SERVER_URL;
 
-          main {
-            text-align: center;
-          }
-
-          h1 {
-            margin: 0 0 12px;
-            font-size: 32px;
-            font-weight: 700;
-          }
-
-          p {
-            margin: 0;
-            color: #5c667a;
-            font-size: 15px;
-          }
-        </style>
-      </head>
-      <body>
-        <main>
-          <h1>Skills Manager</h1>
-          <p>Electron shell initialized. React renderer comes next.</p>
-          <div>
-              <p>We are using Node.js <span id="node-version"></span></p>
-              <p>Chromium <span id="chrome-version"></span></p>
-              <p>and Electron <span id="electron-version"></span></p>
-          </div>
-        </main>
-      </body>
-    </html>
-  `;
-
-  void mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+  if (devServerUrl) {
+    void mainWindow.loadURL(devServerUrl);
+  } else {
+    void mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
+  }
 };
 
 void app.whenReady().then(() => {

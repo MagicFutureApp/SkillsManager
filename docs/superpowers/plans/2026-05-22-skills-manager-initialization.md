@@ -144,6 +144,8 @@ e72d25b Add Prettier formatting setup
 
 ## 任务 2：React + Vite Renderer
 
+**状态：** 已完成。
+
 **文件：**
 
 - 创建：`index.html`
@@ -155,7 +157,7 @@ e72d25b Add Prettier formatting setup
 - 修改：`package.json`
 - 修改：`src/main/index.ts`
 
-- [ ] **步骤 1：安装 renderer 依赖**
+- [x] **步骤 1：安装 renderer 依赖**
 
 运行：
 
@@ -171,7 +173,7 @@ react、react-dom、vite 和 @vitejs/plugin-react 被添加到 package.json
 pnpm-lock.yaml 被更新
 ```
 
-- [ ] **步骤 2：添加 renderer TypeScript 配置**
+- [x] **步骤 2：添加 renderer TypeScript 配置**
 
 创建 `tsconfig.renderer.json`：
 
@@ -198,7 +200,7 @@ pnpm-lock.yaml 被更新
 }
 ```
 
-- [ ] **步骤 3：添加 Vite 配置**
+- [x] **步骤 3：添加 Vite 配置**
 
 创建 `vite.config.ts`：
 
@@ -220,7 +222,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **步骤 4：创建 React renderer 入口**
+- [x] **步骤 4：创建 React renderer 入口**
 
 创建 `src/renderer/main.tsx`：
 
@@ -305,7 +307,7 @@ body {
 </html>
 ```
 
-- [ ] **步骤 5：更新 Electron 以加载 renderer**
+- [x] **步骤 5：更新 Electron 以加载 renderer**
 
 修改 `src/main/index.ts`，使开发环境加载 Vite，生产环境加载构建后的 HTML：
 
@@ -319,7 +321,7 @@ if (devServerUrl) {
 }
 ```
 
-- [ ] **步骤 6：更新 scripts**
+- [x] **步骤 6：更新 scripts**
 
 修改 `package.json` scripts：
 
@@ -341,7 +343,7 @@ if (devServerUrl) {
 pnpm add -D concurrently cross-env
 ```
 
-- [ ] **步骤 7：验证 renderer**
+- [x] **步骤 7：验证 renderer**
 
 运行：
 
@@ -361,7 +363,7 @@ check passes
 build creates dist/main and dist/renderer
 ```
 
-- [ ] **步骤 8：提交并停止**
+- [x] **步骤 8：提交并停止**
 
 运行：
 
