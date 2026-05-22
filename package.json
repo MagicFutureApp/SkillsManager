@@ -1,0 +1,23 @@
+{
+  "name": "skills-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An Electron React TypeScript SQLite based Skills Manager App.",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "pnpm run build:main && node node_modules/electron/cli.js .",
+    "electron:version": "node node_modules/electron/cli.js --version",
+    "build:main": "tsc -p tsconfig.main.json",
+    "check": "tsc -p tsconfig.main.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "electron": "42.2.0",
+    "typescript": "6.0.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
+  }
+}
