@@ -1,27 +1,27 @@
-# Skills Manager Initialization Implementation Plan
+# Skills Manager 初始化实现计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **给 agentic workers：** 必须使用子技能：推荐使用 superpowers:subagent-driven-development，也可以使用 superpowers:executing-plans，逐个任务执行本计划。步骤使用 checkbox（`- [ ]`）语法跟踪。
 
-**Goal:** Build the Skills Manager desktop application foundation in small confirmed steps, starting from the existing Electron shell and ending with a typed React/Vite renderer plus the first SQLite/Drizzle data layer skeleton.
+**目标：** 以小步确认的方式构建 Skills Manager 桌面应用基础，从现有 Electron 壳开始，直到具备类型化 React/Vite renderer，以及第一版 SQLite/Drizzle 数据层骨架。
 
-**Architecture:** The app keeps Electron main/preload code separate from the React renderer. Renderer code talks to main through typed IPC only. SQLite and Drizzle live behind the `src/db` and `src/main` boundary so the renderer never opens the database directly.
+**架构：** 应用将 Electron main/preload 代码与 React renderer 分离。Renderer 只通过类型化 IPC 与 main 通信。SQLite 和 Drizzle 隐藏在 `src/db` 与 `src/main` 边界之后，renderer 永远不直接打开数据库。
 
-**Tech Stack:** Electron 42.2.0, Node.js 24.11.1, React, TypeScript 6.0.3, Vite, SQLite, Drizzle ORM, `better-sqlite3`, `drizzle-kit`, Prettier, pnpm with `nodeLinker: hoisted`.
+**技术栈：** Electron 42.2.0、Node.js 24.11.1、React、TypeScript 6.0.3、Vite、SQLite、Drizzle ORM、`better-sqlite3`、`drizzle-kit`、Prettier、pnpm with `nodeLinker: hoisted`。
 
 ---
 
-## Current Baseline
+## 当前基线
 
-The repository already has:
+仓库当前已经包含：
 
-- `package.json` with Electron, TypeScript, Prettier scripts, and Electron main build scripts
-- `pnpm-workspace.yaml` with `nodeLinker: hoisted`
+- 带有 Electron、TypeScript、Prettier 脚本和 Electron main 构建脚本的 `package.json`
+- 设置了 `nodeLinker: hoisted` 的 `pnpm-workspace.yaml`
 - `tsconfig.main.json`
 - `src/main/index.ts`
 - `src/main/preload.ts`
-- Prettier project configuration
+- Prettier 项目配置
 
-Baseline verification before continuing:
+继续之前的基线验证：
 
 ```bash
 pnpm run format:check
@@ -29,7 +29,7 @@ pnpm run check
 pnpm run electron:version
 ```
 
-Expected:
+预期：
 
 ```text
 All matched files use Prettier code style!
@@ -37,15 +37,15 @@ tsc exits with code 0
 v42.2.0
 ```
 
-## Confirmation Rule
+## 确认规则
 
-After each task:
+每个任务完成后：
 
-1. Run the listed verification commands.
-2. Commit the task if verification passes.
-3. Stop and wait for user confirmation before starting the next task.
+1. 运行列出的验证命令。
+2. 如果验证通过，提交该任务。
+3. 停下来等待用户确认，再开始下一个任务。
 
-## File Structure Target
+## 目标文件结构
 
 ```text
 src/
@@ -70,22 +70,22 @@ src/
     domain/
 ```
 
-## Task 1: Electron Shell Baseline
+## 任务 1：Electron 壳基线
 
-**Status:** Complete.
+**状态：** 已完成。
 
-**Files:**
+**文件：**
 
-- Created: `package.json`
-- Created: `pnpm-lock.yaml`
-- Created: `pnpm-workspace.yaml`
-- Created: `tsconfig.main.json`
-- Created: `src/main/index.ts`
-- Created: `src/main/preload.ts`
+- 已创建：`package.json`
+- 已创建：`pnpm-lock.yaml`
+- 已创建：`pnpm-workspace.yaml`
+- 已创建：`tsconfig.main.json`
+- 已创建：`src/main/index.ts`
+- 已创建：`src/main/preload.ts`
 
-- [x] **Step 1: Create minimal Electron package scripts**
+- [x] **步骤 1：创建最小 Electron package scripts**
 
-`package.json` contains:
+`package.json` 包含：
 
 ```json
 {
@@ -98,23 +98,23 @@ src/
 }
 ```
 
-- [x] **Step 2: Configure pnpm for Electron compatibility**
+- [x] **步骤 2：配置 pnpm 以兼容 Electron**
 
-`pnpm-workspace.yaml` contains:
+`pnpm-workspace.yaml` 包含：
 
 ```yaml
 nodeLinker: hoisted
 ```
 
-- [x] **Step 3: Create Electron main and preload entries**
+- [x] **步骤 3：创建 Electron main 和 preload 入口**
 
-`src/main/index.ts` creates a `BrowserWindow`.
+`src/main/index.ts` 创建 `BrowserWindow`。
 
-`src/main/preload.ts` exposes the initial `skillsManager` preload bridge.
+`src/main/preload.ts` 暴露初始的 `skillsManager` preload bridge。
 
-- [x] **Step 4: Verify Electron baseline**
+- [x] **步骤 4：验证 Electron 基线**
 
-Run:
+运行：
 
 ```bash
 pnpm run format:check
@@ -123,7 +123,7 @@ pnpm run build:main
 pnpm run electron:version
 ```
 
-Expected:
+预期：
 
 ```text
 format:check passes
@@ -132,9 +132,9 @@ build:main passes
 electron:version prints v42.2.0
 ```
 
-- [x] **Step 5: Commit**
+- [x] **步骤 5：提交**
 
-Completed commits:
+已完成提交：
 
 ```text
 7012918 Initialize Electron app shell
@@ -142,38 +142,38 @@ e72d25b Add Prettier formatting setup
 8c190a6 Adjust Electron welcome text layout
 ```
 
-## Task 2: React + Vite Renderer
+## 任务 2：React + Vite Renderer
 
-**Files:**
+**文件：**
 
-- Create: `index.html`
-- Create: `vite.config.ts`
-- Create: `tsconfig.renderer.json`
-- Create: `src/renderer/main.tsx`
-- Create: `src/renderer/App.tsx`
-- Create: `src/renderer/styles.css`
-- Modify: `package.json`
-- Modify: `src/main/index.ts`
+- 创建：`index.html`
+- 创建：`vite.config.ts`
+- 创建：`tsconfig.renderer.json`
+- 创建：`src/renderer/main.tsx`
+- 创建：`src/renderer/App.tsx`
+- 创建：`src/renderer/styles.css`
+- 修改：`package.json`
+- 修改：`src/main/index.ts`
 
-- [ ] **Step 1: Install renderer dependencies**
+- [ ] **步骤 1：安装 renderer 依赖**
 
-Run:
+运行：
 
 ```bash
 pnpm add react react-dom
 pnpm add -D @vitejs/plugin-react vite @types/react @types/react-dom
 ```
 
-Expected:
+预期：
 
 ```text
-react, react-dom, vite, and @vitejs/plugin-react are added to package.json
-pnpm-lock.yaml is updated
+react、react-dom、vite 和 @vitejs/plugin-react 被添加到 package.json
+pnpm-lock.yaml 被更新
 ```
 
-- [ ] **Step 2: Add renderer TypeScript config**
+- [ ] **步骤 2：添加 renderer TypeScript 配置**
 
-Create `tsconfig.renderer.json`:
+创建 `tsconfig.renderer.json`：
 
 ```json
 {
@@ -198,9 +198,9 @@ Create `tsconfig.renderer.json`:
 }
 ```
 
-- [ ] **Step 3: Add Vite config**
+- [ ] **步骤 3：添加 Vite 配置**
 
-Create `vite.config.ts`:
+创建 `vite.config.ts`：
 
 ```ts
 import { defineConfig } from "vite";
@@ -220,9 +220,9 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Create React renderer entry**
+- [ ] **步骤 4：创建 React renderer 入口**
 
-Create `src/renderer/main.tsx`:
+创建 `src/renderer/main.tsx`：
 
 ```tsx
 import React from "react";
@@ -237,7 +237,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 );
 ```
 
-Create `src/renderer/App.tsx`:
+创建 `src/renderer/App.tsx`：
 
 ```tsx
 export const App = () => {
@@ -252,7 +252,7 @@ export const App = () => {
 };
 ```
 
-Create `src/renderer/styles.css`:
+创建 `src/renderer/styles.css`：
 
 ```css
 :root {
@@ -288,7 +288,7 @@ body {
 }
 ```
 
-Create `src/renderer/index.html`:
+创建 `src/renderer/index.html`：
 
 ```html
 <!doctype html>
@@ -305,9 +305,9 @@ Create `src/renderer/index.html`:
 </html>
 ```
 
-- [ ] **Step 5: Update Electron to load renderer**
+- [ ] **步骤 5：更新 Electron 以加载 renderer**
 
-Modify `src/main/index.ts` so development loads Vite and production loads built HTML:
+修改 `src/main/index.ts`，使开发环境加载 Vite，生产环境加载构建后的 HTML：
 
 ```ts
 const devServerUrl = process.env.VITE_DEV_SERVER_URL;
@@ -319,9 +319,9 @@ if (devServerUrl) {
 }
 ```
 
-- [ ] **Step 6: Update scripts**
+- [ ] **步骤 6：更新 scripts**
 
-Modify `package.json` scripts:
+修改 `package.json` scripts：
 
 ```json
 {
@@ -335,15 +335,15 @@ Modify `package.json` scripts:
 }
 ```
 
-Install helper dev dependencies:
+安装辅助 dev dependencies：
 
 ```bash
 pnpm add -D concurrently cross-env
 ```
 
-- [ ] **Step 7: Verify renderer**
+- [ ] **步骤 7：验证 renderer**
 
-Run:
+运行：
 
 ```bash
 pnpm run format
@@ -352,7 +352,7 @@ pnpm run check
 pnpm run build
 ```
 
-Expected:
+预期：
 
 ```text
 format passes
@@ -361,30 +361,30 @@ check passes
 build creates dist/main and dist/renderer
 ```
 
-- [ ] **Step 8: Commit and stop**
+- [ ] **步骤 8：提交并停止**
 
-Run:
+运行：
 
 ```bash
 git add -A
 git commit -m "Initialize React renderer"
 ```
 
-Stop and wait for user confirmation.
+停下来等待用户确认。
 
-## Task 3: Typed Preload and Health IPC
+## 任务 3：类型化 Preload 与 Health IPC
 
-**Files:**
+**文件：**
 
-- Create: `src/main/ipc/health.ts`
-- Create: `src/renderer/global.d.ts`
-- Modify: `src/main/index.ts`
-- Modify: `src/main/preload.ts`
-- Modify: `src/renderer/App.tsx`
+- 创建：`src/main/ipc/health.ts`
+- 创建：`src/renderer/global.d.ts`
+- 修改：`src/main/index.ts`
+- 修改：`src/main/preload.ts`
+- 修改：`src/renderer/App.tsx`
 
-- [ ] **Step 1: Add health IPC handler**
+- [ ] **步骤 1：添加 health IPC handler**
 
-Create `src/main/ipc/health.ts`:
+创建 `src/main/ipc/health.ts`：
 
 ```ts
 import { ipcMain } from "electron";
@@ -408,9 +408,9 @@ export const registerHealthIpc = (): void => {
 };
 ```
 
-- [ ] **Step 2: Register IPC in main process**
+- [ ] **步骤 2：在 main process 注册 IPC**
 
-Modify `src/main/index.ts`:
+修改 `src/main/index.ts`：
 
 ```ts
 import { registerHealthIpc } from "./ipc/health";
@@ -421,9 +421,9 @@ void app.whenReady().then(() => {
 });
 ```
 
-- [ ] **Step 3: Expose typed preload API**
+- [ ] **步骤 3：暴露类型化 preload API**
 
-Modify `src/main/preload.ts`:
+修改 `src/main/preload.ts`：
 
 ```ts
 import { contextBridge, ipcRenderer } from "electron";
@@ -434,7 +434,7 @@ contextBridge.exposeInMainWorld("skillsManager", {
 });
 ```
 
-Create `src/renderer/global.d.ts`:
+创建 `src/renderer/global.d.ts`：
 
 ```ts
 import type { AppHealth } from "../main/ipc/health";
@@ -450,9 +450,9 @@ declare global {
 export {};
 ```
 
-- [ ] **Step 4: Show health in React UI**
+- [ ] **步骤 4：在 React UI 显示 health 信息**
 
-Modify `src/renderer/App.tsx`:
+修改 `src/renderer/App.tsx`：
 
 ```tsx
 import { useEffect, useState } from "react";
@@ -486,9 +486,9 @@ export const App = () => {
 };
 ```
 
-- [ ] **Step 5: Verify IPC**
+- [ ] **步骤 5：验证 IPC**
 
-Run:
+运行：
 
 ```bash
 pnpm run format
@@ -497,52 +497,52 @@ pnpm run check
 pnpm run build
 ```
 
-Expected:
+预期：
 
 ```text
 all commands exit with code 0
 ```
 
-- [ ] **Step 6: Commit and stop**
+- [ ] **步骤 6：提交并停止**
 
-Run:
+运行：
 
 ```bash
 git add -A
 git commit -m "Add typed Electron health IPC"
 ```
 
-Stop and wait for user confirmation.
+停下来等待用户确认。
 
-## Task 4: Drizzle SQLite Schema Skeleton
+## 任务 4：Drizzle SQLite Schema 骨架
 
-**Files:**
+**文件：**
 
-- Create: `drizzle.config.ts`
-- Create: `src/db/schema.ts`
-- Create: `src/db/client.ts`
-- Create: `src/db/repositories/appSettingsRepository.ts`
-- Modify: `package.json`
+- 创建：`drizzle.config.ts`
+- 创建：`src/db/schema.ts`
+- 创建：`src/db/client.ts`
+- 创建：`src/db/repositories/appSettingsRepository.ts`
+- 修改：`package.json`
 
-- [ ] **Step 1: Install database dependencies**
+- [ ] **步骤 1：安装数据库依赖**
 
-Run:
+运行：
 
 ```bash
 pnpm add drizzle-orm better-sqlite3
 pnpm add -D drizzle-kit @types/better-sqlite3
 ```
 
-Expected:
+预期：
 
 ```text
-drizzle-orm and better-sqlite3 are added to dependencies
-drizzle-kit and @types/better-sqlite3 are added to devDependencies
+drizzle-orm 和 better-sqlite3 被添加到 dependencies
+drizzle-kit 和 @types/better-sqlite3 被添加到 devDependencies
 ```
 
-- [ ] **Step 2: Add Drizzle config**
+- [ ] **步骤 2：添加 Drizzle 配置**
 
-Create `drizzle.config.ts`:
+创建 `drizzle.config.ts`：
 
 ```ts
 import { defineConfig } from "drizzle-kit";
@@ -557,9 +557,9 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 3: Add schema tables**
+- [ ] **步骤 3：添加 schema tables**
 
-Create `src/db/schema.ts` with the v1 tables:
+创建 `src/db/schema.ts`，包含 v1 表：
 
 ```ts
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
@@ -654,9 +654,9 @@ export const appSettings = sqliteTable("app_settings", {
 });
 ```
 
-- [ ] **Step 4: Add database client**
+- [ ] **步骤 4：添加数据库 client**
 
-Create `src/db/client.ts`:
+创建 `src/db/client.ts`：
 
 ```ts
 import Database from "better-sqlite3";
@@ -671,9 +671,9 @@ export const createDbClient = (databasePath: string) => {
 };
 ```
 
-- [ ] **Step 5: Add migration scripts**
+- [ ] **步骤 5：添加 migration scripts**
 
-Modify `package.json` scripts:
+修改 `package.json` scripts：
 
 ```json
 {
@@ -684,9 +684,9 @@ Modify `package.json` scripts:
 }
 ```
 
-- [ ] **Step 6: Verify schema**
+- [ ] **步骤 6：验证 schema**
 
-Run:
+运行：
 
 ```bash
 pnpm run format
@@ -695,7 +695,7 @@ pnpm run check
 pnpm run db:generate
 ```
 
-Expected:
+预期：
 
 ```text
 format passes
@@ -704,28 +704,28 @@ check passes
 drizzle migration files are generated under drizzle/
 ```
 
-- [ ] **Step 7: Commit and stop**
+- [ ] **步骤 7：提交并停止**
 
-Run:
+运行：
 
 ```bash
 git add -A
 git commit -m "Add Drizzle SQLite schema"
 ```
 
-Stop and wait for user confirmation.
+停下来等待用户确认。
 
-## Task 5: First App Shell UI
+## 任务 5：第一版 App Shell UI
 
-**Files:**
+**文件：**
 
-- Create: `src/renderer/features/shell/AppShell.tsx`
-- Modify: `src/renderer/App.tsx`
-- Modify: `src/renderer/styles.css`
+- 创建：`src/renderer/features/shell/AppShell.tsx`
+- 修改：`src/renderer/App.tsx`
+- 修改：`src/renderer/styles.css`
 
-- [ ] **Step 1: Create app shell component**
+- [ ] **步骤 1：创建 app shell component**
 
-Create `src/renderer/features/shell/AppShell.tsx`:
+创建 `src/renderer/features/shell/AppShell.tsx`：
 
 ```tsx
 const navItems = ["Sources", "Repositories", "Skills", "Targets", "Distribution"];
@@ -758,9 +758,9 @@ export const AppShell = () => {
 };
 ```
 
-- [ ] **Step 2: Wire App to shell**
+- [ ] **步骤 2：将 App 接入 shell**
 
-Modify `src/renderer/App.tsx`:
+修改 `src/renderer/App.tsx`：
 
 ```tsx
 import { AppShell } from "./features/shell/AppShell";
@@ -770,9 +770,9 @@ export const App = () => {
 };
 ```
 
-- [ ] **Step 3: Style dense desktop shell**
+- [ ] **步骤 3：为桌面工具布局添加样式**
 
-Modify `src/renderer/styles.css` with a restrained desktop tool layout:
+修改 `src/renderer/styles.css`，使用克制的桌面工具布局：
 
 ```css
 :root {
@@ -869,9 +869,9 @@ button {
 }
 ```
 
-- [ ] **Step 4: Verify UI shell**
+- [ ] **步骤 4：验证 UI shell**
 
-Run:
+运行：
 
 ```bash
 pnpm run format
@@ -880,25 +880,25 @@ pnpm run check
 pnpm run build
 ```
 
-Expected:
+预期：
 
 ```text
 all commands exit with code 0
 ```
 
-- [ ] **Step 5: Commit and stop**
+- [ ] **步骤 5：提交并停止**
 
-Run:
+运行：
 
 ```bash
 git add -A
 git commit -m "Add desktop app shell UI"
 ```
 
-Stop and wait for user confirmation.
+停下来等待用户确认。
 
-## Plan Self-Review
+## 计划自检
 
-- Spec coverage: This plan covers the v1 foundation from the existing Electron shell through React renderer, typed IPC, Drizzle/SQLite schema, and the first desktop UI shell. Deeper source sync, Git adapters, scanning, planning, and installer behavior should be separate implementation plans.
-- Placeholder scan: No banned placeholder markers or undefined task references remain.
-- Type consistency: Table and API names match the current design docs, including `skill_target_preferences`.
+- 规格覆盖：本计划覆盖 v1 基础工程，从现有 Electron 壳到 React renderer、类型化 IPC、Drizzle/SQLite schema，以及第一版桌面 UI shell。更深入的 source sync、Git adapters、scanning、planning 和 installer 行为应拆成独立实现计划。
+- 占位符扫描：没有禁用的占位标记或未定义的任务引用。
+- 类型一致性：表名和 API 名称与当前设计文档一致，包括 `skill_target_preferences`。
