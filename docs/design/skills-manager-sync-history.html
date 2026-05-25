@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>技能管理器 - Sync History</title>
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --fg: #111111;
+      --muted: #6B6B6B;
+      --border: #E5E5E5;
+      --accent: #2F6FEB;
+      --success: #17A34A;
+      --warn: #EAB308;
+      --danger: #DC2626;
+      --shadow: 0 2px 8px rgb(17 17 17 / 8%);
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 232px minmax(620px, 1fr) 400px;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font: 600 16px/1 var(--font-display);
+    }
+
+    .brand-title { margin: 0; font: 600 16px/1.2 var(--font-display); letter-spacing: -0.01em; }
+    .brand-subtitle { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+    .nav-group { display: grid; gap: 4px; }
+    .nav-label { margin: 0 0 6px; color: var(--muted); font-size: 12px; font-weight: 600; }
+
+    .nav-item {
+      width: 100%;
+      min-height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      text-align: left;
+      text-decoration: none;
+    }
+
+    .nav-item:hover { background: var(--bg); }
+
+    .nav-item.active {
+      background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .badge {
+      min-width: 22px;
+      height: 20px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 7px;
+      color: var(--muted);
+      font: 12px/1 var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      background: var(--surface);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: var(--bg);
+    }
+
+    .footer-title { margin: 0 0 4px; font-weight: 600; }
+    .footer-copy { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .main {
+      min-width: 0;
+      padding: 28px 28px 32px;
+      display: grid;
+      gap: 20px;
+      align-content: start;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font: 600 12px/1.2 var(--font-mono);
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font: 600 32px/1.2 var(--font-display); letter-spacing: -0.01em; }
+    h2, h3 { margin: 0; font: 600 16px/1.2 var(--font-display); letter-spacing: -0.01em; }
+    .page-copy { margin: 8px 0 0; max-width: 760px; color: var(--muted); }
+
+    .button-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .btn {
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn.primary { border-color: var(--accent); background: var(--accent); color: #FFFFFF; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+
+    .summary-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+    }
+
+    .summary-label { margin: 0; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .summary-value { margin: 8px 0 0; font: 600 24px/1.2 var(--font-display); letter-spacing: -0.01em; }
+
+    .toolbar {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 144px 144px 144px;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field { display: grid; gap: 6px; }
+    label { color: var(--muted); font-size: 12px; font-weight: 600; }
+
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--fg);
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    input:focus, select:focus { border-color: var(--accent); }
+
+    .run-list {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .list-head, .run-row {
+      display: grid;
+      grid-template-columns: 1fr 112px 108px 116px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .list-head {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .run-row {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      padding: 14px;
+      text-align: left;
+    }
+
+    .run-row:last-child { border-bottom: 0; }
+    .run-row:hover, .run-row[aria-selected="true"] { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+
+    .run-name { display: grid; gap: 3px; }
+    .run-title { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+    .run-title span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .run-meta { color: var(--muted); font: 12px/1.3 var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .status-pill {
+      width: max-content;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: var(--bg);
+      color: var(--muted);
+      font: 12px/1.2 var(--font-mono);
+    }
+
+    .status-pill.ok { border-color: color-mix(in srgb, var(--success) 28%, var(--border)); background: color-mix(in srgb, var(--success) 8%, var(--surface)); color: var(--success); }
+    .status-pill.warn { border-color: color-mix(in srgb, var(--warn) 38%, var(--border)); background: color-mix(in srgb, var(--warn) 12%, var(--surface)); color: #8A6200; }
+    .status-pill.danger { border-color: color-mix(in srgb, var(--danger) 28%, var(--border)); background: color-mix(in srgb, var(--danger) 8%, var(--surface)); color: var(--danger); }
+    .empty-state { padding: 22px; color: var(--muted); text-align: center; }
+
+    .detail {
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      padding: 28px 24px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .detail-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .detail-copy { margin: 6px 0 0; color: var(--muted); }
+    .meta-row { display: grid; gap: 4px; }
+    .meta-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .meta-value { margin: 0; overflow-wrap: anywhere; }
+    .mono { font-family: var(--font-mono); font-size: 12px; }
+
+    .step-list { display: grid; gap: 8px; }
+
+    .step-row {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .step-row span { color: var(--muted); font-size: 12px; }
+
+    .log {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      padding: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1180px) {
+      .app-shell { grid-template-columns: 220px minmax(0, 1fr); }
+      .detail { grid-column: 2; border-top: 1px solid var(--border); border-left: 0; }
+    }
+
+    @media (max-width: 860px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar, .detail { display: none; }
+      .toolbar, .summary-grid, .list-head, .run-row { grid-template-columns: 1fr; }
+      .main { padding: 22px 16px; }
+      .topbar { display: grid; }
+      .button-row { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div>
+          <p class="brand-title">Skills Manager</p>
+          <p class="brand-subtitle">Local-first desktop</p>
+        </div>
+      </div>
+
+      <nav class="nav-group" aria-label="产品区域">
+        <p class="nav-label">工作区</p>
+        <a class="nav-item" href="skills-manager-sources.html"><span>Provider</span><span class="badge">6</span></a>
+        <a class="nav-item" href="skills-manager-repositories.html"><span>Repositories</span><span class="badge">5</span></a>
+        <a class="nav-item" href="skills-manager-skills.html"><span>Skills</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-targets.html"><span>Targets</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-distribution.html"><span>Distribution</span><span class="badge">3</span></a>
+      </nav>
+
+      <nav class="nav-group" aria-label="系统区域">
+        <p class="nav-label">系统</p>
+        <a class="nav-item" href="skills-manager-settings.html"><span>Settings</span><span class="badge">8</span></a>
+        <a class="nav-item active" href="skills-manager-sync-history.html"><span>Sync history</span><span class="badge" id="nav-run-count">0</span></a>
+        <a class="nav-item" href="skills-manager-diagnostics.html"><span>Diagnostics</span><span class="badge">5</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p class="footer-title">手动同步</p>
+        <p class="footer-copy">v1 不做后台同步。每次来源拉取、扫描和摘要计算都记录为 sync run。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Sync history</p>
+          <h1>追溯仓库同步与扫描运行</h1>
+          <p class="page-copy">这里按 `sync_runs` 展示手动同步结果：来源、仓库、commit、发现数量、错误和后续动作，帮助用户复查本地状态为何变化。</p>
+        </div>
+        <div class="button-row">
+          <button class="btn" type="button" id="export-selected">复制所选摘要</button>
+          <button class="btn primary" type="button" id="rerun-selected">重新同步所选</button>
+        </div>
+      </header>
+
+      <section class="summary-grid" aria-label="同步摘要">
+        <div class="summary-card"><p class="summary-label">同步运行</p><p class="summary-value" id="summary-runs">0</p></div>
+        <div class="summary-card"><p class="summary-label">成功</p><p class="summary-value" id="summary-success">0</p></div>
+        <div class="summary-card"><p class="summary-label">需复核</p><p class="summary-value" id="summary-review">0</p></div>
+        <div class="summary-card"><p class="summary-label">发现 skill units</p><p class="summary-value" id="summary-skills">0</p></div>
+      </section>
+
+      <section class="toolbar" aria-label="筛选同步历史">
+        <div class="field">
+          <label for="search">搜索</label>
+          <input id="search" type="search" placeholder="运行、来源、仓库、commit 或错误">
+        </div>
+        <div class="field">
+          <label for="status">状态</label>
+          <select id="status">
+            <option value="all">全部</option>
+            <option value="success">success</option>
+            <option value="review">review</option>
+            <option value="failed">failed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="scope">范围</label>
+          <select id="scope">
+            <option value="all">全部</option>
+            <option value="source">source</option>
+            <option value="repository">repository</option>
+            <option value="market">market</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sort">排序</label>
+          <select id="sort">
+            <option value="time">按时间</option>
+            <option value="status">按状态</option>
+            <option value="skills">按发现数</option>
+            <option value="duration">按耗时</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="run-list" aria-live="polite">
+        <div class="list-head" aria-hidden="true"><span>运行</span><span>状态</span><span>发现</span><span>耗时</span></div>
+        <div id="run-rows"></div>
+      </section>
+    </main>
+
+    <aside class="detail" aria-label="同步详情">
+      <section>
+        <p class="eyebrow">Selected run</p>
+        <h2 id="detail-title">选择一条同步记录</h2>
+        <p class="detail-copy" id="detail-copy">右侧会显示同步步骤、commit 变化、扫描摘要和可复制的诊断日志。</p>
+      </section>
+
+      <section class="detail-card"><h3>运行元数据</h3><div id="detail-meta"></div></section>
+      <section class="detail-card"><h3>步骤结果</h3><div class="step-list" id="step-list"></div></section>
+      <section class="detail-card"><h3>运行日志</h3><div class="log" id="run-log">尚未选择运行。</div></section>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const storageKey = 'skills-manager-sync-history-wireframe';
+    const defaultRuns = [
+      {
+        id: 'run-20260428-1422-core',
+        name: 'core-skills manual sync',
+        status: 'success',
+        scope: 'repository',
+        source: 'GitHub personal',
+        repository: 'agent-skills/core-skills',
+        commitBefore: '7b1d2a4',
+        commitAfter: 'a3d91f0',
+        time: '2026-04-28 14:22',
+        duration: 42,
+        discovered: 3,
+        updated: 2,
+        warnings: 0,
+        log: 'git fetch completed\nmanifest scan completed\nskill units: 3\nsummary persisted to sync_runs',
+        steps: [
+          ['git fetch', 'ok', 'origin/main advanced to a3d91f0'],
+          ['manifest parse', 'ok', '2 manifest skills, 1 fallback skill'],
+          ['summary write', 'ok', 'sync_runs + skill_versions updated']
+        ]
+      },
+      {
+        id: 'run-20260428-1304-design',
+        name: 'design-sandbox scan',
+        status: 'review',
+        scope: 'repository',
+        source: 'Local Git',
+        repository: 'D:/agent-skills/design-sandbox',
+        commitBefore: '21ab9d0',
+        commitAfter: '21ab9d0',
+        time: '2026-04-28 13:04',
+        duration: 18,
+        discovered: 1,
+        updated: 0,
+        warnings: 2,
+        log: 'local repo opened\nfallback scan found SKILL.md\nambiguous metadata requires review',
+        steps: [
+          ['repo open', 'ok', 'working tree readable'],
+          ['fallback scan', 'warn', 'missing manifest; inferred one skill unit'],
+          ['review flag', 'warn', 'metadata owner and compatibility are incomplete']
+        ]
+      },
+      {
+        id: 'run-20260428-1210-market',
+        name: 'skills.sh market refresh',
+        status: 'success',
+        scope: 'market',
+        source: 'skills.sh market',
+        repository: 'market index',
+        commitBefore: 'index-20260427',
+        commitAfter: 'index-20260428',
+        time: '2026-04-28 12:10',
+        duration: 9,
+        discovered: 7,
+        updated: 4,
+        warnings: 0,
+        log: 'market index loaded\ncompatibility tags normalized\nno local install actions executed',
+        steps: [
+          ['index load', 'ok', 'market index reachable'],
+          ['normalize', 'ok', 'agent compatibility mapped'],
+          ['summary write', 'ok', 'source metadata updated']
+        ]
+      },
+      {
+        id: 'run-20260428-1025-private',
+        name: 'private GitLab sync',
+        status: 'failed',
+        scope: 'source',
+        source: 'GitLab work',
+        repository: 'infra/internal-skills',
+        commitBefore: '9c402bb',
+        commitAfter: 'unresolved',
+        time: '2026-04-28 10:25',
+        duration: 5,
+        discovered: 0,
+        updated: 0,
+        warnings: 1,
+        log: 'git fetch failed\nauth delegated to system git\ncredential helper returned authentication failure',
+        steps: [
+          ['git executable', 'ok', 'system git found'],
+          ['credential helper', 'failed', 'authentication failed outside app scope'],
+          ['summary write', 'ok', 'failure recorded for diagnostics']
+        ]
+      }
+    ];
+
+    const els = {
+      rows: document.querySelector('#run-rows'),
+      search: document.querySelector('#search'),
+      status: document.querySelector('#status'),
+      scope: document.querySelector('#scope'),
+      sort: document.querySelector('#sort'),
+      summaryRuns: document.querySelector('#summary-runs'),
+      summarySuccess: document.querySelector('#summary-success'),
+      summaryReview: document.querySelector('#summary-review'),
+      summarySkills: document.querySelector('#summary-skills'),
+      navRunCount: document.querySelector('#nav-run-count'),
+      detailTitle: document.querySelector('#detail-title'),
+      detailCopy: document.querySelector('#detail-copy'),
+      detailMeta: document.querySelector('#detail-meta'),
+      stepList: document.querySelector('#step-list'),
+      runLog: document.querySelector('#run-log'),
+      exportSelected: document.querySelector('#export-selected'),
+      rerunSelected: document.querySelector('#rerun-selected'),
+      toast: document.querySelector('#toast')
+    };
+
+    let runs = loadRuns();
+    let selectedId = runs[0]?.id || null;
+
+    function loadRuns() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey));
+        return Array.isArray(stored) && stored.length ? stored : defaultRuns;
+      } catch {
+        return defaultRuns;
+      }
+    }
+
+    function persist() { localStorage.setItem(storageKey, JSON.stringify(runs)); }
+
+    function getVisibleRuns() {
+      const query = els.search.value.trim().toLowerCase();
+      const status = els.status.value;
+      const scope = els.scope.value;
+      const visible = runs.filter((run) => {
+        const haystack = [run.name, run.source, run.repository, run.commitBefore, run.commitAfter, run.log].join(' ').toLowerCase();
+        return (!query || haystack.includes(query)) && (status === 'all' || run.status === status) && (scope === 'all' || run.scope === scope);
+      });
+      return visible.sort((a, b) => {
+        if (els.sort.value === 'status') return a.status.localeCompare(b.status);
+        if (els.sort.value === 'skills') return b.discovered - a.discovered;
+        if (els.sort.value === 'duration') return b.duration - a.duration;
+        return b.time.localeCompare(a.time);
+      });
+    }
+
+    function statusClass(status) {
+      if (status === 'success') return 'ok';
+      if (status === 'review') return 'warn';
+      if (status === 'failed') return 'danger';
+      return '';
+    }
+
+    function renderRows() {
+      const visible = getVisibleRuns();
+      els.rows.innerHTML = visible.length ? visible.map((run) => `
+        <button class="run-row" type="button" data-id="${run.id}" aria-selected="${run.id === selectedId}">
+          <span class="run-name">
+            <span class="run-title"><span>${run.name}</span><span class="status-pill">${run.scope}</span></span>
+            <span class="run-meta">${run.time} · ${run.source} · ${run.repository}</span>
+          </span>
+          <span class="status-pill ${statusClass(run.status)}">${run.status}</span>
+          <span class="mono">${run.discovered} units</span>
+          <span class="mono">${run.duration}s</span>
+        </button>
+      `).join('') : '<div class="empty-state">没有匹配的同步记录。</div>';
+
+      document.querySelectorAll('.run-row').forEach((row) => {
+        row.addEventListener('click', () => {
+          selectedId = row.dataset.id;
+          render();
+        });
+      });
+    }
+
+    function renderSummary() {
+      els.summaryRuns.textContent = runs.length;
+      els.summarySuccess.textContent = runs.filter((run) => run.status === 'success').length;
+      els.summaryReview.textContent = runs.filter((run) => run.status !== 'success').length;
+      els.summarySkills.textContent = runs.reduce((sum, run) => sum + run.discovered, 0);
+      els.navRunCount.textContent = runs.length;
+    }
+
+    function renderDetail() {
+      const run = runs.find((item) => item.id === selectedId) || runs[0];
+      if (!run) return;
+      selectedId = run.id;
+      els.detailTitle.textContent = run.name;
+      els.detailCopy.textContent = `${run.source} 的 ${run.scope} 同步在 ${run.time} 完成，状态为 ${run.status}。`;
+      els.detailMeta.innerHTML = [
+        ['来源', run.source],
+        ['仓库', run.repository],
+        ['commit before', run.commitBefore],
+        ['commit after', run.commitAfter],
+        ['发现 / 更新', `${run.discovered} / ${run.updated}`],
+        ['警告', run.warnings]
+      ].map(([label, value]) => `<div class="meta-row"><span class="meta-label">${label}</span><p class="meta-value mono">${value}</p></div>`).join('');
+      els.stepList.innerHTML = run.steps.map(([name, status, note]) => `
+        <div class="step-row">
+          <strong>${name}</strong>
+          <span class="status-pill ${statusClass(status === 'ok' ? 'success' : status === 'warn' ? 'review' : 'failed')}">${status}</span>
+          <span>${note}</span>
+        </div>
+      `).join('');
+      els.runLog.textContent = run.log;
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => els.toast.classList.remove('show'), 1800);
+    }
+
+    function copySelected() {
+      const run = runs.find((item) => item.id === selectedId);
+      if (!run) return;
+      const text = `${run.name}\nstatus: ${run.status}\nsource: ${run.source}\nrepository: ${run.repository}\ncommit: ${run.commitBefore} -> ${run.commitAfter}\n${run.log}`;
+      navigator.clipboard?.writeText(text);
+      showToast('同步摘要已复制');
+    }
+
+    function rerunSelected() {
+      const run = runs.find((item) => item.id === selectedId);
+      if (!run) return;
+      const nextRun = {
+        ...run,
+        id: `run-${Date.now()}`,
+        name: `${run.name} rerun`,
+        status: run.status === 'failed' ? 'review' : run.status,
+        time: 'queued locally',
+        duration: 0,
+        log: `manual rerun queued\nsource: ${run.source}\nrepository: ${run.repository}`
+      };
+      runs = [nextRun, ...runs];
+      selectedId = nextRun.id;
+      persist();
+      render();
+      showToast('已加入手动同步队列');
+    }
+
+    function render() {
+      renderSummary();
+      renderRows();
+      renderDetail();
+    }
+
+    [els.search, els.status, els.scope, els.sort].forEach((control) => control.addEventListener('input', render));
+    els.exportSelected.addEventListener('click', copySelected);
+    els.rerunSelected.addEventListener('click', rerunSelected);
+    render();
+  </script>
+</body>
+</html>
+

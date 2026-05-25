@@ -157,7 +157,7 @@ v1 的 manifest 支持从每个技能根目录一个 manifest 文件开始。
 
 ### 6.1 必需实体
 
-- `providers`
+- `sources`
 - `repositories`
 - `skill_units`
 - `skill_versions`
@@ -171,8 +171,8 @@ v1 的 manifest 支持从每个技能根目录一个 manifest 文件开始。
 
 ### 6.2 实体意图
 
-`providers`
-- 标识 provider 类型和配置
+`sources`
+- 标识来源类型和来源配置
 
 `repositories`
 - 记录仓库来源、本地缓存路径、分支元数据和最后扫描的 commit
@@ -282,7 +282,7 @@ src/
   main/
     index.ts
     ipc/
-      providers.ts
+      sources.ts
       repositories.ts
       skills.ts
       distribution.ts
@@ -294,7 +294,7 @@ src/
     pages/
     components/
     features/
-      providers/
+      sources/
       repositories/
       skills/
       distribution/
@@ -306,7 +306,7 @@ src/
     domain/
     services/
     adapters/
-      providers/
+      sources/
       targets/
     scanning/
     git/
@@ -324,7 +324,7 @@ src/
 
 v1 应保持紧凑，并聚焦五个主要区域：
 
-- `Providers`
+- `Sources`
 - `Repositories`
 - `Skills`
 - `Targets`

@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>技能管理器 - Provider</title>
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --fg: #111111;
+      --muted: #6B6B6B;
+      --border: #E5E5E5;
+      --accent: #2F6FEB;
+      --success: #17A34A;
+      --warn: #EAB308;
+      --danger: #DC2626;
+      --shadow: 0 2px 8px rgb(17 17 17 / 8%);
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 232px minmax(560px, 1fr) 380px;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 40px;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font: 600 16px/1 var(--font-display);
+    }
+
+    .brand-title {
+      margin: 0;
+      font: 600 16px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav-group { display: grid; gap: 4px; }
+
+    .nav-label {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font: 600 12px/1.2 var(--font-body);
+    }
+
+    .nav-item {
+      width: 100%;
+      min-height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      text-align: left;
+      text-decoration: none;
+    }
+
+    .nav-item:hover { background: var(--bg); }
+
+    .nav-item.active {
+      background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .badge {
+      min-width: 22px;
+      height: 20px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 7px;
+      color: var(--muted);
+      font: 12px/1 var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      background: var(--surface);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: var(--bg);
+    }
+
+    .footer-title { margin: 0 0 4px; font-weight: 600; }
+    .footer-copy { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .main {
+      min-width: 0;
+      padding: 28px 28px 32px;
+      display: grid;
+      gap: 20px;
+      align-content: start;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font: 600 12px/1.2 var(--font-mono);
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font: 600 32px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    h2, h3 {
+      margin: 0;
+      font: 600 16px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .page-copy {
+      margin: 8px 0 0;
+      max-width: 720px;
+      color: var(--muted);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .toolbar {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(156px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field { display: grid; gap: 6px; }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--fg);
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    textarea { min-height: 88px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+    .source-list {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .list-head, .source-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 104px 96px 112px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .list-head {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .source-row {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      padding: 14px;
+      text-align: left;
+    }
+
+    .source-row:last-child { border-bottom: 0; }
+    .source-row:hover, .source-row[aria-selected="true"] { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+
+    .source-name { display: grid; gap: 3px; }
+
+    .source-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      font-weight: 600;
+    }
+
+    .source-title span:first-child {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .source-meta {
+      color: var(--muted);
+      font: 12px/1.3 var(--font-mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-pill {
+      width: max-content;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: var(--bg);
+      color: var(--muted);
+      font: 12px/1.2 var(--font-mono);
+    }
+
+    .status-pill.ok {
+      border-color: color-mix(in srgb, var(--success) 28%, var(--border));
+      background: color-mix(in srgb, var(--success) 8%, var(--surface));
+      color: var(--success);
+    }
+
+    .status-pill.warn {
+      border-color: color-mix(in srgb, var(--warn) 38%, var(--border));
+      background: color-mix(in srgb, var(--warn) 12%, var(--surface));
+      color: #8A6200;
+    }
+
+    .status-pill.danger {
+      border-color: color-mix(in srgb, var(--danger) 28%, var(--border));
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+      color: var(--danger);
+    }
+
+    .row-action {
+      width: max-content;
+      min-height: 32px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: var(--accent);
+      color: #FFFFFF;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+      justify-self: start;
+    }
+
+    .row-action.disconnect {
+      border-color: var(--border);
+      background: var(--surface);
+      color: var(--fg);
+    }
+
+    .empty-state { padding: 22px; color: var(--muted); text-align: center; }
+
+    .detail {
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      padding: 28px 24px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .detail-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .detail-copy { margin: 6px 0 0; color: var(--muted); }
+    .meta-row { display: grid; gap: 4px; }
+    .meta-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .meta-value { margin: 0; overflow-wrap: anywhere; }
+    .mono { font-family: var(--font-mono); font-size: 12px; }
+
+    .diagnostic {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      padding: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+
+    .rule-list { display: grid; gap: 8px; }
+
+    .rule-row {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .rule-row span { color: var(--muted); font-size: 12px; }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1180px) {
+      .app-shell { grid-template-columns: 220px minmax(0, 1fr); }
+      .detail { grid-column: 2; border-top: 1px solid var(--border); border-left: 0; }
+    }
+
+    @media (max-width: 860px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar, .detail { display: none; }
+      .toolbar, .list-head, .source-row { grid-template-columns: 1fr; }
+      .main { padding: 22px 16px; }
+      .topbar { display: grid; }
+      .button-row { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div>
+          <p class="brand-title">Skills Manager</p>
+          <p class="brand-subtitle">Local-first desktop</p>
+        </div>
+      </div>
+
+      <nav class="nav-group" aria-label="产品区域">
+        <p class="nav-label">工作区</p>
+        <a class="nav-item active" href="skills-manager-sources.html"><span>Provider</span><span class="badge" id="nav-source-count">0</span></a>
+        <a class="nav-item" href="skills-manager-repositories.html"><span>Repositories</span><span class="badge">5</span></a>
+        <a class="nav-item" href="skills-manager-skills.html"><span>Skills</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-targets.html"><span>Targets</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-distribution.html"><span>Distribution</span><span class="badge">3</span></a>
+      </nav>
+
+      <nav class="nav-group" aria-label="系统区域">
+        <p class="nav-label">系统</p>
+        <a class="nav-item" href="skills-manager-settings.html"><span>Settings</span><span class="badge">8</span></a>
+        <a class="nav-item" href="skills-manager-sync-history.html"><span>Sync history</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-diagnostics.html"><span>Diagnostics</span><span class="badge">5</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p class="footer-title">认证边界</p>
+        <p class="footer-copy">Provider 只声明访问方式。Git 凭据继续委托给系统环境。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Provider</p>
+          <h1>管理 Provider 与连接诊断</h1>
+          <p class="page-copy">Provider 是系统预定义的连接入口。用户只负责登录、取消连接和验证访问能力；仓库屏幕只负责具体缓存、同步与扫描结果。</p>
+        </div>
+        <div class="button-row">
+          <button class="btn" type="button" id="run-diagnostics">运行诊断</button>
+        </div>
+      </header>
+
+      <section class="toolbar" aria-label="筛选 Provider">
+        <div class="field">
+          <label for="provider">Provider</label>
+          <select id="provider">
+            <option value="all">全部</option>
+            <option value="github">GitHub</option>
+            <option value="gitlab">GitLab</option>
+            <option value="gitea">Gitea</option>
+            <option value="bitbucket">Bitbucket</option>
+            <option value="local-git">Local Git</option>
+            <option value="skills-market">skills.sh</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="status">状态</label>
+          <select id="status">
+            <option value="all">全部</option>
+            <option value="connected">connected</option>
+            <option value="review">review</option>
+            <option value="error">error</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sort">排序</label>
+          <select id="sort">
+            <option value="priority">按优先级</option>
+            <option value="name">按名称</option>
+            <option value="status">按状态</option>
+            <option value="provider">按 provider</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="source-list" aria-live="polite">
+        <div class="list-head" aria-hidden="true"><span>Provider</span><span>认证</span><span>状态</span><span>连接</span></div>
+        <div id="source-rows"></div>
+      </section>
+    </main>
+
+    <aside class="detail" aria-label="Provider 详情">
+      <section>
+        <p class="eyebrow">Selected provider</p>
+        <h2 id="detail-title">选择一个 Provider</h2>
+        <p class="detail-copy" id="detail-copy">右侧会显示认证方式、默认发现规则和访问诊断。</p>
+      </section>
+
+      <div class="button-row">
+        <button class="btn primary" type="button" id="connect-selected">连接</button>
+        <button class="btn" type="button" id="disconnect-selected">取消连接</button>
+        <button class="btn" type="button" id="test-selected">测试访问</button>
+      </div>
+
+      <section class="detail-card"><h3>连接配置</h3><div id="detail-meta"></div></section>
+      <section class="detail-card"><h3>默认发现规则</h3><div class="rule-list" id="rule-list"></div></section>
+      <section class="detail-card"><h3>最近诊断</h3><div class="diagnostic" id="diagnostic-log">尚未选择 Provider。</div></section>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const storageKey = 'skills-manager-sources-wireframe';
+    const defaultSources = [
+      { id: 'github', name: 'GitHub', provider: 'github', auth: 'OSS login', strategy: 'manifest first', patterns: 'skills/*/SKILL.md, .codex/skills/*/SKILL.md', notes: '通过系统浏览器完成 GitHub 登录授权。应用只保存连接状态和访问范围，不保存 token 明文。', status: 'connected', connected: true, enabled: true, priority: 1, diagnostic: 'oauth session: active\nrepo access probe: reachable\nlast result: connected' },
+      { id: 'gitlab', name: 'GitLab', provider: 'gitlab', auth: 'OSS login', strategy: 'manifest first', patterns: 'skills/*/SKILL.md', notes: '通过 GitLab 登录连接组织或个人命名空间。首次同步前需要确认可访问范围。', status: 'review', connected: true, enabled: true, priority: 2, diagnostic: 'oauth session: active\nnamespace probe: one namespace requires review\nlast result: needs review' },
+      { id: 'local-git', name: 'Local Git', provider: 'local-git', auth: 'Local filesystem', strategy: 'convention scan', patterns: 'agents/skills/*/SKILL.md, skills/*/SKILL.md', notes: '读取本机已授权的开发目录。连接时选择本地根目录，扫描结果默认进入 review。', status: 'connected', connected: true, enabled: true, priority: 3, diagnostic: 'folder permission: granted\ngit worktree probe: reachable\nlast result: connected' },
+      { id: 'skills-market', name: 'skills.sh', provider: 'skills-market', auth: 'Marketplace account', strategy: 'market index', patterns: 'market index manifest', notes: '公共市场 Provider。安装仍需解析到 commit sha，并在 dry-run 计划中确认目标。', status: 'connected', connected: true, enabled: true, priority: 4, diagnostic: 'account session: active\ncatalog schema: compatible\nlast result: connected' },
+      { id: 'bitbucket', name: 'Bitbucket', provider: 'bitbucket', auth: 'OSS login', strategy: 'convention scan', patterns: 'skills/*/SKILL.md', notes: '可选 Provider。连接后才能读取团队空间，当前需要重新登录。', status: 'error', connected: false, enabled: false, priority: 5, diagnostic: 'oauth session: expired\nsuggestion: reconnect with system browser\nlast result: error' },
+      { id: 'gitea', name: 'Gitea', provider: 'gitea', auth: 'OSS login', strategy: 'manifest first', patterns: 'skills/*/SKILL.md', notes: '自托管 Provider。连接时先验证实例地址和登录会话，再进入仓库发现。', status: 'review', connected: false, enabled: false, priority: 6, diagnostic: 'instance access: not connected\nhost verification: pending\nlast result: needs review' }
+    ];
+
+    const els = {
+      rows: document.querySelector('#source-rows'), provider: document.querySelector('#provider'), status: document.querySelector('#status'), sort: document.querySelector('#sort'), navSourceCount: document.querySelector('#nav-source-count'),
+      detailTitle: document.querySelector('#detail-title'), detailCopy: document.querySelector('#detail-copy'), detailMeta: document.querySelector('#detail-meta'), ruleList: document.querySelector('#rule-list'), diagnosticLog: document.querySelector('#diagnostic-log'),
+      runDiagnostics: document.querySelector('#run-diagnostics'), connectSelected: document.querySelector('#connect-selected'), disconnectSelected: document.querySelector('#disconnect-selected'), testSelected: document.querySelector('#test-selected'),
+      toast: document.querySelector('#toast')
+    };
+
+    let sources = loadSources();
+    let selectedId = sources[0]?.id || null;
+
+    function loadSources() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey));
+        if (!Array.isArray(stored) || !stored.length) return defaultSources;
+        return defaultSources.map((item) => ({ ...item, ...(stored.find((source) => source.id === item.id) || {}) }));
+      } catch {
+        return defaultSources;
+      }
+    }
+
+    function persist() { localStorage.setItem(storageKey, JSON.stringify(sources)); }
+
+    function getVisibleSources() {
+      const provider = els.provider.value;
+      const status = els.status.value;
+      const result = sources.filter((source) => {
+        return (provider === 'all' || source.provider === provider) && (status === 'all' || source.status === status);
+      });
+      const sorters = {
+        priority: (a, b) => a.priority - b.priority,
+        name: (a, b) => a.name.localeCompare(b.name),
+        status: (a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name),
+        provider: (a, b) => a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name)
+      };
+      return result.sort(sorters[els.sort.value] || sorters.priority);
+    }
+
+    function render() {
+      const visible = getVisibleSources();
+      if (!sources.some((source) => source.id === selectedId)) selectedId = visible[0]?.id || sources[0]?.id || null;
+      els.navSourceCount.textContent = String(sources.length);
+      renderRows(visible);
+      renderDetails();
+    }
+
+    function renderRows(visible) {
+      if (!visible.length) {
+        els.rows.innerHTML = '<div class="empty-state">没有匹配的 Provider。调整筛选条件。</div>';
+        return;
+      }
+      els.rows.innerHTML = visible.map((source) => `
+        <div class="source-row" role="button" tabindex="0" data-id="${source.id}" aria-selected="${source.id === selectedId}">
+          <div class="source-name">
+            <div class="source-title"><span>${escapeHtml(providerLabel(source.provider))}</span></div>
+            <div class="source-meta">${escapeHtml(source.auth)}</div>
+          </div>
+          <span class="mono">${escapeHtml(source.auth)}</span>
+          <span class="status-pill ${statusClass(source.status)}">${source.status}</span>
+          <button class="row-action ${source.connected ? 'disconnect' : ''}" type="button" data-action="toggle-connection" data-id="${source.id}">${source.connected ? '取消链接' : '连接'}</button>
+        </div>
+      `).join('');
+    }
+
+    function renderDetails() {
+      const source = sources.find((item) => item.id === selectedId);
+      const hasSelection = Boolean(source);
+      els.testSelected.disabled = !hasSelection;
+      els.connectSelected.disabled = !hasSelection || source?.connected;
+      els.disconnectSelected.disabled = !hasSelection || !source?.connected;
+      if (!source) {
+        els.detailTitle.textContent = '选择一个 Provider';
+        els.detailCopy.textContent = '右侧会显示认证方式、默认发现规则和访问诊断。';
+        els.detailMeta.innerHTML = '';
+        els.ruleList.innerHTML = '';
+        els.diagnosticLog.textContent = '尚未选择 Provider。';
+        return;
+      }
+      els.detailTitle.textContent = source.name;
+      els.detailCopy.textContent = source.notes;
+      els.detailMeta.innerHTML = [
+        ['Provider', providerLabel(source.provider)], ['认证方式', source.auth], ['状态', source.status], ['连接', source.connected ? '取消链接' : '连接'], ['发现策略', source.strategy]
+      ].map(([label, value]) => `<div class="meta-row"><span class="meta-label">${label}</span><p class="meta-value ${label.includes('Provider') ? 'mono' : ''}">${escapeHtml(String(value))}</p></div>`).join('');
+      const rules = source.patterns.split(',').map((rule) => rule.trim()).filter(Boolean);
+      els.ruleList.innerHTML = rules.map((rule, index) => `<div class="rule-row"><strong class="mono">${escapeHtml(rule)}</strong><span>${index === 0 ? 'primary' : 'fallback'}</span></div>`).join('');
+      els.diagnosticLog.textContent = source.diagnostic;
+    }
+
+    function statusClass(status) {
+      if (status === 'connected') return 'ok';
+      if (status === 'review') return 'warn';
+      if (status === 'error') return 'danger';
+      return '';
+    }
+
+    function providerLabel(provider) {
+      const labels = { github: 'GitHub', gitlab: 'GitLab', gitea: 'Gitea', bitbucket: 'Bitbucket', 'local-git': 'Local Git', 'skills-market': 'skills.sh' };
+      return labels[provider] || provider;
+    }
+
+    function testSelected() {
+      if (!selectedId) return;
+      sources = sources.map((source) => {
+        if (source.id !== selectedId) return source;
+        const status = source.connected ? (source.provider === 'gitea' ? 'review' : 'connected') : 'error';
+        return { ...source, status, diagnostic: [`provider: ${providerLabel(source.provider)}`, `auth: ${source.auth}`, `connection: ${source.connected ? 'active' : 'not connected'}`, status === 'connected' ? 'result: access ready' : status === 'review' ? 'result: host review required' : 'result: login required'].join('\n') };
+      });
+      persist();
+      render();
+      showToast('访问测试已更新');
+    }
+
+    function runDiagnostics() {
+      sources = sources.map((source) => source.connected ? { ...source, status: source.status === 'error' ? 'review' : source.status, diagnostic: `${source.diagnostic}\nqueued access test: manual run requested` } : source);
+      persist();
+      render();
+      showToast('已为已连接 Provider 排队访问测试');
+    }
+
+    function connectSelected() {
+      if (!selectedId) return;
+      sources = sources.map((source) => source.id === selectedId ? { ...source, connected: true, enabled: true, status: 'connected', diagnostic: [`provider: ${providerLabel(source.provider)}`, `auth: ${source.auth}`, 'login: completed through system browser', 'result: connected'].join('\n') } : source);
+      persist();
+      render();
+      showToast('Provider 已连接');
+    }
+
+    function disconnectSelected() {
+      if (!selectedId) return;
+      sources = sources.map((source) => source.id === selectedId ? { ...source, connected: false, enabled: false, status: 'error', diagnostic: [`provider: ${providerLabel(source.provider)}`, 'login: disconnected', 'result: access disabled'].join('\n') } : source);
+      persist();
+      render();
+      showToast('Provider 已取消连接');
+    }
+
+    function toggleConnection(id) {
+      const source = sources.find((item) => item.id === id);
+      if (!source) return;
+      selectedId = id;
+      if (source.connected) {
+        disconnectSelected();
+      } else {
+        connectSelected();
+      }
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => els.toast.classList.remove('show'), 1800);
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+    }
+
+    els.rows.addEventListener('click', (event) => {
+      const actionButton = event.target.closest('[data-action="toggle-connection"]');
+      if (actionButton) {
+        toggleConnection(actionButton.dataset.id);
+        return;
+      }
+      const row = event.target.closest('[data-id]');
+      if (row) {
+        selectedId = row.dataset.id;
+        render();
+      }
+    });
+
+    els.rows.addEventListener('keydown', (event) => {
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-id]')) {
+        event.preventDefault();
+        selectedId = event.target.dataset.id;
+        render();
+      }
+    });
+
+    [els.provider, els.status, els.sort].forEach((control) => {
+      control.addEventListener('input', render);
+      control.addEventListener('change', render);
+    });
+
+    els.connectSelected.addEventListener('click', connectSelected);
+    els.disconnectSelected.addEventListener('click', disconnectSelected);
+    els.testSelected.addEventListener('click', testSelected);
+    els.runDiagnostics.addEventListener('click', runDiagnostics);
+
+    render();
+  </script>
+</body>
+</html>
+

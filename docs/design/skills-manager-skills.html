@@ -1,0 +1,1299 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>技能管理器 - Skills</title>
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --fg: #111111;
+      --muted: #6B6B6B;
+      --border: #E5E5E5;
+      --accent: #2F6FEB;
+      --success: #17A34A;
+      --warn: #EAB308;
+      --danger: #DC2626;
+      --shadow: 0 2px 8px rgb(17 17 17 / 8%);
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    select,
+    textarea { font: inherit; }
+
+    button { cursor: pointer; }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 232px minmax(560px, 1fr) 380px;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 40px;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font: 600 16px/1 var(--font-display);
+    }
+
+    .brand-title {
+      margin: 0;
+      font: 600 16px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 4px;
+    }
+
+    .nav-label {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font: 600 12px/1.2 var(--font-body);
+    }
+
+    .nav-item {
+      width: 100%;
+      min-height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      text-align: left;
+      text-decoration: none;
+    }
+
+    .nav-item:hover { background: var(--bg); }
+
+    .nav-item.active {
+      background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .badge {
+      min-width: 22px;
+      height: 20px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 7px;
+      color: var(--muted);
+      font: 12px/1 var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      background: var(--surface);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: var(--bg);
+    }
+
+    .footer-title {
+      margin: 0 0 4px;
+      font-weight: 600;
+    }
+
+    .footer-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 28px 28px 32px;
+      display: grid;
+      gap: 20px;
+      align-content: start;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font: 600 12px/1.2 var(--font-mono);
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font: 600 32px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    h2,
+    h3 {
+      margin: 0;
+      font: 600 16px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .page-copy {
+      margin: 8px 0 0;
+      max-width: 720px;
+      color: var(--muted);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .toolbar {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 168px 168px 168px;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--fg);
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus { border-color: var(--accent); }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .summary-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+    }
+
+    .summary-value {
+      margin: 0;
+      font: 600 24px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .summary-label {
+      margin: 6px 0 0;
+      font-weight: 600;
+    }
+
+    .summary-meta {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .skill-list {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .list-head,
+    .skill-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.4fr) 160px 128px 120px 120px 84px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 16px;
+    }
+
+    .list-head {
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .skill-row {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+      color: var(--fg);
+      text-align: left;
+    }
+
+    .skill-row:last-child { border-bottom: 0; }
+
+    .skill-row:hover,
+    .skill-row.selected {
+      background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+    }
+
+    .skill-name {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .skill-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    .skill-subtitle,
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-pill,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 24px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 12px;
+      line-height: 1;
+      background: var(--surface);
+      color: var(--muted);
+    }
+
+    .status-pill.ok {
+      border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+      color: color-mix(in srgb, var(--success) 70%, var(--fg));
+      background: color-mix(in srgb, var(--success) 8%, var(--surface));
+    }
+
+    .status-pill.warn {
+      border-color: color-mix(in srgb, var(--warn) 42%, var(--border));
+      color: color-mix(in srgb, var(--warn) 55%, var(--fg));
+      background: color-mix(in srgb, var(--warn) 10%, var(--surface));
+    }
+
+    .status-pill.danger {
+      border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+      color: color-mix(in srgb, var(--danger) 72%, var(--fg));
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+    }
+
+    .toggle {
+      width: 36px;
+      height: 22px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg);
+      display: inline-flex;
+      align-items: center;
+      padding: 2px;
+    }
+
+    .toggle::before {
+      content: "";
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: transform 160ms ease;
+    }
+
+    .toggle.on {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .toggle.on::before {
+      border-color: #FFFFFF;
+      transform: translateX(14px);
+    }
+
+    .details {
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      padding: 28px 20px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .detail-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      background: var(--surface);
+      display: grid;
+      gap: 14px;
+    }
+
+    .detail-copy {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .detail-stack,
+    .target-stack,
+    .plan-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .meta-row,
+    .target-row,
+    .plan-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--bg);
+      display: grid;
+      gap: 4px;
+    }
+
+    .meta-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .meta-value {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .target-row {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+
+    .target-main {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .target-title {
+      font-weight: 600;
+    }
+
+    .detail-actions {
+      justify-content: flex-start;
+    }
+
+    .empty-state {
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: rgb(17 17 17 / 18%);
+      z-index: 20;
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal {
+      width: min(720px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .modal-copy {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .span-2 { grid-column: span 2; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .error {
+      min-height: 20px;
+      color: var(--danger);
+      font-size: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      color: var(--fg);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+      z-index: 30;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1200px) {
+      .app-shell {
+        grid-template-columns: 220px minmax(0, 1fr);
+      }
+
+      .details {
+        grid-column: 2;
+        border-left: 0;
+        border-top: 1px solid var(--border);
+      }
+
+      .toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 860px) {
+      .app-shell {
+        display: block;
+      }
+
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .main,
+      .details {
+        padding: 20px;
+      }
+
+      .topbar {
+        display: grid;
+      }
+
+      .button-row {
+        justify-content: flex-start;
+      }
+
+      .toolbar,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .list-head {
+        display: none;
+      }
+
+      .skill-row {
+        grid-template-columns: 1fr auto;
+      }
+
+      .skill-row > :nth-child(2),
+      .skill-row > :nth-child(3),
+      .skill-row > :nth-child(4),
+      .skill-row > :nth-child(5) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div>
+          <p class="brand-title">Skills Manager</p>
+          <p class="brand-subtitle">Local-first desktop</p>
+        </div>
+      </div>
+
+      <nav class="nav-group" aria-label="产品区域">
+        <p class="nav-label">工作区</p>
+        <a class="nav-item" href="skills-manager-sources.html"><span>Provider</span><span class="badge">6</span></a>
+        <a class="nav-item" href="skills-manager-repositories.html"><span>Repositories</span><span class="badge">5</span></a>
+        <a class="nav-item active" href="skills-manager-skills.html"><span>Skills</span><span class="badge" id="nav-skill-count">0</span></a>
+        <a class="nav-item" href="skills-manager-targets.html"><span>Targets</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-distribution.html"><span>Distribution</span><span class="badge" id="nav-plan-count">0</span></a>
+      </nav>
+
+      <nav class="nav-group" aria-label="系统区域">
+        <p class="nav-label">系统</p>
+        <a class="nav-item" href="skills-manager-settings.html"><span>Settings</span><span class="badge">8</span></a>
+        <a class="nav-item" href="skills-manager-sync-history.html"><span>Sync history</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-diagnostics.html"><span>Diagnostics</span><span class="badge">5</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p class="footer-title">计划优先</p>
+        <p class="footer-copy">安装前先生成 dry-run 计划，确认目标、commit 和策略后再执行。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Skills</p>
+          <h1>浏览 skill unit 并预览分发计划</h1>
+          <p class="page-copy">每个技能来自仓库扫描结果，可按目标偏好保存安装意图。执行前必须解析到固定 commit，并展示 dry-run 计划。</p>
+        </div>
+        <div class="button-row">
+          <button class="btn" id="copy-skill-id" type="button">复制技能 ID</button>
+          <button class="btn" id="preview-plan" type="button">预览计划</button>
+          <button class="btn primary" id="open-create" type="button">新增技能记录</button>
+        </div>
+      </header>
+
+      <section class="toolbar" aria-label="技能筛选">
+        <div class="field">
+          <label for="search">搜索技能</label>
+          <input id="search" type="search" placeholder="搜索名称、ID、仓库、标签或入口路径">
+        </div>
+        <div class="field">
+          <label for="sort">排序</label>
+          <select id="sort">
+            <option value="priority">按推荐优先级</option>
+            <option value="name">按名称</option>
+            <option value="repository">按仓库</option>
+            <option value="status">按状态</option>
+            <option value="targets">按目标数量</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="repository">仓库</label>
+          <select id="repository">
+            <option value="all">全部仓库</option>
+            <option value="Team skills repository">Team skills repository</option>
+            <option value="Local development skills">Local development skills</option>
+            <option value="Design lab prompts">Design lab prompts</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="status">状态</label>
+          <select id="status">
+            <option value="all">全部状态</option>
+            <option value="ready">ready</option>
+            <option value="review">review</option>
+            <option value="installed">installed</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="summary-grid" aria-label="技能摘要">
+        <article class="summary-card">
+          <p class="summary-value" id="summary-skills">0</p>
+          <p class="summary-label">skill unit</p>
+          <p class="summary-meta">来自当前本地索引</p>
+        </article>
+        <article class="summary-card">
+          <p class="summary-value" id="summary-installed">0</p>
+          <p class="summary-label">已保存目标偏好</p>
+          <p class="summary-meta">Codex / Claude / Gemini / custom</p>
+        </article>
+        <article class="summary-card">
+          <p class="summary-value" id="summary-review">0</p>
+          <p class="summary-label">需要复核</p>
+          <p class="summary-meta">入口或 manifest 有歧义</p>
+        </article>
+        <article class="summary-card">
+          <p class="summary-value">commit</p>
+          <p class="summary-label">默认锁定</p>
+          <p class="summary-meta">安装解析到固定 SHA</p>
+        </article>
+      </section>
+
+      <section class="skill-list" aria-live="polite">
+        <div class="list-head">
+          <span>技能</span>
+          <span>仓库</span>
+          <span>版本</span>
+          <span>状态</span>
+          <span>目标</span>
+          <span>启用</span>
+        </div>
+        <div id="skill-rows"></div>
+      </section>
+    </main>
+
+    <aside class="details" aria-label="技能详情">
+      <section class="detail-card">
+        <h2 id="detail-title">选择一个技能</h2>
+        <p class="detail-copy" id="detail-copy">右侧会显示来源、入口文件、commit 锁定、目标偏好和计划预览。</p>
+        <div class="detail-stack" id="detail-meta"></div>
+        <div class="button-row detail-actions">
+          <button class="btn" id="edit-selected" type="button">编辑技能</button>
+          <button class="btn primary" id="save-targets" type="button">保存目标偏好</button>
+        </div>
+      </section>
+
+      <section class="detail-card">
+        <h3>目标偏好</h3>
+        <p class="detail-copy">这里记录期望关系，不代表已经安装成功。</p>
+        <div class="target-stack" id="target-list"></div>
+      </section>
+
+      <section class="detail-card">
+        <h3>dry-run 计划</h3>
+        <p class="detail-copy">预览计划会把每个目标分类为 install、update、skip 或 conflict。</p>
+        <div class="plan-list" id="plan-list"></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <form class="modal" id="skill-form">
+      <div class="modal-head">
+        <div>
+          <h2 id="modal-title">新增技能记录</h2>
+          <p class="modal-copy" id="modal-copy">新增记录会进入本地索引。安装仍需先预览分发计划。</p>
+        </div>
+        <button class="btn" id="close-modal" type="button" aria-label="关闭">关闭</button>
+      </div>
+
+      <div class="modal-grid">
+        <div class="field">
+          <label for="skill-name">名称</label>
+          <input id="skill-name" name="name" placeholder="例如：Release note writer">
+        </div>
+        <div class="field">
+          <label for="skill-id">Skill ID</label>
+          <input id="skill-id" name="skillId" placeholder="writing/release-notes">
+        </div>
+        <div class="field">
+          <label for="skill-repository">仓库</label>
+          <select id="skill-repository" name="repository">
+            <option>Team skills repository</option>
+            <option>Local development skills</option>
+            <option>Design lab prompts</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="skill-version">版本</label>
+          <input id="skill-version" name="version" placeholder="0.1.0">
+        </div>
+        <div class="field span-2">
+          <label for="skill-entry">入口文件</label>
+          <input id="skill-entry" name="entry" placeholder="skills/writing/release-notes/SKILL.md">
+        </div>
+        <div class="field span-2">
+          <label for="skill-description">说明</label>
+          <textarea id="skill-description" name="description" placeholder="说明这个技能解决什么任务、适合哪些 agent 使用"></textarea>
+        </div>
+      </div>
+      <div class="error" id="form-error" role="alert"></div>
+      <div class="modal-actions">
+        <button class="btn" type="button" id="cancel-modal">取消</button>
+        <button class="btn primary" type="submit">保存技能</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const storageKey = 'skills-manager-skills-wireframe';
+    const targetOptions = [
+      { id: 'codex', name: 'Codex', path: '~/.codex/skills', defaultAction: 'install' },
+      { id: 'claude', name: 'Claude Code', path: '~/.claude/skills', defaultAction: 'update' },
+      { id: 'gemini', name: 'Gemini CLI', path: '~/.gemini/skills', defaultAction: 'skip' },
+      { id: 'custom', name: 'Custom directory', path: 'D:/Agents/shared-skills', defaultAction: 'install' }
+    ];
+
+    const initialSkills = [
+      {
+        id: 'prompt-engineering-basic',
+        skillId: 'prompt-engineering/basic',
+        name: 'Prompt Engineering Basic',
+        repository: 'Team skills repository',
+        version: '0.1.0',
+        commit: '8f2c91a',
+        entry: 'skills/prompt-engineering/basic/SKILL.md',
+        description: '基础提示词工程模式，适合写作、评审和结构化任务拆解。',
+        status: 'installed',
+        enabled: true,
+        priority: 1,
+        tags: ['prompt', 'writing'],
+        targets: ['codex', 'claude']
+      },
+      {
+        id: 'browser-qa',
+        skillId: 'testing/browser-qa',
+        name: 'Browser QA checklist',
+        repository: 'Team skills repository',
+        version: '0.3.2',
+        commit: '8f2c91a',
+        entry: 'skills/testing/browser-qa/SKILL.md',
+        description: '用于本地预览、截图验证、键盘路径和可访问性烟测。',
+        status: 'ready',
+        enabled: true,
+        priority: 2,
+        tags: ['testing', 'browser'],
+        targets: ['codex']
+      },
+      {
+        id: 'wireframe-review',
+        skillId: 'design/wireframe-review',
+        name: 'Wireframe review',
+        repository: 'Design lab prompts',
+        version: '0.2.0',
+        commit: '21ab9d0',
+        entry: 'skills/design/wireframe-review/SKILL.md',
+        description: '对低保真产品界面做层级、密度、术语和流程检查。',
+        status: 'review',
+        enabled: true,
+        priority: 3,
+        tags: ['design', 'review'],
+        targets: ['codex', 'custom']
+      },
+      {
+        id: 'local-refactor-notes',
+        skillId: 'engineering/refactor-notes',
+        name: 'Refactor notes',
+        repository: 'Local development skills',
+        version: 'local',
+        commit: 'local',
+        entry: 'agents/skills/refactor-notes/SKILL.md',
+        description: '整理代码重构前后的行为边界、验证步骤和残留风险。',
+        status: 'ready',
+        enabled: false,
+        priority: 4,
+        tags: ['engineering', 'notes'],
+        targets: ['gemini']
+      }
+    ];
+
+    const labels = {
+      ready: 'ready',
+      review: 'review',
+      installed: 'installed'
+    };
+
+    const els = {
+      rows: document.querySelector('#skill-rows'),
+      search: document.querySelector('#search'),
+      sort: document.querySelector('#sort'),
+      repository: document.querySelector('#repository'),
+      status: document.querySelector('#status'),
+      summarySkills: document.querySelector('#summary-skills'),
+      summaryInstalled: document.querySelector('#summary-installed'),
+      summaryReview: document.querySelector('#summary-review'),
+      navSkillCount: document.querySelector('#nav-skill-count'),
+      navPlanCount: document.querySelector('#nav-plan-count'),
+      detailTitle: document.querySelector('#detail-title'),
+      detailCopy: document.querySelector('#detail-copy'),
+      detailMeta: document.querySelector('#detail-meta'),
+      targetList: document.querySelector('#target-list'),
+      planList: document.querySelector('#plan-list'),
+      copySkillId: document.querySelector('#copy-skill-id'),
+      previewPlan: document.querySelector('#preview-plan'),
+      saveTargets: document.querySelector('#save-targets'),
+      editSelected: document.querySelector('#edit-selected'),
+      openCreate: document.querySelector('#open-create'),
+      modal: document.querySelector('#modal-backdrop'),
+      form: document.querySelector('#skill-form'),
+      modalTitle: document.querySelector('#modal-title'),
+      modalCopy: document.querySelector('#modal-copy'),
+      error: document.querySelector('#form-error'),
+      closeModal: document.querySelector('#close-modal'),
+      cancelModal: document.querySelector('#cancel-modal'),
+      toast: document.querySelector('#toast')
+    };
+
+    let skills = loadSkills();
+    let selectedId = skills[0]?.id || null;
+    let editingId = null;
+    let planRows = [];
+
+    function loadSkills() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey));
+        return Array.isArray(stored) && stored.length ? stored : initialSkills;
+      } catch {
+        return initialSkills;
+      }
+    }
+
+    function persist() {
+      localStorage.setItem(storageKey, JSON.stringify(skills));
+    }
+
+    function getVisibleSkills() {
+      const q = els.search.value.trim().toLowerCase();
+      const repository = els.repository.value;
+      const status = els.status.value;
+      const visible = skills.filter((skill) => {
+        const searchable = [
+          skill.name,
+          skill.skillId,
+          skill.repository,
+          skill.version,
+          skill.commit,
+          skill.entry,
+          skill.description,
+          skill.tags.join(' ')
+        ].join(' ').toLowerCase();
+        return (!q || searchable.includes(q))
+          && (repository === 'all' || skill.repository === repository)
+          && (status === 'all' || skill.status === status);
+      });
+
+      const sorters = {
+        priority: (a, b) => a.priority - b.priority || a.name.localeCompare(b.name),
+        name: (a, b) => a.name.localeCompare(b.name),
+        repository: (a, b) => a.repository.localeCompare(b.repository) || a.name.localeCompare(b.name),
+        status: (a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name),
+        targets: (a, b) => b.targets.length - a.targets.length || a.name.localeCompare(b.name)
+      };
+
+      return visible.sort(sorters[els.sort.value] || sorters.priority);
+    }
+
+    function render() {
+      const visible = getVisibleSkills();
+      renderSummary();
+      renderRows(visible);
+      if (!skills.some((skill) => skill.id === selectedId)) {
+        selectedId = visible[0]?.id || skills[0]?.id || null;
+      }
+      renderDetails();
+    }
+
+    function renderSummary() {
+      const targetPrefs = skills.reduce((sum, skill) => sum + skill.targets.length, 0);
+      const review = skills.filter((skill) => skill.status === 'review').length;
+      els.summarySkills.textContent = String(skills.length);
+      els.summaryInstalled.textContent = String(targetPrefs);
+      els.summaryReview.textContent = String(review);
+      els.navSkillCount.textContent = String(skills.length);
+      els.navPlanCount.textContent = String(planRows.length);
+    }
+
+    function renderRows(visible) {
+      if (!visible.length) {
+        els.rows.innerHTML = '<div class="empty-state">没有匹配的技能。调整搜索、仓库或状态筛选。</div>';
+        return;
+      }
+
+      els.rows.innerHTML = visible.map((skill) => `
+        <div class="skill-row ${skill.id === selectedId ? 'selected' : ''}" role="button" tabindex="0" data-id="${skill.id}">
+          <span class="skill-name">
+            <span class="skill-title">${escapeHtml(skill.name)}</span>
+            <span class="skill-subtitle mono">${escapeHtml(skill.skillId)}</span>
+          </span>
+          <span>${escapeHtml(skill.repository)}</span>
+          <span class="mono">${escapeHtml(skill.version)}</span>
+          <span><span class="status-pill ${statusClass(skill.status)}">${labels[skill.status]}</span></span>
+          <span class="mono">${skill.targets.length}</span>
+          <span><span class="toggle ${skill.enabled ? 'on' : ''}" role="switch" aria-checked="${skill.enabled}" tabindex="0" data-toggle="${skill.id}"></span></span>
+        </div>
+      `).join('');
+    }
+
+    function renderDetails() {
+      const skill = skills.find((item) => item.id === selectedId);
+      const hasSelection = Boolean(skill);
+      els.copySkillId.disabled = !hasSelection;
+      els.previewPlan.disabled = !hasSelection;
+      els.saveTargets.disabled = !hasSelection;
+      els.editSelected.disabled = !hasSelection;
+
+      if (!skill) {
+        els.detailTitle.textContent = '选择一个技能';
+        els.detailCopy.textContent = '右侧会显示来源、入口文件、commit 锁定、目标偏好和计划预览。';
+        els.detailMeta.innerHTML = '';
+        els.targetList.innerHTML = '';
+        els.planList.innerHTML = '';
+        return;
+      }
+
+      els.detailTitle.textContent = skill.name;
+      els.detailCopy.textContent = skill.description;
+      els.detailMeta.innerHTML = [
+        ['Skill ID', skill.skillId],
+        ['仓库', skill.repository],
+        ['入口文件', skill.entry],
+        ['版本', skill.version],
+        ['锁定 commit', skill.commit],
+        ['标签', skill.tags.join(', ')]
+      ].map(([label, value]) => `
+        <div class="meta-row">
+          <span class="meta-label">${label}</span>
+          <p class="meta-value ${label.includes('ID') || label.includes('入口') || label.includes('commit') ? 'mono' : ''}">${escapeHtml(String(value))}</p>
+        </div>
+      `).join('');
+
+      els.targetList.innerHTML = targetOptions.map((target) => `
+        <label class="target-row">
+          <span class="target-main">
+            <span class="target-title">${escapeHtml(target.name)}</span>
+            <span class="muted mono">${escapeHtml(target.path)}</span>
+          </span>
+          <input type="checkbox" data-target="${target.id}" ${skill.targets.includes(target.id) ? 'checked' : ''}>
+        </label>
+      `).join('');
+
+      renderPlan();
+    }
+
+    function renderPlan() {
+      const rows = planRows.filter((row) => row.skillId === selectedId);
+      if (!rows.length) {
+        els.planList.innerHTML = '<div class="empty-state">尚未预览。选择目标后点击“预览计划”。</div>';
+        return;
+      }
+
+      els.planList.innerHTML = rows.map((row) => `
+        <div class="plan-item">
+          <strong>${escapeHtml(row.target)}</strong>
+          <span><span class="status-pill ${planClass(row.action)}">${row.action}</span></span>
+          <span class="muted mono">${escapeHtml(row.commit)} -> ${escapeHtml(row.path)}</span>
+        </div>
+      `).join('');
+    }
+
+    function statusClass(status) {
+      if (status === 'installed') return 'ok';
+      if (status === 'review') return 'warn';
+      return '';
+    }
+
+    function planClass(action) {
+      if (action === 'install' || action === 'update') return 'ok';
+      if (action === 'conflict') return 'danger';
+      return '';
+    }
+
+    function openModal(skill = null) {
+      editingId = skill?.id || null;
+      els.modalTitle.textContent = editingId ? '编辑技能记录' : '新增技能记录';
+      els.modalCopy.textContent = editingId
+        ? '修改本地技能索引信息。已保存的目标偏好不会被清空。'
+        : '新增记录会进入本地索引。安装仍需先预览分发计划。';
+      els.error.textContent = '';
+      els.form.reset();
+      els.form.elements.name.value = skill?.name || '';
+      els.form.elements.skillId.value = skill?.skillId || '';
+      els.form.elements.repository.value = skill?.repository || 'Team skills repository';
+      els.form.elements.version.value = skill?.version || '0.1.0';
+      els.form.elements.entry.value = skill?.entry || '';
+      els.form.elements.description.value = skill?.description || '';
+      els.modal.classList.add('open');
+      els.form.elements.name.focus();
+    }
+
+    function closeModal() {
+      els.modal.classList.remove('open');
+      editingId = null;
+    }
+
+    function saveForm(event) {
+      event.preventDefault();
+      const formData = new FormData(els.form);
+      const name = String(formData.get('name') || '').trim();
+      const skillId = String(formData.get('skillId') || '').trim();
+      const entry = String(formData.get('entry') || '').trim();
+      if (!name || !skillId || !entry) {
+        els.error.textContent = '名称、Skill ID 和入口文件是必填项。';
+        return;
+      }
+
+      const payload = {
+        name,
+        skillId,
+        repository: String(formData.get('repository') || 'Team skills repository'),
+        version: String(formData.get('version') || '0.1.0').trim() || '0.1.0',
+        entry,
+        description: String(formData.get('description') || '').trim() || '本地新增的技能记录，等待下一次扫描补全 manifest 元数据。'
+      };
+
+      if (editingId) {
+        skills = skills.map((skill) => skill.id === editingId ? { ...skill, ...payload } : skill);
+        selectedId = editingId;
+        showToast('技能记录已更新');
+      } else {
+        const next = {
+          id: `skill-${Date.now()}`,
+          ...payload,
+          commit: 'pending',
+          status: 'review',
+          enabled: true,
+          priority: skills.length + 1,
+          tags: inferTags(skillId),
+          targets: []
+        };
+        skills = [next, ...skills];
+        selectedId = next.id;
+        showToast('技能记录已加入本地索引');
+      }
+
+      persist();
+      closeModal();
+      render();
+    }
+
+    function inferTags(skillId) {
+      return skillId.split('/').filter(Boolean).slice(0, 2);
+    }
+
+    function saveTargets() {
+      const skill = skills.find((item) => item.id === selectedId);
+      if (!skill) return;
+      const selectedTargets = Array.from(els.targetList.querySelectorAll('[data-target]:checked')).map((input) => input.dataset.target);
+      skills = skills.map((item) => item.id === skill.id ? { ...item, targets: selectedTargets } : item);
+      persist();
+      render();
+      showToast('目标偏好已保存');
+    }
+
+    function previewPlan() {
+      const skill = skills.find((item) => item.id === selectedId);
+      if (!skill) return;
+      saveTargets();
+      const updated = skills.find((item) => item.id === selectedId);
+      planRows = updated.targets.map((targetId) => {
+        const target = targetOptions.find((item) => item.id === targetId);
+        const action = updated.status === 'review' && targetId === 'custom' ? 'conflict' : target.defaultAction;
+        return {
+          skillId: updated.id,
+          target: target.name,
+          action,
+          commit: updated.commit === 'pending' ? 'resolve on sync' : updated.commit,
+          path: `${target.path}/${updated.skillId}`
+        };
+      });
+      renderSummary();
+      renderPlan();
+      showToast('dry-run 计划已生成');
+    }
+
+    function copySkillId() {
+      const skill = skills.find((item) => item.id === selectedId);
+      if (!skill) return;
+      navigator.clipboard?.writeText(skill.skillId);
+      showToast('技能 ID 已复制');
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => els.toast.classList.remove('show'), 1800);
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    els.rows.addEventListener('click', (event) => {
+      const toggle = event.target.closest('[data-toggle]');
+      if (toggle) {
+        event.stopPropagation();
+        const id = toggle.dataset.toggle;
+        skills = skills.map((skill) => skill.id === id ? { ...skill, enabled: !skill.enabled } : skill);
+        selectedId = id;
+        persist();
+        render();
+        showToast('技能启用状态已更新');
+        return;
+      }
+      const row = event.target.closest('[data-id]');
+      if (row) {
+        selectedId = row.dataset.id;
+        render();
+      }
+    });
+
+    els.rows.addEventListener('keydown', (event) => {
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-toggle]')) {
+        event.preventDefault();
+        event.target.click();
+        return;
+      }
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-id]')) {
+        event.preventDefault();
+        selectedId = event.target.dataset.id;
+        render();
+      }
+    });
+
+    [els.search, els.sort, els.repository, els.status].forEach((control) => {
+      control.addEventListener('input', render);
+      control.addEventListener('change', render);
+    });
+
+    els.openCreate.addEventListener('click', () => openModal());
+    els.editSelected.addEventListener('click', () => {
+      const skill = skills.find((item) => item.id === selectedId);
+      if (skill) openModal(skill);
+    });
+    els.previewPlan.addEventListener('click', previewPlan);
+    els.saveTargets.addEventListener('click', saveTargets);
+    els.copySkillId.addEventListener('click', copySkillId);
+    els.form.addEventListener('submit', saveForm);
+    els.closeModal.addEventListener('click', closeModal);
+    els.cancelModal.addEventListener('click', closeModal);
+    els.modal.addEventListener('click', (event) => {
+      if (event.target === els.modal) closeModal();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && els.modal.classList.contains('open')) closeModal();
+    });
+
+    render();
+  </script>
+</body>
+</html>
+

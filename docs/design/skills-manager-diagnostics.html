@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>技能管理器 - Diagnostics</title>
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --fg: #111111;
+      --muted: #6B6B6B;
+      --border: #E5E5E5;
+      --accent: #2F6FEB;
+      --success: #17A34A;
+      --warn: #EAB308;
+      --danger: #DC2626;
+      --shadow: 0 2px 8px rgb(17 17 17 / 8%);
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 232px minmax(620px, 1fr) 400px;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font: 600 16px/1 var(--font-display);
+    }
+
+    .brand-title { margin: 0; font: 600 16px/1.2 var(--font-display); letter-spacing: -0.01em; }
+    .brand-subtitle { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+    .nav-group { display: grid; gap: 4px; }
+    .nav-label { margin: 0 0 6px; color: var(--muted); font-size: 12px; font-weight: 600; }
+
+    .nav-item {
+      width: 100%;
+      min-height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      text-align: left;
+      text-decoration: none;
+    }
+
+    .nav-item:hover { background: var(--bg); }
+
+    .nav-item.active {
+      background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .badge {
+      min-width: 22px;
+      height: 20px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 7px;
+      color: var(--muted);
+      font: 12px/1 var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      background: var(--surface);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: var(--bg);
+    }
+
+    .footer-title { margin: 0 0 4px; font-weight: 600; }
+    .footer-copy { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .main {
+      min-width: 0;
+      padding: 28px 28px 32px;
+      display: grid;
+      gap: 20px;
+      align-content: start;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font: 600 12px/1.2 var(--font-mono);
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font: 600 32px/1.2 var(--font-display); letter-spacing: -0.01em; }
+    h2, h3 { margin: 0; font: 600 16px/1.2 var(--font-display); letter-spacing: -0.01em; }
+    .page-copy { margin: 8px 0 0; max-width: 760px; color: var(--muted); }
+
+    .button-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .btn {
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn.primary { border-color: var(--accent); background: var(--accent); color: #FFFFFF; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+
+    .summary-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+    }
+
+    .summary-label { margin: 0; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .summary-value { margin: 8px 0 0; font: 600 24px/1.2 var(--font-display); letter-spacing: -0.01em; }
+
+    .toolbar {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 144px 144px 144px;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field { display: grid; gap: 6px; }
+    label { color: var(--muted); font-size: 12px; font-weight: 600; }
+
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--fg);
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    input:focus, select:focus { border-color: var(--accent); }
+
+    .check-list {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .list-head, .check-row {
+      display: grid;
+      grid-template-columns: 1fr 108px 112px 104px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .list-head {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .check-row {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      padding: 14px;
+      text-align: left;
+    }
+
+    .check-row:last-child { border-bottom: 0; }
+    .check-row:hover, .check-row[aria-selected="true"] { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+
+    .check-name { display: grid; gap: 3px; }
+    .check-title { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+    .check-title span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .check-meta { color: var(--muted); font: 12px/1.3 var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .status-pill {
+      width: max-content;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: var(--bg);
+      color: var(--muted);
+      font: 12px/1.2 var(--font-mono);
+    }
+
+    .status-pill.ok { border-color: color-mix(in srgb, var(--success) 28%, var(--border)); background: color-mix(in srgb, var(--success) 8%, var(--surface)); color: var(--success); }
+    .status-pill.warn { border-color: color-mix(in srgb, var(--warn) 38%, var(--border)); background: color-mix(in srgb, var(--warn) 12%, var(--surface)); color: #8A6200; }
+    .status-pill.danger { border-color: color-mix(in srgb, var(--danger) 28%, var(--border)); background: color-mix(in srgb, var(--danger) 8%, var(--surface)); color: var(--danger); }
+    .empty-state { padding: 22px; color: var(--muted); text-align: center; }
+
+    .detail {
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      padding: 28px 24px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .detail-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .detail-copy { margin: 6px 0 0; color: var(--muted); }
+    .meta-row { display: grid; gap: 4px; }
+    .meta-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .meta-value { margin: 0; overflow-wrap: anywhere; }
+    .mono { font-family: var(--font-mono); font-size: 12px; }
+
+    .action-list { display: grid; gap: 8px; }
+
+    .action-row {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .action-row p { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .log {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      padding: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1180px) {
+      .app-shell { grid-template-columns: 220px minmax(0, 1fr); }
+      .detail { grid-column: 2; border-top: 1px solid var(--border); border-left: 0; }
+    }
+
+    @media (max-width: 860px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar, .detail { display: none; }
+      .toolbar, .summary-grid, .list-head, .check-row { grid-template-columns: 1fr; }
+      .main { padding: 22px 16px; }
+      .topbar { display: grid; }
+      .button-row { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div>
+          <p class="brand-title">Skills Manager</p>
+          <p class="brand-subtitle">Local-first desktop</p>
+        </div>
+      </div>
+
+      <nav class="nav-group" aria-label="产品区域">
+        <p class="nav-label">工作区</p>
+        <a class="nav-item" href="skills-manager-sources.html"><span>Provider</span><span class="badge">6</span></a>
+        <a class="nav-item" href="skills-manager-repositories.html"><span>Repositories</span><span class="badge">5</span></a>
+        <a class="nav-item" href="skills-manager-skills.html"><span>Skills</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-targets.html"><span>Targets</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-distribution.html"><span>Distribution</span><span class="badge">3</span></a>
+      </nav>
+
+      <nav class="nav-group" aria-label="系统区域">
+        <p class="nav-label">系统</p>
+        <a class="nav-item" href="skills-manager-settings.html"><span>Settings</span><span class="badge">8</span></a>
+        <a class="nav-item" href="skills-manager-sync-history.html"><span>Sync history</span><span class="badge">4</span></a>
+        <a class="nav-item active" href="skills-manager-diagnostics.html"><span>Diagnostics</span><span class="badge" id="nav-issue-count">0</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p class="footer-title">本地边界</p>
+        <p class="footer-copy">诊断只检查系统 Git、SQLite、路径权限和扫描规则；认证仍委托给系统环境。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Diagnostics</p>
+          <h1>检查本地引擎和执行边界</h1>
+          <p class="page-copy">Diagnostics 把可操作问题集中到一处：Git 可用性、认证委托、SQLite 状态、目标路径权限、扫描规则和计划执行安全。</p>
+        </div>
+        <div class="button-row">
+          <button class="btn" type="button" id="copy-report">复制报告</button>
+          <button class="btn primary" type="button" id="run-all">运行全部检查</button>
+        </div>
+      </header>
+
+      <section class="summary-grid" aria-label="诊断摘要">
+        <div class="summary-card"><p class="summary-label">检查项</p><p class="summary-value" id="summary-total">0</p></div>
+        <div class="summary-card"><p class="summary-label">通过</p><p class="summary-value" id="summary-pass">0</p></div>
+        <div class="summary-card"><p class="summary-label">需复核</p><p class="summary-value" id="summary-review">0</p></div>
+        <div class="summary-card"><p class="summary-label">阻塞</p><p class="summary-value" id="summary-blocked">0</p></div>
+      </section>
+
+      <section class="toolbar" aria-label="筛选诊断">
+        <div class="field">
+          <label for="search">搜索</label>
+          <input id="search" type="search" placeholder="检查项、模块、路径、建议或日志">
+        </div>
+        <div class="field">
+          <label for="area">区域</label>
+          <select id="area">
+            <option value="all">全部</option>
+            <option value="runtime">runtime</option>
+            <option value="storage">storage</option>
+            <option value="sources">sources</option>
+            <option value="targets">targets</option>
+            <option value="planning">planning</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="status">状态</label>
+          <select id="status">
+            <option value="all">全部</option>
+            <option value="pass">pass</option>
+            <option value="review">review</option>
+            <option value="blocked">blocked</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sort">排序</label>
+          <select id="sort">
+            <option value="severity">按严重度</option>
+            <option value="area">按区域</option>
+            <option value="name">按名称</option>
+            <option value="updated">按最近检查</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="check-list" aria-live="polite">
+        <div class="list-head" aria-hidden="true"><span>检查项</span><span>区域</span><span>状态</span><span>最近检查</span></div>
+        <div id="check-rows"></div>
+      </section>
+    </main>
+
+    <aside class="detail" aria-label="诊断详情">
+      <section>
+        <p class="eyebrow">Selected check</p>
+        <h2 id="detail-title">选择一条诊断</h2>
+        <p class="detail-copy" id="detail-copy">右侧会显示检查目的、系统边界、建议动作和最近日志。</p>
+      </section>
+
+      <div class="button-row">
+        <button class="btn" type="button" id="mark-reviewed">标记已复核</button>
+        <button class="btn primary" type="button" id="run-selected">运行所选检查</button>
+      </div>
+
+      <section class="detail-card"><h3>诊断元数据</h3><div id="detail-meta"></div></section>
+      <section class="detail-card"><h3>建议动作</h3><div class="action-list" id="action-list"></div></section>
+      <section class="detail-card"><h3>最近日志</h3><div class="log" id="diagnostic-log">尚未选择诊断。</div></section>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const storageKey = 'skills-manager-diagnostics-wireframe';
+    const defaultChecks = [
+      {
+        id: 'runtime-git',
+        name: 'System Git executable',
+        area: 'runtime',
+        status: 'pass',
+        severity: 1,
+        updated: '14:24',
+        purpose: '确认后台任务能调用系统 git，而不是在 renderer 里直接执行文件系统操作。',
+        subject: 'git --version',
+        log: 'git found\nversion probe completed\nmain-process adapter ready',
+        actions: ['保持 Git 调用在 main/core 层。', '同步失败时把 stderr 写入 sync_runs。']
+      },
+      {
+        id: 'sources-auth',
+        name: 'Git credential delegation',
+        area: 'sources',
+        status: 'review',
+        severity: 2,
+        updated: '13:51',
+        purpose: '确认应用不存 token，只委托 SSH key、credential helper 或系统 keychain。',
+        subject: 'GitHub personal / GitLab work',
+        log: 'GitHub source authenticated\nGitLab source returned auth failure\nno token stored in app settings',
+        actions: ['让用户在系统 Git 环境里修复 GitLab 凭据。', '在 Sources 页保留认证失败诊断入口。']
+      },
+      {
+        id: 'storage-sqlite',
+        name: 'SQLite schema and migrations',
+        area: 'storage',
+        status: 'pass',
+        severity: 1,
+        updated: '14:18',
+        purpose: '确认 Drizzle schema 覆盖 sources、repositories、skill_units、distribution_plans 和 sync_runs。',
+        subject: 'local app database',
+        log: 'schema probe completed\nrequired tables present\nmigration cursor current',
+        actions: ['继续把 schema 作为数据库结构的 TypeScript 单一事实来源。']
+      },
+      {
+        id: 'targets-paths',
+        name: 'Target write boundaries',
+        area: 'targets',
+        status: 'blocked',
+        severity: 3,
+        updated: '13:05',
+        purpose: '确认目标目录可写，并且写入动作只能由 Distribution 的 dry-run 计划触发。',
+        subject: 'Design team sandbox',
+        log: 'path probe failed\nD:/agent-skills/design-sandbox not found\nwrite probe skipped',
+        actions: ['在 Targets 页修正或禁用 Design team sandbox。', '阻止关联计划执行，直到路径通过校验。']
+      },
+      {
+        id: 'planning-commit-lock',
+        name: 'Commit lock enforcement',
+        area: 'planning',
+        status: 'review',
+        severity: 2,
+        updated: '12:46',
+        purpose: '确认安装、更新和移除计划都能解析到固定 commit_sha，避免不可复现分发。',
+        subject: 'distribution plan resolver',
+        log: '2 plans locked\n1 draft has unresolved commit\nexecution guard active',
+        actions: ['在执行前要求确认 commit 锁定。', '把 unresolved 草稿留在 Distribution 中复核。']
+      },
+      {
+        id: 'sources-scan-rules',
+        name: 'Fallback scan conventions',
+        area: 'sources',
+        status: 'pass',
+        severity: 1,
+        updated: '12:22',
+        purpose: '确认无 manifest 仓库会按常见 SKILL.md 布局兜底扫描，并把歧义结果标记为 review。',
+        subject: '**/SKILL.md rules',
+        log: 'scan rules loaded\nmanifest priority enabled\nambiguous fallback emits review flag',
+        actions: ['在 Sync history 中保留 fallback 运行记录。']
+      }
+    ];
+
+    const els = {
+      rows: document.querySelector('#check-rows'),
+      search: document.querySelector('#search'),
+      area: document.querySelector('#area'),
+      status: document.querySelector('#status'),
+      sort: document.querySelector('#sort'),
+      summaryTotal: document.querySelector('#summary-total'),
+      summaryPass: document.querySelector('#summary-pass'),
+      summaryReview: document.querySelector('#summary-review'),
+      summaryBlocked: document.querySelector('#summary-blocked'),
+      navIssueCount: document.querySelector('#nav-issue-count'),
+      detailTitle: document.querySelector('#detail-title'),
+      detailCopy: document.querySelector('#detail-copy'),
+      detailMeta: document.querySelector('#detail-meta'),
+      actionList: document.querySelector('#action-list'),
+      diagnosticLog: document.querySelector('#diagnostic-log'),
+      copyReport: document.querySelector('#copy-report'),
+      runAll: document.querySelector('#run-all'),
+      markReviewed: document.querySelector('#mark-reviewed'),
+      runSelected: document.querySelector('#run-selected'),
+      toast: document.querySelector('#toast')
+    };
+
+    let checks = loadChecks();
+    let selectedId = checks[0]?.id || null;
+
+    function loadChecks() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey));
+        return Array.isArray(stored) && stored.length ? stored : defaultChecks;
+      } catch {
+        return defaultChecks;
+      }
+    }
+
+    function persist() { localStorage.setItem(storageKey, JSON.stringify(checks)); }
+
+    function getVisibleChecks() {
+      const query = els.search.value.trim().toLowerCase();
+      const area = els.area.value;
+      const status = els.status.value;
+      const visible = checks.filter((check) => {
+        const haystack = [check.name, check.area, check.status, check.purpose, check.subject, check.log, check.actions.join(' ')].join(' ').toLowerCase();
+        return (!query || haystack.includes(query)) && (area === 'all' || check.area === area) && (status === 'all' || check.status === status);
+      });
+      return visible.sort((a, b) => {
+        if (els.sort.value === 'area') return a.area.localeCompare(b.area);
+        if (els.sort.value === 'name') return a.name.localeCompare(b.name);
+        if (els.sort.value === 'updated') return b.updated.localeCompare(a.updated);
+        return b.severity - a.severity || a.name.localeCompare(b.name);
+      });
+    }
+
+    function statusClass(status) {
+      if (status === 'pass') return 'ok';
+      if (status === 'review') return 'warn';
+      if (status === 'blocked') return 'danger';
+      return '';
+    }
+
+    function renderRows() {
+      const visible = getVisibleChecks();
+      els.rows.innerHTML = visible.length ? visible.map((check) => `
+        <button class="check-row" type="button" data-id="${check.id}" aria-selected="${check.id === selectedId}">
+          <span class="check-name">
+            <span class="check-title"><span>${check.name}</span><span class="status-pill">S${check.severity}</span></span>
+            <span class="check-meta">${check.subject}</span>
+          </span>
+          <span class="mono">${check.area}</span>
+          <span class="status-pill ${statusClass(check.status)}">${check.status}</span>
+          <span class="mono">${check.updated}</span>
+        </button>
+      `).join('') : '<div class="empty-state">没有匹配的诊断项。</div>';
+
+      document.querySelectorAll('.check-row').forEach((row) => {
+        row.addEventListener('click', () => {
+          selectedId = row.dataset.id;
+          render();
+        });
+      });
+    }
+
+    function renderSummary() {
+      els.summaryTotal.textContent = checks.length;
+      els.summaryPass.textContent = checks.filter((check) => check.status === 'pass').length;
+      els.summaryReview.textContent = checks.filter((check) => check.status === 'review').length;
+      els.summaryBlocked.textContent = checks.filter((check) => check.status === 'blocked').length;
+      els.navIssueCount.textContent = checks.filter((check) => check.status !== 'pass').length;
+    }
+
+    function renderDetail() {
+      const check = checks.find((item) => item.id === selectedId) || checks[0];
+      if (!check) return;
+      selectedId = check.id;
+      els.detailTitle.textContent = check.name;
+      els.detailCopy.textContent = check.purpose;
+      els.detailMeta.innerHTML = [
+        ['区域', check.area],
+        ['状态', check.status],
+        ['严重度', `S${check.severity}`],
+        ['对象', check.subject],
+        ['最近检查', check.updated]
+      ].map(([label, value]) => `<div class="meta-row"><span class="meta-label">${label}</span><p class="meta-value mono">${value}</p></div>`).join('');
+      els.actionList.innerHTML = check.actions.map((action) => `
+        <div class="action-row"><strong>${action}</strong><p>在对应产品页完成后重新运行该检查。</p></div>
+      `).join('');
+      els.diagnosticLog.textContent = check.log;
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => els.toast.classList.remove('show'), 1800);
+    }
+
+    function copyReport() {
+      const report = checks.map((check) => `${check.name}: ${check.status} (${check.area})\n${check.log}`).join('\n\n');
+      navigator.clipboard?.writeText(report);
+      showToast('诊断报告已复制');
+    }
+
+    function runSelected() {
+      const check = checks.find((item) => item.id === selectedId);
+      if (!check) return;
+      check.updated = 'just now';
+      check.log = `${check.log}\nmanual probe queued from Diagnostics`;
+      persist();
+      render();
+      showToast('已运行所选检查');
+    }
+
+    function runAll() {
+      checks = checks.map((check) => ({ ...check, updated: 'just now', log: `${check.log}\nbatch probe queued` }));
+      persist();
+      render();
+      showToast('全部检查已加入队列');
+    }
+
+    function markReviewed() {
+      const check = checks.find((item) => item.id === selectedId);
+      if (!check || check.status === 'pass') return;
+      check.status = 'review';
+      check.updated = 'reviewed';
+      persist();
+      render();
+      showToast('已标记为复核中');
+    }
+
+    function render() {
+      renderSummary();
+      renderRows();
+      renderDetail();
+    }
+
+    [els.search, els.area, els.status, els.sort].forEach((control) => control.addEventListener('input', render));
+    els.copyReport.addEventListener('click', copyReport);
+    els.runAll.addEventListener('click', runAll);
+    els.runSelected.addEventListener('click', runSelected);
+    els.markReviewed.addEventListener('click', markReviewed);
+    render();
+  </script>
+</body>
+</html>
+

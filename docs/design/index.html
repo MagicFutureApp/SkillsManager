@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>技能管理器 - 原型入口</title>
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --fg: #111111;
+      --muted: #6B6B6B;
+      --border: #E5E5E5;
+      --accent: #2F6FEB;
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+      font: 14px/1.5 var(--font-body);
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 56px 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font: 600 12px/1.2 var(--font-mono);
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font: 600 48px/1.12 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .intro {
+      margin: 14px 0 0;
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .card {
+      min-height: 220px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 20px;
+      color: inherit;
+      text-decoration: none;
+      display: grid;
+      align-content: space-between;
+      transition: border-color 160ms ease, transform 160ms ease;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .card h2 {
+      margin: 0;
+      font: 600 24px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      margin: 10px 0 0;
+      color: var(--muted);
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font: 12px/1.2 var(--font-mono);
+    }
+
+    .active {
+      color: var(--accent);
+    }
+
+    @media (max-width: 840px) {
+      .shell {
+        width: min(100% - 32px, 680px);
+        padding: 36px 0;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <p class="eyebrow">Skills Manager</p>
+    <h1>桌面端技能管理器线框入口</h1>
+    <p class="intro">八个独立屏幕已连接：Provider、仓库、技能、目标、分发、设置、同步历史和诊断共同覆盖本地优先的技能管理核心循环。</p>
+
+    <section class="grid" aria-label="原型页面">
+      <a class="card" href="skills-manager-sources.html">
+        <span>
+          <h2>Provider</h2>
+          <p>管理 provider、认证委托、默认发现规则和连接诊断。</p>
+        </span>
+        <span class="meta"><span class="active">new</span><span>6 providers</span></span>
+      </a>
+
+      <a class="card" href="skills-manager-repositories.html">
+        <span>
+          <h2>Repositories</h2>
+          <p>管理 Git / market 来源的本地缓存、同步和扫描摘要。</p>
+        </span>
+        <span class="meta"><span>workspace</span><span>5 repos</span></span>
+      </a>
+
+      <a class="card" href="skills-manager-skills.html">
+        <span>
+          <h2>Skills</h2>
+          <p>浏览 skill unit，保存 agent 目标偏好并生成 dry-run 计划。</p>
+        </span>
+        <span class="meta"><span>workspace</span><span>4 skill units</span></span>
+      </a>
+
+      <a class="card" href="skills-manager-targets.html">
+        <span>
+          <h2>Targets</h2>
+          <p>管理 Codex、Claude Code、Gemini CLI 和自定义目录的安装边界。</p>
+        </span>
+        <span class="meta"><span class="active">new</span><span>4 targets</span></span>
+      </a>
+
+      <a class="card" href="skills-manager-distribution.html">
+        <span>
+          <h2>Distribution</h2>
+          <p>预览 dry-run 计划，确认 commit 锁定、冲突和目标路径后执行。</p>
+        </span>
+        <span class="meta"><span class="active">new</span><span>3 plans</span></span>
+      </a>
+
+      <a class="card" href="skills-manager-settings.html">
+        <span>
+          <h2>Settings</h2>
+          <p>配置目标路径、扫描策略和安全执行边界。</p>
+        </span>
+        <span class="meta"><span>system</span><span>8 settings</span></span>
+      </a>
+
+      <a class="card" href="skills-manager-sync-history.html">
+        <span>
+          <h2>Sync History</h2>
+          <p>追溯手动同步运行、commit 变化、扫描步骤和失败原因。</p>
+        </span>
+        <span class="meta"><span class="active">new</span><span>4 runs</span></span>
+      </a>
+
+      <a class="card" href="skills-manager-diagnostics.html">
+        <span>
+          <h2>Diagnostics</h2>
+          <p>检查 Git、SQLite、来源认证、目标路径和计划执行边界。</p>
+        </span>
+        <span class="meta"><span class="active">new</span><span>5 checks</span></span>
+      </a>
+    </section>
+  </main>
+</body>
+</html>
+

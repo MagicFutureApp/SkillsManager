@@ -1,0 +1,1348 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>技能管理器 - Repositories</title>
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --fg: #111111;
+      --muted: #6B6B6B;
+      --border: #E5E5E5;
+      --accent: #2F6FEB;
+      --success: #17A34A;
+      --warn: #EAB308;
+      --danger: #DC2626;
+      --shadow: 0 2px 8px rgb(17 17 17 / 8%);
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 232px minmax(520px, 1fr) 380px;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 40px;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font: 600 16px/1 var(--font-display);
+    }
+
+    .brand-title {
+      margin: 0;
+      font: 600 16px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 4px;
+    }
+
+    .nav-label {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font: 600 12px/1.2 var(--font-body);
+    }
+
+    .nav-item {
+      width: 100%;
+      min-height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      text-align: left;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background: var(--bg);
+    }
+
+    .nav-item.active {
+      background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .badge {
+      min-width: 22px;
+      height: 20px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 7px;
+      color: var(--muted);
+      font: 12px/1 var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      background: var(--surface);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: var(--bg);
+    }
+
+    .footer-title {
+      margin: 0 0 4px;
+      font-weight: 600;
+    }
+
+    .footer-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 28px 28px 32px;
+      display: grid;
+      gap: 20px;
+      align-content: start;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font: 600 12px/1.2 var(--font-mono);
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font: 600 32px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .page-copy {
+      margin: 8px 0 0;
+      max-width: 720px;
+      color: var(--muted);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--fg);
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--bg);
+    }
+
+    .btn.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.52;
+    }
+
+    .toolbar {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) 160px 150px 150px;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--fg);
+      padding: 10px 12px;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 0;
+      border-color: var(--accent);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .summary-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 16px;
+      min-width: 0;
+    }
+
+    .summary-value {
+      margin: 0;
+      font: 600 24px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .summary-label {
+      margin: 6px 0 0;
+      font-weight: 600;
+    }
+
+    .summary-meta {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font: 12px/1.35 var(--font-mono);
+      overflow-wrap: anywhere;
+    }
+
+    .repo-list {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .list-head,
+    .repo-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.4fr) 118px 112px 110px 96px 68px;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 16px;
+    }
+
+    .list-head {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .repo-row {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .repo-row:last-child {
+      border-bottom: 0;
+    }
+
+    .repo-row:hover,
+    .repo-row.selected {
+      background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+    }
+
+    .repo-row.selected {
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .repo-name {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .repo-title {
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .repo-subtitle {
+      color: var(--muted);
+      font: 12px/1.35 var(--font-mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-pill {
+      width: fit-content;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 8px;
+      font: 12px/1.2 var(--font-mono);
+      color: var(--muted);
+      background: var(--surface);
+    }
+
+    .status-pill.ok {
+      border-color: color-mix(in srgb, var(--success) 32%, var(--border));
+      color: var(--success);
+      background: color-mix(in srgb, var(--success) 8%, var(--surface));
+    }
+
+    .status-pill.warn {
+      border-color: color-mix(in srgb, var(--warn) 42%, var(--border));
+      color: color-mix(in srgb, var(--warn) 72%, var(--fg));
+      background: color-mix(in srgb, var(--warn) 12%, var(--surface));
+    }
+
+    .status-pill.danger {
+      border-color: color-mix(in srgb, var(--danger) 34%, var(--border));
+      color: var(--danger);
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+    }
+
+    .toggle {
+      width: 46px;
+      height: 26px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg);
+      padding: 2px;
+      display: inline-flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    .toggle::after {
+      content: "";
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .toggle.on {
+      justify-content: flex-end;
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .toggle.on::after {
+      border-color: #FFFFFF;
+      background: #FFFFFF;
+    }
+
+    .empty-state {
+      padding: 34px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .details {
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      padding: 28px 20px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .detail-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      background: var(--surface);
+    }
+
+    .detail-card h2,
+    .detail-card h3 {
+      margin: 0;
+      font: 600 20px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .detail-card h3 {
+      font-size: 16px;
+    }
+
+    .detail-copy {
+      margin: 8px 0 0;
+      color: var(--muted);
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .meta-row {
+      display: grid;
+      gap: 4px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .meta-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .meta-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .meta-value {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .scan-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .scan-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--bg);
+    }
+
+    .scan-item strong {
+      font-size: 13px;
+    }
+
+    .scan-item span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .detail-actions {
+      justify-content: flex-start;
+      margin-top: 16px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: rgb(17 17 17 / 28%);
+      z-index: 10;
+    }
+
+    .modal-backdrop.open {
+      display: grid;
+    }
+
+    .modal {
+      width: min(680px, 100%);
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .modal h2 {
+      margin: 0;
+      font: 600 24px/1.2 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+
+    .modal-copy {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .span-2 {
+      grid-column: 1 / -1;
+    }
+
+    .error {
+      min-height: 20px;
+      margin-top: 12px;
+      color: var(--danger);
+      font-size: 13px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(12px);
+      min-width: 280px;
+      max-width: calc(100vw - 32px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--fg);
+      box-shadow: var(--shadow);
+      padding: 12px 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 1180px) {
+      .app-shell {
+        grid-template-columns: 220px minmax(0, 1fr);
+      }
+
+      .details {
+        display: none;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr 160px;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .main {
+        padding: 20px;
+      }
+
+      .topbar {
+        display: grid;
+      }
+
+      .button-row {
+        justify-content: flex-start;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .list-head {
+        display: none;
+      }
+
+      .repo-row {
+        grid-template-columns: 1fr auto;
+      }
+
+      .repo-row > :nth-child(2),
+      .repo-row > :nth-child(3),
+      .repo-row > :nth-child(4),
+      .repo-row > :nth-child(5) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div>
+          <p class="brand-title">Skills Manager</p>
+          <p class="brand-subtitle">Local-first desktop</p>
+        </div>
+      </div>
+
+      <nav class="nav-group" aria-label="产品区域">
+        <p class="nav-label">工作区</p>
+        <a class="nav-item" href="skills-manager-sources.html"><span>Provider</span><span class="badge">6</span></a>
+        <a class="nav-item active" href="skills-manager-repositories.html"><span>Repositories</span><span class="badge" id="nav-repo-count">0</span></a>
+        <a class="nav-item" href="skills-manager-skills.html"><span>Skills</span><span class="badge" id="nav-skill-count">0</span></a>
+        <a class="nav-item" href="skills-manager-targets.html"><span>Targets</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-distribution.html"><span>Distribution</span><span class="badge">3</span></a>
+      </nav>
+
+      <nav class="nav-group" aria-label="系统区域">
+        <p class="nav-label">系统</p>
+        <a class="nav-item" href="skills-manager-settings.html"><span>Settings</span><span class="badge">8</span></a>
+        <a class="nav-item" href="skills-manager-sync-history.html"><span>Sync history</span><span class="badge">4</span></a>
+        <a class="nav-item" href="skills-manager-diagnostics.html"><span>Diagnostics</span><span class="badge">5</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p class="footer-title">同步边界</p>
+        <p class="footer-copy">使用系统 Git 和本机凭据。应用记录同步结果，不保存 provider token。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Repositories</p>
+          <h1>管理仓库缓存与扫描结果</h1>
+          <p class="page-copy">注册 Git 或市场来源后，系统在本机缓存仓库、记录分支与 commit，并把扫描到的 skill unit 写入本地索引。</p>
+        </div>
+        <div class="button-row">
+          <button class="btn" id="sync-selected" type="button">同步选中</button>
+          <button class="btn" id="force-rescan" type="button">强制重新扫描</button>
+          <button class="btn primary" id="open-create" type="button">新增仓库</button>
+        </div>
+      </header>
+
+      <section class="toolbar" aria-label="仓库筛选">
+        <div class="field">
+          <label for="search">搜索仓库</label>
+          <input id="search" type="search" placeholder="搜索名称、URL、缓存路径或入口模式">
+        </div>
+        <div class="field">
+          <label for="sort">排序</label>
+          <select id="sort">
+            <option value="priority">按同步优先级</option>
+            <option value="name">按名称</option>
+            <option value="provider">按来源类型</option>
+            <option value="status">按扫描状态</option>
+            <option value="skills">按技能数量</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="provider">来源类型</label>
+          <select id="provider">
+            <option value="all">全部来源</option>
+            <option value="GitHub">GitHub</option>
+            <option value="GitLab">GitLab</option>
+            <option value="Gitea">Gitea</option>
+            <option value="Bitbucket">Bitbucket</option>
+            <option value="Local Git">Local Git</option>
+            <option value="skills.sh">skills.sh</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="status">扫描状态</label>
+          <select id="status">
+            <option value="all">全部状态</option>
+            <option value="ready">ready</option>
+            <option value="review">review</option>
+            <option value="failed">failed</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="summary-grid" aria-label="仓库摘要">
+        <article class="summary-card">
+          <p class="summary-value" id="summary-repos">0</p>
+          <p class="summary-label">已注册仓库</p>
+          <p class="summary-meta">enabled / total</p>
+        </article>
+        <article class="summary-card">
+          <p class="summary-value" id="summary-skills">0</p>
+          <p class="summary-label">已发现 skill unit</p>
+          <p class="summary-meta">来自当前仓库列表</p>
+        </article>
+        <article class="summary-card">
+          <p class="summary-value" id="summary-review">0</p>
+          <p class="summary-label">需要复核</p>
+          <p class="summary-meta">scan warnings / auth failures</p>
+        </article>
+        <article class="summary-card">
+          <p class="summary-value">manual</p>
+          <p class="summary-label">同步模式</p>
+          <p class="summary-meta">无后台轮询</p>
+        </article>
+      </section>
+
+      <section class="repo-list" aria-live="polite">
+        <div class="list-head">
+          <span>仓库</span>
+          <span>来源</span>
+          <span>分支</span>
+          <span>扫描</span>
+          <span>Skills</span>
+          <span>启用</span>
+        </div>
+        <div id="repo-rows"></div>
+      </section>
+    </main>
+
+    <aside class="details" aria-label="仓库详情">
+      <section class="detail-card">
+        <h2 id="detail-title">选择一个仓库</h2>
+        <p class="detail-copy" id="detail-copy">右侧会显示本地缓存、最后扫描 commit、发现模式和同步影响。</p>
+        <div class="detail-stack" id="detail-meta"></div>
+        <div class="button-row detail-actions">
+          <button class="btn" id="edit-selected" type="button">编辑仓库</button>
+          <button class="btn" id="copy-cache" type="button">复制缓存路径</button>
+        </div>
+      </section>
+
+      <section class="detail-card">
+        <h3>最近扫描摘要</h3>
+        <p class="detail-copy">同步完成后，这里展示新增、移除、元数据变更和入口路径变更。</p>
+        <div class="scan-list" id="scan-list"></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <form class="modal" id="repo-form">
+      <div class="modal-head">
+        <div>
+          <h2 id="modal-title">新增仓库</h2>
+          <p class="modal-copy" id="modal-copy">保存后只进入本地仓库注册表。同步或扫描需要用户手动触发。</p>
+        </div>
+        <button class="btn" id="close-modal" type="button" aria-label="关闭">关闭</button>
+      </div>
+
+      <div class="modal-grid">
+        <div class="field">
+          <label for="repo-name">名称</label>
+          <input id="repo-name" name="name" placeholder="例如：Team skills repository">
+        </div>
+        <div class="field">
+          <label for="repo-provider">来源类型</label>
+          <select id="repo-provider" name="provider">
+            <option>GitHub</option>
+            <option>GitLab</option>
+            <option>Gitea</option>
+            <option>Bitbucket</option>
+            <option>Local Git</option>
+            <option>skills.sh</option>
+          </select>
+        </div>
+        <div class="field span-2">
+          <label for="repo-url">URL 或本机路径</label>
+          <input id="repo-url" name="url" placeholder="git@github.com:org/skills.git 或 D:/workspace/local-skills">
+        </div>
+        <div class="field">
+          <label for="repo-branch">分支</label>
+          <input id="repo-branch" name="branch" placeholder="main">
+        </div>
+        <div class="field">
+          <label for="repo-cache">缓存目录</label>
+          <input id="repo-cache" name="cachePath" placeholder="~/.skills-manager/cache/org-skills">
+        </div>
+        <div class="field span-2">
+          <label for="repo-patterns">发现入口</label>
+          <input id="repo-patterns" name="patterns" placeholder="skills/*/SKILL.md, .codex/skills/*/SKILL.md">
+        </div>
+        <div class="field span-2">
+          <label for="repo-note">备注</label>
+          <textarea id="repo-note" name="note" placeholder="说明这个仓库的维护者、扫描限制或已知风险"></textarea>
+        </div>
+      </div>
+      <div class="error" id="form-error" role="alert"></div>
+      <div class="modal-actions">
+        <button class="btn" type="button" id="cancel-modal">取消</button>
+        <button class="btn primary" type="submit">保存仓库</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const storageKey = 'skills-manager-repositories-wireframe';
+    const initialRepositories = [
+      {
+        id: 'team-skills',
+        name: 'Team skills repository',
+        provider: 'GitHub',
+        url: 'git@github.com:team/skills.git',
+        branch: 'main',
+        cachePath: '~/.skills-manager/cache/team-skills',
+        patterns: 'skills/*/SKILL.md, .codex/skills/*/SKILL.md',
+        status: 'ready',
+        enabled: true,
+        priority: 1,
+        skillUnits: 12,
+        lastCommit: '8f2c91a',
+        lastScan: '未执行',
+        note: '团队共享技能来源，使用系统 Git 凭据读取。',
+        scan: { added: 0, removed: 0, changed: 0, warnings: 0 }
+      },
+      {
+        id: 'local-dev-skills',
+        name: 'Local development skills',
+        provider: 'Local Git',
+        url: 'D:/workspace/local-skills',
+        branch: 'main',
+        cachePath: 'D:/workspace/local-skills',
+        patterns: 'agents/skills/*/SKILL.md, skills/*/SKILL.md',
+        status: 'ready',
+        enabled: true,
+        priority: 2,
+        skillUnits: 5,
+        lastCommit: 'local',
+        lastScan: '未执行',
+        note: '开发中的本机仓库，不需要 clone。',
+        scan: { added: 0, removed: 0, changed: 0, warnings: 0 }
+      },
+      {
+        id: 'design-lab',
+        name: 'Design lab prompts',
+        provider: 'GitLab',
+        url: 'git@gitlab.com:design/lab-skills.git',
+        branch: 'stable',
+        cachePath: '~/.skills-manager/cache/design-lab',
+        patterns: 'skills/*/SKILL.md',
+        status: 'review',
+        enabled: true,
+        priority: 3,
+        skillUnits: 7,
+        lastCommit: '21ab9d0',
+        lastScan: '未执行',
+        note: '部分目录没有 manifest，需要按 SKILL.md 路径回退发现。',
+        scan: { added: 2, removed: 0, changed: 1, warnings: 1 }
+      },
+      {
+        id: 'market-index',
+        name: 'skills.sh market index',
+        provider: 'skills.sh',
+        url: 'https://skills.sh',
+        branch: 'index',
+        cachePath: '~/.skills-manager/cache/skills-market',
+        patterns: 'market-index.json',
+        status: 'review',
+        enabled: false,
+        priority: 6,
+        skillUnits: 0,
+        lastCommit: 'remote',
+        lastScan: '未执行',
+        note: '市场索引默认休眠，启用后进入同步队列。',
+        scan: { added: 0, removed: 0, changed: 0, warnings: 1 }
+      },
+      {
+        id: 'legacy-bitbucket',
+        name: 'Legacy support skills',
+        provider: 'Bitbucket',
+        url: 'git@bitbucket.org:support/legacy-skills.git',
+        branch: 'main',
+        cachePath: '~/.skills-manager/cache/legacy-support',
+        patterns: 'skills/*/SKILL.md',
+        status: 'failed',
+        enabled: false,
+        priority: 8,
+        skillUnits: 0,
+        lastCommit: '--',
+        lastScan: '认证失败',
+        note: '系统 Git 凭据未通过，需要用户在终端修复凭据。',
+        scan: { added: 0, removed: 0, changed: 0, warnings: 1 }
+      }
+    ];
+
+    const labels = {
+      ready: 'ready',
+      review: 'review',
+      failed: 'failed'
+    };
+
+    const els = {
+      rows: document.querySelector('#repo-rows'),
+      search: document.querySelector('#search'),
+      sort: document.querySelector('#sort'),
+      provider: document.querySelector('#provider'),
+      status: document.querySelector('#status'),
+      summaryRepos: document.querySelector('#summary-repos'),
+      summarySkills: document.querySelector('#summary-skills'),
+      summaryReview: document.querySelector('#summary-review'),
+      navRepoCount: document.querySelector('#nav-repo-count'),
+      navSkillCount: document.querySelector('#nav-skill-count'),
+      detailTitle: document.querySelector('#detail-title'),
+      detailCopy: document.querySelector('#detail-copy'),
+      detailMeta: document.querySelector('#detail-meta'),
+      scanList: document.querySelector('#scan-list'),
+      syncSelected: document.querySelector('#sync-selected'),
+      forceRescan: document.querySelector('#force-rescan'),
+      editSelected: document.querySelector('#edit-selected'),
+      copyCache: document.querySelector('#copy-cache'),
+      openCreate: document.querySelector('#open-create'),
+      modal: document.querySelector('#modal-backdrop'),
+      form: document.querySelector('#repo-form'),
+      modalTitle: document.querySelector('#modal-title'),
+      modalCopy: document.querySelector('#modal-copy'),
+      error: document.querySelector('#form-error'),
+      closeModal: document.querySelector('#close-modal'),
+      cancelModal: document.querySelector('#cancel-modal'),
+      toast: document.querySelector('#toast')
+    };
+
+    let repositories = loadRepositories();
+    let selectedId = repositories[0]?.id || null;
+    let editingId = null;
+
+    function loadRepositories() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey));
+        return Array.isArray(stored) && stored.length ? stored : initialRepositories;
+      } catch {
+        return initialRepositories;
+      }
+    }
+
+    function persist() {
+      localStorage.setItem(storageKey, JSON.stringify(repositories));
+    }
+
+    function getVisibleRepositories() {
+      const q = els.search.value.trim().toLowerCase();
+      const provider = els.provider.value;
+      const status = els.status.value;
+      const visible = repositories.filter((repo) => {
+        const searchable = [
+          repo.name,
+          repo.provider,
+          repo.url,
+          repo.branch,
+          repo.cachePath,
+          repo.patterns,
+          repo.note
+        ].join(' ').toLowerCase();
+        return (!q || searchable.includes(q))
+          && (provider === 'all' || repo.provider === provider)
+          && (status === 'all' || repo.status === status);
+      });
+
+      const sorters = {
+        priority: (a, b) => a.priority - b.priority || a.name.localeCompare(b.name),
+        name: (a, b) => a.name.localeCompare(b.name),
+        provider: (a, b) => a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name),
+        status: (a, b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name),
+        skills: (a, b) => b.skillUnits - a.skillUnits || a.name.localeCompare(b.name)
+      };
+
+      return visible.sort(sorters[els.sort.value] || sorters.priority);
+    }
+
+    function render() {
+      const visible = getVisibleRepositories();
+      renderSummary();
+      renderRows(visible);
+      if (!repositories.some((repo) => repo.id === selectedId)) {
+        selectedId = visible[0]?.id || repositories[0]?.id || null;
+      }
+      renderDetails();
+    }
+
+    function renderSummary() {
+      const enabled = repositories.filter((repo) => repo.enabled).length;
+      const skillUnits = repositories.reduce((sum, repo) => sum + Number(repo.skillUnits || 0), 0);
+      const review = repositories.filter((repo) => repo.status !== 'ready').length;
+      els.summaryRepos.textContent = `${enabled}/${repositories.length}`;
+      els.summarySkills.textContent = String(skillUnits);
+      els.summaryReview.textContent = String(review);
+      els.navRepoCount.textContent = String(repositories.length);
+      els.navSkillCount.textContent = String(skillUnits);
+    }
+
+    function renderRows(visible) {
+      if (!visible.length) {
+        els.rows.innerHTML = '<div class="empty-state">没有匹配的仓库。调整搜索或筛选条件。</div>';
+        return;
+      }
+
+      els.rows.innerHTML = visible.map((repo) => `
+        <div class="repo-row ${repo.id === selectedId ? 'selected' : ''}" role="button" tabindex="0" data-id="${repo.id}">
+          <span class="repo-name">
+            <span class="repo-title">${escapeHtml(repo.name)}</span>
+            <span class="repo-subtitle">${escapeHtml(repo.url)}</span>
+          </span>
+          <span>${escapeHtml(repo.provider)}</span>
+          <span class="mono">${escapeHtml(repo.branch)}</span>
+          <span><span class="status-pill ${statusClass(repo.status)}">${labels[repo.status]}</span></span>
+          <span class="mono">${repo.skillUnits}</span>
+          <span><span class="toggle ${repo.enabled ? 'on' : ''}" role="switch" aria-checked="${repo.enabled}" tabindex="0" data-toggle="${repo.id}"></span></span>
+        </div>
+      `).join('');
+    }
+
+    function renderDetails() {
+      const repo = repositories.find((item) => item.id === selectedId);
+      const hasSelection = Boolean(repo);
+      els.syncSelected.disabled = !hasSelection;
+      els.forceRescan.disabled = !hasSelection;
+      els.editSelected.disabled = !hasSelection;
+      els.copyCache.disabled = !hasSelection;
+
+      if (!repo) {
+        els.detailTitle.textContent = '选择一个仓库';
+        els.detailCopy.textContent = '右侧会显示本地缓存、最后扫描 commit、发现模式和同步影响。';
+        els.detailMeta.innerHTML = '';
+        els.scanList.innerHTML = '';
+        return;
+      }
+
+      els.detailTitle.textContent = repo.name;
+      els.detailCopy.textContent = repo.note;
+      els.detailMeta.innerHTML = [
+        ['来源类型', repo.provider],
+        ['URL / 路径', repo.url],
+        ['缓存目录', repo.cachePath],
+        ['分支', repo.branch],
+        ['最后 commit', repo.lastCommit],
+        ['最后扫描', repo.lastScan],
+        ['发现入口', repo.patterns]
+      ].map(([label, value]) => `
+        <div class="meta-row">
+          <span class="meta-label">${label}</span>
+          <p class="meta-value ${label.includes('commit') || label.includes('目录') || label.includes('入口') ? 'mono' : ''}">${escapeHtml(String(value))}</p>
+        </div>
+      `).join('');
+
+      const scanRows = [
+        ['新增 skill unit', repo.scan.added],
+        ['移除 skill unit', repo.scan.removed],
+        ['元数据变更', repo.scan.changed],
+        ['扫描警告', repo.scan.warnings]
+      ];
+      els.scanList.innerHTML = scanRows.map(([label, value]) => `
+        <div class="scan-item">
+          <div><strong>${label}</strong><br><span>${repo.lastScan}</span></div>
+          <span class="mono">${value}</span>
+        </div>
+      `).join('');
+    }
+
+    function statusClass(status) {
+      if (status === 'ready') return 'ok';
+      if (status === 'review') return 'warn';
+      return 'danger';
+    }
+
+    function openModal(repo = null) {
+      editingId = repo?.id || null;
+      els.modalTitle.textContent = editingId ? '编辑仓库' : '新增仓库';
+      els.modalCopy.textContent = editingId
+        ? '修改仓库注册信息。保存不会立即同步或写入目标目录。'
+        : '保存后只进入本地仓库注册表。同步或扫描需要用户手动触发。';
+      els.error.textContent = '';
+      els.form.reset();
+      els.form.elements.name.value = repo?.name || '';
+      els.form.elements.provider.value = repo?.provider || 'GitHub';
+      els.form.elements.url.value = repo?.url || '';
+      els.form.elements.branch.value = repo?.branch || 'main';
+      els.form.elements.cachePath.value = repo?.cachePath || '';
+      els.form.elements.patterns.value = repo?.patterns || 'skills/*/SKILL.md';
+      els.form.elements.note.value = repo?.note || '';
+      els.modal.classList.add('open');
+      els.form.elements.name.focus();
+    }
+
+    function closeModal() {
+      els.modal.classList.remove('open');
+      editingId = null;
+    }
+
+    function saveForm(event) {
+      event.preventDefault();
+      const formData = new FormData(els.form);
+      const name = String(formData.get('name') || '').trim();
+      const url = String(formData.get('url') || '').trim();
+      if (!name || !url) {
+        els.error.textContent = '名称和 URL / 本机路径是必填项。';
+        return;
+      }
+
+      const payload = {
+        name,
+        provider: String(formData.get('provider') || 'GitHub'),
+        url,
+        branch: String(formData.get('branch') || 'main').trim() || 'main',
+        cachePath: String(formData.get('cachePath') || '').trim() || buildCachePath(name),
+        patterns: String(formData.get('patterns') || 'skills/*/SKILL.md').trim(),
+        note: String(formData.get('note') || '').trim() || '用户新增的仓库，等待第一次同步扫描。',
+      };
+
+      if (editingId) {
+        repositories = repositories.map((repo) => repo.id === editingId ? { ...repo, ...payload } : repo);
+        selectedId = editingId;
+        showToast('仓库信息已更新');
+      } else {
+        const next = {
+          id: `repo-${Date.now()}`,
+          ...payload,
+          status: 'review',
+          enabled: true,
+          priority: repositories.length + 1,
+          skillUnits: 0,
+          lastCommit: '--',
+          lastScan: '未执行',
+          scan: { added: 0, removed: 0, changed: 0, warnings: 0 }
+        };
+        repositories = [next, ...repositories];
+        selectedId = next.id;
+        showToast('仓库已加入本地注册表');
+      }
+
+      persist();
+      closeModal();
+      render();
+    }
+
+    function buildCachePath(name) {
+      return `~/.skills-manager/cache/${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'repository'}`;
+    }
+
+    function syncSelected(force = false) {
+      const repo = repositories.find((item) => item.id === selectedId);
+      if (!repo) return;
+      const warnings = repo.status === 'failed' ? 1 : Math.max(0, repo.scan.warnings || 0);
+      repositories = repositories.map((item) => {
+        if (item.id !== repo.id) return item;
+        return {
+          ...item,
+          status: warnings ? 'review' : 'ready',
+          lastScan: force ? '刚刚强制扫描' : '刚刚同步',
+          lastCommit: item.provider === 'Local Git' ? 'local' : nextCommit(item.lastCommit),
+          scan: {
+            added: force ? Math.max(1, item.scan.added) : item.scan.added,
+            removed: item.scan.removed,
+            changed: force ? item.scan.changed + 1 : item.scan.changed,
+            warnings
+          }
+        };
+      });
+      persist();
+      render();
+      showToast(force ? '已创建强制重新扫描任务' : '已创建同步任务');
+    }
+
+    function nextCommit(current) {
+      if (!current || current === '--' || current === 'remote') return 'pending';
+      if (current === 'local') return current;
+      return current.slice(0, 6);
+    }
+
+    function copyCachePath() {
+      const repo = repositories.find((item) => item.id === selectedId);
+      if (!repo) return;
+      navigator.clipboard?.writeText(repo.cachePath);
+      showToast('缓存路径已复制');
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => els.toast.classList.remove('show'), 1800);
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    els.rows.addEventListener('click', (event) => {
+      const toggle = event.target.closest('[data-toggle]');
+      if (toggle) {
+        event.stopPropagation();
+        const id = toggle.dataset.toggle;
+        repositories = repositories.map((repo) => repo.id === id ? { ...repo, enabled: !repo.enabled } : repo);
+        selectedId = id;
+        persist();
+        render();
+        showToast('仓库启用状态已更新');
+        return;
+      }
+      const row = event.target.closest('[data-id]');
+      if (row) {
+        selectedId = row.dataset.id;
+        render();
+      }
+    });
+
+    els.rows.addEventListener('keydown', (event) => {
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-toggle]')) {
+        event.preventDefault();
+        event.target.click();
+        return;
+      }
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-id]')) {
+        event.preventDefault();
+        selectedId = event.target.dataset.id;
+        render();
+      }
+    });
+
+    [els.search, els.sort, els.provider, els.status].forEach((control) => {
+      control.addEventListener('input', render);
+      control.addEventListener('change', render);
+    });
+
+    els.openCreate.addEventListener('click', () => openModal());
+    els.editSelected.addEventListener('click', () => {
+      const repo = repositories.find((item) => item.id === selectedId);
+      if (repo) openModal(repo);
+    });
+    els.syncSelected.addEventListener('click', () => syncSelected(false));
+    els.forceRescan.addEventListener('click', () => syncSelected(true));
+    els.copyCache.addEventListener('click', copyCachePath);
+    els.form.addEventListener('submit', saveForm);
+    els.closeModal.addEventListener('click', closeModal);
+    els.cancelModal.addEventListener('click', closeModal);
+    els.modal.addEventListener('click', (event) => {
+      if (event.target === els.modal) closeModal();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && els.modal.classList.contains('open')) closeModal();
+    });
+
+    render();
+  </script>
+</body>
+</html>
+

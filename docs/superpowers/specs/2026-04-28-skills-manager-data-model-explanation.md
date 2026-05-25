@@ -8,14 +8,14 @@
 
 这组实体可以按三条主线理解：
 
-1. 技能从哪里来：`sources`、`repositories`、`skill_units`、`skill_versions`
+1. 技能从哪里来：`providers`、`repositories`、`skill_units`、`skill_versions`
 2. 技能要装到哪里：`agent_targets`、`skill_target_preferences`、`install_instances`
 3. 技能如何同步和分发：`sync_runs`、`distribution_plans`、`distribution_plan_items`
 
 整体关系可以概括为：
 
 ```text
-sources
+providers
   -> repositories
     -> skill_units
       -> skill_versions
@@ -39,11 +39,11 @@ app_settings 记录全局配置
 - `install_instances` 管“实际装了什么”
 - `distribution_plans` 和 `distribution_plan_items` 管“准备怎么装以及执行结果”
 - `sync_runs` 管“仓库同步扫描过程”
-- `sources` 和 `repositories` 管“技能从哪里来”
+- `providers` 和 `repositories` 管“技能从哪里来”
 
-## 2. `sources`：来源配置
+## 2. `providers`：provider 配置
 
-`sources` 表示技能来源的入口。它不是具体某个技能，也不一定是某个仓库，而是告诉系统：用户登记了一个什么类型的来源。
+`providers` 表示技能来源的入口。它不是具体某个技能，也不一定是某个仓库，而是告诉系统：用户登记了一个什么类型的 provider。
 
 例如：
 
@@ -72,23 +72,23 @@ updated_at
 用户添加了一个 GitHub 仓库地址：
 https://github.com/foo/ai-skills
 
-这个 GitHub 来源配置会先进入 sources。
-后续系统再基于这个来源创建或更新对应的 repositories。
+这个 GitHub provider 配置会先进入 providers。
+后续系统再基于这个 provider 创建或更新对应的 repositories。
 ```
 
-`sources` 的主要作用是把“来源类型和来源配置”独立出来。这样未来同一个系统可以支持不同 provider，而不是把 GitHub、GitLab、本地仓库、市场来源的逻辑全部塞进 `repositories`。
+`providers` 的主要作用是把“provider 类型和 provider 配置”独立出来。这样未来同一个系统可以支持不同 provider，而不是把 GitHub、GitLab、本地仓库、市场来源的逻辑全部塞进 `repositories`。
 
 ## 3. `repositories`：仓库记录
 
 `repositories` 表示一个实际可同步、可扫描的仓库。
 
-它比 `sources` 更具体。`sources` 说明“这个来源是什么”，`repositories` 说明“这个仓库现在在本地缓存在哪里、同步到哪个 commit、最后扫描结果是什么”。
+它比 `providers` 更具体。`providers` 说明“这个 provider 是什么”，`repositories` 说明“这个仓库现在在本地缓存在哪里、同步到哪个 commit、最后扫描结果是什么”。
 
 它通常保存：
 
 ```text
 id
-source_id
+provider_id
 remote_url
 default_branch
 local_cache_path
@@ -103,7 +103,7 @@ updated_at
 举例：
 
 ```text
-source: GitHub
+provider: GitHub
 repository: https://github.com/foo/ai-skills
 local_cache_path: AppData/.../repo-cache/foo-ai-skills
 last_scanned_commit_sha: abc123
@@ -553,7 +553,7 @@ future_policy_scope
 
 假设用户添加一个 GitHub 仓库，并安装其中一个技能到 Codex：
 
-1. 用户添加 GitHub 仓库，写入 `sources`
+1. 用户添加 GitHub 仓库，写入 `providers`
 2. 系统 clone/fetch 仓库，写入或更新 `repositories`
 3. 用户点击同步，创建 `sync_runs`
 4. 扫描仓库里的 `SKILL.md`，写入 `skill_units`
