@@ -166,46 +166,95 @@
       gap: 20px;
       align-content: start;
     }
-
     .topbar {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
+      display: block;
     }
 
-    .eyebrow {
-      margin: 0 0 6px;
-      color: var(--muted);
-      font: 600 12px/1.2 var(--font-mono);
-      letter-spacing: 0;
-      text-transform: uppercase;
+    .topbar-content {
+      min-width: 0;
     }
 
-    h1 {
-      margin: 0;
-      font: 600 32px/1.2 var(--font-display);
-      letter-spacing: -0.01em;
+    .topbar .eyebrow {
+      margin: 0 0 4px;
     }
 
-    h2,
-    h3 {
-      margin: 0;
-      font: 600 16px/1.2 var(--font-display);
-      letter-spacing: -0.01em;
+    .topbar .page-copy {
+      margin: 4px 0 0;
     }
 
-    .page-copy {
-      margin: 8px 0 0;
-      max-width: 720px;
-      color: var(--muted);
+    .title-row {
+      position: relative;
+      min-width: 0;
+      padding-right: min(42vw, 420px);
+    }
+
+    .title-row h1 {
+      min-width: 0;
+      margin-block: 0.12em;
     }
 
     .button-row {
       display: flex;
+      align-items: center;
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    .title-row .button-row {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
+    }
+
+    .title-row .btn {
+      min-height: 36px;
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
+
+    .action-overflow {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .action-menu-toggle[aria-expanded="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .action-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 20;
+      min-width: 180px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 6px;
+      display: none;
+    }
+
+    .action-overflow.open .action-menu {
+      display: grid;
+      gap: 4px;
+    }
+
+    .action-menu .btn {
+      width: 100%;
+      justify-content: flex-start;
+      border-color: transparent;
+      background: transparent;
+      color: var(--fg);
+    }
+
+    .action-menu .btn:hover {
+      background: var(--bg);
     }
 
     .btn {
@@ -274,32 +323,34 @@
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
     }
 
     .summary-card {
       border: 1px solid var(--border);
       border-radius: 12px;
       background: var(--surface);
-      padding: 16px;
+      padding: 10px 12px;
     }
 
     .summary-value {
-      margin: 0;
-      font: 600 24px/1.2 var(--font-display);
+      display: inline;
+      margin: 0 8px 0 0;
+      font: 600 20px/1.2 var(--font-display);
       letter-spacing: -0.01em;
     }
 
     .summary-label {
-      margin: 6px 0 0;
+      display: inline;
+      margin: 0;
       font-weight: 600;
     }
 
     .summary-meta {
-      margin: 4px 0 0;
+      margin: 2px 0 0;
       color: var(--muted);
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .skill-list {
@@ -312,10 +363,10 @@
     .list-head,
     .skill-row {
       display: grid;
-      grid-template-columns: minmax(220px, 1.4fr) 160px 128px 120px 120px 84px;
-      gap: 12px;
+      grid-template-columns: minmax(180px, 1.4fr) 132px 84px 84px 64px 56px 64px;
+      gap: 8px;
       align-items: center;
-      padding: 12px 16px;
+      padding: 12px 14px;
     }
 
     .list-head {
@@ -432,19 +483,19 @@
     .details {
       border-left: 1px solid var(--border);
       background: var(--surface);
-      padding: 28px 20px;
+      padding: 24px 20px;
       display: grid;
-      gap: 16px;
+      gap: 12px;
       align-content: start;
     }
 
     .detail-card {
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px;
+      padding: 14px;
       background: var(--surface);
       display: grid;
-      gap: 14px;
+      gap: 10px;
     }
 
     .detail-copy {
@@ -456,7 +507,7 @@
     .target-stack,
     .plan-list {
       display: grid;
-      gap: 10px;
+      gap: 8px;
     }
 
     .meta-row,
@@ -464,7 +515,7 @@
     .plan-item {
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 10px;
+      padding: 8px 10px;
       background: var(--bg);
       display: grid;
       gap: 4px;
@@ -498,6 +549,19 @@
 
     .detail-actions {
       justify-content: flex-start;
+    }
+
+    .detail-footer-actions {
+      padding-top: 4px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .row-action {
+      min-height: 32px;
+      padding: 6px 9px;
+      justify-self: start;
     }
 
     .empty-state {
@@ -622,6 +686,16 @@
         justify-content: flex-start;
       }
 
+      .title-row {
+        padding-right: 0;
+      }
+
+      .title-row .button-row {
+        position: static;
+        transform: none;
+        margin-top: -4px;
+      }
+
       .toolbar,
       .summary-grid {
         grid-template-columns: 1fr;
@@ -673,23 +747,13 @@
 
       <div class="sidebar-footer">
         <p class="footer-title">计划优先</p>
-        <p class="footer-copy">安装前先生成 dry-run 计划，确认目标、commit 和策略后再执行。</p>
+        <p class="footer-copy">安装前先生成计划预览，确认同步目标和策略后再执行。</p>
       </div>
     </aside>
 
     <main class="main">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">Skills</p>
-          <h1>浏览 skill unit 并预览分发计划</h1>
-          <p class="page-copy">每个技能来自仓库扫描结果，可按目标偏好保存安装意图。执行前必须解析到固定 commit，并展示 dry-run 计划。</p>
-        </div>
-        <div class="button-row">
-          <button class="btn" id="copy-skill-id" type="button">复制技能 ID</button>
-          <button class="btn" id="preview-plan" type="button">预览计划</button>
-          <button class="btn primary" id="open-create" type="button">新增技能记录</button>
-        </div>
-      </header>
+      <header class="topbar"><div class="topbar-content"><p class="eyebrow">Skills</p><div class="title-row"><h1>浏览 skill unit 并预览分发计划</h1><div class="button-row" data-overflow-actions><button class="btn" id="copy-skill-id" type="button">复制技能 ID</button>
+          <button class="btn" id="preview-plan" type="button">预览计划</button><button class="btn primary" id="open-create" type="button">新增技能</button></div></div><p class="page-copy">每个技能来自仓库扫描结果，可选择同步目标并查看计划预览。</p></div></header>
 
       <section class="toolbar" aria-label="技能筛选">
         <div class="field">
@@ -733,19 +797,9 @@
           <p class="summary-meta">来自当前本地索引</p>
         </article>
         <article class="summary-card">
-          <p class="summary-value" id="summary-installed">0</p>
-          <p class="summary-label">已保存目标偏好</p>
-          <p class="summary-meta">Codex / Claude / Gemini / custom</p>
-        </article>
-        <article class="summary-card">
           <p class="summary-value" id="summary-review">0</p>
           <p class="summary-label">需要复核</p>
           <p class="summary-meta">入口或 manifest 有歧义</p>
-        </article>
-        <article class="summary-card">
-          <p class="summary-value">commit</p>
-          <p class="summary-label">默认锁定</p>
-          <p class="summary-meta">安装解析到固定 SHA</p>
         </article>
       </section>
 
@@ -757,6 +811,7 @@
           <span>状态</span>
           <span>目标</span>
           <span>启用</span>
+          <span>操作</span>
         </div>
         <div id="skill-rows"></div>
       </section>
@@ -765,24 +820,32 @@
     <aside class="details" aria-label="技能详情">
       <section class="detail-card">
         <h2 id="detail-title">选择一个技能</h2>
-        <p class="detail-copy" id="detail-copy">右侧会显示来源、入口文件、commit 锁定、目标偏好和计划预览。</p>
-        <div class="detail-stack" id="detail-meta"></div>
+        <p class="detail-copy" id="detail-copy">右侧会显示来源、入口文件、同步目标和计划预览。</p>
         <div class="button-row detail-actions">
           <button class="btn" id="edit-selected" type="button">编辑技能</button>
-          <button class="btn primary" id="save-targets" type="button">保存目标偏好</button>
         </div>
       </section>
 
       <section class="detail-card">
-        <h3>目标偏好</h3>
-        <p class="detail-copy">这里记录期望关系，不代表已经安装成功。</p>
+        <h3>同步目标</h3>
+        <p class="detail-copy">勾选后自动保存为同步目标。</p>
         <div class="target-stack" id="target-list"></div>
       </section>
 
       <section class="detail-card">
-        <h3>dry-run 计划</h3>
-        <p class="detail-copy">预览计划会把每个目标分类为 install、update、skip 或 conflict。</p>
+        <h3>计划预览</h3>
+        <p class="detail-copy">计划预览会把每个目标分类为 install、update、skip 或 conflict。</p>
         <div class="plan-list" id="plan-list"></div>
+      </section>
+
+      <div class="button-row detail-actions detail-footer-actions">
+        <button class="btn" id="preview-selected" type="button">预览</button>
+        <button class="btn primary" id="sync-selected" type="button">同步</button>
+      </div>
+
+      <section class="detail-card">
+        <h3>详情</h3>
+        <div class="detail-stack" id="detail-meta"></div>
       </section>
     </aside>
   </div>
@@ -791,8 +854,8 @@
     <form class="modal" id="skill-form">
       <div class="modal-head">
         <div>
-          <h2 id="modal-title">新增技能记录</h2>
-          <p class="modal-copy" id="modal-copy">新增记录会进入本地索引。安装仍需先预览分发计划。</p>
+          <h2 id="modal-title">编辑记录</h2>
+          <p class="modal-copy" id="modal-copy">修改本地技能索引信息。已保存的同步目标不会被清空。</p>
         </div>
         <button class="btn" id="close-modal" type="button" aria-label="关闭">关闭</button>
       </div>
@@ -838,7 +901,65 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const storageKey = 'skills-manager-skills-wireframe';
+    function initHeaderActions() {
+      document.querySelectorAll('[data-overflow-actions]').forEach((row) => {
+        const actions = Array.from(row.querySelectorAll(':scope > .btn'));
+        if (actions.length <= 3 || row.querySelector('.action-overflow')) return;
+
+        const overflow = document.createElement('div');
+        overflow.className = 'action-overflow';
+        const toggle = document.createElement('button');
+        toggle.className = 'btn action-menu-toggle';
+        toggle.type = 'button';
+        toggle.textContent = '操作...';
+        toggle.setAttribute('aria-haspopup', 'menu');
+        toggle.setAttribute('aria-expanded', 'false');
+        const menu = document.createElement('div');
+        menu.className = 'action-menu';
+        menu.setAttribute('role', 'menu');
+
+        actions.slice(3).forEach((button) => {
+          button.setAttribute('role', 'menuitem');
+          menu.appendChild(button);
+        });
+
+        toggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const nextOpen = !overflow.classList.contains('open');
+          document.querySelectorAll('.action-overflow.open').forEach((item) => {
+            item.classList.remove('open');
+            item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+          });
+          overflow.classList.toggle('open', nextOpen);
+          toggle.setAttribute('aria-expanded', String(nextOpen));
+        });
+
+        menu.addEventListener('click', () => {
+          overflow.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+        });
+
+        overflow.append(toggle, menu);
+        row.appendChild(overflow);
+      });
+    }
+
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('.action-overflow')) return;
+      document.querySelectorAll('.action-overflow.open').forEach((item) => {
+        item.classList.remove('open');
+        item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      document.querySelectorAll('.action-overflow.open').forEach((item) => {
+        item.classList.remove('open');
+        item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+const storageKey = 'skills-manager-skills-wireframe';
     const targetOptions = [
       { id: 'codex', name: 'Codex', path: '~/.codex/skills', defaultAction: 'install' },
       { id: 'claude', name: 'Claude Code', path: '~/.claude/skills', defaultAction: 'update' },
@@ -880,7 +1001,7 @@
       {
         id: 'wireframe-review',
         skillId: 'design/wireframe-review',
-        name: 'Wireframe review',
+        name: '详情',
         repository: 'Design lab prompts',
         version: '0.2.0',
         commit: '21ab9d0',
@@ -922,7 +1043,6 @@
       repository: document.querySelector('#repository'),
       status: document.querySelector('#status'),
       summarySkills: document.querySelector('#summary-skills'),
-      summaryInstalled: document.querySelector('#summary-installed'),
       summaryReview: document.querySelector('#summary-review'),
       navSkillCount: document.querySelector('#nav-skill-count'),
       navPlanCount: document.querySelector('#nav-plan-count'),
@@ -933,9 +1053,10 @@
       planList: document.querySelector('#plan-list'),
       copySkillId: document.querySelector('#copy-skill-id'),
       previewPlan: document.querySelector('#preview-plan'),
-      saveTargets: document.querySelector('#save-targets'),
-      editSelected: document.querySelector('#edit-selected'),
       openCreate: document.querySelector('#open-create'),
+      previewSelected: document.querySelector('#preview-selected'),
+      editSelected: document.querySelector('#edit-selected'),
+      syncSelected: document.querySelector('#sync-selected'),
       modal: document.querySelector('#modal-backdrop'),
       form: document.querySelector('#skill-form'),
       modalTitle: document.querySelector('#modal-title'),
@@ -1006,10 +1127,8 @@
     }
 
     function renderSummary() {
-      const targetPrefs = skills.reduce((sum, skill) => sum + skill.targets.length, 0);
       const review = skills.filter((skill) => skill.status === 'review').length;
       els.summarySkills.textContent = String(skills.length);
-      els.summaryInstalled.textContent = String(targetPrefs);
       els.summaryReview.textContent = String(review);
       els.navSkillCount.textContent = String(skills.length);
       els.navPlanCount.textContent = String(planRows.length);
@@ -1032,6 +1151,7 @@
           <span><span class="status-pill ${statusClass(skill.status)}">${labels[skill.status]}</span></span>
           <span class="mono">${skill.targets.length}</span>
           <span><span class="toggle ${skill.enabled ? 'on' : ''}" role="switch" aria-checked="${skill.enabled}" tabindex="0" data-toggle="${skill.id}"></span></span>
+          <button class="btn row-action" type="button" data-sync="${skill.id}">同步</button>
         </div>
       `).join('');
     }
@@ -1041,12 +1161,13 @@
       const hasSelection = Boolean(skill);
       els.copySkillId.disabled = !hasSelection;
       els.previewPlan.disabled = !hasSelection;
-      els.saveTargets.disabled = !hasSelection;
+      els.previewSelected.disabled = !hasSelection;
       els.editSelected.disabled = !hasSelection;
+      els.syncSelected.disabled = !hasSelection;
 
       if (!skill) {
         els.detailTitle.textContent = '选择一个技能';
-        els.detailCopy.textContent = '右侧会显示来源、入口文件、commit 锁定、目标偏好和计划预览。';
+        els.detailCopy.textContent = '右侧会显示来源、入口文件、同步目标和计划预览。';
         els.detailMeta.innerHTML = '';
         els.targetList.innerHTML = '';
         els.planList.innerHTML = '';
@@ -1060,12 +1181,11 @@
         ['仓库', skill.repository],
         ['入口文件', skill.entry],
         ['版本', skill.version],
-        ['锁定 commit', skill.commit],
         ['标签', skill.tags.join(', ')]
       ].map(([label, value]) => `
         <div class="meta-row">
           <span class="meta-label">${label}</span>
-          <p class="meta-value ${label.includes('ID') || label.includes('入口') || label.includes('commit') ? 'mono' : ''}">${escapeHtml(String(value))}</p>
+          <p class="meta-value ${label.includes('ID') || label.includes('入口') ? 'mono' : ''}">${escapeHtml(String(value))}</p>
         </div>
       `).join('');
 
@@ -1093,7 +1213,7 @@
         <div class="plan-item">
           <strong>${escapeHtml(row.target)}</strong>
           <span><span class="status-pill ${planClass(row.action)}">${row.action}</span></span>
-          <span class="muted mono">${escapeHtml(row.commit)} -> ${escapeHtml(row.path)}</span>
+          <span class="muted mono">${escapeHtml(row.path)}</span>
         </div>
       `).join('');
     }
@@ -1112,10 +1232,10 @@
 
     function openModal(skill = null) {
       editingId = skill?.id || null;
-      els.modalTitle.textContent = editingId ? '编辑技能记录' : '新增技能记录';
+      els.modalTitle.textContent = editingId ? '编辑记录' : '新增技能';
       els.modalCopy.textContent = editingId
-        ? '修改本地技能索引信息。已保存的目标偏好不会被清空。'
-        : '新增记录会进入本地索引。安装仍需先预览分发计划。';
+        ? '修改本地技能索引信息。已保存的同步目标不会被清空。'
+        : '新增技能会进入本地索引。安装仍需先预览分发计划。';
       els.error.textContent = '';
       els.form.reset();
       els.form.elements.name.value = skill?.name || '';
@@ -1150,7 +1270,7 @@
         repository: String(formData.get('repository') || 'Team skills repository'),
         version: String(formData.get('version') || '0.1.0').trim() || '0.1.0',
         entry,
-        description: String(formData.get('description') || '').trim() || '本地新增的技能记录，等待下一次扫描补全 manifest 元数据。'
+        description: String(formData.get('description') || '').trim() || '技能记录说明待补充。'
       };
 
       if (editingId) {
@@ -1158,19 +1278,20 @@
         selectedId = editingId;
         showToast('技能记录已更新');
       } else {
-        const next = {
-          id: `skill-${Date.now()}`,
+        const id = skillId.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `skill-${Date.now()}`;
+        const created = {
+          id,
           ...payload,
           commit: 'pending',
           status: 'review',
           enabled: true,
           priority: skills.length + 1,
           tags: inferTags(skillId),
-          targets: []
+          targets: ['codex']
         };
-        skills = [next, ...skills];
-        selectedId = next.id;
-        showToast('技能记录已加入本地索引');
+        skills = [created, ...skills];
+        selectedId = id;
+        showToast('技能记录已新增');
       }
 
       persist();
@@ -1182,20 +1303,20 @@
       return skillId.split('/').filter(Boolean).slice(0, 2);
     }
 
-    function saveTargets() {
+    function saveTargets({ silent = false } = {}) {
       const skill = skills.find((item) => item.id === selectedId);
       if (!skill) return;
       const selectedTargets = Array.from(els.targetList.querySelectorAll('[data-target]:checked')).map((input) => input.dataset.target);
       skills = skills.map((item) => item.id === skill.id ? { ...item, targets: selectedTargets } : item);
       persist();
       render();
-      showToast('目标偏好已保存');
+      if (!silent) showToast('保存成功');
     }
 
     function previewPlan() {
       const skill = skills.find((item) => item.id === selectedId);
       if (!skill) return;
-      saveTargets();
+      saveTargets({ silent: true });
       const updated = skills.find((item) => item.id === selectedId);
       planRows = updated.targets.map((targetId) => {
         const target = targetOptions.find((item) => item.id === targetId);
@@ -1210,7 +1331,7 @@
       });
       renderSummary();
       renderPlan();
-      showToast('dry-run 计划已生成');
+      showToast('计划预览已生成');
     }
 
     function copySkillId() {
@@ -1218,6 +1339,14 @@
       if (!skill) return;
       navigator.clipboard?.writeText(skill.skillId);
       showToast('技能 ID 已复制');
+    }
+
+    function syncSkill(id = selectedId) {
+      const skill = skills.find((item) => item.id === id);
+      if (!skill) return;
+      selectedId = skill.id;
+      showToast(`${skill.name} 已同步`);
+      render();
     }
 
     function showToast(message) {
@@ -1238,6 +1367,12 @@
     }
 
     els.rows.addEventListener('click', (event) => {
+      const syncButton = event.target.closest('[data-sync]');
+      if (syncButton) {
+        event.stopPropagation();
+        syncSkill(syncButton.dataset.sync);
+        return;
+      }
       const toggle = event.target.closest('[data-toggle]');
       if (toggle) {
         event.stopPropagation();
@@ -1274,13 +1409,19 @@
       control.addEventListener('change', render);
     });
 
-    els.openCreate.addEventListener('click', () => openModal());
     els.editSelected.addEventListener('click', () => {
       const skill = skills.find((item) => item.id === selectedId);
       if (skill) openModal(skill);
     });
     els.previewPlan.addEventListener('click', previewPlan);
-    els.saveTargets.addEventListener('click', saveTargets);
+    els.openCreate.addEventListener('click', () => {
+      window.location.href = 'skills-manager-repositories.html?action=new-repository';
+    });
+    els.previewSelected.addEventListener('click', previewPlan);
+    els.syncSelected.addEventListener('click', () => syncSkill());
+    els.targetList.addEventListener('change', (event) => {
+      if (event.target.matches('[data-target]')) saveTargets();
+    });
     els.copySkillId.addEventListener('click', copySkillId);
     els.form.addEventListener('submit', saveForm);
     els.closeModal.addEventListener('click', closeModal);
@@ -1293,6 +1434,7 @@
     });
 
     render();
+    initHeaderActions();
   </script>
 </body>
 </html>

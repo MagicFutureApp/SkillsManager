@@ -171,39 +171,95 @@
       gap: 20px;
       align-content: start;
     }
-
     .topbar {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
+      display: block;
     }
 
-    .eyebrow {
-      margin: 0 0 6px;
-      color: var(--muted);
-      font: 600 12px/1.2 var(--font-mono);
-      letter-spacing: 0;
-      text-transform: uppercase;
+    .topbar-content {
+      min-width: 0;
     }
 
-    h1 {
-      margin: 0;
-      font: 600 32px/1.2 var(--font-display);
-      letter-spacing: -0.01em;
+    .topbar .eyebrow {
+      margin: 0 0 4px;
     }
 
-    .page-copy {
-      margin: 8px 0 0;
-      max-width: 720px;
-      color: var(--muted);
+    .topbar .page-copy {
+      margin: 4px 0 0;
+    }
+
+    .title-row {
+      position: relative;
+      min-width: 0;
+      padding-right: min(42vw, 420px);
+    }
+
+    .title-row h1 {
+      min-width: 0;
+      margin-block: 0.12em;
     }
 
     .button-row {
       display: flex;
+      align-items: center;
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    .title-row .button-row {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
+    }
+
+    .title-row .btn {
+      min-height: 36px;
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
+
+    .action-overflow {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .action-menu-toggle[aria-expanded="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .action-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 20;
+      min-width: 180px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 6px;
+      display: none;
+    }
+
+    .action-overflow.open .action-menu {
+      display: grid;
+      gap: 4px;
+    }
+
+    .action-menu .btn {
+      width: 100%;
+      justify-content: flex-start;
+      border-color: transparent;
+      background: transparent;
+      color: var(--fg);
+    }
+
+    .action-menu .btn:hover {
+      background: var(--bg);
     }
 
     .btn {
@@ -269,6 +325,16 @@
       padding: 10px 12px;
     }
 
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-height: 0;
+      border-radius: 4px;
+      padding: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
     textarea {
       min-height: 88px;
       resize: vertical;
@@ -283,7 +349,7 @@
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -323,7 +389,7 @@
     .list-head,
     .repo-row {
       display: grid;
-      grid-template-columns: minmax(220px, 1.4fr) 118px 112px 110px 96px 68px;
+      grid-template-columns: 34px minmax(220px, 1.4fr) 118px 112px 110px 96px 68px;
       gap: 12px;
       align-items: center;
       padding: 13px 16px;
@@ -335,6 +401,13 @@
       font-weight: 600;
       border-bottom: 1px solid var(--border);
       background: var(--bg);
+    }
+
+    .select-cell {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
     }
 
     .repo-row {
@@ -672,6 +745,16 @@
         justify-content: flex-start;
       }
 
+      .title-row {
+        padding-right: 0;
+      }
+
+      .title-row .button-row {
+        position: static;
+        transform: none;
+        margin-top: -4px;
+      }
+
       .summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -681,13 +764,13 @@
       }
 
       .repo-row {
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 34px minmax(0, 1fr) auto;
       }
 
-      .repo-row > :nth-child(2),
       .repo-row > :nth-child(3),
       .repo-row > :nth-child(4),
-      .repo-row > :nth-child(5) {
+      .repo-row > :nth-child(5),
+      .repo-row > :nth-child(6) {
         display: none;
       }
     }
@@ -727,18 +810,9 @@
     </aside>
 
     <main class="main">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">Repositories</p>
-          <h1>管理仓库缓存与扫描结果</h1>
-          <p class="page-copy">注册 Git 或市场来源后，系统在本机缓存仓库、记录分支与 commit，并把扫描到的 skill unit 写入本地索引。</p>
-        </div>
-        <div class="button-row">
-          <button class="btn" id="sync-selected" type="button">同步选中</button>
+      <header class="topbar"><div class="topbar-content"><p class="eyebrow">Repositories</p><div class="title-row"><h1>管理仓库缓存与扫描结果</h1><div class="button-row" data-overflow-actions><button class="btn" id="sync-selected" type="button">同步选中</button>
           <button class="btn" id="force-rescan" type="button">强制重新扫描</button>
-          <button class="btn primary" id="open-create" type="button">新增仓库</button>
-        </div>
-      </header>
+          <button class="btn primary" id="open-create" type="button">新增仓库</button></div></div><p class="page-copy">注册 Git 或市场来源后，系统在本机缓存仓库、记录分支与 commit，并把扫描到的 skill unit 写入本地索引。</p></div></header>
 
       <section class="toolbar" aria-label="仓库筛选">
         <div class="field">
@@ -794,15 +868,13 @@
           <p class="summary-label">需要复核</p>
           <p class="summary-meta">scan warnings / auth failures</p>
         </article>
-        <article class="summary-card">
-          <p class="summary-value">manual</p>
-          <p class="summary-label">同步模式</p>
-          <p class="summary-meta">无后台轮询</p>
-        </article>
       </section>
 
       <section class="repo-list" aria-live="polite">
         <div class="list-head">
+          <span class="select-cell">
+            <input id="select-visible" type="checkbox" aria-label="选择当前筛选出的仓库">
+          </span>
           <span>仓库</span>
           <span>来源</span>
           <span>分支</span>
@@ -891,7 +963,65 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const storageKey = 'skills-manager-repositories-wireframe';
+    function initHeaderActions() {
+      document.querySelectorAll('[data-overflow-actions]').forEach((row) => {
+        const actions = Array.from(row.querySelectorAll(':scope > .btn'));
+        if (actions.length <= 3 || row.querySelector('.action-overflow')) return;
+
+        const overflow = document.createElement('div');
+        overflow.className = 'action-overflow';
+        const toggle = document.createElement('button');
+        toggle.className = 'btn action-menu-toggle';
+        toggle.type = 'button';
+        toggle.textContent = '操作...';
+        toggle.setAttribute('aria-haspopup', 'menu');
+        toggle.setAttribute('aria-expanded', 'false');
+        const menu = document.createElement('div');
+        menu.className = 'action-menu';
+        menu.setAttribute('role', 'menu');
+
+        actions.slice(3).forEach((button) => {
+          button.setAttribute('role', 'menuitem');
+          menu.appendChild(button);
+        });
+
+        toggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const nextOpen = !overflow.classList.contains('open');
+          document.querySelectorAll('.action-overflow.open').forEach((item) => {
+            item.classList.remove('open');
+            item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+          });
+          overflow.classList.toggle('open', nextOpen);
+          toggle.setAttribute('aria-expanded', String(nextOpen));
+        });
+
+        menu.addEventListener('click', () => {
+          overflow.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+        });
+
+        overflow.append(toggle, menu);
+        row.appendChild(overflow);
+      });
+    }
+
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('.action-overflow')) return;
+      document.querySelectorAll('.action-overflow.open').forEach((item) => {
+        item.classList.remove('open');
+        item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      document.querySelectorAll('.action-overflow.open').forEach((item) => {
+        item.classList.remove('open');
+        item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+const storageKey = 'skills-manager-repositories-wireframe';
     const initialRepositories = [
       {
         id: 'team-skills',
@@ -988,6 +1118,7 @@
 
     const els = {
       rows: document.querySelector('#repo-rows'),
+      selectVisible: document.querySelector('#select-visible'),
       search: document.querySelector('#search'),
       sort: document.querySelector('#sort'),
       provider: document.querySelector('#provider'),
@@ -1018,6 +1149,7 @@
 
     let repositories = loadRepositories();
     let selectedId = repositories[0]?.id || null;
+    let checkedIds = new Set();
     let editingId = null;
 
     function loadRepositories() {
@@ -1065,8 +1197,10 @@
 
     function render() {
       const visible = getVisibleRepositories();
+      checkedIds = new Set([...checkedIds].filter((id) => repositories.some((repo) => repo.id === id)));
       renderSummary();
       renderRows(visible);
+      syncSelectVisible(visible);
       if (!repositories.some((repo) => repo.id === selectedId)) {
         selectedId = visible[0]?.id || repositories[0]?.id || null;
       }
@@ -1092,6 +1226,9 @@
 
       els.rows.innerHTML = visible.map((repo) => `
         <div class="repo-row ${repo.id === selectedId ? 'selected' : ''}" role="button" tabindex="0" data-id="${repo.id}">
+          <span class="select-cell">
+            <input type="checkbox" aria-label="选择 ${escapeHtml(repo.name)}" data-check="${repo.id}" ${checkedIds.has(repo.id) ? 'checked' : ''}>
+          </span>
           <span class="repo-name">
             <span class="repo-title">${escapeHtml(repo.name)}</span>
             <span class="repo-subtitle">${escapeHtml(repo.url)}</span>
@@ -1103,6 +1240,14 @@
           <span><span class="toggle ${repo.enabled ? 'on' : ''}" role="switch" aria-checked="${repo.enabled}" tabindex="0" data-toggle="${repo.id}"></span></span>
         </div>
       `).join('');
+    }
+
+    function syncSelectVisible(visible) {
+      const visibleIds = visible.map((repo) => repo.id);
+      const checkedCount = visibleIds.filter((id) => checkedIds.has(id)).length;
+      els.selectVisible.checked = Boolean(visibleIds.length && checkedCount === visibleIds.length);
+      els.selectVisible.indeterminate = Boolean(checkedCount && checkedCount < visibleIds.length);
+      els.selectVisible.disabled = !visibleIds.length;
     }
 
     function renderDetails() {
@@ -1287,6 +1432,19 @@
     }
 
     els.rows.addEventListener('click', (event) => {
+      const checkbox = event.target.closest('[data-check]');
+      if (checkbox) {
+        event.stopPropagation();
+        const id = checkbox.dataset.check;
+        if (checkbox.checked) {
+          checkedIds.add(id);
+        } else {
+          checkedIds.delete(id);
+        }
+        syncSelectVisible(getVisibleRepositories());
+        return;
+      }
+
       const toggle = event.target.closest('[data-toggle]');
       if (toggle) {
         event.stopPropagation();
@@ -1303,6 +1461,19 @@
         selectedId = row.dataset.id;
         render();
       }
+    });
+
+    els.selectVisible.addEventListener('change', () => {
+      const visible = getVisibleRepositories();
+      visible.forEach((repo) => {
+        if (els.selectVisible.checked) {
+          checkedIds.add(repo.id);
+        } else {
+          checkedIds.delete(repo.id);
+        }
+      });
+      renderRows(visible);
+      syncSelectVisible(visible);
     });
 
     els.rows.addEventListener('keydown', (event) => {
@@ -1340,8 +1511,12 @@
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && els.modal.classList.contains('open')) closeModal();
     });
-
     render();
+    initHeaderActions();
+    if (new URLSearchParams(window.location.search).get('action') === 'new-repository') {
+      openModal();
+      window.history.replaceState(null, '', window.location.pathname);
+    }
   </script>
 </body>
 </html>

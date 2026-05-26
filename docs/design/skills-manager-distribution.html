@@ -68,7 +68,7 @@
     .brand-title { margin: 0; font: 600 16px/1.2 var(--font-display); letter-spacing: -0.01em; }
     .brand-subtitle { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
     .nav-group { display: grid; gap: 4px; }
-    .nav-label { margin: 0 0 6px; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .nav-label { margin: 0 0 6px; color: var(--muted); font: 600 12px / 1.2 var(--font-body); }
 
     .nav-item {
       width: 100%;
@@ -125,26 +125,96 @@
       gap: 20px;
       align-content: start;
     }
-
     .topbar {
+      display: block;
+    }
+
+    .topbar-content {
+      min-width: 0;
+    }
+
+    .topbar .eyebrow {
+      margin: 0 0 4px;
+    }
+
+    .topbar .page-copy {
+      margin: 4px 0 0;
+    }
+
+    .title-row {
+      position: relative;
+      min-width: 0;
+      padding-right: min(42vw, 420px);
+    }
+
+    .title-row h1 {
+      min-width: 0;
+      margin-block: 0.12em;
+    }
+
+    .button-row {
       display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
-    .eyebrow {
-      margin: 0 0 6px;
-      color: var(--muted);
-      font: 600 12px/1.2 var(--font-mono);
-      text-transform: uppercase;
+    .title-row .button-row {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
     }
 
-    h1 { margin: 0; font: 600 32px/1.2 var(--font-display); letter-spacing: -0.01em; }
-    h2, h3 { margin: 0; font: 600 16px/1.2 var(--font-display); letter-spacing: -0.01em; }
-    .page-copy { margin: 8px 0 0; max-width: 740px; color: var(--muted); }
+    .title-row .btn {
+      min-height: 36px;
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
 
-    .button-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .action-overflow {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .action-menu-toggle[aria-expanded="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .action-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 20;
+      min-width: 180px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 6px;
+      display: none;
+    }
+
+    .action-overflow.open .action-menu {
+      display: grid;
+      gap: 4px;
+    }
+
+    .action-menu .btn {
+      width: 100%;
+      justify-content: flex-start;
+      border-color: transparent;
+      background: transparent;
+      color: var(--fg);
+    }
+
+    .action-menu .btn:hover {
+      background: var(--bg);
+    }
 
     .btn {
       min-height: 40px;
@@ -383,8 +453,17 @@
       .sidebar, .detail { display: none; }
       .toolbar, .summary-grid, .list-head, .plan-row { grid-template-columns: 1fr; }
       .main { padding: 22px 16px; }
-      .topbar { display: grid; }
-      .button-row { justify-content: flex-start; }
+      .topbar { display: block; }
+      .title-row {
+        padding-right: 0;
+      }
+
+      .title-row .button-row {
+        position: static;
+        transform: none;
+        justify-content: flex-start;
+        margin-top: -4px;
+      }
       .modal-grid { grid-template-columns: 1fr; }
     }
   </style>
@@ -423,17 +502,8 @@
     </aside>
 
     <main class="main">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">Distribution</p>
-          <h1>预览并执行技能分发计划</h1>
-          <p class="page-copy">Distribution 把 skill unit、固定 commit 和目标路径合并成可审计计划。执行只消费已确认的计划条目。</p>
-        </div>
-        <div class="button-row">
-          <button class="btn" type="button" id="refresh-plan">重新计算</button>
-          <button class="btn primary" type="button" id="open-create">新建计划</button>
-        </div>
-      </header>
+      <header class="topbar"><div class="topbar-content"><p class="eyebrow">Distribution</p><div class="title-row"><h1>预览并执行技能分发计划</h1><div class="button-row" data-overflow-actions><button class="btn" type="button" id="refresh-plan">重新计算</button>
+          <button class="btn primary" type="button" id="open-create">新建计划</button></div></div><p class="page-copy">Distribution 把 skill unit、固定 commit 和目标路径合并成可审计计划。执行只消费已确认的计划条目。</p></div></header>
 
       <section class="summary-grid" aria-label="分发摘要">
         <div class="summary-card"><p class="summary-label">计划数</p><p class="summary-value" id="summary-plans">0</p></div>
@@ -556,7 +626,65 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const storageKey = 'skills-manager-distribution-wireframe';
+    function initHeaderActions() {
+      document.querySelectorAll('[data-overflow-actions]').forEach((row) => {
+        const actions = Array.from(row.querySelectorAll(':scope > .btn'));
+        if (actions.length <= 3 || row.querySelector('.action-overflow')) return;
+
+        const overflow = document.createElement('div');
+        overflow.className = 'action-overflow';
+        const toggle = document.createElement('button');
+        toggle.className = 'btn action-menu-toggle';
+        toggle.type = 'button';
+        toggle.textContent = '操作...';
+        toggle.setAttribute('aria-haspopup', 'menu');
+        toggle.setAttribute('aria-expanded', 'false');
+        const menu = document.createElement('div');
+        menu.className = 'action-menu';
+        menu.setAttribute('role', 'menu');
+
+        actions.slice(3).forEach((button) => {
+          button.setAttribute('role', 'menuitem');
+          menu.appendChild(button);
+        });
+
+        toggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const nextOpen = !overflow.classList.contains('open');
+          document.querySelectorAll('.action-overflow.open').forEach((item) => {
+            item.classList.remove('open');
+            item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+          });
+          overflow.classList.toggle('open', nextOpen);
+          toggle.setAttribute('aria-expanded', String(nextOpen));
+        });
+
+        menu.addEventListener('click', () => {
+          overflow.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+        });
+
+        overflow.append(toggle, menu);
+        row.appendChild(overflow);
+      });
+    }
+
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('.action-overflow')) return;
+      document.querySelectorAll('.action-overflow.open').forEach((item) => {
+        item.classList.remove('open');
+        item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      document.querySelectorAll('.action-overflow.open').forEach((item) => {
+        item.classList.remove('open');
+        item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+const storageKey = 'skills-manager-distribution-wireframe';
     const defaultPlans = [
       {
         id: 'plan-core-skills',
@@ -870,8 +998,8 @@
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && els.modal.classList.contains('open')) closeModal();
     });
-
     render();
+    initHeaderActions();
   </script>
 </body>
 </html>

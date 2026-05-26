@@ -145,45 +145,95 @@
       gap: 20px;
       align-content: start;
     }
-
     .topbar {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
+      display: block;
     }
 
-    .eyebrow {
-      margin: 0 0 6px;
-      color: var(--muted);
-      font: 600 12px/1.2 var(--font-mono);
-      letter-spacing: 0;
-      text-transform: uppercase;
+    .topbar-content {
+      min-width: 0;
     }
 
-    h1 {
-      margin: 0;
-      font: 600 32px/1.2 var(--font-display);
-      letter-spacing: -0.01em;
+    .topbar .eyebrow {
+      margin: 0 0 4px;
     }
 
-    h2, h3 {
-      margin: 0;
-      font: 600 16px/1.2 var(--font-display);
-      letter-spacing: -0.01em;
+    .topbar .page-copy {
+      margin: 4px 0 0;
     }
 
-    .page-copy {
-      margin: 8px 0 0;
-      max-width: 720px;
-      color: var(--muted);
+    .title-row {
+      position: relative;
+      min-width: 0;
+      padding-right: min(42vw, 420px);
+    }
+
+    .title-row h1 {
+      min-width: 0;
+      margin-block: 0.12em;
     }
 
     .button-row {
       display: flex;
+      align-items: center;
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    .title-row .button-row {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
+    }
+
+    .title-row .btn {
+      min-height: 36px;
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
+
+    .action-overflow {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .action-menu-toggle[aria-expanded="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .action-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 20;
+      min-width: 180px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 6px;
+      display: none;
+    }
+
+    .action-overflow.open .action-menu {
+      display: grid;
+      gap: 4px;
+    }
+
+    .action-menu .btn {
+      width: 100%;
+      justify-content: flex-start;
+      border-color: transparent;
+      background: transparent;
+      color: var(--fg);
+    }
+
+    .action-menu .btn:hover {
+      background: var(--bg);
     }
 
     .btn {
@@ -424,8 +474,17 @@
       .sidebar, .detail { display: none; }
       .toolbar, .list-head, .source-row { grid-template-columns: 1fr; }
       .main { padding: 22px 16px; }
-      .topbar { display: grid; }
-      .button-row { justify-content: flex-start; }
+      .topbar { display: block; }
+      .title-row {
+        padding-right: 0;
+      }
+
+      .title-row .button-row {
+        position: static;
+        transform: none;
+        justify-content: flex-start;
+        margin-top: -4px;
+      }
     }
   </style>
 </head>
@@ -463,16 +522,7 @@
     </aside>
 
     <main class="main">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">Provider</p>
-          <h1>管理 Provider 与连接诊断</h1>
-          <p class="page-copy">Provider 是系统预定义的连接入口。用户只负责登录、取消连接和验证访问能力；仓库屏幕只负责具体缓存、同步与扫描结果。</p>
-        </div>
-        <div class="button-row">
-          <button class="btn" type="button" id="run-diagnostics">运行诊断</button>
-        </div>
-      </header>
+      <header class="topbar"><div class="topbar-content"><p class="eyebrow">Provider</p><div class="title-row"><h1>管理 Provider 与连接诊断</h1><div class="button-row" data-overflow-actions><button class="btn" type="button" id="run-diagnostics">运行诊断</button></div></div><p class="page-copy">Provider 是系统预定义的连接入口。用户只负责登录、取消连接和验证访问能力；仓库屏幕只负责具体缓存、同步与扫描结果。</p></div></header>
 
       <section class="toolbar" aria-label="筛选 Provider">
         <div class="field">
@@ -535,7 +585,65 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const storageKey = 'skills-manager-sources-wireframe';
+    function initHeaderActions() {
+      document.querySelectorAll('[data-overflow-actions]').forEach((row) => {
+        const actions = Array.from(row.querySelectorAll(':scope > .btn'));
+        if (actions.length <= 3 || row.querySelector('.action-overflow')) return;
+
+        const overflow = document.createElement('div');
+        overflow.className = 'action-overflow';
+        const toggle = document.createElement('button');
+        toggle.className = 'btn action-menu-toggle';
+        toggle.type = 'button';
+        toggle.textContent = '操作...';
+        toggle.setAttribute('aria-haspopup', 'menu');
+        toggle.setAttribute('aria-expanded', 'false');
+        const menu = document.createElement('div');
+        menu.className = 'action-menu';
+        menu.setAttribute('role', 'menu');
+
+        actions.slice(3).forEach((button) => {
+          button.setAttribute('role', 'menuitem');
+          menu.appendChild(button);
+        });
+
+        toggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const nextOpen = !overflow.classList.contains('open');
+          document.querySelectorAll('.action-overflow.open').forEach((item) => {
+            item.classList.remove('open');
+            item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+          });
+          overflow.classList.toggle('open', nextOpen);
+          toggle.setAttribute('aria-expanded', String(nextOpen));
+        });
+
+        menu.addEventListener('click', () => {
+          overflow.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+        });
+
+        overflow.append(toggle, menu);
+        row.appendChild(overflow);
+      });
+    }
+
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('.action-overflow')) return;
+      document.querySelectorAll('.action-overflow.open').forEach((item) => {
+        item.classList.remove('open');
+        item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      document.querySelectorAll('.action-overflow.open').forEach((item) => {
+        item.classList.remove('open');
+        item.querySelector('.action-menu-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    });
+const storageKey = 'skills-manager-sources-wireframe';
     const defaultSources = [
       { id: 'github', name: 'GitHub', provider: 'github', auth: 'OSS login', strategy: 'manifest first', patterns: 'skills/*/SKILL.md, .codex/skills/*/SKILL.md', notes: '通过系统浏览器完成 GitHub 登录授权。应用只保存连接状态和访问范围，不保存 token 明文。', status: 'connected', connected: true, enabled: true, priority: 1, diagnostic: 'oauth session: active\nrepo access probe: reachable\nlast result: connected' },
       { id: 'gitlab', name: 'GitLab', provider: 'gitlab', auth: 'OSS login', strategy: 'manifest first', patterns: 'skills/*/SKILL.md', notes: '通过 GitLab 登录连接组织或个人命名空间。首次同步前需要确认可访问范围。', status: 'review', connected: true, enabled: true, priority: 2, diagnostic: 'oauth session: active\nnamespace probe: one namespace requires review\nlast result: needs review' },
@@ -733,6 +841,7 @@
     els.runDiagnostics.addEventListener('click', runDiagnostics);
 
     render();
+    initHeaderActions();
   </script>
 </body>
 </html>
