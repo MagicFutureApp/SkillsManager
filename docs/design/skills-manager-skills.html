@@ -365,7 +365,7 @@
     .list-head,
     .skill-row {
       display: grid;
-      grid-template-columns: minmax(180px, 1.4fr) 132px 84px 84px 64px 56px 64px;
+      grid-template-columns: 32px minmax(180px, 1.4fr) 132px 84px 84px 64px 56px 64px;
       gap: 8px;
       align-items: center;
       padding: 12px 14px;
@@ -392,6 +392,22 @@
     .skill-row:hover,
     .skill-row.selected {
       background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+    }
+
+    .skill-select-cell {
+      display: grid;
+      place-items: center;
+    }
+
+    .skill-select-cell input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .list-head .skill-select-cell {
+      align-self: center;
     }
 
     .skill-name {
@@ -814,7 +830,7 @@
     </aside>
 
     <main class="main">
-      <header class="topbar"><div class="topbar-content"><p class="eyebrow">Skills</p><div class="title-row"><h1>浏览 skill unit 并预览分发计划</h1><div class="button-row" data-overflow-actions><button class="btn" id="copy-skill-id" type="button">复制技能 ID</button>
+      <header class="topbar"><div class="topbar-content"><p class="eyebrow">Skills</p><div class="title-row"><h1>浏览 skill unit 并预览分发计划</h1><div class="button-row" data-overflow-actions><button class="btn primary" id="sync-checked" type="button" disabled>同步</button>
           <button class="btn" id="preview-plan" type="button" hidden>预览计划</button><button class="btn primary" id="open-create" type="button">新增技能</button></div></div><p class="page-copy">每个技能来自仓库扫描结果，可选择同步目标并查看计划预览。</p></div></header>
 
       <section class="toolbar" aria-label="技能筛选">
@@ -867,6 +883,9 @@
 
       <section class="skill-list" aria-live="polite">
         <div class="list-head">
+          <label class="skill-select-cell" aria-label="选择全部可见技能">
+            <input id="select-all-skills" type="checkbox">
+          </label>
           <span>技能</span>
           <span>仓库</span>
           <span>版本</span>
@@ -1125,7 +1144,8 @@ const storageKey = 'skills-manager-skills-wireframe';
       addTarget: document.querySelector('#add-target'),
       targetFolderPicker: document.querySelector('#target-folder-picker'),
       planList: document.querySelector('#plan-list'),
-      copySkillId: document.querySelector('#copy-skill-id'),
+      selectAllSkills: document.querySelector('#select-all-skills'),
+      syncChecked: document.querySelector('#sync-checked'),
       previewPlan: document.querySelector('#preview-plan'),
       openCreate: document.querySelector('#open-create'),
       previewSelected: document.querySelector('#preview-selected'),
@@ -1143,6 +1163,7 @@ const storageKey = 'skills-manager-skills-wireframe';
 
     let skills = loadSkills();
     let selectedId = skills[0]?.id || null;
+    let checkedSkillIds = new Set();
     let editingId = null;
     let planRows = [];
 
@@ -1194,6 +1215,7 @@ const storageKey = 'skills-manager-skills-wireframe';
       const visible = getVisibleSkills();
       renderSummary();
       renderRows(visible);
+      syncCheckedSelection(visible);
       if (!skills.some((skill) => skill.id === selectedId)) {
         selectedId = visible[0]?.id || skills[0]?.id || null;
       }
@@ -1216,6 +1238,9 @@ const storageKey = 'skills-manager-skills-wireframe';
 
       els.rows.innerHTML = visible.map((skill) => `
         <div class="skill-row ${skill.id === selectedId ? 'selected' : ''}" role="button" tabindex="0" data-id="${skill.id}">
+          <label class="skill-select-cell" aria-label="选择 ${escapeHtml(skill.name)}">
+            <input type="checkbox" data-skill-check="${skill.id}" ${checkedSkillIds.has(skill.id) ? 'checked' : ''}>
+          </label>
           <span class="skill-name">
             <span class="skill-title">${escapeHtml(skill.name)}</span>
             <span class="skill-subtitle mono">${escapeHtml(skill.skillId)}</span>
@@ -1230,10 +1255,19 @@ const storageKey = 'skills-manager-skills-wireframe';
       `).join('');
     }
 
+    function syncCheckedSelection(visible = getVisibleSkills()) {
+      const validIds = new Set(skills.map((skill) => skill.id));
+      checkedSkillIds = new Set([...checkedSkillIds].filter((id) => validIds.has(id)));
+      const checkedVisibleCount = visible.filter((skill) => checkedSkillIds.has(skill.id)).length;
+      els.syncChecked.disabled = checkedSkillIds.size === 0;
+      els.selectAllSkills.disabled = visible.length === 0;
+      els.selectAllSkills.checked = visible.length > 0 && checkedVisibleCount === visible.length;
+      els.selectAllSkills.indeterminate = checkedVisibleCount > 0 && checkedVisibleCount < visible.length;
+    }
+
     function renderDetails() {
       const skill = skills.find((item) => item.id === selectedId);
       const hasSelection = Boolean(skill);
-      els.copySkillId.disabled = !hasSelection;
       els.previewPlan.disabled = !hasSelection;
       els.previewSelected.disabled = !hasSelection;
       els.editSelected.disabled = !hasSelection;
@@ -1471,19 +1505,19 @@ const storageKey = 'skills-manager-skills-wireframe';
       showToast('计划预览已生成');
     }
 
-    function copySkillId() {
-      const skill = skills.find((item) => item.id === selectedId);
-      if (!skill) return;
-      navigator.clipboard?.writeText(skill.skillId);
-      showToast('技能 ID 已复制');
-    }
-
     function syncSkill(id = selectedId) {
       const skill = skills.find((item) => item.id === id);
       if (!skill) return;
       selectedId = skill.id;
       showToast(`${skill.name} 已同步`);
       render();
+    }
+
+    function syncCheckedSkills() {
+      const selectedSkills = skills.filter((skill) => checkedSkillIds.has(skill.id));
+      if (!selectedSkills.length) return;
+      if (!window.confirm('确定要同步这些技能到目标目录吗？')) return;
+      showToast(`已同步 ${selectedSkills.length} 个技能`);
     }
 
     function showToast(message) {
@@ -1504,6 +1538,10 @@ const storageKey = 'skills-manager-skills-wireframe';
     }
 
     els.rows.addEventListener('click', (event) => {
+      if (event.target.closest('.skill-select-cell')) {
+        event.stopPropagation();
+        return;
+      }
       const syncButton = event.target.closest('[data-sync]');
       if (syncButton) {
         event.stopPropagation();
@@ -1526,6 +1564,30 @@ const storageKey = 'skills-manager-skills-wireframe';
         selectedId = row.dataset.id;
         render();
       }
+    });
+
+    els.rows.addEventListener('change', (event) => {
+      const checker = event.target.closest('[data-skill-check]');
+      if (!checker) return;
+      if (checker.checked) {
+        checkedSkillIds.add(checker.dataset.skillCheck);
+      } else {
+        checkedSkillIds.delete(checker.dataset.skillCheck);
+      }
+      syncCheckedSelection();
+    });
+
+    els.selectAllSkills.addEventListener('change', () => {
+      const visible = getVisibleSkills();
+      visible.forEach((skill) => {
+        if (els.selectAllSkills.checked) {
+          checkedSkillIds.add(skill.id);
+        } else {
+          checkedSkillIds.delete(skill.id);
+        }
+      });
+      renderRows(visible);
+      syncCheckedSelection(visible);
     });
 
     els.rows.addEventListener('keydown', (event) => {
@@ -1556,6 +1618,7 @@ const storageKey = 'skills-manager-skills-wireframe';
     });
     els.previewSelected.addEventListener('click', previewPlan);
     els.syncSelected.addEventListener('click', () => syncSkill());
+    els.syncChecked.addEventListener('click', syncCheckedSkills);
     els.addTarget.addEventListener('click', browseLocalTarget);
     els.targetFolderPicker.addEventListener('change', (event) => {
       const file = event.target.files?.[0];
@@ -1567,7 +1630,6 @@ const storageKey = 'skills-manager-skills-wireframe';
     els.targetList.addEventListener('change', (event) => {
       if (event.target.matches('[data-target]')) saveTargets();
     });
-    els.copySkillId.addEventListener('click', copySkillId);
     els.form.addEventListener('submit', saveForm);
     els.closeModal.addEventListener('click', closeModal);
     els.cancelModal.addEventListener('click', closeModal);
