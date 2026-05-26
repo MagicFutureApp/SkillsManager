@@ -40,16 +40,23 @@ export const skillVersions = sqliteTable("skill_versions", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull()
 });
 
-export const agentTargets = sqliteTable("agent_targets", {
-  id: text("id").primaryKey(),
-  type: text("type").notNull(),
-  name: text("name").notNull(),
-  path: text("path").notNull(),
-  defaultInstallStrategy: text("default_install_strategy").notNull(),
-  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
-});
+export const agentTargets = sqliteTable(
+  "agent_targets",
+  {
+    id: text("id").primaryKey(),
+    type: text("type").notNull(),
+    name: text("name").notNull(),
+    path: text("path").notNull(),
+    normalizedPath: text("normalized_path").notNull(),
+    defaultInstallStrategy: text("default_install_strategy").notNull(),
+    enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
+  },
+  (table) => [
+    uniqueIndex("agent_targets_type_normalized_path_uq").on(table.type, table.normalizedPath)
+  ]
+);
 
 export const skillTargetPreferences = sqliteTable(
   "skill_target_preferences",
@@ -75,12 +82,57 @@ export const installInstances = sqliteTable("install_instances", {
   id: text("id").primaryKey(),
   skillVersionId: text("skill_version_id").notNull(),
   agentTargetId: text("agent_target_id").notNull(),
+  targetSnapshotJson: text("target_snapshot_json").notNull(),
   installedPath: text("installed_path").notNull(),
   installStrategy: text("install_strategy").notNull(),
   installedCommitSha: text("installed_commit_sha").notNull(),
   status: text("status").notNull(),
   installedAt: integer("installed_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
+});
+
+export const distributionPlans = sqliteTable("distribution_plans", {
+  id: text("id").primaryKey(),
+  triggerSource: text("trigger_source").notNull(),
+  operationType: text("operation_type").notNull(),
+  status: text("status").notNull(),
+  summaryJson: text("summary_json").notNull(),
+  confirmationsJson: text("confirmations_json").notNull(),
+  createdBy: text("created_by").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  confirmedAt: integer("confirmed_at", { mode: "timestamp" }),
+  executedAt: integer("executed_at", { mode: "timestamp" }),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
+});
+
+export const distributionPlanItems = sqliteTable("distribution_plan_items", {
+  id: text("id").primaryKey(),
+  distributionPlanId: text("distribution_plan_id").notNull(),
+  skillVersionId: text("skill_version_id").notNull(),
+  agentTargetId: text("agent_target_id").notNull(),
+  action: text("action").notNull(),
+  sourcePath: text("source_path").notNull(),
+  targetPath: text("target_path").notNull(),
+  installStrategy: text("install_strategy").notNull(),
+  status: text("status").notNull(),
+  reason: text("reason"),
+  errorMessage: text("error_message"),
+  resultJson: text("result_json").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
+});
+
+export const syncRuns = sqliteTable("sync_runs", {
+  id: text("id").primaryKey(),
+  repositoryId: text("repository_id").notNull(),
+  status: text("status").notNull(),
+  startedAt: integer("started_at", { mode: "timestamp" }).notNull(),
+  finishedAt: integer("finished_at", { mode: "timestamp" }),
+  startCommitSha: text("start_commit_sha"),
+  endCommitSha: text("end_commit_sha"),
+  summaryJson: text("summary_json").notNull(),
+  errorMessage: text("error_message"),
+  logPath: text("log_path")
 });
 
 export const appSettings = sqliteTable("app_settings", {

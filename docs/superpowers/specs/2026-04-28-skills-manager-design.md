@@ -197,10 +197,11 @@ v1 的 manifest 支持从每个技能根目录一个 manifest 文件开始。
 - 保留执行时的目标快照；即使后续删除 `agent_targets`，历史安装事实仍可用于审计和诊断
 
 `distribution_plans`
-- 存储一次安装、更新或卸载操作的执行计划
+- 存储一次从 Skills 工作流触发的安装、更新或卸载执行计划
+- v1 不作为独立用户页面展示；用于支撑 Skills 页 dry-run、执行确认、失败恢复和后续历史日志
 
 `distribution_plan_items`
-- 存储计划中的每一个可执行条目
+- 存储计划中的每一个 skill-target 可执行条目
 
 `sync_runs`
 - 存储仓库同步和扫描操作的执行历史
@@ -247,7 +248,9 @@ v1 使用系统 Git 和现有系统凭据。
 
 ## 9. 分发流程
 
-所有分发操作都必须先计划、再执行。
+所有分发操作都必须先计划、再执行。v1 的用户入口在 Skills 页面：用户可以在单个 Skill 详情或 Skills 多选批量操作中生成 dry-run 并确认执行。
+
+Distribution 在 v1 中不是独立主页面。`distribution_plans` 和 `distribution_plan_items` 仍然是底层审计模型，用于记录 dry-run、执行状态和每个条目的结果；后续可以把这些记录展示为“技能同步到目标”的历史日志，但不要和仓库同步扫描历史 `sync_runs` 混在一起。
 
 ### 9.1 计划
 
@@ -257,9 +260,9 @@ v1 使用系统 Git 和现有系统凭据。
 4. 系统将用户勾选的技能-目标关系写入 `skill_target_preferences`
 5. 取消某个 Skill 的同步目标时，只移除该 Skill 与目标之间的 preference，不影响其他 Skill
 6. 系统解析期望的固定 commit 版本
-7. planner 基于用户选择或已保存的 `skill_target_preferences` 计算每个目标的操作
+7. planner 基于 Skills 页当前选择或已保存的 `skill_target_preferences` 计算每个目标的操作
 8. planner 将每个条目分类为 install、update、skip、conflict 或 remove
-9. UI 展示 dry-run 预览
+9. Skills 页展示 dry-run 预览，同时底层写入或更新 `distribution_plans` 和 `distribution_plan_items`
 
 ### 9.2 执行
 
@@ -336,15 +339,16 @@ src/
 
 ## 11. v1 UI 范围
 
-v1 应保持紧凑，并聚焦五个主要区域：
+v1 应保持紧凑，并聚焦四个主要操作区域：
 
 - `Providers`
 - `Repositories`
 - `Skills`
 - `Targets`
-- `Distribution`
 
-这足以验证核心循环，同时避免过早扩展到低价值的复杂设置。
+Skills 页面承担单个 Skill 和多选 Skill 的 dry-run、批量同步与执行确认。Distribution 不在 v1 作为独立主导航展示；底层分发计划记录保留，未来可以作为“技能同步到目标”的历史日志或执行审计视图。
+
+这足以验证核心循环，同时避免过早扩展到重复入口和低价值的复杂设置。
 
 ## 12. v1 范围裁剪
 
@@ -422,6 +426,6 @@ Drizzle 被选为 v1 的 ORM/query layer，因为它足够轻量，贴近 SQL，
 - 从一个仓库中发现多个 skill unit
 - 在一个统一的本地注册表中浏览技能
 - 配置 Codex、Claude Code、Gemini CLI 和自定义目标
-- 预览分发计划
+- 在 Skills 页面预览单个或多选 Skill 的分发 dry-run
 - 将选中的 skill unit 安装到一个或多个目标，并记录 commit 锁定信息
 - 检查结果，并从常见路径或凭据失败中恢复

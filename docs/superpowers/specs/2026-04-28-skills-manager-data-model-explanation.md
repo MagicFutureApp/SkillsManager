@@ -37,7 +37,7 @@ app_settings 记录全局配置
 - `agent_targets` 管“要装到哪里”
 - `skill_target_preferences` 管“用户希望哪些技能默认同步到哪些目标”
 - `install_instances` 管“实际装了什么”
-- `distribution_plans` 和 `distribution_plan_items` 管“准备怎么装以及执行结果”
+- `distribution_plans` 和 `distribution_plan_items` 管“这次准备怎么同步到目标以及执行结果”；v1 作为 Skills 页背后的记录模型，不对应独立主页面
 - `sync_runs` 管“仓库同步扫描过程”
 - `providers` 和 `repositories` 管“技能从哪里来”
 
@@ -417,41 +417,54 @@ status: installed
 
 这些都可以通过 `install_instances` 做状态追踪。
 
-## 9. `distribution_plans`：分发计划
+## 9. `distribution_plans`：分发执行记录
 
-`distribution_plans` 表示一次安装、更新或卸载操作的整体计划。
+`distribution_plans` 表示一次从 Skills 页面触发的安装、更新或卸载操作。它既保存 dry-run 计划，也保存确认执行后的整体状态。
 
-设计文档强调 plan-first execution，也就是先计划，再执行。这个表就是计划的头部记录。
+v1 不需要把 Distribution 做成独立用户页面。用户在 Skills 详情或 Skills 多选批量操作里预览 dry-run 并确认执行；系统在背后创建或更新 `distribution_plans`。后续如果需要“技能同步到目标”的历史日志，可以直接展示这些记录。
+
+它和 `sync_runs` 的边界必须保持清楚：
+
+```text
+sync_runs:
+  仓库 clone/fetch/scan 历史。
+
+distribution_plans:
+  已发现 skill unit 同步到 agent target 的 dry-run 和执行历史。
+```
 
 它通常保存：
 
 ```text
 id
-plan_type: install | update | uninstall | mixed
+trigger_source: skill_detail | skills_bulk
+operation_type: install | update | remove | mixed
 status: draft | ready | executing | completed | failed | cancelled
 summary_json
+confirmations_json
 created_by
 created_at
 confirmed_at
 executed_at
 ```
 
-例如用户选择：
+例如用户在 Skills 页多选：
 
 ```text
 安装 prompt-basic 和 code-review 到 Codex、Gemini CLI
 ```
 
-系统不会立刻写文件，而是先生成一个 plan：
+系统不会立刻写文件，而是先生成一个 plan，并在 Skills 页展示 dry-run：
 
 ```text
 distribution_plan #42
-type: install
-status: draft
+trigger_source: skills_bulk
+operation_type: install
+status: ready
 summary: 2 skills x 2 targets = 4 actions
 ```
 
-这个实体的价值是让 UI 可以展示 dry-run 预览：
+这个实体的价值是让 Skills 页可以展示 dry-run 预览，并让未来的历史日志有数据可查：
 
 - 将安装哪些技能
 - 安装到哪些目录
@@ -459,14 +472,16 @@ summary: 2 skills x 2 targets = 4 actions
 - 哪些有冲突
 - 哪些可能覆盖已有文件
 - 使用 symlink 还是 copy
+- 用户何时确认
+- 执行是否完成或失败
 
-批量同步时，系统可以读取所有启用的 `skill_target_preferences`，再生成对应的 `distribution_plan`。
+批量同步时，系统可以读取当前多选 Skills 和对应的 `skill_target_preferences`，再生成对应的 `distribution_plan`。
 
-## 10. `distribution_plan_items`：分发计划条目
+## 10. `distribution_plan_items`：分发执行条目
 
-`distribution_plan_items` 是计划里的每一个动作。
+`distribution_plan_items` 是一次同步中的每一个 skill-target 动作。
 
-如果 `distribution_plans` 是“这次分发任务”，那 `distribution_plan_items` 就是“这次任务里的每一个具体步骤”。
+如果 `distribution_plans` 是“这次从 Skills 发起的同步任务”，那 `distribution_plan_items` 就是“这次任务里的每一个具体步骤”。
 
 通常保存：
 
@@ -482,6 +497,7 @@ install_strategy
 status: pending | running | succeeded | failed | skipped
 reason
 error_message
+result_json
 created_at
 updated_at
 ```
@@ -505,7 +521,7 @@ updated_at
 
 而不是只知道“整个安装失败了”。
 
-这对恢复、重试、审计都很重要。
+这对恢复、重试、审计和后续历史日志都很重要。执行成功的 install/update/remove 条目会进一步写入或更新 `install_instances`；conflict/skip/failed 条目只保留在 plan/item 中，作为用户复核和诊断记录。
 
 ## 11. `sync_runs`：同步/扫描历史
 
@@ -595,7 +611,7 @@ future_policy_scope
 5. 把某个技能解析到当前 commit，写入 `skill_versions`
 6. 用户配置 Codex 技能目录，系统按 `type + normalized_path` 去重后写入或复用 `agent_targets`
 7. 用户勾选技能要同步到 Codex，写入 `skill_target_preferences`
-8. 用户点击同步，创建 `distribution_plans`
+8. 用户在 Skills 页面点击同步，创建 `distribution_plans`
 9. 系统生成每个安装动作，写入 `distribution_plan_items`
 10. 用户确认执行，更新 plan/item 状态
 11. 安装成功后，写入 `install_instances`，并保存目标快照

@@ -254,6 +254,7 @@
     }
 
     .field { display: grid; gap: 6px; }
+    .field-hidden { display: none; }
     label { color: var(--muted); font-size: 12px; font-weight: 600; }
 
     input, select, textarea {
@@ -602,7 +603,7 @@
           </select>
         </div>
         <div class="field span-2"><label for="target-path">技能目录</label><input id="target-path" name="path" placeholder="~/.codex/skills 或 D:/agent-skills"></div>
-        <div class="field">
+        <div class="field field-hidden" aria-hidden="true">
           <label for="target-strategy">默认安装策略</label>
           <select id="target-strategy" name="strategy">
             <option>symlink</option>
@@ -610,7 +611,7 @@
             <option>copy only</option>
           </select>
         </div>
-        <div class="field">
+        <div class="field field-hidden" aria-hidden="true">
           <label for="target-adapter">适配器</label>
           <select id="target-adapter" name="adapter">
             <option>convention adapter</option>
