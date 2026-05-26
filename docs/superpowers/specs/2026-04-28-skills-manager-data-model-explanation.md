@@ -216,6 +216,7 @@ id
 type: codex | claude_code | gemini_cli | custom_directory
 name
 path
+normalized_path
 config_json
 default_install_strategy: symlink | copy
 enabled
@@ -247,6 +248,18 @@ prompt-basic@abc123 -> custom directory
 ```
 
 这就是为什么需要单独的目标表。
+
+`agent_targets` 是全局目标注册表。用户可以在某个 Skill 的详情里新增同步目标，但新增时应按目标身份去重：如果相同类型、相同规范化路径的目标已经存在，系统复用已有 `agent_targets`，只为当前 Skill 写入新的选择关系。
+
+建议增加唯一约束：
+
+```text
+unique(type, normalized_path)
+```
+
+`normalized_path` 由程序写入，表达去重用的稳定路径形式。它可以消除大小写、分隔符、尾部分隔符、`~` 展开等平台差异。显示给用户看的原始路径仍保留在 `path`。
+
+Targets 页展示的是去重后的 `agent_targets`。它是所有 Skill 可选择目标的合集，不表示所有 Skill 都已经选择这些目标。
 
 ## 7. `skill_target_preferences`：技能目标偏好
 
@@ -299,6 +312,25 @@ unique(skill_unit_id, agent_target_id)
 
 这里选择 `skill_unit_id`，而不是 `skill_version_id`，是因为勾选偏好通常表达“这个技能以后默认同步到这个目标”。具体同步到哪个 commit，由同步执行时解析出的 `skill_versions` 决定。
 
+如果用户在 Skill A 详情里新增目标，数据写入分两步：
+
+```text
+1. 在 agent_targets 中按 type + normalized_path 查找或创建目标
+2. 在 skill_target_preferences 中写入 Skill A -> target 的 enabled 关系
+```
+
+这不会影响 Skill B。Skill B 只有在自己也存在对应 preference 时，才会默认勾选该目标。
+
+如果用户在某个 Skill 详情里删掉一个同步目标，语义是删除或禁用当前 skill unit 的 preference：
+
+```text
+Skill A -> target: removed
+agent_targets.target: still exists
+Skill B -> target: unchanged
+```
+
+如果用户在 Targets 页删除一个目标，语义是全局删除。程序必须在一个事务里删除 `agent_targets` 中的目标，并清理所有引用该目标的 `skill_target_preferences`。这个清理由应用层 repository/service 负责，不依赖数据库外键级联。
+
 如果用户需要锁定某个固定版本，可以使用：
 
 ```text
@@ -348,6 +380,7 @@ install_instances:
 id
 skill_version_id
 agent_target_id
+target_snapshot_json
 installed_path
 install_strategy: symlink | copy
 installed_commit_sha
@@ -360,6 +393,8 @@ last_error
 这个实体非常重要，因为它是“事实记录”。
 
 `distribution_plans` 是计划，`install_instances` 是执行后的状态。
+
+`target_snapshot_json` 保留安装执行时的目标信息，例如目标名称、类型、原始路径、规范化路径和默认策略。这样即使用户后续在 Targets 页删除了 `agent_targets` 记录，历史安装事实仍然可读、可审计，也能解释当时安装到了哪里。
 
 举例：
 
@@ -558,9 +593,9 @@ future_policy_scope
 3. 用户点击同步，创建 `sync_runs`
 4. 扫描仓库里的 `SKILL.md`，写入 `skill_units`
 5. 把某个技能解析到当前 commit，写入 `skill_versions`
-6. 用户配置 Codex 技能目录，写入 `agent_targets`
+6. 用户配置 Codex 技能目录，系统按 `type + normalized_path` 去重后写入或复用 `agent_targets`
 7. 用户勾选技能要同步到 Codex，写入 `skill_target_preferences`
 8. 用户点击同步，创建 `distribution_plans`
 9. 系统生成每个安装动作，写入 `distribution_plan_items`
 10. 用户确认执行，更新 plan/item 状态
-11. 安装成功后，写入 `install_instances`
+11. 安装成功后，写入 `install_instances`，并保存目标快照

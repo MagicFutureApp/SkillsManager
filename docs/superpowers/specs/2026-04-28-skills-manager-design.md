@@ -185,12 +185,16 @@ v1 的 manifest 支持从每个技能根目录一个 manifest 文件开始。
 
 `agent_targets`
 - 存储目标类型、目标路径/配置和默认安装策略
+- 表示全局目标注册表；从某个 Skill 详情新增目标时，系统应按目标身份去重后 create-or-reuse
+- 目标身份至少应包含 `type` 和规范化后的目标路径；数据库模型应提供对应唯一约束，避免 Targets 列表出现重复目标
 
 `skill_target_preferences`
 - 记录用户希望某个 skill unit 默认同步到哪些目标；用于恢复 UI 勾选状态，不代表已经安装成功
+- 表示 skill unit 到 agent target 的选择关系；在 Skill 详情移除同步目标时，只删除或禁用当前 skill unit 的这条选择关系，不删除全局目标
 
 `install_instances`
 - 记录哪个技能版本以何种方式安装到了哪个目标和位置
+- 保留执行时的目标快照；即使后续删除 `agent_targets`，历史安装事实仍可用于审计和诊断
 
 `distribution_plans`
 - 存储一次安装、更新或卸载操作的执行计划
@@ -248,12 +252,14 @@ v1 使用系统 Git 和现有系统凭据。
 ### 9.1 计划
 
 1. 用户选择 skill unit
-2. 用户选择目标 agent 或者当前机器的文件目录，支持多选
-3. 系统将用户勾选的技能-目标关系写入 `skill_target_preferences`
-4. 系统解析期望的固定 commit 版本
-5. planner 基于用户选择或已保存的 `skill_target_preferences` 计算每个目标的操作
-6. planner 将每个条目分类为 install、update、skip、conflict 或 remove
-7. UI 展示 dry-run 预览
+2. 用户选择已有目标 agent 或者新增当前机器的文件目录，支持多选
+3. 如果用户新增目标，系统先按 `agent_targets` 的目标身份去重并 create-or-reuse
+4. 系统将用户勾选的技能-目标关系写入 `skill_target_preferences`
+5. 取消某个 Skill 的同步目标时，只移除该 Skill 与目标之间的 preference，不影响其他 Skill
+6. 系统解析期望的固定 commit 版本
+7. planner 基于用户选择或已保存的 `skill_target_preferences` 计算每个目标的操作
+8. planner 将每个条目分类为 install、update、skip、conflict 或 remove
+9. UI 展示 dry-run 预览
 
 ### 9.2 执行
 
@@ -264,7 +270,15 @@ v1 使用系统 Git 和现有系统凭据。
 5. 结果写入 `install_instances`
 6. UI 展示成功、失败和恢复细节
 
-### 9.3 为什么计划是一等概念
+### 9.3 目标删除语义
+
+Targets 页展示去重后的 `agent_targets`。
+
+在 Targets 页删除一个同步目标是全局删除。应用层必须在一个事务中删除该 `agent_targets` 记录，并清理所有引用它的 `skill_target_preferences`。这类级联清理由程序负责，不依赖数据库外键级联。
+
+删除目标不应删除历史 `install_instances`。执行记录应保留目标快照，以便目标被删除后仍能展示当时安装到了哪里、使用了什么策略以及当时目标名称是什么。
+
+### 9.4 为什么计划是一等概念
 
 必须采用计划优先的执行方式，因为主要产品风险不只是安装失败，还包括意外覆盖、目标污染或隐藏的版本漂移。
 
