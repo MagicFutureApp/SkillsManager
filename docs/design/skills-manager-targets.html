@@ -295,7 +295,7 @@
 
     .list-head, .target-row {
       display: grid;
-      grid-template-columns: 1fr 112px 112px 92px;
+      grid-template-columns: 1fr 112px 92px 92px;
       gap: 12px;
       align-items: center;
     }
@@ -354,41 +354,41 @@
 
     .switch[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); justify-content: flex-end; }
     .switch::before { content: ""; width: 18px; height: 18px; border-radius: 50%; background: #FFFFFF; }
+    .row-action {
+      min-height: 32px;
+      padding: 6px 10px;
+      justify-self: start;
+      color: var(--danger);
+      border-color: color-mix(in srgb, var(--danger) 30%, var(--border));
+      background: color-mix(in srgb, var(--danger) 4%, var(--surface));
+    }
+
+    .row-action:hover {
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+    }
+
     .empty-state { padding: 22px; color: var(--muted); text-align: center; }
 
     .detail {
       border-left: 1px solid var(--border);
       background: var(--surface);
-      padding: 28px 24px;
+      padding: 24px 20px;
       display: grid;
-      gap: 18px;
+      gap: 12px;
       align-content: start;
     }
 
     .detail-card {
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px;
+      padding: 14px;
+      background: var(--surface);
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
-    .detail-copy { margin: 6px 0 0; color: var(--muted); }
-    .meta-row { display: grid; gap: 4px; }
-    .meta-label { color: var(--muted); font-size: 12px; font-weight: 600; }
-    .meta-value { margin: 0; overflow-wrap: anywhere; }
+    .detail-copy { margin: 0; color: var(--muted); }
     .mono { font-family: var(--font-mono); font-size: 12px; }
-
-    .diagnostic {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--bg);
-      padding: 12px;
-      color: var(--muted);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      white-space: pre-wrap;
-    }
 
     .check-list { display: grid; gap: 8px; }
 
@@ -425,6 +425,10 @@
       padding: 20px;
       display: grid;
       gap: 18px;
+    }
+
+    .confirm-modal {
+      width: min(460px, 100%);
     }
 
     .modal-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
@@ -510,8 +514,7 @@
     </aside>
 
     <main class="main">
-      <header class="topbar"><div class="topbar-content"><p class="eyebrow">Targets</p><div class="title-row"><h1>管理 agent 目标与安装路径</h1><div class="button-row" data-overflow-actions><button class="btn" type="button" id="validate-all">批量校验</button>
-          <button class="btn primary" type="button" id="open-create">新增目标</button></div></div><p class="page-copy">Targets 保存 Codex、Claude Code、Gemini CLI 和自定义目录的本机路径、默认安装策略与路径校验结果。</p></div></header>
+      <header class="topbar"><div class="topbar-content"><p class="eyebrow">Targets</p><div class="title-row"><h1>管理 agent 目标与安装路径</h1><div class="button-row" data-overflow-actions><button class="btn" type="button" id="validate-all">批量校验</button></div></div><p class="page-copy">Targets 保存 Codex、Claude Code、Gemini CLI 和自定义目录的本机路径、默认安装策略与路径校验结果。</p></div></header>
 
       <section class="summary-grid" aria-label="目标摘要">
         <div class="summary-card"><p class="summary-label">已启用目标</p><p class="summary-value" id="summary-enabled">0/0</p></div>
@@ -556,27 +559,24 @@
       </section>
 
       <section class="target-list" aria-live="polite">
-        <div class="list-head" aria-hidden="true"><span>目标</span><span>类型</span><span>策略</span><span>启用</span></div>
+        <div class="list-head" aria-hidden="true"><span>目标</span><span>类型</span><span>启用</span><span>操作</span></div>
         <div id="target-rows"></div>
       </section>
     </main>
 
     <aside class="detail" aria-label="目标详情">
-      <section>
-        <p class="eyebrow">Selected target</p>
+      <section class="detail-card detail-summary">
+        <!--<p class="eyebrow">Selected target</p>-->
         <h2 id="detail-title">选择一个目标</h2>
         <p class="detail-copy" id="detail-copy">右侧会显示路径、适配器、安装策略和最近一次路径校验。</p>
+        <div class="button-row">
+          <button class="btn" type="button" id="copy-path">复制路径</button>
+          <button class="btn" type="button" id="edit-selected">编辑目标</button>
+          <button class="btn primary" type="button" id="test-selected">校验路径</button>
+        </div>
       </section>
 
-      <div class="button-row">
-        <button class="btn" type="button" id="copy-path">复制路径</button>
-        <button class="btn" type="button" id="edit-selected">编辑目标</button>
-        <button class="btn primary" type="button" id="test-selected">校验路径</button>
-      </div>
-
-      <section class="detail-card"><h3>目标配置</h3><div id="detail-meta"></div></section>
       <section class="detail-card"><h3>安全检查</h3><div class="check-list" id="check-list"></div></section>
-      <section class="detail-card"><h3>最近校验</h3><div class="diagnostic" id="diagnostic-log">尚未选择目标。</div></section>
     </aside>
   </div>
 
@@ -584,8 +584,8 @@
     <form class="modal" id="target-form">
       <div class="modal-head">
         <div>
-          <h2 id="modal-title">新增目标</h2>
-          <p class="modal-copy" id="modal-copy">保存后只更新本地目标注册表，不会写入任何 agent 目录。</p>
+          <h2 id="modal-title">编辑目标</h2>
+          <p class="modal-copy" id="modal-copy">修改目标注册信息。已有安装实例不会被立即迁移。</p>
         </div>
         <button class="btn" id="close-modal" type="button" aria-label="关闭">关闭</button>
       </div>
@@ -629,6 +629,25 @@
         </div>
       </div>
     </form>
+  </div>
+
+  <div class="modal-backdrop" id="delete-backdrop" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+    <section class="modal confirm-modal">
+      <div class="modal-head">
+        <div>
+          <h2 id="delete-title">删除目标</h2>
+          <p class="modal-copy" id="delete-copy">确认后会移除目标记录，不会删除磁盘上的文件。会删除所有 Skill 下此同步目录的记录。</p>
+        </div>
+        <button class="btn" id="close-delete" type="button" aria-label="关闭">关闭</button>
+      </div>
+      <div class="modal-actions">
+        <p class="form-error" id="delete-error"></p>
+        <div class="button-row">
+          <button class="btn" type="button" id="cancel-delete">取消</button>
+          <button class="btn row-action" type="button" id="confirm-delete">删除</button>
+        </div>
+      </div>
+    </section>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -703,14 +722,16 @@ const storageKey = 'skills-manager-targets-wireframe';
     const els = {
       rows: document.querySelector('#target-rows'), search: document.querySelector('#search'), type: document.querySelector('#type'), status: document.querySelector('#status'), sort: document.querySelector('#sort'),
       summaryEnabled: document.querySelector('#summary-enabled'), summaryReview: document.querySelector('#summary-review'), summaryConvention: document.querySelector('#summary-convention'), summarySymlink: document.querySelector('#summary-symlink'), navTargetCount: document.querySelector('#nav-target-total'),
-      detailTitle: document.querySelector('#detail-title'), detailCopy: document.querySelector('#detail-copy'), detailMeta: document.querySelector('#detail-meta'), checkList: document.querySelector('#check-list'), diagnosticLog: document.querySelector('#diagnostic-log'),
-      openCreate: document.querySelector('#open-create'), validateAll: document.querySelector('#validate-all'), copyPath: document.querySelector('#copy-path'), editSelected: document.querySelector('#edit-selected'), testSelected: document.querySelector('#test-selected'),
-      modal: document.querySelector('#modal-backdrop'), form: document.querySelector('#target-form'), modalTitle: document.querySelector('#modal-title'), modalCopy: document.querySelector('#modal-copy'), error: document.querySelector('#form-error'), closeModal: document.querySelector('#close-modal'), cancelModal: document.querySelector('#cancel-modal'), toast: document.querySelector('#toast')
+      detailTitle: document.querySelector('#detail-title'), detailCopy: document.querySelector('#detail-copy'), checkList: document.querySelector('#check-list'),
+      validateAll: document.querySelector('#validate-all'), copyPath: document.querySelector('#copy-path'), editSelected: document.querySelector('#edit-selected'), testSelected: document.querySelector('#test-selected'),
+      modal: document.querySelector('#modal-backdrop'), form: document.querySelector('#target-form'), modalTitle: document.querySelector('#modal-title'), modalCopy: document.querySelector('#modal-copy'), error: document.querySelector('#form-error'), closeModal: document.querySelector('#close-modal'), cancelModal: document.querySelector('#cancel-modal'),
+      deleteModal: document.querySelector('#delete-backdrop'), deleteTitle: document.querySelector('#delete-title'), deleteCopy: document.querySelector('#delete-copy'), deleteError: document.querySelector('#delete-error'), closeDelete: document.querySelector('#close-delete'), cancelDelete: document.querySelector('#cancel-delete'), confirmDelete: document.querySelector('#confirm-delete'), toast: document.querySelector('#toast')
     };
 
     let targets = loadTargets();
     let selectedId = targets[0]?.id || null;
     let editingId = null;
+    let pendingDeleteId = null;
 
     function loadTargets() {
       try {
@@ -762,7 +783,7 @@ const storageKey = 'skills-manager-targets-wireframe';
 
     function renderRows(visible) {
       if (!visible.length) {
-        els.rows.innerHTML = '<div class="empty-state">没有匹配的目标。调整搜索或新增目标。</div>';
+        els.rows.innerHTML = '<div class="empty-state">没有匹配的目标。调整搜索条件。</div>';
         return;
       }
       els.rows.innerHTML = visible.map((target) => `
@@ -772,8 +793,8 @@ const storageKey = 'skills-manager-targets-wireframe';
             <div class="target-meta">${escapeHtml(target.path)}</div>
           </div>
           <span class="mono">${escapeHtml(typeLabel(target.type))}</span>
-          <span class="mono">${escapeHtml(target.strategy)}</span>
           <button class="switch" type="button" data-toggle="${target.id}" aria-label="切换 ${escapeHtml(target.name)}" aria-pressed="${target.enabled}"></button>
+          <button class="btn row-action" type="button" data-delete="${target.id}" aria-label="删除 ${escapeHtml(target.name)}">删除</button>
         </div>
       `).join('');
     }
@@ -787,24 +808,16 @@ const storageKey = 'skills-manager-targets-wireframe';
       if (!target) {
         els.detailTitle.textContent = '选择一个目标';
         els.detailCopy.textContent = '右侧会显示路径、适配器、安装策略和最近一次路径校验。';
-        els.detailMeta.innerHTML = '';
         els.checkList.innerHTML = '';
-        els.diagnosticLog.textContent = '尚未选择目标。';
         return;
       }
       els.detailTitle.textContent = target.name;
       els.detailCopy.textContent = target.notes;
-      els.detailMeta.innerHTML = [
-        ['类型', typeLabel(target.type)], ['技能目录', target.path], ['安装策略', target.strategy], ['适配器', target.adapter], ['启用状态', target.enabled ? 'enabled' : 'disabled']
-      ].map(([label, value]) => `<div class="meta-row"><span class="meta-label">${label}</span><p class="meta-value ${label.includes('目录') ? 'mono' : ''}">${escapeHtml(String(value))}</p></div>`).join('');
       const checks = [
         ['路径存在', target.status === 'blocked' ? 'missing' : 'checked'],
-        ['写入边界', target.enabled ? 'enabled target' : 'disabled target'],
-        ['commit 锁定', 'required'],
-        ['覆盖保护', target.strategy === 'copy only' ? 'copy review' : 'dry-run first']
+        ['写权限', target.enabled ? '可写' : '未启用']
       ];
       els.checkList.innerHTML = checks.map(([label, value]) => `<div class="check-row"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(value)}</span></div>`).join('');
-      els.diagnosticLog.textContent = target.diagnostic;
     }
 
     function statusClass(status) {
@@ -818,10 +831,11 @@ const storageKey = 'skills-manager-targets-wireframe';
       return { codex: 'Codex', claude: 'Claude', gemini: 'Gemini', custom: 'Custom' }[type] || type;
     }
 
-    function openModal(target = null) {
-      editingId = target?.id || null;
-      els.modalTitle.textContent = editingId ? '编辑目标' : '新增目标';
-      els.modalCopy.textContent = editingId ? '修改目标注册信息。已有安装实例不会被立即迁移。' : '保存后只更新本地目标注册表，不会写入任何 agent 目录。';
+    function openModal(target) {
+      if (!target) return;
+      editingId = target.id;
+      els.modalTitle.textContent = '编辑目标';
+      els.modalCopy.textContent = '修改目标注册信息。已有安装实例不会被立即迁移。';
       els.error.textContent = '';
       els.form.reset();
       els.form.elements.name.value = target?.name || '';
@@ -835,6 +849,22 @@ const storageKey = 'skills-manager-targets-wireframe';
     }
 
     function closeModal() { els.modal.classList.remove('open'); editingId = null; }
+
+    function openDeleteModal(id) {
+      const target = targets.find((item) => item.id === id);
+      if (!target) return;
+      pendingDeleteId = id;
+      els.deleteTitle.textContent = `删除 ${target.name}`;
+      els.deleteCopy.textContent = `确认后会移除「${target.name}」目标记录，不会删除磁盘上的文件。会删除所有 Skill 下此同步目录的记录。`;
+      els.deleteError.textContent = '';
+      els.deleteModal.classList.add('open');
+      els.confirmDelete.focus();
+    }
+
+    function closeDeleteModal() {
+      els.deleteModal.classList.remove('open');
+      pendingDeleteId = null;
+    }
 
     function saveForm(event) {
       event.preventDefault();
@@ -851,18 +881,11 @@ const storageKey = 'skills-manager-targets-wireframe';
         path,
         strategy: String(formData.get('strategy') || 'symlink'),
         adapter: String(formData.get('adapter') || 'convention adapter'),
-        notes: String(formData.get('notes') || '').trim() || '本地新增目标，等待下一次路径校验确认写入边界。'
+        notes: String(formData.get('notes') || '').trim() || '目标说明待补充。'
       };
-      if (editingId) {
-        targets = targets.map((target) => target.id === editingId ? { ...target, ...payload } : target);
-        selectedId = editingId;
-        showToast('目标已更新');
-      } else {
-        const next = { id: `target-${Date.now()}`, ...payload, status: 'review', enabled: true, priority: targets.length + 1, diagnostic: 'new target: path not validated\nlast result: review' };
-        targets = [next, ...targets];
-        selectedId = next.id;
-        showToast('目标已加入注册表');
-      }
+      targets = targets.map((target) => target.id === editingId ? { ...target, ...payload } : target);
+      selectedId = editingId;
+      showToast('目标已更新');
       persist();
       closeModal();
       render();
@@ -885,6 +908,17 @@ const storageKey = 'skills-manager-targets-wireframe';
       persist();
       render();
       showToast('已为启用目标排队校验');
+    }
+
+    function confirmDeleteTarget() {
+      const target = targets.find((item) => item.id === pendingDeleteId);
+      if (!target) return;
+      targets = targets.filter((item) => item.id !== pendingDeleteId);
+      if (selectedId === pendingDeleteId) selectedId = getVisibleTargets()[0]?.id || targets[0]?.id || null;
+      persist();
+      closeDeleteModal();
+      render();
+      showToast('目标已删除');
     }
 
     function copyPath() {
@@ -917,6 +951,12 @@ const storageKey = 'skills-manager-targets-wireframe';
         showToast('目标启用状态已更新');
         return;
       }
+      const deleteButton = event.target.closest('[data-delete]');
+      if (deleteButton) {
+        event.stopPropagation();
+        openDeleteModal(deleteButton.dataset.delete);
+        return;
+      }
       const row = event.target.closest('[data-id]');
       if (row) {
         selectedId = row.dataset.id;
@@ -926,6 +966,11 @@ const storageKey = 'skills-manager-targets-wireframe';
 
     els.rows.addEventListener('keydown', (event) => {
       if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-toggle]')) {
+        event.preventDefault();
+        event.target.click();
+        return;
+      }
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-delete]')) {
         event.preventDefault();
         event.target.click();
         return;
@@ -942,7 +987,6 @@ const storageKey = 'skills-manager-targets-wireframe';
       control.addEventListener('change', render);
     });
 
-    els.openCreate.addEventListener('click', () => openModal());
     els.editSelected.addEventListener('click', () => {
       const target = targets.find((item) => item.id === selectedId);
       if (target) openModal(target);
@@ -953,11 +997,18 @@ const storageKey = 'skills-manager-targets-wireframe';
     els.form.addEventListener('submit', saveForm);
     els.closeModal.addEventListener('click', closeModal);
     els.cancelModal.addEventListener('click', closeModal);
+    els.closeDelete.addEventListener('click', closeDeleteModal);
+    els.cancelDelete.addEventListener('click', closeDeleteModal);
+    els.confirmDelete.addEventListener('click', confirmDeleteTarget);
     els.modal.addEventListener('click', (event) => {
       if (event.target === els.modal) closeModal();
     });
+    els.deleteModal.addEventListener('click', (event) => {
+      if (event.target === els.deleteModal) closeDeleteModal();
+    });
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && els.modal.classList.contains('open')) closeModal();
+      if (event.key === 'Escape' && els.deleteModal.classList.contains('open')) closeDeleteModal();
     });
 
     render();
@@ -965,4 +1016,3 @@ const storageKey = 'skills-manager-targets-wireframe';
   </script>
 </body>
 </html>
-

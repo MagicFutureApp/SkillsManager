@@ -332,18 +332,19 @@
     .detail {
       border-left: 1px solid var(--border);
       background: var(--surface);
-      padding: 28px 24px;
+      padding: 24px 20px;
       display: grid;
-      gap: 18px;
+      gap: 12px;
       align-content: start;
     }
 
     .detail-card {
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px;
+      padding: 14px;
+      background: var(--surface);
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .detail-copy { margin: 6px 0 0; color: var(--muted); }
@@ -556,17 +557,16 @@
     </main>
 
     <aside class="detail" aria-label="计划详情">
-      <section>
-        <p class="eyebrow">Selected plan</p>
+      <section class="detail-card detail-summary">
+        <!--<p class="eyebrow">Selected plan</p>-->
         <h2 id="detail-title">选择一个计划</h2>
         <p class="detail-copy" id="detail-copy">右侧会显示 dry-run 条目、commit 锁定、目标路径和执行确认。</p>
+        <div class="button-row">
+          <button class="btn" type="button" id="copy-plan">复制计划摘要</button>
+          <button class="btn" type="button" id="edit-selected">编辑计划</button>
+          <button class="btn primary" type="button" id="execute-selected">执行计划</button>
+        </div>
       </section>
-
-      <div class="button-row">
-        <button class="btn" type="button" id="copy-plan">复制计划摘要</button>
-        <button class="btn" type="button" id="edit-selected">编辑计划</button>
-        <button class="btn primary" type="button" id="execute-selected">执行计划</button>
-      </div>
 
       <section class="detail-card"><h3>计划配置</h3><div id="detail-meta"></div></section>
       <section class="detail-card"><h3>Dry-run 条目</h3><div class="item-stack" id="item-list"></div></section>

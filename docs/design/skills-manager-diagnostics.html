@@ -329,18 +329,19 @@
     .detail {
       border-left: 1px solid var(--border);
       background: var(--surface);
-      padding: 28px 24px;
+      padding: 24px 20px;
       display: grid;
-      gap: 18px;
+      gap: 12px;
       align-content: start;
     }
 
     .detail-card {
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px;
+      padding: 14px;
+      background: var(--surface);
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .detail-copy { margin: 6px 0 0; color: var(--muted); }
@@ -500,16 +501,16 @@
     </main>
 
     <aside class="detail" aria-label="诊断详情">
-      <section>
-        <p class="eyebrow">Selected check</p>
+      <section class="detail-card detail-summary">
+        <!--<p class="eyebrow">Selected check</p>-->
         <h2 id="detail-title">选择一条诊断</h2>
         <p class="detail-copy" id="detail-copy">右侧会显示检查目的、系统边界、建议动作和最近日志。</p>
-      </section>
 
-      <div class="button-row">
-        <button class="btn" type="button" id="mark-reviewed">标记已复核</button>
-        <button class="btn primary" type="button" id="run-selected">运行所选检查</button>
-      </div>
+        <div class="button-row">
+          <button class="btn" type="button" id="mark-reviewed">标记已复核</button>
+          <button class="btn primary" type="button" id="run-selected">运行所选检查</button>
+        </div>
+      </section>
 
       <section class="detail-card"><h3>诊断元数据</h3><div id="detail-meta"></div></section>
       <section class="detail-card"><h3>建议动作</h3><div class="action-list" id="action-list"></div></section>

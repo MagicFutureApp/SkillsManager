@@ -532,19 +532,79 @@
       overflow-wrap: anywhere;
     }
 
+    .target-card-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .target-card-tools {
+      display: grid;
+      justify-items: end;
+      gap: 8px;
+    }
+
+    .target-count {
+      min-width: 58px;
+      text-align: right;
+      color: var(--muted);
+      font: 12px/1.2 var(--font-mono);
+    }
+
     .target-row {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
+      gap: 10px;
+    }
+
+    .target-row.selected {
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+      background: color-mix(in srgb, var(--accent) 5%, var(--surface));
     }
 
     .target-main {
       min-width: 0;
       display: grid;
-      gap: 2px;
+      gap: 3px;
+    }
+
+    .target-line {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .target-title {
       font-weight: 600;
+    }
+
+    .target-note {
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .target-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .target-meta strong {
+      font-weight: 600;
+    }
+
+    .target-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-height: 18px;
+      accent-color: var(--accent);
     }
 
     .detail-actions {
@@ -827,9 +887,18 @@
       </section>
 
       <section class="detail-card">
-        <h3>同步目标</h3>
-        <p class="detail-copy">勾选后自动保存为同步目标。</p>
+        <div class="target-card-head">
+          <div>
+            <h3>同步目标</h3>
+            <p class="detail-copy">选择默认同步范围；安装前仍会先生成计划预览。</p>
+          </div>
+          <div class="target-card-tools">
+            <span class="target-count" id="target-count">0 / 0</span>
+            <button class="btn row-action" id="add-target" type="button">新增同步目标</button>
+          </div>
+        </div>
         <div class="target-stack" id="target-list"></div>
+        <input id="target-folder-picker" type="file" webkitdirectory directory hidden>
       </section>
 
       <section class="detail-card">
@@ -960,11 +1029,11 @@
       });
     });
 const storageKey = 'skills-manager-skills-wireframe';
-    const targetOptions = [
-      { id: 'codex', name: 'Codex', path: '~/.codex/skills', defaultAction: 'install' },
-      { id: 'claude', name: 'Claude Code', path: '~/.claude/skills', defaultAction: 'update' },
-      { id: 'gemini', name: 'Gemini CLI', path: '~/.gemini/skills', defaultAction: 'skip' },
-      { id: 'custom', name: 'Custom directory', path: 'D:/Agents/shared-skills', defaultAction: 'install' }
+    let targetOptions = [
+      { id: 'codex', name: 'Codex', strategy: 'symlink', path: '~/.codex/skills', defaultAction: 'install' },
+      { id: 'claude', name: 'Claude Code', strategy: 'copy', path: '~/.claude/skills', defaultAction: 'update' },
+      { id: 'gemini', name: 'Gemini CLI', strategy: 'copy', path: '~/.gemini/skills', defaultAction: 'skip' },
+      { id: 'custom', name: 'Custom directory', strategy: 'symlink', path: 'D:/Agents/shared-skills', defaultAction: 'install' }
     ];
 
     const initialSkills = [
@@ -1050,6 +1119,9 @@ const storageKey = 'skills-manager-skills-wireframe';
       detailCopy: document.querySelector('#detail-copy'),
       detailMeta: document.querySelector('#detail-meta'),
       targetList: document.querySelector('#target-list'),
+      targetCount: document.querySelector('#target-count'),
+      addTarget: document.querySelector('#add-target'),
+      targetFolderPicker: document.querySelector('#target-folder-picker'),
       planList: document.querySelector('#plan-list'),
       copySkillId: document.querySelector('#copy-skill-id'),
       previewPlan: document.querySelector('#preview-plan'),
@@ -1170,6 +1242,7 @@ const storageKey = 'skills-manager-skills-wireframe';
         els.detailCopy.textContent = '右侧会显示来源、入口文件、同步目标和计划预览。';
         els.detailMeta.innerHTML = '';
         els.targetList.innerHTML = '';
+        els.targetCount.textContent = `0 / ${targetOptions.length}`;
         els.planList.innerHTML = '';
         return;
       }
@@ -1189,13 +1262,18 @@ const storageKey = 'skills-manager-skills-wireframe';
         </div>
       `).join('');
 
+      els.targetCount.textContent = `${skill.targets.length} / ${targetOptions.length}`;
       els.targetList.innerHTML = targetOptions.map((target) => `
-        <label class="target-row">
+        <label class="target-row ${skill.targets.includes(target.id) ? 'selected' : ''}">
           <span class="target-main">
-            <span class="target-title">${escapeHtml(target.name)}</span>
-            <span class="muted mono">${escapeHtml(target.path)}</span>
+            <span class="target-line">
+              <span class="target-title">${escapeHtml(target.name)}</span>
+            </span>
+            <span class="target-meta">
+              <span><strong class="mono">${escapeHtml(target.path)}</strong></span>
+            </span>
           </span>
-          <input type="checkbox" data-target="${target.id}" ${skill.targets.includes(target.id) ? 'checked' : ''}>
+          <input type="checkbox" aria-label="选择 ${escapeHtml(target.name)} 作为同步目标" data-target="${target.id}" ${skill.targets.includes(target.id) ? 'checked' : ''}>
         </label>
       `).join('');
 
@@ -1313,6 +1391,63 @@ const storageKey = 'skills-manager-skills-wireframe';
       if (!silent) showToast('保存成功');
     }
 
+    function slugTargetPath(path) {
+      return String(path || 'target')
+        .toLowerCase()
+        .replace(/^[a-z]:/i, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 36) || 'target';
+    }
+
+    function addLocalTarget({ name, path }) {
+      const skill = skills.find((item) => item.id === selectedId);
+      const idBase = `local-${slugTargetPath(path || name)}`;
+      let id = idBase;
+      let index = 2;
+      while (targetOptions.some((target) => target.id === id)) {
+        id = `${idBase}-${index}`;
+        index += 1;
+      }
+
+      targetOptions = [
+        ...targetOptions,
+        {
+          id,
+          name: name || '本地同步目标',
+          strategy: 'copy',
+          path: path || name || '本地文件夹',
+          defaultAction: 'install'
+        }
+      ];
+
+      if (skill) {
+        skills = skills.map((item) => item.id === skill.id
+          ? { ...item, targets: Array.from(new Set([...item.targets, id])) }
+          : item);
+      }
+
+      persist();
+      render();
+      showToast('保存成功');
+    }
+
+    async function browseLocalTarget() {
+      if ('showDirectoryPicker' in window) {
+        try {
+          const directory = await window.showDirectoryPicker({ mode: 'readwrite' });
+          addLocalTarget({ name: directory.name, path: directory.name });
+          return;
+        } catch (error) {
+          if (error?.name !== 'AbortError') showToast('未能打开文件夹选择窗口');
+          return;
+        }
+      }
+
+      els.targetFolderPicker.value = '';
+      els.targetFolderPicker.click();
+    }
+
     function previewPlan() {
       const skill = skills.find((item) => item.id === selectedId);
       if (!skill) return;
@@ -1419,6 +1554,14 @@ const storageKey = 'skills-manager-skills-wireframe';
     });
     els.previewSelected.addEventListener('click', previewPlan);
     els.syncSelected.addEventListener('click', () => syncSkill());
+    els.addTarget.addEventListener('click', browseLocalTarget);
+    els.targetFolderPicker.addEventListener('change', (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const relativePath = file.webkitRelativePath || file.name;
+      const folderName = relativePath.split('/')[0] || '本地同步目标';
+      addLocalTarget({ name: folderName, path: folderName });
+    });
     els.targetList.addEventListener('change', (event) => {
       if (event.target.matches('[data-target]')) saveTargets();
     });
