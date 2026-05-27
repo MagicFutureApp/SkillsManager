@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
 
@@ -7,7 +7,15 @@ import { shellNavigationGroups } from "./shell-navigation";
 
 describe("AppSidebar", () => {
   it("uses Providers as the first workspace route instead of Sources", () => {
-    render(<AppSidebar activeRouteId="providers" onNavigate={vi.fn()} />);
+    render(
+      <AppSidebar
+        activeRouteId="providers"
+        isAutoCollapsed={false}
+        isCollapsed={false}
+        onNavigate={vi.fn()}
+        onToggleCollapsed={vi.fn()}
+      />
+    );
 
     expect(screen.getByRole("button", { name: /Provider/i })).toHaveAttribute(
       "aria-current",
@@ -17,9 +25,57 @@ describe("AppSidebar", () => {
   });
 
   it("keeps diagnostics hidden from the visible sidebar navigation", () => {
-    render(<AppSidebar activeRouteId="skills" onNavigate={vi.fn()} />);
+    render(
+      <AppSidebar
+        activeRouteId="skills"
+        isAutoCollapsed={false}
+        isCollapsed={false}
+        onNavigate={vi.fn()}
+        onToggleCollapsed={vi.fn()}
+      />
+    );
 
     expect(screen.queryByRole("button", { name: /Diagnostics/i })).not.toBeInTheDocument();
+  });
+
+  it("requests a sidebar collapse from the toggle button", () => {
+    const onToggleCollapsed = vi.fn();
+
+    render(
+      <AppSidebar
+        activeRouteId="skills"
+        isAutoCollapsed={false}
+        isCollapsed={false}
+        onNavigate={vi.fn()}
+        onToggleCollapsed={onToggleCollapsed}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "收起侧边栏" }));
+
+    expect(onToggleCollapsed).toHaveBeenCalledOnce();
+  });
+
+  it("uses compact navigation when the sidebar is collapsed", () => {
+    render(
+      <AppSidebar
+        activeRouteId="skills"
+        isAutoCollapsed={false}
+        isCollapsed={true}
+        onNavigate={vi.fn()}
+        onToggleCollapsed={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("complementary", { name: "主导航" })).toHaveAttribute(
+      "data-collapsed",
+      "true"
+    );
+    expect(screen.queryByText("Local-first desktop")).not.toBeInTheDocument();
+    expect(screen.queryByText("工作区")).not.toBeInTheDocument();
+    expect(screen.queryByText("计划优先")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Skills" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "展开侧边栏" })).toBeInTheDocument();
   });
 });
 

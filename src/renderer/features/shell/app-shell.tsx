@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { routeIdByPath, routePathById } from "@/app/route-config";
 import type { AppHealth } from "@/global";
 import { useShellStore } from "@/stores/shell-store";
+import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 
 import { AppSidebar } from "./app-sidebar";
@@ -13,21 +14,49 @@ export const AppShell = ({ children }: AppShellProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const activeRouteId = routeIdByPath[location.pathname] ?? "skills";
+  const isSidebarAutoCollapsed = useShellStore((state) => state.isSidebarAutoCollapsed);
+  const isSidebarCollapsed = useShellStore((state) => state.isSidebarCollapsed);
   const setActiveRouteId = useShellStore((state) => state.setActiveRouteId);
+  const setSidebarAutoCollapsedByWidth = useShellStore(
+    (state) => state.setSidebarAutoCollapsedByWidth
+  );
+  const toggleSidebarCollapsed = useShellStore((state) => state.toggleSidebarCollapsed);
+  const shouldCollapseSidebar = isSidebarCollapsed || isSidebarAutoCollapsed;
 
   useEffect(() => {
     setActiveRouteId(activeRouteId);
   }, [activeRouteId, setActiveRouteId]);
 
   useEffect(() => {
+    const syncSidebarAutoCollapse = () => {
+      setSidebarAutoCollapsedByWidth(window.innerWidth);
+    };
+
+    syncSidebarAutoCollapse();
+    window.addEventListener("resize", syncSidebarAutoCollapse);
+
+    return () => {
+      window.removeEventListener("resize", syncSidebarAutoCollapse);
+    };
+  }, [setSidebarAutoCollapsedByWidth]);
+
+  useEffect(() => {
     void window.skillsManager?.getHealth().then(setHealth);
   }, []);
 
   return (
-    <div className="grid min-h-svh grid-cols-[232px_minmax(0,1fr)] bg-background text-foreground">
+    <div
+      className={cn(
+        "grid min-h-svh bg-background text-foreground transition-[grid-template-columns]",
+        shouldCollapseSidebar ? "grid-cols-[64px_minmax(0,1fr)]" : "grid-cols-[232px_minmax(0,1fr)]"
+      )}
+    >
       <AppSidebar
         activeRouteId={activeRouteId}
+        isAutoCollapsed={isSidebarAutoCollapsed}
+        isCollapsed={shouldCollapseSidebar}
         onNavigate={(routeId) => void navigate({ to: routePathById[routeId] })}
+        onToggleCollapsed={toggleSidebarCollapsed}
       />
       <main className="min-w-0">
         {children}

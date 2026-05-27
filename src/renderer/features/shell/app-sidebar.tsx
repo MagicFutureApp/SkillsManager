@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import React from "react";
 
 import skillportMark from "../../assets/skillport-mark.svg";
@@ -8,31 +9,65 @@ import { shellNavigationGroups } from "./shell-navigation";
 
 type AppSidebarProps = {
   activeRouteId: AppRouteId;
+  isAutoCollapsed: boolean;
+  isCollapsed: boolean;
   onNavigate: (routeId: AppRouteId) => void;
+  onToggleCollapsed: () => void;
 };
 
-export const AppSidebar = ({ activeRouteId, onNavigate }: AppSidebarProps) => {
+export const AppSidebar = ({
+  activeRouteId,
+  isAutoCollapsed,
+  isCollapsed,
+  onNavigate,
+  onToggleCollapsed
+}: AppSidebarProps) => {
+  const ToggleIcon = isCollapsed ? PanelLeftOpen : PanelLeftClose;
+  const toggleLabel = isCollapsed ? "展开侧边栏" : "收起侧边栏";
+
   return (
     <aside
-      className="flex min-h-svh flex-col gap-6 border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground"
+      className={cn(
+        "flex min-h-svh flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,padding]",
+        isCollapsed ? "gap-4 px-3 py-4" : "gap-6 px-4 py-5"
+      )}
       aria-label="主导航"
+      data-auto-collapsed={isAutoCollapsed}
+      data-collapsed={isCollapsed}
     >
-      <div className="flex min-h-10 items-center gap-2.5">
+      <div className={cn("flex min-h-10 items-center", isCollapsed ? "justify-center" : "gap-2.5")}>
         <img src={skillportMark} alt="" className="size-8 rounded-lg" aria-hidden="true" />
-        <div className="min-w-0">
-          <p className="truncate text-base font-semibold">Skills Manager</p>
-          <p className="truncate text-xs text-muted-foreground">Local-first desktop</p>
-        </div>
+        {!isCollapsed ? (
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold">Skills Manager</p>
+            <p className="truncate text-xs text-muted-foreground">Local-first desktop</p>
+          </div>
+        ) : null}
       </div>
 
-      <div className="flex flex-col gap-6">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className={cn("self-start", isCollapsed && "self-center")}
+        aria-label={toggleLabel}
+        title={toggleLabel}
+        onClick={onToggleCollapsed}
+      >
+        <ToggleIcon aria-hidden="true" />
+      </Button>
+
+      <div className={cn("flex flex-col", isCollapsed ? "gap-4" : "gap-6")}>
         {shellNavigationGroups.map((group) => (
           <nav key={group.label} className="flex flex-col gap-1" aria-label={group.label}>
-            <p className="mb-1 text-xs font-semibold text-muted-foreground">{group.label}</p>
+            {!isCollapsed ? (
+              <p className="mb-1 text-xs font-semibold text-muted-foreground">{group.label}</p>
+            ) : null}
             {group.items
               .filter((item) => !item.hidden)
               .map((item) => {
                 const isActive = item.routeId === activeRouteId;
+                const Icon = item.icon;
 
                 return (
                   <Button
@@ -40,18 +75,31 @@ export const AppSidebar = ({ activeRouteId, onNavigate }: AppSidebarProps) => {
                     type="button"
                     variant="ghost"
                     className={cn(
-                      "h-9 justify-between rounded-lg px-2.5 text-sm font-normal",
+                      "h-9 rounded-lg text-sm font-normal",
+                      isCollapsed
+                        ? "relative size-9 justify-center px-0"
+                        : "justify-between px-2.5",
                       isActive && "bg-primary/10 font-semibold text-primary hover:bg-primary/10"
                     )}
+                    aria-label={isCollapsed ? item.label : undefined}
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => onNavigate(item.routeId as AppRouteId)}
+                    title={isCollapsed ? item.label : undefined}
                   >
-                    <span className="truncate">{item.label}</span>
+                    {isCollapsed ? (
+                      <Icon aria-hidden="true" className="size-4" />
+                    ) : (
+                      <span className="truncate">{item.label}</span>
+                    )}
                     <span
                       className={cn(
-                        "ml-3 inline-grid h-5 min-w-5 place-items-center rounded-full border border-border bg-background px-1.5 font-mono text-xs tabular-nums text-muted-foreground",
+                        "inline-grid place-items-center rounded-full border border-border bg-background font-mono text-xs tabular-nums text-muted-foreground",
+                        isCollapsed
+                          ? "absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px]"
+                          : "ml-3 h-5 min-w-5 px-1.5",
                         isActive && "text-foreground"
                       )}
+                      aria-hidden={isCollapsed ? "true" : undefined}
                     >
                       {item.badge}
                     </span>
@@ -62,12 +110,14 @@ export const AppSidebar = ({ activeRouteId, onNavigate }: AppSidebarProps) => {
         ))}
       </div>
 
-      <div className="mt-auto rounded-lg border border-border bg-muted/40 p-3">
-        <p className="text-sm font-semibold">计划优先</p>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          安装前先生成计划预览，确认同步目标和策略后再执行。
-        </p>
-      </div>
+      {!isCollapsed ? (
+        <div className="mt-auto rounded-lg border border-border bg-muted/40 p-3">
+          <p className="text-sm font-semibold">计划优先</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            安装前先生成计划预览，确认同步目标和策略后再执行。
+          </p>
+        </div>
+      ) : null}
     </aside>
   );
 };
