@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 112 112" role="img" aria-labelledby="title desc">
+  <title id="title">Skillport mark</title>
+  <desc id="desc">A local-first skill unit hub mark with connected skill tracks.</desc>
+  <defs>
+    <linearGradient id="icon-surface" x1="0" y1="-6" x2="112" y2="118" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1d2b3f" />
+      <stop offset="1" stop-color="#101827" />
+    </linearGradient>
+  </defs>
+
+  <rect width="112" height="112" rx="26" fill="url(#icon-surface)" />
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M34 34h54" stroke="#f4f7fb" stroke-width="10" />
+    <path d="M34 56h34" stroke="#f4f7fb" stroke-width="10" />
+    <path d="M34 78h54" stroke="#f4f7fb" stroke-width="10" />
+    <path d="M34 34c17 1 27 8 34 22" stroke="#8da1bd" stroke-width="4" opacity=".78" />
+    <path d="M68 56c5 10 10 16 20 22" stroke="#8da1bd" stroke-width="4" opacity=".78" />
+  </g>
+
+  <g>
+    <circle cx="34" cy="34" r="10" fill="#31d0a7" />
+    <circle cx="68" cy="56" r="10" fill="#f2b84b" />
+    <circle cx="88" cy="78" r="10" fill="#5f8cff" />
+    <circle cx="34" cy="34" r="4" fill="#0f2f26" opacity=".52" />
+    <circle cx="68" cy="56" r="4" fill="#402b08" opacity=".42" />
+    <circle cx="88" cy="78" r="4" fill="#162c66" opacity=".42" />
+  </g>
+</svg>

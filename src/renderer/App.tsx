@@ -1,13 +1,6 @@
-import { useEffect, useState } from "react";
-import { AppShell } from "./features/shell/AppShell";
-import type { AppHealth } from "./global";
+import { AppRouter } from "./app/router";
+import React from "react";
 
 export const App = () => {
-  const [health, setHealth] = useState<AppHealth | null>(null);
-
-  useEffect(() => {
-    void window.skillsManager.getHealth().then(setHealth);
-  }, []);
-
-  return <AppShell health={health} />;
+  return <AppRouter />;
 };

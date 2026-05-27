@@ -1,6 +1,6 @@
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
-export const sources = sqliteTable("sources", {
+export const providers = sqliteTable("providers", {
   id: text("id").primaryKey(),
   type: text("type").notNull(),
   name: text("name").notNull(),
@@ -11,7 +11,7 @@ export const sources = sqliteTable("sources", {
 
 export const repositories = sqliteTable("repositories", {
   id: text("id").primaryKey(),
-  sourceId: text("source_id").notNull(),
+  providerId: text("provider_id").notNull(),
   remoteUrl: text("remote_url").notNull(),
   localCachePath: text("local_cache_path").notNull(),
   defaultBranch: text("default_branch"),

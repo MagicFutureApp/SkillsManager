@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="160" viewBox="0 0 512 160" role="img" aria-labelledby="title desc">
+  <title id="title">Skillport logo</title>
+  <desc id="desc">A local-first skill unit hub mark with connected skill tracks and the Skillport wordmark.</desc>
+  <defs>
+    <linearGradient id="icon-surface" x1="24" y1="18" x2="136" y2="142" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1d2b3f" />
+      <stop offset="1" stop-color="#101827" />
+    </linearGradient>
+    <filter id="soft-shadow" x="8" y="8" width="144" height="144" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0f172a" flood-opacity=".18" />
+    </filter>
+  </defs>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="24" y="24" width="112" height="112" rx="26" fill="url(#icon-surface)" />
+  </g>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M58 58h54" stroke="#f4f7fb" stroke-width="10" />
+    <path d="M58 80h34" stroke="#f4f7fb" stroke-width="10" />
+    <path d="M58 102h54" stroke="#f4f7fb" stroke-width="10" />
+    <path d="M58 58c17 1 27 8 34 22" stroke="#8da1bd" stroke-width="4" opacity=".78" />
+    <path d="M92 80c5 10 10 16 20 22" stroke="#8da1bd" stroke-width="4" opacity=".78" />
+  </g>
+
+  <g>
+    <circle cx="58" cy="58" r="10" fill="#31d0a7" />
+    <circle cx="92" cy="80" r="10" fill="#f2b84b" />
+    <circle cx="112" cy="102" r="10" fill="#5f8cff" />
+    <circle cx="58" cy="58" r="4" fill="#0f2f26" opacity=".52" />
+    <circle cx="92" cy="80" r="4" fill="#402b08" opacity=".42" />
+    <circle cx="112" cy="102" r="4" fill="#162c66" opacity=".42" />
+  </g>
+
+  <g fill="#172033">
+    <text x="168" y="78" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="38" font-weight="750" letter-spacing="0">Skillport</text>
+    <text x="170" y="110" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15" font-weight="520" letter-spacing="0" fill="#607089">Sync and distribute agent skills</text>
+  </g>
+</svg>

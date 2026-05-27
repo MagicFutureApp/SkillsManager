@@ -4,7 +4,7 @@ export type AppHealth = MainAppHealth;
 
 declare global {
   interface Window {
-    skillsManager: {
+    skillsManager?: {
       getHealth: () => Promise<AppHealth>;
     };
   }

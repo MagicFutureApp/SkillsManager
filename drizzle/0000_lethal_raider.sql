@@ -61,9 +61,18 @@ CREATE TABLE `install_instances` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `providers` (
+	`id` text PRIMARY KEY NOT NULL,
+	`type` text NOT NULL,
+	`name` text NOT NULL,
+	`config_json` text NOT NULL,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `repositories` (
 	`id` text PRIMARY KEY NOT NULL,
-	`source_id` text NOT NULL,
+	`provider_id` text NOT NULL,
 	`remote_url` text NOT NULL,
 	`local_cache_path` text NOT NULL,
 	`default_branch` text,
@@ -102,15 +111,6 @@ CREATE TABLE `skill_versions` (
 	`commit_sha` text NOT NULL,
 	`metadata_snapshot_json` text NOT NULL,
 	`created_at` integer NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE `sources` (
-	`id` text PRIMARY KEY NOT NULL,
-	`type` text NOT NULL,
-	`name` text NOT NULL,
-	`config_json` text NOT NULL,
-	`created_at` integer NOT NULL,
-	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `sync_runs` (
