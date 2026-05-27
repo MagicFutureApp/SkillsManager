@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
 
-import { AppSidebar } from "./AppSidebar";
-import { shellNavigationGroups } from "./shellNavigation";
+import { AppSidebar } from "./app-sidebar";
+import { shellNavigationGroups } from "./shell-navigation";
 
 describe("AppSidebar", () => {
   it("uses Providers as the first workspace route instead of Sources", () => {

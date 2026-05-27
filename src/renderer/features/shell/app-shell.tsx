@@ -1,10 +1,10 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { routeIdByPath, routePathById } from "@/app/routeIds";
-import type { AppHealth } from "../../global";
-import { useShellStore } from "@/stores/shellStore";
+import { routeIdByPath, routePathById } from "@/app/route-ids";
+import type { AppHealth } from "@/global";
+import { useShellStore } from "@/stores/shell-store";
 import React, { useEffect, useState } from "react";
 
-import { AppSidebar } from "./AppSidebar";
+import { AppSidebar } from "./app-sidebar";
 
 type AppShellProps = React.PropsWithChildren;
 

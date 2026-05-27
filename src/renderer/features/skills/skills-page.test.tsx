@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import React from "react";
 
-import { SkillsPage } from "./SkillsPage";
+import { SkillsPage } from "./skills-page";
 
 describe("SkillsPage", () => {
   it("renders the skills design surface from the HTML mockup", () => {

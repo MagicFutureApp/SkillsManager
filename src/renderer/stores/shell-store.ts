@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { AppRouteId } from "@/app/routeIds";
+import type { AppRouteId } from "@/app/route-ids";
 
 type ShellStore = {
   activeRouteId: AppRouteId;

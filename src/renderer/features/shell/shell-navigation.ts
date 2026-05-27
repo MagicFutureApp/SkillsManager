@@ -1,4 +1,4 @@
-import type { AppRouteId } from "@/app/routeIds";
+import type { AppRouteId } from "@/app/route-ids";
 
 export type ShellNavigationItem = {
   routeId: AppRouteId | "diagnostics";

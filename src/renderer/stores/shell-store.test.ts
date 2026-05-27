@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { useShellStore } from "./shellStore";
+import { useShellStore } from "./shell-store";
 
 describe("useShellStore", () => {
   it("tracks the active route id", () => {

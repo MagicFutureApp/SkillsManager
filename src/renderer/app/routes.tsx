@@ -1,8 +1,8 @@
 import { createRoute, createRootRoute, Navigate, Outlet } from "@tanstack/react-router";
 import React from "react";
 
-import { AppShell } from "@/features/shell/AppShell";
-import { SkillsPage } from "@/features/skills/SkillsPage";
+import { AppShell } from "@/features/shell/app-shell";
+import { SkillsPage } from "@/features/skills/skills-page";
 
 const PagePlaceholder = ({
   eyebrow,

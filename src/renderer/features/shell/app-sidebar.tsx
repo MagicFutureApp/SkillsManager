@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 import React from "react";
 
 import skillportMark from "../../assets/skillport-mark.svg";
-import type { AppRouteId } from "@/app/routeIds";
-import { shellNavigationGroups } from "./shellNavigation";
+import type { AppRouteId } from "@/app/route-ids";
+import { shellNavigationGroups } from "./shell-navigation";
 
 type AppSidebarProps = {
   activeRouteId: AppRouteId;
