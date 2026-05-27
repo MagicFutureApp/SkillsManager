@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { routeIdByPath, routePathById } from "@/app/route-ids";
+import { routeIdByPath, routePathById } from "@/app/route-config";
 import type { AppHealth } from "@/global";
 import { useShellStore } from "@/stores/shell-store";
 import React, { useEffect, useState } from "react";

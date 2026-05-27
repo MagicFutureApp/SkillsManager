@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import React from "react";
 
 import skillportMark from "../../assets/skillport-mark.svg";
-import type { AppRouteId } from "@/app/route-ids";
+import type { AppRouteId } from "@/app/route-config";
 import { shellNavigationGroups } from "./shell-navigation";
 
 type AppSidebarProps = {
