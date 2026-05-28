@@ -15,6 +15,7 @@ import type { LucideIcon } from "lucide-react";
 export type ShellNavigationItem = {
   routeId: AppRouteId | "diagnostics";
   labelKey: string;
+  descriptionKey?: string;
   badge: string;
   hidden?: boolean;
   icon: LucideIcon;
@@ -39,14 +40,28 @@ export const shellNavigationGroups: ShellNavigationGroup[] = [
       {
         routeId: "repositories",
         labelKey: "shell.navigation.repositories",
+        descriptionKey: "shell.navigationDescriptions.repositories",
         badge: "5",
         icon: GitBranch
       },
-      { routeId: "skills", labelKey: "shell.navigation.skills", badge: "0", icon: Package },
-      { routeId: "targets", labelKey: "shell.navigation.targets", badge: "4", icon: Target },
+      {
+        routeId: "skills",
+        labelKey: "shell.navigation.skills",
+        descriptionKey: "shell.navigationDescriptions.skills",
+        badge: "0",
+        icon: Package
+      },
+      {
+        routeId: "targets",
+        labelKey: "shell.navigation.targets",
+        descriptionKey: "shell.navigationDescriptions.targets",
+        badge: "4",
+        icon: Target
+      },
       {
         routeId: "distribution",
         labelKey: "shell.navigation.distribution",
+        descriptionKey: "shell.navigationDescriptions.distribution",
         badge: "0",
         icon: Send
       }

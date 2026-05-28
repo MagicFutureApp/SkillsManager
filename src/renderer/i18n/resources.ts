@@ -20,6 +20,13 @@ export const resources = {
         guidance: {
           title: "计划优先",
           description: "安装前先生成计划预览，确认同步目标和策略后再执行。"
+        },
+        navigationDescriptions: {
+          repositories: "管理技能来源仓库和本地索引入口。",
+          skills: "浏览 skill unit，选择目标并预览分发计划。",
+          targets: "维护 Codex、Claude Code、Gemini CLI 和自定义目录目标。",
+          distribution: "查看技能同步和分发执行记录。",
+          versionLabel: "版本: {{version}}"
         }
       },
       skills: {
@@ -104,6 +111,13 @@ export const resources = {
         guidance: {
           title: "Plan first",
           description: "Preview the plan before installing, then confirm targets and strategy."
+        },
+        navigationDescriptions: {
+          repositories: "Manage skill source repositories and local index entry points.",
+          skills: "Browse skill units, choose targets, and preview distribution plans.",
+          targets: "Maintain Codex, Claude Code, Gemini CLI, and custom directory targets.",
+          distribution: "Review skill sync and distribution execution records.",
+          versionLabel: "Version: {{version}}"
         }
       },
       skills: {

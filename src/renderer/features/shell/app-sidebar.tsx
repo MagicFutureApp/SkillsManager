@@ -12,6 +12,7 @@ import { APP_META } from "../../../core/app-constants";
 
 type AppSidebarProps = {
   activeRouteId: AppRouteId;
+  appVersion?: string | null;
   isAutoCollapsed: boolean;
   isCollapsed: boolean;
   onNavigate: (routeId: AppRouteId) => void;
@@ -19,11 +20,20 @@ type AppSidebarProps = {
 
 export const AppSidebar = ({
   activeRouteId,
+  appVersion,
   isAutoCollapsed,
   isCollapsed,
   onNavigate
 }: AppSidebarProps) => {
   const { t } = useTranslation();
+  const activeNavigationItem = shellNavigationGroups
+    .flatMap((group) => group.items)
+    .find((item) => item.routeId === activeRouteId);
+  const activeNavigationDescription = activeNavigationItem?.descriptionKey
+    ? t(activeNavigationItem.descriptionKey)
+    : appVersion
+      ? t("shell.navigationDescriptions.versionLabel", { version: appVersion })
+      : null;
 
   const logoContent = (
     <>
@@ -138,10 +148,9 @@ export const AppSidebar = ({
 
       {!isCollapsed ? (
         <div className="mt-auto rounded-lg border border-border bg-muted/40 p-3">
-          <p className="text-sm font-semibold">{t("shell.guidance.title")}</p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {t("shell.guidance.description")}
-          </p>
+          {activeNavigationDescription ? (
+            <p className="text-xs leading-5 text-muted-foreground">{activeNavigationDescription}</p>
+          ) : null}
         </div>
       ) : null}
     </aside>

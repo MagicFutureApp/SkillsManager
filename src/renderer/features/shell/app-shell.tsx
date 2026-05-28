@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { routeIdByPath, routePathById } from "@/app/route-config";
-import type { AppHealth } from "@/global";
+import type { AppHealth, AppInfo } from "@/global";
 import { useShellStore } from "@/stores/shell-store";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
@@ -13,6 +13,7 @@ type AppShellProps = React.PropsWithChildren;
 
 export const AppShell = ({ children }: AppShellProps) => {
   const [health, setHealth] = useState<AppHealth | null>(null);
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const activeRouteId = routeIdByPath[location.pathname] ?? "skills";
@@ -42,6 +43,7 @@ export const AppShell = ({ children }: AppShellProps) => {
 
   useEffect(() => {
     void window.skillsManager?.getHealth().then(setHealth);
+    void window.skillsManager?.getInfo().then(setAppInfo);
   }, []);
 
   return (
@@ -67,6 +69,7 @@ export const AppShell = ({ children }: AppShellProps) => {
       >
         <AppSidebar
           activeRouteId={activeRouteId}
+          appVersion={appInfo?.version}
           isAutoCollapsed={isSidebarAutoCollapsed}
           isCollapsed={shouldCollapseSidebar}
           onNavigate={(routeId) => void navigate({ to: routePathById[routeId] })}

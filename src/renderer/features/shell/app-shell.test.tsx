@@ -29,6 +29,17 @@ const renderAppShell = async (children: React.ReactNode) => {
 
 describe("AppShell", () => {
   beforeEach(() => {
+    window.skillsManager = {
+      getHealth: vi.fn().mockResolvedValue({
+        chrome: "130.0.0",
+        electron: "42.2.0",
+        node: "25.0.0",
+        platform: "win32"
+      }),
+      getInfo: vi.fn().mockResolvedValue({ version: "9.8.7" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN")
+    };
+
     setViewportWidth(1440);
     useShellStore.setState({
       activeRouteId: "skills",
@@ -100,6 +111,21 @@ describe("AppShell", () => {
       "h-[calc(100svh-44px)]",
       "overflow-y-auto"
     );
+  });
+
+  it("loads the application version from the Electron API for sidebar fallback text", async () => {
+    const getInfo = vi.mocked(window.skillsManager?.getInfo);
+    expect(getInfo).toBeDefined();
+
+    await renderAppShell(
+      <AppShell>
+        <div>Shell content</div>
+      </AppShell>
+    );
+
+    await waitFor(() => {
+      expect(getInfo).toHaveBeenCalled();
+    });
   });
 
   it("updates the auto-collapse state when the viewport crosses the compact threshold", async () => {

@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu, Tray } from "electron";
 import path from "node:path";
+import { registerAppInfoIpc } from "./ipc/app-info.js";
 import { registerHealthIpc } from "./ipc/health";
 import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
 import { getMainMessages } from "./i18n/main-messages.js";
@@ -83,6 +84,7 @@ const createTray = (): void => {
 void app
   .whenReady()
   .then(async () => {
+    registerAppInfoIpc();
     registerHealthIpc();
     registerLocaleIpc();
     await createMainWindow();

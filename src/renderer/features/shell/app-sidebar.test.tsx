@@ -14,6 +14,7 @@ const renderSidebar = async (props: Partial<React.ComponentProps<typeof AppSideb
     <I18nextProvider i18n={i18n}>
       <AppSidebar
         activeRouteId="skills"
+        appVersion="0.1.0"
         isAutoCollapsed={false}
         isCollapsed={false}
         onNavigate={vi.fn()}
@@ -55,7 +56,7 @@ describe("AppSidebar", () => {
     expect(screen.queryByText("Local-first desktop")).not.toBeInTheDocument();
     expect(screen.queryByText("工作区")).not.toBeInTheDocument();
     expect(screen.queryByText("系统")).not.toBeInTheDocument();
-    expect(screen.queryByText("计划优先")).not.toBeInTheDocument();
+    expect(screen.queryByText("浏览 skill unit，选择目标并预览分发计划。")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "技能" })).toHaveAttribute("aria-current", "page");
     expect(screen.queryByRole("button", { name: "展开侧边栏" })).not.toBeInTheDocument();
   });
@@ -95,10 +96,24 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("button", { name: /目标/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "同步记录" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /设置/ })).toBeInTheDocument();
-    expect(screen.getByText("计划优先")).toBeInTheDocument();
-    expect(
-      screen.getByText("安装前先生成计划预览，确认同步目标和策略后再执行。")
-    ).toBeInTheDocument();
+  });
+
+  it("shows the active navigation item description at the bottom of the expanded sidebar", async () => {
+    await renderSidebar({ activeRouteId: "skills" });
+
+    expect(screen.getByText("浏览 skill unit，选择目标并预览分发计划。")).toBeInTheDocument();
+  });
+
+  it("does not repeat the active navigation label in the sidebar footer", async () => {
+    await renderSidebar({ activeRouteId: "skills" });
+
+    expect(screen.getAllByText("技能")).toHaveLength(1);
+  });
+
+  it("falls back to the app version when the active navigation item has no description", async () => {
+    await renderSidebar({ activeRouteId: "settings", appVersion: "2.3.4" });
+
+    expect(screen.getByText("版本: 2.3.4")).toBeInTheDocument();
   });
 
   it("renders icons for every visible navigation item when expanded", async () => {
