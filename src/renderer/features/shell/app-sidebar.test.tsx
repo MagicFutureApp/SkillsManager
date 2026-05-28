@@ -24,13 +24,11 @@ const renderSidebar = async (props: Partial<React.ComponentProps<typeof AppSideb
 };
 
 describe("AppSidebar", () => {
-  it("uses Providers as the first workspace route instead of Sources", async () => {
-    await renderSidebar({ activeRouteId: "providers" });
+  it("hides Providers and Sync History from the visible sidebar navigation", async () => {
+    await renderSidebar();
 
-    expect(screen.getByRole("button", { name: /Provider/i })).toHaveAttribute(
-      "aria-current",
-      "page"
-    );
+    expect(screen.queryByRole("button", { name: /Provider/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Sync history/i })).not.toBeInTheDocument();
     expect(screen.queryByText("Sources")).not.toBeInTheDocument();
   });
 
@@ -56,8 +54,9 @@ describe("AppSidebar", () => {
     );
     expect(screen.queryByText("Local-first desktop")).not.toBeInTheDocument();
     expect(screen.queryByText("工作区")).not.toBeInTheDocument();
+    expect(screen.queryByText("系统")).not.toBeInTheDocument();
     expect(screen.queryByText("计划优先")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Skills" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "技能" })).toHaveAttribute("aria-current", "page");
     expect(screen.queryByRole("button", { name: "展开侧边栏" })).not.toBeInTheDocument();
   });
 
@@ -68,7 +67,7 @@ describe("AppSidebar", () => {
     const badges = sidebar.querySelectorAll('[data-slot="badge"]');
 
     expect(badges.length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "Skills" })).not.toHaveAttribute("title");
+    expect(screen.getByRole("button", { name: "技能" })).not.toHaveAttribute("title");
     expect(
       sidebar.querySelector('[data-slot="tooltip-trigger"][aria-label="Skillport"]')
     ).toBeTruthy();
@@ -83,17 +82,34 @@ describe("AppSidebar", () => {
     );
 
     expect(badgeTexts).not.toContain("0");
-    expect(badgeTexts).toEqual(["6", "5", "4", "8", "4"]);
+    expect(badgeTexts).toEqual(["5", "4", "8"]);
   });
 
-  it("renders translated group labels and plan guidance", async () => {
+  it("renders localized navigation labels without group headings", async () => {
     await renderSidebar();
 
-    expect(screen.getByText("工作区")).toBeInTheDocument();
+    expect(screen.queryByText("工作区")).not.toBeInTheDocument();
+    expect(screen.queryByText("系统")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /来源/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "技能" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /目标/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "同步记录" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /设置/ })).toBeInTheDocument();
     expect(screen.getByText("计划优先")).toBeInTheDocument();
     expect(
       screen.getByText("安装前先生成计划预览，确认同步目标和策略后再执行。")
     ).toBeInTheDocument();
+  });
+
+  it("renders icons for every visible navigation item when expanded", async () => {
+    await renderSidebar();
+
+    const sidebar = screen.getByRole("complementary", { name: "主导航" });
+    const visibleButtons = screen.getAllByRole("button").filter((button) => button !== null);
+    const navigationButtons = visibleButtons.filter((button) => button.closest("nav"));
+
+    expect(navigationButtons).toHaveLength(5);
+    expect(sidebar.querySelectorAll("nav button svg")).toHaveLength(5);
   });
 });
 
@@ -104,13 +120,11 @@ describe("shellNavigationGroups", () => {
     );
 
     expect(visibleRouteIds).toEqual([
-      "providers",
       "repositories",
       "skills",
       "targets",
       "distribution",
-      "settings",
-      "sync-history"
+      "settings"
     ]);
   });
 });

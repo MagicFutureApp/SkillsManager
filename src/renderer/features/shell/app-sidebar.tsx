@@ -67,11 +67,6 @@ export const AppSidebar = ({
       <div className={cn("flex flex-col", isCollapsed ? "gap-4" : "gap-6")}>
         {shellNavigationGroups.map((group) => (
           <nav key={group.labelKey} className="flex flex-col gap-1" aria-label={t(group.labelKey)}>
-            {!isCollapsed ? (
-              <p className="mb-1 text-xs font-semibold text-muted-foreground">
-                {t(group.labelKey)}
-              </p>
-            ) : null}
             {group.items
               .filter((item) => !item.hidden)
               .map((item) => {
@@ -98,7 +93,10 @@ export const AppSidebar = ({
                     {isCollapsed ? (
                       <Icon aria-hidden="true" />
                     ) : (
-                      <span className="truncate">{label}</span>
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Icon aria-hidden="true" className="size-4" />
+                        <span className="truncate">{label}</span>
+                      </span>
                     )}
                     {shouldShowBadge ? (
                       <Badge

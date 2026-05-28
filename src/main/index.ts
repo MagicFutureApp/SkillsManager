@@ -3,8 +3,9 @@ import path from "node:path";
 import { registerHealthIpc } from "./ipc/health";
 import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
 import { getMainMessages } from "./i18n/main-messages.js";
-import { getAppIconPath, getTrayIconPath } from "./tray-icon.js";
-import { APP_META, WINDOW_MIN_WIDTH } from "../core/app-constants.js";
+import { getTrayIconPath } from "./tray-icon.js";
+import { buildMainWindowOptions, disableWindowMenuBar } from "./window-menu.js";
+import { APP_META } from "../core/app-constants.js";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -21,19 +22,8 @@ const loadMainWindow = async (window: BrowserWindow): Promise<void> => {
 };
 
 const createMainWindow = async (): Promise<void> => {
-  mainWindow = new BrowserWindow({
-    width: 1180,
-    height: 760,
-    minWidth: WINDOW_MIN_WIDTH,
-    minHeight: 640,
-    title: APP_META.title,
-    icon: getAppIconPath(__dirname),
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false
-    }
-  });
+  mainWindow = new BrowserWindow(buildMainWindowOptions(__dirname));
+  disableWindowMenuBar(mainWindow);
 
   mainWindow.on("closed", () => {
     mainWindow = null;

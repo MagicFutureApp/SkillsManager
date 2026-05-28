@@ -29,7 +29,13 @@ export const shellNavigationGroups: ShellNavigationGroup[] = [
   {
     labelKey: "shell.navigation.workspace",
     items: [
-      { routeId: "providers", labelKey: "shell.navigation.providers", badge: "6", icon: PlugZap },
+      {
+        routeId: "providers",
+        labelKey: "shell.navigation.providers",
+        badge: "6",
+        hidden: true,
+        icon: PlugZap
+      },
       {
         routeId: "repositories",
         labelKey: "shell.navigation.repositories",
@@ -54,6 +60,7 @@ export const shellNavigationGroups: ShellNavigationGroup[] = [
         routeId: "sync-history",
         labelKey: "shell.navigation.syncHistory",
         badge: "4",
+        hidden: true,
         icon: History
       },
       {
