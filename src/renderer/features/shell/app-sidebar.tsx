@@ -1,7 +1,9 @@
 import React from "react";
 
 import skillportMark from "../../assets/skillport-mark.svg";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AppRouteId } from "@/app/route-config";
 import { cn } from "@/lib/utils";
 import { shellNavigationGroups } from "./shell-navigation";
@@ -20,6 +22,18 @@ export const AppSidebar = ({
   isCollapsed,
   onNavigate
 }: AppSidebarProps) => {
+  const logoContent = (
+    <>
+      <img src={skillportMark} alt="" className="size-8 rounded-lg" aria-hidden="true" />
+      {!isCollapsed ? (
+        <div className="min-w-0">
+          <p className="truncate text-base font-semibold">{APP_META.title}</p>
+          <p className="truncate text-xs text-muted-foreground">{APP_META.description}</p>
+        </div>
+      ) : null}
+    </>
+  );
+
   return (
     <aside
       className={cn(
@@ -30,15 +44,22 @@ export const AppSidebar = ({
       data-auto-collapsed={isAutoCollapsed}
       data-collapsed={isCollapsed}
     >
-      <div className={cn("flex min-h-10 items-center", isCollapsed ? "justify-center" : "gap-2.5")}>
-        <img src={skillportMark} alt="" className="size-8 rounded-lg" aria-hidden="true" />
-        {!isCollapsed ? (
-          <div className="min-w-0">
-            <p className="truncate text-base font-semibold">{APP_META.title}</p>
-            <p className="truncate text-xs text-muted-foreground">{APP_META.description}</p>
-          </div>
-        ) : null}
-      </div>
+      {isCollapsed ? (
+        <Tooltip>
+          <TooltipTrigger
+            className="flex min-h-10 items-center justify-center rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            aria-label={APP_META.title}
+          >
+            {logoContent}
+          </TooltipTrigger>
+          <TooltipContent side="right" align="center" className="flex flex-col items-start gap-0.5">
+            <span className="font-semibold">{APP_META.title}</span>
+            <span className="text-background/75">{APP_META.description}</span>
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <div className="flex min-h-10 items-center gap-2.5">{logoContent}</div>
+      )}
 
       <div className={cn("flex flex-col", isCollapsed ? "gap-4" : "gap-6")}>
         {shellNavigationGroups.map((group) => (
@@ -51,10 +72,10 @@ export const AppSidebar = ({
               .map((item) => {
                 const isActive = item.routeId === activeRouteId;
                 const Icon = item.icon;
+                const shouldShowBadge = Number(item.badge) > 0;
 
-                return (
+                const button = (
                   <Button
-                    key={item.routeId}
                     type="button"
                     variant="ghost"
                     className={cn(
@@ -67,26 +88,43 @@ export const AppSidebar = ({
                     aria-label={isCollapsed ? item.label : undefined}
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => onNavigate(item.routeId as AppRouteId)}
-                    title={isCollapsed ? item.label : undefined}
                   >
                     {isCollapsed ? (
-                      <Icon aria-hidden="true" className="size-4" />
+                      <Icon aria-hidden="true" />
                     ) : (
                       <span className="truncate">{item.label}</span>
                     )}
-                    <span
-                      className={cn(
-                        "inline-grid place-items-center rounded-full border border-border bg-background font-mono text-xs tabular-nums text-muted-foreground",
-                        isCollapsed
-                          ? "absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px]"
-                          : "ml-3 h-5 min-w-5 px-1.5",
-                        isActive && "text-foreground"
-                      )}
-                      aria-hidden={isCollapsed ? "true" : undefined}
-                    >
-                      {item.badge}
-                    </span>
+                    {shouldShowBadge ? (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "bg-background font-mono tabular-nums text-muted-foreground",
+                          isCollapsed
+                            ? "absolute -right-1 -top-0.5 h-4 min-w-4 px-1 text-[10px]"
+                            : "ml-3",
+                          isActive && "text-foreground"
+                        )}
+                        aria-hidden={isCollapsed ? "true" : undefined}
+                      >
+                        {item.badge}
+                      </Badge>
+                    ) : null}
                   </Button>
+                );
+
+                return (
+                  <React.Fragment key={item.routeId}>
+                    {isCollapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger render={button} />
+                        <TooltipContent side="right" align="center">
+                          {item.label}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      button
+                    )}
+                  </React.Fragment>
                 );
               })}
           </nav>
