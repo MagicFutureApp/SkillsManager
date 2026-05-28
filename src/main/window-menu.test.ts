@@ -9,6 +9,17 @@ describe("main window menu bar", () => {
     });
   });
 
+  it("keeps the title bar border visible below the window controls overlay", () => {
+    expect(buildMainWindowOptions("dist/main/main")).toMatchObject({
+      titleBarStyle: "hidden",
+      titleBarOverlay: {
+        color: "#ffffff",
+        symbolColor: "#172033",
+        height: 43
+      }
+    });
+  });
+
   it("removes the menu from an existing browser window", () => {
     const window = {
       setMenu: vi.fn(),

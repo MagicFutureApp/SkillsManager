@@ -5,7 +5,9 @@ import { useShellStore } from "@/stores/shell-store";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 
+import skillportMark from "../../assets/skillport-mark.svg";
 import { AppSidebar } from "./app-sidebar";
+import { APP_META } from "../../../core/app-constants";
 
 type AppShellProps = React.PropsWithChildren;
 
@@ -43,37 +45,55 @@ export const AppShell = ({ children }: AppShellProps) => {
   }, []);
 
   return (
-    <div
-      className={cn(
-        "grid min-h-svh bg-background text-foreground transition-[grid-template-columns]",
-        shouldCollapseSidebar ? "grid-cols-[64px_minmax(0,1fr)]" : "grid-cols-[232px_minmax(0,1fr)]"
-      )}
-    >
-      <AppSidebar
-        activeRouteId={activeRouteId}
-        isAutoCollapsed={isSidebarAutoCollapsed}
-        isCollapsed={shouldCollapseSidebar}
-        onNavigate={(routeId) => void navigate({ to: routePathById[routeId] })}
-      />
-      <main className="min-w-0">
-        {children}
-        {health ? (
-          <dl className="sr-only">
-            <div className="flex gap-1">
-              <dt>Node</dt>
-              <dd className="text-foreground">{health.node}</dd>
-            </div>
-            <div className="flex gap-1">
-              <dt>Electron</dt>
-              <dd className="text-foreground">{health.electron}</dd>
-            </div>
-            <div className="flex gap-1">
-              <dt>Platform</dt>
-              <dd className="text-foreground">{health.platform}</dd>
-            </div>
-          </dl>
-        ) : null}
-      </main>
-    </div>
+    <>
+      <div
+        className="fixed left-0 right-0 top-0 z-50 flex h-11 items-center border-b border-border bg-background pl-4 pr-[138px]"
+        data-testid="app-titlebar-spacer"
+        style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <img src={skillportMark} alt={APP_META.title} className="size-5 rounded-md" />
+          <span className="truncate text-sm font-semibold">{APP_META.title}</span>
+        </div>
+      </div>
+      <div
+        className={cn(
+          "grid h-svh overflow-hidden bg-background pt-11 text-foreground transition-[grid-template-columns]",
+          shouldCollapseSidebar
+            ? "grid-cols-[64px_minmax(0,1fr)]"
+            : "grid-cols-[232px_minmax(0,1fr)]"
+        )}
+        data-testid="app-shell-layout"
+      >
+        <AppSidebar
+          activeRouteId={activeRouteId}
+          isAutoCollapsed={isSidebarAutoCollapsed}
+          isCollapsed={shouldCollapseSidebar}
+          onNavigate={(routeId) => void navigate({ to: routePathById[routeId] })}
+        />
+        <main
+          className="h-[calc(100svh-44px)] min-w-0 overflow-y-auto"
+          data-testid="app-shell-content"
+        >
+          {children}
+          {health ? (
+            <dl className="sr-only">
+              <div className="flex gap-1">
+                <dt>Node</dt>
+                <dd className="text-foreground">{health.node}</dd>
+              </div>
+              <div className="flex gap-1">
+                <dt>Electron</dt>
+                <dd className="text-foreground">{health.electron}</dd>
+              </div>
+              <div className="flex gap-1">
+                <dt>Platform</dt>
+                <dd className="text-foreground">{health.platform}</dd>
+              </div>
+            </dl>
+          ) : null}
+        </main>
+      </div>
+    </>
   );
 };

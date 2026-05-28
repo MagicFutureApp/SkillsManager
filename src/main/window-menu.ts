@@ -12,6 +12,12 @@ export const buildMainWindowOptions = (mainDirname: string): BrowserWindowConstr
   title: APP_META.title,
   icon: getAppIconPath(mainDirname),
   autoHideMenuBar: true,
+  titleBarStyle: "hidden",
+  titleBarOverlay: {
+    color: "#ffffff",
+    symbolColor: "#172033",
+    height: 43
+  },
   webPreferences: {
     preload: path.join(mainDirname, "preload.js"),
     contextIsolation: true,

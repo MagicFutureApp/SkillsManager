@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
@@ -51,6 +51,54 @@ describe("AppShell", () => {
         "true"
       );
     });
+  });
+
+  it("reserves space below the Electron title bar overlay", async () => {
+    await renderAppShell(
+      <AppShell>
+        <div>Shell content</div>
+      </AppShell>
+    );
+
+    expect(screen.getByTestId("app-titlebar-spacer")).toHaveClass(
+      "fixed",
+      "left-0",
+      "right-0",
+      "top-0",
+      "h-11"
+    );
+    expect(screen.getByTestId("app-shell-layout")).toHaveClass("pt-11");
+    expect(screen.getByRole("complementary", { name: "主导航" })).toHaveClass(
+      "min-h-[calc(100svh-44px)]"
+    );
+  });
+
+  it("renders the app identity inside the custom title bar", async () => {
+    await renderAppShell(
+      <AppShell>
+        <div>Shell content</div>
+      </AppShell>
+    );
+
+    const titlebar = screen.getByTestId("app-titlebar-spacer");
+
+    expect(titlebar).toHaveClass("border-b", "pr-[138px]");
+    expect(within(titlebar).getByRole("img", { name: "Skillport" })).toBeInTheDocument();
+    expect(within(titlebar).getByText("Skillport")).toBeInTheDocument();
+  });
+
+  it("keeps scrolling inside the content area below the title bar", async () => {
+    await renderAppShell(
+      <AppShell>
+        <div>Shell content</div>
+      </AppShell>
+    );
+
+    expect(screen.getByTestId("app-shell-layout")).toHaveClass("h-svh", "overflow-hidden", "pt-11");
+    expect(screen.getByTestId("app-shell-content")).toHaveClass(
+      "h-[calc(100svh-44px)]",
+      "overflow-y-auto"
+    );
   });
 
   it("updates the auto-collapse state when the viewport crosses the compact threshold", async () => {
