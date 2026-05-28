@@ -1,6 +1,8 @@
 import { app, BrowserWindow, Menu, Tray } from "electron";
 import path from "node:path";
 import { registerHealthIpc } from "./ipc/health";
+import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
+import { getMainMessages } from "./i18n/main-messages.js";
 import { getAppIconPath, getTrayIconPath } from "./tray-icon.js";
 import { APP_META, WINDOW_MIN_WIDTH } from "../core/app-constants.js";
 
@@ -41,12 +43,14 @@ const createMainWindow = async (): Promise<void> => {
 };
 
 const createTray = (): void => {
+  const messages = getMainMessages(getAppLocale());
+
   tray = new Tray(getTrayIconPath(__dirname));
   tray.setToolTip(APP_META.title);
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
-        label: "Show Skillport",
+        label: messages.tray.show,
         click: () => {
           if (mainWindow) {
             mainWindow.show();
@@ -60,7 +64,7 @@ const createTray = (): void => {
       },
       { type: "separator" },
       {
-        label: "Quit",
+        label: messages.tray.quit,
         click: () => {
           app.quit();
         }
@@ -90,6 +94,7 @@ void app
   .whenReady()
   .then(async () => {
     registerHealthIpc();
+    registerLocaleIpc();
     await createMainWindow();
     createTray();
 

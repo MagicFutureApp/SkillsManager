@@ -14,34 +14,55 @@ import type { LucideIcon } from "lucide-react";
 
 export type ShellNavigationItem = {
   routeId: AppRouteId | "diagnostics";
-  label: string;
+  labelKey: string;
   badge: string;
   hidden?: boolean;
   icon: LucideIcon;
 };
 
 export type ShellNavigationGroup = {
-  label: string;
+  labelKey: string;
   items: ShellNavigationItem[];
 };
 
 export const shellNavigationGroups: ShellNavigationGroup[] = [
   {
-    label: "工作区",
+    labelKey: "shell.navigation.workspace",
     items: [
-      { routeId: "providers", label: "Provider", badge: "6", icon: PlugZap },
-      { routeId: "repositories", label: "Repositories", badge: "5", icon: GitBranch },
-      { routeId: "skills", label: "Skills", badge: "0", icon: Package },
-      { routeId: "targets", label: "Targets", badge: "4", icon: Target },
-      { routeId: "distribution", label: "Distribution", badge: "0", icon: Send }
+      { routeId: "providers", labelKey: "shell.navigation.providers", badge: "6", icon: PlugZap },
+      {
+        routeId: "repositories",
+        labelKey: "shell.navigation.repositories",
+        badge: "5",
+        icon: GitBranch
+      },
+      { routeId: "skills", labelKey: "shell.navigation.skills", badge: "0", icon: Package },
+      { routeId: "targets", labelKey: "shell.navigation.targets", badge: "4", icon: Target },
+      {
+        routeId: "distribution",
+        labelKey: "shell.navigation.distribution",
+        badge: "0",
+        icon: Send
+      }
     ]
   },
   {
-    label: "系统",
+    labelKey: "shell.navigation.system",
     items: [
-      { routeId: "settings", label: "Settings", badge: "8", icon: Settings },
-      { routeId: "sync-history", label: "Sync history", badge: "4", icon: History },
-      { routeId: "diagnostics", label: "Diagnostics", badge: "5", hidden: true, icon: MonitorCog }
+      { routeId: "settings", labelKey: "shell.navigation.settings", badge: "8", icon: Settings },
+      {
+        routeId: "sync-history",
+        labelKey: "shell.navigation.syncHistory",
+        badge: "4",
+        icon: History
+      },
+      {
+        routeId: "diagnostics",
+        labelKey: "shell.navigation.diagnostics",
+        badge: "5",
+        hidden: true,
+        icon: MonitorCog
+      }
     ]
   }
 ];

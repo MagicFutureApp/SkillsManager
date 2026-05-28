@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import skillportMark from "../../assets/skillport-mark.svg";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,8 @@ export const AppSidebar = ({
   isCollapsed,
   onNavigate
 }: AppSidebarProps) => {
+  const { t } = useTranslation();
+
   const logoContent = (
     <>
       <img src={skillportMark} alt="" className="size-8 rounded-lg" aria-hidden="true" />
@@ -40,7 +43,7 @@ export const AppSidebar = ({
         "flex min-h-svh flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,padding]",
         isCollapsed ? "gap-4 px-3 py-4" : "gap-6 px-4 py-5"
       )}
-      aria-label="主导航"
+      aria-label={t("shell.navigation.mainNavigation")}
       data-auto-collapsed={isAutoCollapsed}
       data-collapsed={isCollapsed}
     >
@@ -63,9 +66,11 @@ export const AppSidebar = ({
 
       <div className={cn("flex flex-col", isCollapsed ? "gap-4" : "gap-6")}>
         {shellNavigationGroups.map((group) => (
-          <nav key={group.label} className="flex flex-col gap-1" aria-label={group.label}>
+          <nav key={group.labelKey} className="flex flex-col gap-1" aria-label={t(group.labelKey)}>
             {!isCollapsed ? (
-              <p className="mb-1 text-xs font-semibold text-muted-foreground">{group.label}</p>
+              <p className="mb-1 text-xs font-semibold text-muted-foreground">
+                {t(group.labelKey)}
+              </p>
             ) : null}
             {group.items
               .filter((item) => !item.hidden)
@@ -73,6 +78,7 @@ export const AppSidebar = ({
                 const isActive = item.routeId === activeRouteId;
                 const Icon = item.icon;
                 const shouldShowBadge = Number(item.badge) > 0;
+                const label = t(item.labelKey);
 
                 const button = (
                   <Button
@@ -85,14 +91,14 @@ export const AppSidebar = ({
                         : "justify-between px-2.5",
                       isActive && "bg-primary/10 font-semibold text-primary hover:bg-primary/10"
                     )}
-                    aria-label={isCollapsed ? item.label : undefined}
+                    aria-label={isCollapsed ? label : undefined}
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => onNavigate(item.routeId as AppRouteId)}
                   >
                     {isCollapsed ? (
                       <Icon aria-hidden="true" />
                     ) : (
-                      <span className="truncate">{item.label}</span>
+                      <span className="truncate">{label}</span>
                     )}
                     {shouldShowBadge ? (
                       <Badge
@@ -118,7 +124,7 @@ export const AppSidebar = ({
                       <Tooltip>
                         <TooltipTrigger render={button} />
                         <TooltipContent side="right" align="center">
-                          {item.label}
+                          {label}
                         </TooltipContent>
                       </Tooltip>
                     ) : (
@@ -133,9 +139,9 @@ export const AppSidebar = ({
 
       {!isCollapsed ? (
         <div className="mt-auto rounded-lg border border-border bg-muted/40 p-3">
-          <p className="text-sm font-semibold">计划优先</p>
+          <p className="text-sm font-semibold">{t("shell.guidance.title")}</p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            安装前先生成计划预览，确认同步目标和策略后再执行。
+            {t("shell.guidance.description")}
           </p>
         </div>
       ) : null}

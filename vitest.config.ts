@@ -10,6 +10,7 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    exclude: ["dist/**", "node_modules/**"],
     globals: true,
     setupFiles: ["./src/renderer/test/setup.ts"]
   }

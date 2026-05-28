@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 type SkillStatus = "ready" | "review" | "installed";
 
@@ -28,7 +29,7 @@ const targetOptions: TargetOption[] = [
   { id: "codex", name: "Codex", path: "~/.codex/skills" },
   { id: "claude", name: "Claude Code", path: "~/.claude/skills" },
   { id: "gemini", name: "Gemini CLI", path: "~/.gemini/skills" },
-  { id: "custom", name: "Custom directory", path: "D:/Agents/shared-skills" }
+  { id: "custom", name: "skills.targets.customDirectory", path: "D:/Agents/shared-skills" }
 ];
 
 const skills: Skill[] = [
@@ -137,55 +138,54 @@ const Toggle = ({ enabled }: { enabled: boolean }) => {
 };
 
 export const SkillsPage = () => {
+  const { t } = useTranslation();
   const reviewCount = skills.filter((skill) => skill.status === "review").length;
 
   return (
     <div className="grid min-h-svh grid-cols-[minmax(620px,1fr)_360px] bg-background">
       <main className="min-w-0 p-7">
         <header className="mb-6">
-          <p className="mb-1 text-sm">Skills</p>
+          <p className="mb-1 text-sm">{t("skills.pageLabel")}</p>
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-[28px] font-semibold leading-tight">
-              浏览 skill unit 并预览分发计划
-            </h1>
+            <h1 className="text-[28px] font-semibold leading-tight">{t("skills.heading")}</h1>
             <div className="flex gap-2">
               <Button type="button" disabled>
-                同步
+                {t("skills.actions.sync")}
               </Button>
-              <Button type="button">新增技能</Button>
+              <Button type="button">{t("skills.actions.addSkill")}</Button>
             </div>
           </div>
-          <p className="mt-2 text-sm">每个技能来自仓库扫描结果，可选择同步目标并查看计划预览。</p>
+          <p className="mt-2 text-sm">{t("skills.description")}</p>
         </header>
 
         <section
           className="grid grid-cols-[minmax(240px,1fr)_168px_168px_168px] items-end gap-3 rounded-xl border border-border bg-card p-4"
-          aria-label="技能筛选"
+          aria-label={t("skills.filters.ariaLabel")}
         >
-          <Field label="搜索技能">
+          <Field label={t("skills.filters.search")}>
             <input
               className="h-10 rounded-lg border border-input bg-background px-3 text-sm font-normal outline-none placeholder:text-muted-foreground focus:border-ring"
               type="search"
-              placeholder="搜索名称、ID、仓库、标签或入口路径"
+              placeholder={t("skills.filters.searchPlaceholder")}
             />
           </Field>
-          <Field label="排序">
+          <Field label={t("skills.filters.sort")}>
             <Select>
-              <option>按推荐优先级</option>
-              <option>按名称</option>
-              <option>按仓库</option>
+              <option>{t("skills.filters.sortRecommended")}</option>
+              <option>{t("skills.filters.sortName")}</option>
+              <option>{t("skills.filters.sortRepository")}</option>
             </Select>
           </Field>
-          <Field label="仓库">
+          <Field label={t("skills.filters.repository")}>
             <Select>
-              <option>全部仓库</option>
+              <option>{t("skills.filters.allRepositories")}</option>
               <option>Team skills repository</option>
               <option>Design lab prompts</option>
             </Select>
           </Field>
-          <Field label="状态">
+          <Field label={t("skills.filters.status")}>
             <Select>
-              <option>全部状态</option>
+              <option>{t("skills.filters.allStatuses")}</option>
               <option>ready</option>
               <option>review</option>
               <option>installed</option>
@@ -193,31 +193,35 @@ export const SkillsPage = () => {
           </Field>
         </section>
 
-        <section className="mt-5 grid grid-cols-2 gap-3" aria-label="技能摘要">
+        <section className="mt-5 grid grid-cols-2 gap-3" aria-label={t("skills.summary.ariaLabel")}>
           <article className="rounded-xl border border-border bg-card px-4 py-3">
             <p className="inline text-xl font-semibold">{skills.length}</p>
-            <p className="ml-2 inline text-sm font-semibold">skill unit</p>
-            <p className="mt-1 text-xs text-muted-foreground">来自当前本地索引</p>
+            <p className="ml-2 inline text-sm font-semibold">{t("skills.summary.skillUnit")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("skills.summary.indexed")}</p>
           </article>
           <article className="rounded-xl border border-border bg-card px-4 py-3">
             <p className="inline text-xl font-semibold">{reviewCount}</p>
-            <p className="ml-2 inline text-sm font-semibold">需要复核</p>
-            <p className="mt-1 text-xs text-muted-foreground">入口或 manifest 有歧义</p>
+            <p className="ml-2 inline text-sm font-semibold">{t("skills.summary.needsReview")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("skills.summary.ambiguous")}</p>
           </article>
         </section>
 
         <section className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
           <div className="grid grid-cols-[32px_minmax(190px,1.45fr)_132px_84px_84px_64px_56px_64px] items-center gap-2 border-b border-border px-4 py-3 text-xs font-semibold text-muted-foreground">
             <span className="grid place-items-center">
-              <input className="size-[18px]" type="checkbox" aria-label="选择全部可见技能" />
+              <input
+                className="size-[18px]"
+                type="checkbox"
+                aria-label={t("skills.table.selectAll")}
+              />
             </span>
-            <span>技能</span>
-            <span>仓库</span>
-            <span>版本</span>
-            <span>状态</span>
-            <span>目标</span>
-            <span>启用</span>
-            <span>操作</span>
+            <span>{t("skills.table.skill")}</span>
+            <span>{t("skills.table.repository")}</span>
+            <span>{t("skills.table.version")}</span>
+            <span>{t("skills.table.status")}</span>
+            <span>{t("skills.table.targets")}</span>
+            <span>{t("skills.table.enabled")}</span>
+            <span>{t("skills.table.actions")}</span>
           </div>
 
           {skills.map((skill) => (
@@ -229,7 +233,11 @@ export const SkillsPage = () => {
               )}
             >
               <span className="grid place-items-center">
-                <input className="size-[18px]" type="checkbox" aria-label={`选择 ${skill.name}`} />
+                <input
+                  className="size-[18px]"
+                  type="checkbox"
+                  aria-label={t("skills.table.selectSkill", { name: skill.name })}
+                />
               </span>
               <span className="min-w-0">
                 <strong className="block truncate text-sm">{skill.name}</strong>
@@ -252,7 +260,7 @@ export const SkillsPage = () => {
               <span className="font-mono text-sm">{skill.targets.length}</span>
               <Toggle enabled={skill.enabled} />
               <Button type="button" variant="outline" size="sm">
-                同步
+                {t("skills.actions.sync")}
               </Button>
             </div>
           ))}
@@ -261,7 +269,7 @@ export const SkillsPage = () => {
 
       <aside
         className="grid content-start gap-3 border-l border-border bg-card px-5 py-6"
-        aria-label="技能详情"
+        aria-label={t("skills.detail.ariaLabel")}
       >
         <section className="rounded-xl border border-border bg-card p-4">
           <h2 className="text-xl font-semibold">{selectedSkill.name}</h2>
@@ -269,16 +277,16 @@ export const SkillsPage = () => {
             {selectedSkill.description}
           </p>
           <Button className="mt-3" type="button" variant="outline">
-            编辑技能
+            {t("skills.actions.editSkill")}
           </Button>
         </section>
 
         <section className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-semibold">同步目标</h3>
+              <h3 className="font-semibold">{t("skills.detail.syncTargets")}</h3>
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                选择默认同步范围；安装前仍会先生成计划预览。
+                {t("skills.detail.syncTargetsDescription")}
               </p>
             </div>
             <div className="grid justify-items-end gap-2">
@@ -286,7 +294,7 @@ export const SkillsPage = () => {
                 {selectedSkill.targets.length} / {targetOptions.length}
               </span>
               <Button type="button" variant="outline" size="sm">
-                新增同步目标
+                {t("skills.actions.addSyncTarget")}
               </Button>
             </div>
           </div>
@@ -304,7 +312,9 @@ export const SkillsPage = () => {
                   )}
                 >
                   <span className="min-w-0">
-                    <strong className="block text-sm">{target.name}</strong>
+                    <strong className="block text-sm">
+                      {target.name.startsWith("skills.") ? t(target.name) : target.name}
+                    </strong>
                     <span className="block truncate font-mono text-xs text-muted-foreground">
                       {target.path}
                     </span>
@@ -313,7 +323,9 @@ export const SkillsPage = () => {
                     type="checkbox"
                     checked={checked}
                     readOnly
-                    aria-label={`选择 ${target.name}`}
+                    aria-label={t("skills.detail.chooseTarget", {
+                      name: target.name.startsWith("skills.") ? t(target.name) : target.name
+                    })}
                   />
                 </label>
               );
@@ -322,31 +334,31 @@ export const SkillsPage = () => {
         </section>
 
         <section className="rounded-xl border border-border bg-card p-4">
-          <h3 className="font-semibold">计划预览</h3>
+          <h3 className="font-semibold">{t("skills.detail.planPreview")}</h3>
           <p className="mt-7 text-sm leading-6 text-muted-foreground">
-            计划预览会把每个目标分类为 install、update、skip 或 conflict。
+            {t("skills.detail.planPreviewDescription")}
           </p>
           <p className="mt-14 text-sm text-muted-foreground">
-            尚未预览。选择目标后点击“预览计划”。
+            {t("skills.detail.planPreviewEmpty")}
           </p>
         </section>
 
         <div className="grid grid-cols-2 gap-2">
           <Button type="button" variant="outline">
-            预览
+            {t("skills.actions.preview")}
           </Button>
-          <Button type="button">同步</Button>
+          <Button type="button">{t("skills.actions.sync")}</Button>
         </div>
 
         <section className="rounded-xl border border-border bg-card p-4">
-          <h3 className="font-semibold">详情</h3>
+          <h3 className="font-semibold">{t("skills.detail.details")}</h3>
           <div className="mt-3 grid gap-2">
             {[
-              ["Skill ID", selectedSkill.skillId],
-              ["仓库", selectedSkill.repository],
-              ["入口文件", selectedSkill.entry],
-              ["版本", selectedSkill.version],
-              ["标签", selectedSkill.tags.join(", ")]
+              [t("skills.detail.skillId"), selectedSkill.skillId],
+              [t("skills.detail.repository"), selectedSkill.repository],
+              [t("skills.detail.entryFile"), selectedSkill.entry],
+              [t("skills.detail.version"), selectedSkill.version],
+              [t("skills.detail.tags"), selectedSkill.tags.join(", ")]
             ].map(([label, value]) => (
               <div key={label} className="rounded-lg border border-border bg-muted/40 p-2">
                 <span className="text-xs font-semibold text-muted-foreground">{label}</span>
