@@ -23,6 +23,7 @@ export const AppShell = ({ children }: AppShellProps) => {
     (state) => state.setSidebarAutoCollapsedByWidth
   );
   const shouldCollapseSidebar = isSidebarAutoCollapsed;
+  const isMacOs = health?.platform === "darwin";
 
   useEffect(() => {
     setActiveRouteId(activeRouteId);
@@ -49,7 +50,10 @@ export const AppShell = ({ children }: AppShellProps) => {
   return (
     <>
       <div
-        className="fixed left-0 right-0 top-0 z-50 flex h-11 items-center border-b border-border bg-background pl-4 pr-[138px]"
+        className={cn(
+          "fixed left-0 right-0 top-0 z-50 flex h-11 items-center border-b border-border bg-background",
+          isMacOs ? "justify-center px-[138px]" : "pl-4 pr-[138px]"
+        )}
         data-testid="app-titlebar-spacer"
         style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
       >

@@ -5,6 +5,7 @@ import { I18nextProvider } from "react-i18next";
 
 import { useShellStore } from "@/stores/shell-store";
 import { createI18nInstance } from "@/i18n/react-i18n";
+import type { AppHealth } from "@/global";
 
 import { AppShell } from "./app-shell";
 
@@ -27,18 +28,29 @@ const renderAppShell = async (children: React.ReactNode) => {
   return render(<I18nextProvider i18n={i18n}>{children}</I18nextProvider>);
 };
 
+const setMockPlatform = (platform: AppHealth["platform"]) => {
+  const getHealth = window.skillsManager?.getHealth;
+
+  if (!getHealth) {
+    throw new Error("window.skillsManager.getHealth is not configured");
+  }
+
+  vi.mocked(getHealth).mockResolvedValue({
+    chrome: "130.0.0",
+    electron: "42.2.0",
+    node: "25.0.0",
+    platform
+  });
+};
+
 describe("AppShell", () => {
   beforeEach(() => {
     window.skillsManager = {
-      getHealth: vi.fn().mockResolvedValue({
-        chrome: "130.0.0",
-        electron: "42.2.0",
-        node: "25.0.0",
-        platform: "win32"
-      }),
+      getHealth: vi.fn(),
       getInfo: vi.fn().mockResolvedValue({ version: "9.8.7" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN")
     };
+    setMockPlatform("win32");
 
     setViewportWidth(1440);
     useShellStore.setState({
@@ -84,7 +96,7 @@ describe("AppShell", () => {
     );
   });
 
-  it("renders the app identity inside the custom title bar", async () => {
+  it("keeps the app identity clear of Windows window controls", async () => {
     await renderAppShell(
       <AppShell>
         <div>Shell content</div>
@@ -93,10 +105,27 @@ describe("AppShell", () => {
 
     const titlebar = screen.getByTestId("app-titlebar-spacer");
 
-    expect(titlebar).toHaveClass("border-b", "pr-[138px]");
+    expect(titlebar).toHaveClass("border-b", "pl-4", "pr-[138px]");
+    expect(titlebar).not.toHaveClass("justify-center", "px-[138px]");
     expect(screen.queryByTestId("app-titlebar-border")).not.toBeInTheDocument();
     expect(within(titlebar).getByRole("img", { name: "Skillport" })).toBeInTheDocument();
     expect(within(titlebar).getByText("Skillport")).toBeInTheDocument();
+  });
+
+  it("centers the app identity in the macOS custom title bar", async () => {
+    setMockPlatform("darwin");
+
+    await renderAppShell(
+      <AppShell>
+        <div>Shell content</div>
+      </AppShell>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("app-titlebar-spacer")).toHaveClass("justify-center", "px-[138px]");
+    });
+
+    expect(screen.getByTestId("app-titlebar-spacer")).not.toHaveClass("pl-4", "pr-[138px]");
   });
 
   it("keeps scrolling inside the content area below the title bar", async () => {
