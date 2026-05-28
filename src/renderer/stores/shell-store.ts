@@ -1,16 +1,13 @@
 import { create } from "zustand";
 
 import type { AppRouteId } from "@/app/route-config";
-
-export const SIDEBAR_EXPAND_WIDTH = 232;
-export const SIDEBAR_COLLAPSE_WIDTH = 64;
-export const MAIN_MINI_WIDTH = 996;
-export const SIDEBAR_AUTO_COLLAPSE_WIDTH = MAIN_MINI_WIDTH + SIDEBAR_EXPAND_WIDTH;
-
-export const META = {
-  title: "Skillport",
-  description: "Sync and Distribute Skills"
-};
+export {
+  MAIN_MINI_WIDTH,
+  SIDEBAR_AUTO_COLLAPSE_WIDTH,
+  SIDEBAR_COLLAPSE_WIDTH,
+  SIDEBAR_EXPAND_WIDTH
+} from "../../core/app-constants";
+import { SIDEBAR_AUTO_COLLAPSE_WIDTH } from "../../core/app-constants";
 
 type ShellStore = {
   activeRouteId: AppRouteId;

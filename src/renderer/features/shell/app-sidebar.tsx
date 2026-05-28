@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { AppRouteId } from "@/app/route-config";
 import { cn } from "@/lib/utils";
 import { shellNavigationGroups } from "./shell-navigation";
-import { META } from "@/stores/shell-store";
+import { APP_META } from "../../../core/app-constants";
 
 type AppSidebarProps = {
   activeRouteId: AppRouteId;
@@ -34,8 +34,8 @@ export const AppSidebar = ({
         <img src={skillportMark} alt="" className="size-8 rounded-lg" aria-hidden="true" />
         {!isCollapsed ? (
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold">{META.title}</p>
-            <p className="truncate text-xs text-muted-foreground">{META.description}</p>
+            <p className="truncate text-base font-semibold">{APP_META.title}</p>
+            <p className="truncate text-xs text-muted-foreground">{APP_META.description}</p>
           </div>
         ) : null}
       </div>
