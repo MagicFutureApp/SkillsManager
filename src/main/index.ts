@@ -2,13 +2,17 @@ import { app, BrowserWindow } from "electron";
 import path from "node:path";
 import { registerHealthIpc } from "./ipc/health";
 
+const SIDEBAR_COLLAPSE_WIDTH = 64;
+const MAIN_MINI_WIDTH = 996;
+const APP_TITLE = "Skillport";
+
 const createMainWindow = (): void => {
   const mainWindow = new BrowserWindow({
     width: 1180,
     height: 760,
-    minWidth: 960,
+    minWidth: MAIN_MINI_WIDTH + SIDEBAR_COLLAPSE_WIDTH + 16,
     minHeight: 640,
-    title: "Skills Manager",
+    title: APP_TITLE,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,

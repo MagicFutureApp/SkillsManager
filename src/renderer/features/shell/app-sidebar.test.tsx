@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
 
@@ -13,7 +13,6 @@ describe("AppSidebar", () => {
         isAutoCollapsed={false}
         isCollapsed={false}
         onNavigate={vi.fn()}
-        onToggleCollapsed={vi.fn()}
       />
     );
 
@@ -31,29 +30,24 @@ describe("AppSidebar", () => {
         isAutoCollapsed={false}
         isCollapsed={false}
         onNavigate={vi.fn()}
-        onToggleCollapsed={vi.fn()}
       />
     );
 
     expect(screen.queryByRole("button", { name: /Diagnostics/i })).not.toBeInTheDocument();
   });
 
-  it("requests a sidebar collapse from the toggle button", () => {
-    const onToggleCollapsed = vi.fn();
-
+  it("does not render a manual sidebar collapse toggle", () => {
     render(
       <AppSidebar
         activeRouteId="skills"
         isAutoCollapsed={false}
         isCollapsed={false}
         onNavigate={vi.fn()}
-        onToggleCollapsed={onToggleCollapsed}
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "收起侧边栏" }));
-
-    expect(onToggleCollapsed).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("button", { name: "收起侧边栏" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "展开侧边栏" })).not.toBeInTheDocument();
   });
 
   it("uses compact navigation when the sidebar is collapsed", () => {
@@ -63,7 +57,6 @@ describe("AppSidebar", () => {
         isAutoCollapsed={false}
         isCollapsed={true}
         onNavigate={vi.fn()}
-        onToggleCollapsed={vi.fn()}
       />
     );
 
@@ -75,7 +68,7 @@ describe("AppSidebar", () => {
     expect(screen.queryByText("工作区")).not.toBeInTheDocument();
     expect(screen.queryByText("计划优先")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Skills" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("button", { name: "展开侧边栏" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "展开侧边栏" })).not.toBeInTheDocument();
   });
 });
 

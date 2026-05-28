@@ -1,30 +1,25 @@
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import React from "react";
 
 import skillportMark from "../../assets/skillport-mark.svg";
+import { Button } from "@/components/ui/button";
 import type { AppRouteId } from "@/app/route-config";
+import { cn } from "@/lib/utils";
 import { shellNavigationGroups } from "./shell-navigation";
+import { META } from "@/stores/shell-store";
 
 type AppSidebarProps = {
   activeRouteId: AppRouteId;
   isAutoCollapsed: boolean;
   isCollapsed: boolean;
   onNavigate: (routeId: AppRouteId) => void;
-  onToggleCollapsed: () => void;
 };
 
 export const AppSidebar = ({
   activeRouteId,
   isAutoCollapsed,
   isCollapsed,
-  onNavigate,
-  onToggleCollapsed
+  onNavigate
 }: AppSidebarProps) => {
-  const ToggleIcon = isCollapsed ? PanelLeftOpen : PanelLeftClose;
-  const toggleLabel = isCollapsed ? "展开侧边栏" : "收起侧边栏";
-
   return (
     <aside
       className={cn(
@@ -39,23 +34,11 @@ export const AppSidebar = ({
         <img src={skillportMark} alt="" className="size-8 rounded-lg" aria-hidden="true" />
         {!isCollapsed ? (
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold">Skills Manager</p>
-            <p className="truncate text-xs text-muted-foreground">Local-first desktop</p>
+            <p className="truncate text-base font-semibold">{META.title}</p>
+            <p className="truncate text-xs text-muted-foreground">{META.description}</p>
           </div>
         ) : null}
       </div>
-
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className={cn("self-start", isCollapsed && "self-center")}
-        aria-label={toggleLabel}
-        title={toggleLabel}
-        onClick={onToggleCollapsed}
-      >
-        <ToggleIcon aria-hidden="true" />
-      </Button>
 
       <div className={cn("flex flex-col", isCollapsed ? "gap-4" : "gap-6")}>
         {shellNavigationGroups.map((group) => (

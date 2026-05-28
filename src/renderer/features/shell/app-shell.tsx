@@ -15,13 +15,11 @@ export const AppShell = ({ children }: AppShellProps) => {
   const navigate = useNavigate();
   const activeRouteId = routeIdByPath[location.pathname] ?? "skills";
   const isSidebarAutoCollapsed = useShellStore((state) => state.isSidebarAutoCollapsed);
-  const isSidebarCollapsed = useShellStore((state) => state.isSidebarCollapsed);
   const setActiveRouteId = useShellStore((state) => state.setActiveRouteId);
   const setSidebarAutoCollapsedByWidth = useShellStore(
     (state) => state.setSidebarAutoCollapsedByWidth
   );
-  const toggleSidebarCollapsed = useShellStore((state) => state.toggleSidebarCollapsed);
-  const shouldCollapseSidebar = isSidebarCollapsed || isSidebarAutoCollapsed;
+  const shouldCollapseSidebar = isSidebarAutoCollapsed;
 
   useEffect(() => {
     setActiveRouteId(activeRouteId);
@@ -56,7 +54,6 @@ export const AppShell = ({ children }: AppShellProps) => {
         isAutoCollapsed={isSidebarAutoCollapsed}
         isCollapsed={shouldCollapseSidebar}
         onNavigate={(routeId) => void navigate({ to: routePathById[routeId] })}
-        onToggleCollapsed={toggleSidebarCollapsed}
       />
       <main className="min-w-0">
         {children}

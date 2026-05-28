@@ -24,13 +24,12 @@ describe("AppShell", () => {
     setViewportWidth(1440);
     useShellStore.setState({
       activeRouteId: "skills",
-      isSidebarAutoCollapsed: false,
-      isSidebarCollapsed: false
+      isSidebarAutoCollapsed: false
     });
   });
 
-  it("auto-collapses the sidebar when the viewport is narrower than 1366px", async () => {
-    setViewportWidth(1280);
+  it("auto-collapses the sidebar when the viewport cannot fit the expanded shell", async () => {
+    setViewportWidth(1228);
 
     render(
       <AppShell>
@@ -47,6 +46,8 @@ describe("AppShell", () => {
   });
 
   it("updates the auto-collapse state when the viewport crosses the compact threshold", async () => {
+    setViewportWidth(1229);
+
     render(
       <AppShell>
         <div>Shell content</div>
@@ -59,7 +60,7 @@ describe("AppShell", () => {
     );
 
     act(() => {
-      setViewportWidth(1200);
+      setViewportWidth(1228);
       window.dispatchEvent(new Event("resize"));
     });
 
