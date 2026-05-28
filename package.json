@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "An Electron React TypeScript SQLite based Skills Manager App.",
-  "main": "dist/main/index.js",
+  "main": "dist/main/main/index.js",
   "scripts": {
     "dev": "pnpm run build:main && concurrently -k \"pnpm run dev:renderer\" \"cross-env VITE_DEV_SERVER_URL=http://localhost:3700 node node_modules/electron/cli.js .\"",
     "dev:renderer": "vite",

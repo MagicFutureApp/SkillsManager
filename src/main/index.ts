@@ -1,15 +1,31 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu, Tray } from "electron";
 import path from "node:path";
 import { registerHealthIpc } from "./ipc/health";
+import { getAppIconPath, getTrayIconPath } from "./tray-icon.js";
 import { APP_META, WINDOW_MIN_WIDTH } from "../core/app-constants.js";
 
-const createMainWindow = (): void => {
-  const mainWindow = new BrowserWindow({
+let mainWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
+
+const loadMainWindow = async (window: BrowserWindow): Promise<void> => {
+  const devServerUrl = process.env.VITE_DEV_SERVER_URL;
+
+  if (devServerUrl) {
+    await window.loadURL(devServerUrl);
+    return;
+  }
+
+  await window.loadFile(path.join(__dirname, "../renderer/index.html"));
+};
+
+const createMainWindow = async (): Promise<void> => {
+  mainWindow = new BrowserWindow({
     width: 1180,
     height: 760,
     minWidth: WINDOW_MIN_WIDTH,
     minHeight: 640,
     title: APP_META.title,
+    icon: getAppIconPath(__dirname),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -17,25 +33,77 @@ const createMainWindow = (): void => {
     }
   });
 
-  const devServerUrl = process.env.VITE_DEV_SERVER_URL;
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
 
-  if (devServerUrl) {
-    void mainWindow.loadURL(devServerUrl);
-  } else {
-    void mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
-  }
+  await loadMainWindow(mainWindow);
 };
 
-void app.whenReady().then(() => {
-  registerHealthIpc();
-  createMainWindow();
+const createTray = (): void => {
+  tray = new Tray(getTrayIconPath(__dirname));
+  tray.setToolTip(APP_META.title);
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      {
+        label: "Show Skillport",
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+          } else {
+            void createMainWindow().catch((error: unknown) => {
+              console.error("Failed to create main window from tray menu.", error);
+            });
+          }
+        }
+      },
+      { type: "separator" },
+      {
+        label: "Quit",
+        click: () => {
+          app.quit();
+        }
+      }
+    ])
+  );
 
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
+  tray.on("click", () => {
+    if (!mainWindow) {
+      void createMainWindow().catch((error: unknown) => {
+        console.error("Failed to create main window from tray click.", error);
+      });
+      return;
     }
+
+    if (mainWindow.isVisible()) {
+      mainWindow.hide();
+      return;
+    }
+
+    mainWindow.show();
+    mainWindow.focus();
   });
-});
+};
+
+void app
+  .whenReady()
+  .then(async () => {
+    registerHealthIpc();
+    await createMainWindow();
+    createTray();
+
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        void createMainWindow().catch((error: unknown) => {
+          console.error("Failed to create main window on activate.", error);
+        });
+      }
+    });
+  })
+  .catch((error: unknown) => {
+    console.error("Failed to start Skillport.", error);
+  });
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
