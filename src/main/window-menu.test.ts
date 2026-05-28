@@ -9,13 +9,13 @@ describe("main window menu bar", () => {
     });
   });
 
-  it("keeps the title bar border visible below the window controls overlay", () => {
+  it("aligns the window controls overlay with the custom title bar height", () => {
     expect(buildMainWindowOptions("dist/main/main")).toMatchObject({
       titleBarStyle: "hidden",
       titleBarOverlay: {
-        color: "#ffffff",
+        color: "rgba(255, 255, 255, 0)",
         symbolColor: "#172033",
-        height: 43
+        height: 44
       }
     });
   });

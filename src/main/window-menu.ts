@@ -14,9 +14,9 @@ export const buildMainWindowOptions = (mainDirname: string): BrowserWindowConstr
   autoHideMenuBar: true,
   titleBarStyle: "hidden",
   titleBarOverlay: {
-    color: "#ffffff",
+    color: "rgba(255, 255, 255, 0)",
     symbolColor: "#172033",
-    height: 43
+    height: 44
   },
   webPreferences: {
     preload: path.join(mainDirname, "preload.js"),

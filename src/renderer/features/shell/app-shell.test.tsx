@@ -83,6 +83,7 @@ describe("AppShell", () => {
     const titlebar = screen.getByTestId("app-titlebar-spacer");
 
     expect(titlebar).toHaveClass("border-b", "pr-[138px]");
+    expect(screen.queryByTestId("app-titlebar-border")).not.toBeInTheDocument();
     expect(within(titlebar).getByRole("img", { name: "Skillport" })).toBeInTheDocument();
     expect(within(titlebar).getByText("Skillport")).toBeInTheDocument();
   });
