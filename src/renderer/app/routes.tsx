@@ -2,6 +2,8 @@ import { createRoute, createRootRoute, Navigate, Outlet } from "@tanstack/react-
 import React from "react";
 
 import { AppShell } from "@/features/shell/app-shell";
+import { ProvidersPage } from "@/features/providers/providers-page";
+import { RepositoriesPage } from "@/features/repositories/repositories-page";
 import { SkillsPage } from "@/features/skills/skills-page";
 
 const PagePlaceholder = ({
@@ -39,25 +41,13 @@ const indexRoute = createRoute({
 const providersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/providers",
-  component: () => (
-    <PagePlaceholder
-      eyebrow="Provider"
-      title="管理 Provider 与连接诊断"
-      copy="Provider 只声明访问方式。Git 凭据继续委托给系统环境。"
-    />
-  )
+  component: ProvidersPage
 });
 
 const repositoriesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/repositories",
-  component: () => (
-    <PagePlaceholder
-      eyebrow="Repositories"
-      title="管理仓库缓存、同步和扫描摘要"
-      copy="仓库页面负责本地缓存、手动同步和扫描结果。"
-    />
-  )
+  component: RepositoriesPage
 });
 
 const skillsRoute = createRoute({

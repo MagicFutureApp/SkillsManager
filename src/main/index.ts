@@ -3,6 +3,8 @@ import path from "node:path";
 import { registerAppInfoIpc } from "./ipc/app-info.js";
 import { registerHealthIpc } from "./ipc/health";
 import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
+import { registerProvidersIpc } from "./ipc/providers.js";
+import { registerRepositoriesIpc } from "./ipc/repositories.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { getTrayIconPath } from "./tray-icon.js";
 import { buildMainWindowOptions, disableWindowMenuBar } from "./window-menu.js";
@@ -87,6 +89,8 @@ void app
     registerAppInfoIpc();
     registerHealthIpc();
     registerLocaleIpc();
+    registerProvidersIpc();
+    registerRepositoriesIpc();
     await createMainWindow();
     createTray();
 

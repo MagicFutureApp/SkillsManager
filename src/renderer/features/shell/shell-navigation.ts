@@ -33,6 +33,7 @@ export const shellNavigationGroups: ShellNavigationGroup[] = [
       {
         routeId: "providers",
         labelKey: "shell.navigation.providers",
+        descriptionKey: "shell.navigationDescriptions.providers",
         badge: "6",
         hidden: true,
         icon: PlugZap
