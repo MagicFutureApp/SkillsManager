@@ -45,7 +45,7 @@ export const RepositoryDetail = ({
   return (
     <aside
       className="grid content-start gap-3 border-l border-border bg-card px-5 py-6 max-[1320px]:hidden"
-      aria-label="仓库详情"
+      aria-label="来源详情"
     >
       <section className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-xl font-semibold">
@@ -65,7 +65,7 @@ export const RepositoryDetail = ({
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
-        <h3 className="font-semibold">Repository</h3>
+        <h3 className="font-semibold">{copy.provider}</h3>
         {repository ? (
           <div className="mt-3 grid gap-2">
             <DetailRow label={copy.provider} value={repository.provider} />

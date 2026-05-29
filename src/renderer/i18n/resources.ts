@@ -23,7 +23,7 @@ export const resources = {
         },
         navigationDescriptions: {
           providers: "管理 Provider 连接入口和访问诊断。",
-          repositories: "管理技能来源仓库和本地索引入口。",
+          repositories: "管理技能来源和本地索引入口。",
           skills: "浏览 skill unit，选择目标并预览分发计划。",
           targets: "维护 Codex、Claude Code、Gemini CLI 和自定义目录目标。",
           distribution: "查看技能同步和分发执行记录。",
@@ -95,7 +95,7 @@ export const resources = {
         pageLabel: "Provider",
         heading: "管理 Provider 与连接诊断",
         description:
-          "Provider 是系统预定义的连接入口。用户只负责连接、取消连接和验证访问能力；仓库屏幕只负责具体缓存、同步与扫描结果。",
+          "Provider 是系统预定义的连接入口。用户只负责连接、取消连接和验证访问能力；来源屏幕只负责具体缓存、同步与扫描结果。",
         empty: "没有匹配的 Provider。调整筛选条件。",
         actions: {
           connect: "连接",
@@ -136,25 +136,25 @@ export const resources = {
         }
       },
       repositories: {
-        pageLabel: "Repositories",
-        heading: "管理仓库缓存与扫描结果",
+        pageLabel: "Sources",
+        heading: "管理来源与扫描结果",
         description:
-          "注册 Git 或市场来源后，系统在本机缓存仓库、记录分支与 commit，并把扫描到的 skill unit 写入本地索引。",
-        empty: "没有匹配的仓库。调整搜索或筛选条件。",
+          "注册 Git 或市场来源后，系统在本机记录分支与 commit，并把扫描到的 skill unit 写入本地索引。",
+        empty: "没有匹配的来源。调整搜索或筛选条件。",
         actions: {
-          addRepository: "新增仓库",
+          addRepository: "新增来源",
           copyCachePath: "复制缓存路径",
-          editRepository: "编辑仓库",
+          editRepository: "编辑来源",
           forceRescan: "强制重新扫描",
           syncSelected: "同步选中"
         },
         filters: {
           allProviders: "全部来源",
           allStatuses: "全部状态",
-          ariaLabel: "仓库筛选",
+          ariaLabel: "来源筛选",
           provider: "来源类型",
-          search: "搜索仓库",
-          searchPlaceholder: "搜索名称、URL、缓存路径或入口模式",
+          search: "搜索来源",
+          searchPlaceholder: "搜索名称、URL、分支或发现入口",
           sort: "排序",
           sortName: "按名称",
           sortPriority: "按同步优先级",
@@ -164,10 +164,10 @@ export const resources = {
           status: "扫描状态"
         },
         summary: {
-          enabledRepositories: "启用仓库",
+          enabledRepositories: "启用来源",
           indexedSkills: "已索引技能",
           needsReview: "需要复核",
-          registered: "注册仓库",
+          registered: "注册来源",
           scanAttention: "扫描状态需处理",
           skillUnit: "skill unit"
         },
@@ -175,8 +175,8 @@ export const resources = {
           actions: "启用",
           branch: "分支",
           provider: "来源",
-          repository: "仓库",
-          selectAll: "选择全部可见仓库",
+          repository: "来源",
+          selectAll: "选择全部可见来源",
           selectRepository: "选择 {{name}}",
           skills: "技能",
           status: "状态",
@@ -185,8 +185,8 @@ export const resources = {
         detail: {
           branch: "分支",
           cachePath: "缓存目录",
-          emptyDescription: "右侧会显示本地缓存、最后扫描 commit、发现模式和同步影响。",
-          emptyTitle: "选择一个仓库",
+          emptyDescription: "右侧会显示最后扫描 commit、发现入口和同步影响。",
+          emptyTitle: "选择一个来源",
           enabled: "启用",
           lastCommit: "最后 commit",
           lastScan: "最后扫描",
@@ -204,17 +204,19 @@ export const resources = {
           cachePath: "缓存目录",
           cancel: "取消",
           close: "关闭",
-          editDescription: "修改仓库注册信息。保存不会立即同步或写入目标目录。",
-          editTitle: "编辑仓库",
+          editDescription: "修改来源注册信息。保存不会立即同步或写入目标目录。",
+          editTitle: "编辑来源",
           name: "名称",
-          newDescription: "保存后只进入本地仓库注册表。同步或扫描需要用户手动触发。",
-          newTitle: "新增仓库",
+          newDescription: "保存后只进入本地来源注册表。同步或扫描需要用户手动触发。",
+          newTitle: "新增来源",
           note: "备注",
           patterns: "发现入口",
           provider: "来源类型",
           remoteUrl: "URL / 本机路径",
           requiredError: "名称和 URL / 本机路径是必填项。",
-          save: "保存仓库"
+          save: "保存来源",
+          sourceInspectionError: "未能自动解析来源信息，可继续手动填写。",
+          sourceInspectionLoading: "正在解析来源信息..."
         },
         scan: {
           justForceScanned: "刚刚强制扫描",
@@ -230,7 +232,7 @@ export const resources = {
           workspace: "Workspace",
           system: "System",
           providers: "Providers",
-          repositories: "Repositories",
+          repositories: "Sources",
           skills: "Skills",
           targets: "Targets",
           distribution: "Distribution",
@@ -245,7 +247,7 @@ export const resources = {
         },
         navigationDescriptions: {
           providers: "Manage provider connection entry points and diagnostics.",
-          repositories: "Manage skill source repositories and local index entry points.",
+          repositories: "Manage skill sources and local index entry points.",
           skills: "Browse skill units, choose targets, and preview distribution plans.",
           targets: "Maintain Codex, Claude Code, Gemini CLI, and custom directory targets.",
           distribution: "Review skill sync and distribution execution records.",
@@ -320,7 +322,7 @@ export const resources = {
         pageLabel: "Provider",
         heading: "Manage providers and connection diagnostics",
         description:
-          "Providers are predefined connection entry points. Users connect, disconnect, and validate access here; repository caching, sync, and scan results stay on the repository screen.",
+          "Providers are predefined connection entry points. Users connect, disconnect, and validate access here; source sync and scan results stay on the source screen.",
         empty: "No matching providers. Adjust the filters.",
         actions: {
           connect: "Connect",
@@ -362,25 +364,25 @@ export const resources = {
         }
       },
       repositories: {
-        pageLabel: "Repositories",
-        heading: "Manage repository cache and scan results",
+        pageLabel: "Sources",
+        heading: "Manage sources and scan results",
         description:
-          "After registering Git or marketplace sources, the app caches repositories locally, records branches and commits, and writes scanned skill units into the local index.",
-        empty: "No matching repositories. Adjust the search or filters.",
+          "After registering Git or marketplace sources, the app records branches and commits, and writes scanned skill units into the local index.",
+        empty: "No matching sources. Adjust the search or filters.",
         actions: {
-          addRepository: "Add repository",
+          addRepository: "Add source",
           copyCachePath: "Copy cache path",
-          editRepository: "Edit repository",
+          editRepository: "Edit source",
           forceRescan: "Force rescan",
           syncSelected: "Sync selected"
         },
         filters: {
           allProviders: "All providers",
           allStatuses: "All statuses",
-          ariaLabel: "Repository filters",
+          ariaLabel: "Source filters",
           provider: "Provider",
-          search: "Search repositories",
-          searchPlaceholder: "Search name, URL, cache path, or entry pattern",
+          search: "Search sources",
+          searchPlaceholder: "Search name, URL, branch, or discovery entry",
           sort: "Sort",
           sortName: "Name",
           sortPriority: "Sync priority",
@@ -390,10 +392,10 @@ export const resources = {
           status: "Scan status"
         },
         summary: {
-          enabledRepositories: "Enabled repositories",
+          enabledRepositories: "Enabled sources",
           indexedSkills: "Indexed skills",
           needsReview: "Need review",
-          registered: "Registered repositories",
+          registered: "Registered sources",
           scanAttention: "Scan status needs attention",
           skillUnit: "skill unit"
         },
@@ -401,8 +403,8 @@ export const resources = {
           actions: "Enabled",
           branch: "Branch",
           provider: "Provider",
-          repository: "Repository",
-          selectAll: "Select all visible repositories",
+          repository: "Source",
+          selectAll: "Select all visible sources",
           selectRepository: "Select {{name}}",
           skills: "Skills",
           status: "Status",
@@ -411,9 +413,8 @@ export const resources = {
         detail: {
           branch: "Branch",
           cachePath: "Cache path",
-          emptyDescription:
-            "Local cache, last scanned commit, discovery patterns, and sync impact appear here.",
-          emptyTitle: "Choose a repository",
+          emptyDescription: "Last scanned commit, discovery entries, and sync impact appear here.",
+          emptyTitle: "Choose a source",
           enabled: "Enabled",
           lastCommit: "Last commit",
           lastScan: "Last scan",
@@ -431,18 +432,21 @@ export const resources = {
           cachePath: "Cache path",
           cancel: "Cancel",
           close: "Close",
-          editDescription: "Update repository registration. Saving does not sync or write targets.",
-          editTitle: "Edit repository",
+          editDescription: "Update source registration. Saving does not sync or write targets.",
+          editTitle: "Edit source",
           name: "Name",
           newDescription:
-            "Saving only adds the repository to the local registry. Sync and scan stay manual.",
-          newTitle: "Add repository",
+            "Saving only adds the source to the local registry. Sync and scan stay manual.",
+          newTitle: "Add source",
           note: "Note",
           patterns: "Discovery entries",
           provider: "Provider",
           remoteUrl: "URL / local path",
           requiredError: "Name and URL / local path are required.",
-          save: "Save repository"
+          save: "Save source",
+          sourceInspectionError:
+            "Source metadata could not be inspected. You can continue manually.",
+          sourceInspectionLoading: "Inspecting source metadata..."
         },
         scan: {
           justForceScanned: "Just force scanned",

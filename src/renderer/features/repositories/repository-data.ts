@@ -43,7 +43,7 @@ export type RepositoryFormValues = {
 const defaultConfig: RepositoryConfig = {
   enabled: true,
   lastScanLabel: "未执行",
-  note: "用户注册的仓库，等待手动同步扫描。",
+  note: "用户注册的来源，等待手动同步扫描。",
   patterns: ["skills/*/SKILL.md"],
   priority: 99,
   providerName: "GitHub",
@@ -176,7 +176,7 @@ export const buildRepositoryFromForm = ({
     lastCommit: "--",
     lastScanLabel: "未执行",
     name: formValues.name,
-    note: formValues.note || "用户新增的仓库，等待第一次同步扫描。",
+    note: formValues.note || "用户新增的来源，等待第一次同步扫描。",
     patterns: formValues.patterns
       .split(",")
       .map((pattern) => pattern.trim())

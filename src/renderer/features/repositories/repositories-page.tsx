@@ -3,7 +3,6 @@ import { RepositoryDetail } from "./repository-detail";
 import { RepositoryFilters } from "./repository-filters";
 import { RepositoryList } from "./repository-list";
 import { RepositoryModal } from "./repository-modal";
-import { RepositorySummary } from "./repository-summary";
 import {
   adaptRepositoryRecords,
   buildRepositoryFromForm,
@@ -37,7 +36,7 @@ export const RepositoriesPage = () => {
   useEffect(() => {
     let isMounted = true;
 
-    void window.skillsManager?.listRepositories().then((result) => {
+    void window.skillsManager?.listRepositories?.().then((result) => {
       if (isMounted) {
         setRepositories(adaptRepositoryRecords(result.repositories));
       }
@@ -67,9 +66,6 @@ export const RepositoriesPage = () => {
   const visibleAllChecked =
     visibleRepositories.length > 0 && visibleCheckedCount === visibleRepositories.length;
   const visibleSomeChecked = visibleCheckedCount > 0;
-  const enabledCount = repositories.filter((repository) => repository.enabled).length;
-  const skillUnits = repositories.reduce((sum, repository) => sum + repository.skillUnits, 0);
-  const reviewCount = repositories.filter((repository) => repository.status !== "ready").length;
 
   const updateRepository = (
     repositoryId: string | null,
@@ -259,23 +255,6 @@ export const RepositoriesPage = () => {
         />
 
         <div className="mt-5">
-          <RepositorySummary
-            copy={{
-              enabledRepositories: t("repositories.summary.enabledRepositories"),
-              indexedSkills: t("repositories.summary.indexedSkills"),
-              needsReview: t("repositories.summary.needsReview"),
-              registered: t("repositories.summary.registered"),
-              scanAttention: t("repositories.summary.scanAttention"),
-              skillUnit: t("repositories.summary.skillUnit")
-            }}
-            enabledCount={enabledCount}
-            reviewCount={reviewCount}
-            skillUnits={skillUnits}
-            totalCount={repositories.length}
-          />
-        </div>
-
-        <div className="mt-5">
           <RepositoryList
             checkedIds={checkedIds}
             copy={{
@@ -330,7 +309,6 @@ export const RepositoriesPage = () => {
       <RepositoryModal
         copy={{
           branch: t("repositories.modal.branch"),
-          cachePath: t("repositories.modal.cachePath"),
           cancel: t("repositories.modal.cancel"),
           close: t("repositories.modal.close"),
           editDescription: t("repositories.modal.editDescription"),
@@ -343,7 +321,9 @@ export const RepositoriesPage = () => {
           provider: t("repositories.modal.provider"),
           remoteUrl: t("repositories.modal.remoteUrl"),
           requiredError: t("repositories.modal.requiredError"),
-          save: t("repositories.modal.save")
+          save: t("repositories.modal.save"),
+          sourceInspectionError: t("repositories.modal.sourceInspectionError"),
+          sourceInspectionLoading: t("repositories.modal.sourceInspectionLoading")
         }}
         editingRepository={editingRepository}
         open={isModalOpen}

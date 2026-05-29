@@ -4,11 +4,17 @@ import type { AppInfo } from "./ipc/app-info";
 import type { AppHealth } from "./ipc/health";
 import type { ProvidersListResult } from "./ipc/providers";
 import type { RepositoriesListResult } from "./ipc/repositories";
+import type { RepositorySourceInspection } from "../core/repositories/source-inspection";
 
 contextBridge.exposeInMainWorld("skillsManager", {
   getHealth: () => ipcRenderer.invoke("app:getHealth") as Promise<AppHealth>,
   getInfo: () => ipcRenderer.invoke("app:getInfo") as Promise<AppInfo>,
   getLocale: () => ipcRenderer.invoke("app:getLocale") as Promise<SupportedLocale>,
+  inspectRepositorySource: (remoteUrl: string) =>
+    ipcRenderer.invoke(
+      "repositories:inspectSource",
+      remoteUrl
+    ) as Promise<RepositorySourceInspection>,
   listProviders: () => ipcRenderer.invoke("providers:list") as Promise<ProvidersListResult>,
   listRepositories: () => ipcRenderer.invoke("repositories:list") as Promise<RepositoriesListResult>
 });

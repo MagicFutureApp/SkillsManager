@@ -5,12 +5,12 @@ import {
   type RepositoryProviderFilter,
   type RepositoryViewModel
 } from "./repository-data";
+import type { RepositorySourceInspection } from "@/global";
 import React, { useEffect, useMemo, useState } from "react";
 
 type RepositoryModalProps = {
   copy: {
     branch: string;
-    cachePath: string;
     cancel: string;
     close: string;
     editDescription: string;
@@ -24,6 +24,8 @@ type RepositoryModalProps = {
     remoteUrl: string;
     requiredError: string;
     save: string;
+    sourceInspectionError: string;
+    sourceInspectionLoading: string;
   };
   editingRepository: RepositoryViewModel | null;
   open: boolean;
@@ -52,19 +54,87 @@ export const RepositoryModal = ({
   );
   const [values, setValues] = useState<RepositoryFormValues>(initialValues);
   const [error, setError] = useState("");
+  const [sourceInspectionStatus, setSourceInspectionStatus] = useState<
+    "idle" | "loading" | "error"
+  >("idle");
+  const [touchedFields, setTouchedFields] = useState<Set<keyof RepositoryFormValues>>(
+    () => new Set()
+  );
 
   useEffect(() => {
     setValues(initialValues);
     setError("");
+    setSourceInspectionStatus("idle");
+    setTouchedFields(new Set());
   }, [initialValues, open]);
+
+  useEffect(() => {
+    const remoteUrl = values.remoteUrl.trim();
+    const inspectRepositorySource = window.skillsManager?.inspectRepositorySource;
+
+    if (!open || editingRepository || !remoteUrl || !inspectRepositorySource) {
+      return;
+    }
+
+    let isCurrent = true;
+
+    setSourceInspectionStatus("loading");
+    const inspectTimer = window.setTimeout(() => {
+      void inspectRepositorySource(remoteUrl)
+        .then((inspection) => {
+          if (isCurrent) {
+            applyInspection(inspection);
+            setSourceInspectionStatus("idle");
+          }
+        })
+        .catch(() => {
+          if (isCurrent) {
+            setSourceInspectionStatus("error");
+          }
+        });
+    }, 250);
+
+    return () => {
+      isCurrent = false;
+      window.clearTimeout(inspectTimer);
+    };
+  }, [editingRepository, open, values.remoteUrl]);
 
   if (!open) {
     return null;
   }
 
   const updateValue = (key: keyof RepositoryFormValues, value: string) => {
+    setTouchedFields((currentFields) => new Set(currentFields).add(key));
     setValues((currentValues) => ({ ...currentValues, [key]: value }));
   };
+
+  const applyInspection = (inspection: RepositorySourceInspection) => {
+    setValues((currentValues) => ({
+      ...currentValues,
+      branch:
+        inspection.branch && !touchedFields.has("branch")
+          ? inspection.branch
+          : currentValues.branch,
+      name: inspection.name && !touchedFields.has("name") ? inspection.name : currentValues.name,
+      note: inspection.about && !touchedFields.has("note") ? inspection.about : currentValues.note,
+      patterns:
+        inspection.patterns?.length && !touchedFields.has("patterns")
+          ? inspection.patterns.join(", ")
+          : currentValues.patterns,
+      provider:
+        inspection.provider && !touchedFields.has("provider")
+          ? inspection.provider
+          : currentValues.provider
+    }));
+  };
+
+  const sourceInspectionMessage =
+    sourceInspectionStatus === "loading"
+      ? copy.sourceInspectionLoading
+      : sourceInspectionStatus === "error"
+        ? copy.sourceInspectionError
+        : "";
 
   const submitForm = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -109,6 +179,18 @@ export const RepositoryModal = ({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
+          <Field label={copy.remoteUrl} span>
+            <input
+              className={controlClassName}
+              value={values.remoteUrl}
+              onChange={(event) => updateValue("remoteUrl", event.target.value)}
+            />
+            {sourceInspectionMessage ? (
+              <span className="text-xs font-normal text-muted-foreground">
+                {sourceInspectionMessage}
+              </span>
+            ) : null}
+          </Field>
           <Field label={copy.name}>
             <input
               className={controlClassName}
@@ -136,25 +218,11 @@ export const RepositoryModal = ({
                 ))}
             </select>
           </Field>
-          <Field label={copy.remoteUrl} span>
-            <input
-              className={controlClassName}
-              value={values.remoteUrl}
-              onChange={(event) => updateValue("remoteUrl", event.target.value)}
-            />
-          </Field>
           <Field label={copy.branch}>
             <input
               className={controlClassName}
               value={values.branch}
               onChange={(event) => updateValue("branch", event.target.value)}
-            />
-          </Field>
-          <Field label={copy.cachePath}>
-            <input
-              className={controlClassName}
-              value={values.cachePath}
-              onChange={(event) => updateValue("cachePath", event.target.value)}
             />
           </Field>
           <Field label={copy.patterns} span>
