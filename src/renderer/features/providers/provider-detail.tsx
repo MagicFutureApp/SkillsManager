@@ -43,7 +43,7 @@ export const ProviderDetail = ({
 }: ProviderDetailProps) => {
   return (
     <aside
-      className="grid content-start gap-3 border-l border-border bg-card px-5 py-6 max-[1180px]:border-l-0 max-[1180px]:border-t max-[860px]:hidden"
+      className="grid content-start gap-3 border-l border-border bg-card px-5 py-6"
       aria-label="Provider 详情"
     >
       <section className="rounded-xl border border-border bg-card p-4">

@@ -191,8 +191,8 @@ export const RepositoriesPage = () => {
   };
 
   return (
-    <div className="grid min-h-full grid-cols-[minmax(620px,1fr)_380px] bg-background max-[1320px]:grid-cols-1">
-      <main className="min-w-0 p-7 max-[860px]:p-4">
+    <div className="grid min-h-svh grid-cols-[minmax(620px,1fr)_360px] bg-background">
+      <main className="min-w-0 p-7">
         <header className="mb-6">
           <p className="mb-1 text-sm">{t("repositories.pageLabel")}</p>
           <div className="flex items-center justify-between gap-4 max-[860px]:items-start">
