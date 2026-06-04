@@ -110,6 +110,11 @@ describe("RepositoriesPage", () => {
     expect(branchField.compareDocumentPosition(patternsField)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING
     );
+    expect(patternsField).toHaveValue("");
+    expect(patternsField).toHaveAttribute(
+      "placeholder",
+      "例: skills/*/SKILL.md 或 SKILL.md 等"
+    );
     expect(within(dialog).queryByText("缓存目录")).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("名称"), {
       target: { value: "Docs skill experiments" }
@@ -123,7 +128,7 @@ describe("RepositoriesPage", () => {
     expect(screen.getByRole("heading", { name: "Docs skill experiments" })).toBeInTheDocument();
   });
 
-  it("autofills source metadata after entering a GitHub repository URL", async () => {
+  it("autofills source metadata without changing discovery entries after entering a GitHub repository URL", async () => {
     const inspectRepositorySource = vi.fn().mockResolvedValue({
       about: "Composable Claude skills from Anthropic.",
       branch: "main",
@@ -151,7 +156,7 @@ describe("RepositoriesPage", () => {
     expect(await within(dialog).findByDisplayValue("anthropics/skills")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("来源类型")).toHaveValue("GitHub");
     expect(within(dialog).getByLabelText("分支")).toHaveValue("main");
-    expect(within(dialog).getByLabelText("发现入口")).toHaveValue("skills/*/SKILL.md");
+    expect(within(dialog).getByLabelText("发现入口")).toHaveValue("");
     expect(within(dialog).getByLabelText("备注")).toHaveValue(
       "Composable Claude skills from Anthropic."
     );

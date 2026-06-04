@@ -20,6 +20,7 @@ type RepositoryModalProps = {
     newTitle: string;
     note: string;
     patterns: string;
+    patternsPlaceholder: string;
     provider: string;
     remoteUrl: string;
     requiredError: string;
@@ -46,7 +47,7 @@ export const RepositoryModal = ({
       cachePath: editingRepository?.cachePath ?? "",
       name: editingRepository?.name ?? "",
       note: editingRepository?.note ?? "",
-      patterns: editingRepository?.patterns.join(", ") ?? "skills/*/SKILL.md",
+      patterns: editingRepository?.patterns.join(", ") ?? "",
       provider: editingRepository?.provider ?? "GitHub",
       remoteUrl: editingRepository?.remoteUrl ?? ""
     }),
@@ -118,10 +119,6 @@ export const RepositoryModal = ({
           : currentValues.branch,
       name: inspection.name && !touchedFields.has("name") ? inspection.name : currentValues.name,
       note: inspection.about && !touchedFields.has("note") ? inspection.about : currentValues.note,
-      patterns:
-        inspection.patterns?.length && !touchedFields.has("patterns")
-          ? inspection.patterns.join(", ")
-          : currentValues.patterns,
       provider:
         inspection.provider && !touchedFields.has("provider")
           ? inspection.provider
@@ -150,7 +147,7 @@ export const RepositoryModal = ({
       cachePath: values.cachePath.trim(),
       name: values.name.trim(),
       note: values.note.trim(),
-      patterns: values.patterns.trim() || "skills/*/SKILL.md",
+      patterns: values.patterns.trim(),
       remoteUrl: values.remoteUrl.trim()
     });
   };
@@ -228,6 +225,7 @@ export const RepositoryModal = ({
           <Field label={copy.patterns} span>
             <input
               className={controlClassName}
+              placeholder={copy.patternsPlaceholder}
               value={values.patterns}
               onChange={(event) => updateValue("patterns", event.target.value)}
             />

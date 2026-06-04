@@ -318,6 +318,7 @@ export const RepositoriesPage = () => {
           newTitle: t("repositories.modal.newTitle"),
           note: t("repositories.modal.note"),
           patterns: t("repositories.modal.patterns"),
+          patternsPlaceholder: t("repositories.modal.patternsPlaceholder"),
           provider: t("repositories.modal.provider"),
           remoteUrl: t("repositories.modal.remoteUrl"),
           requiredError: t("repositories.modal.requiredError"),
