@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
 
+import { PageLayout } from "@/components/layout/page-layout";
 import { SkillsPage } from "./skills-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 
@@ -17,6 +18,23 @@ const renderSkillsPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
 };
 
 describe("SkillsPage", () => {
+  it("renders layout slots inside the page main and sider containers", () => {
+    render(
+      <PageLayout
+        Main={() => <div data-testid="skills-layout-main-slot">Main slot</div>}
+        Sider={() => <div data-testid="skills-layout-sider-slot">Sider slot</div>}
+        siderLabel="Skill detail"
+      />
+    );
+
+    expect(screen.getByRole("main")).toContainElement(
+      screen.getByTestId("skills-layout-main-slot")
+    );
+    expect(screen.getByRole("complementary", { name: "Skill detail" })).toContainElement(
+      screen.getByTestId("skills-layout-sider-slot")
+    );
+  });
+
   it("renders the skills design surface from the HTML mockup", async () => {
     await renderSkillsPage();
 
