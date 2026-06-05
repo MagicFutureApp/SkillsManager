@@ -22,29 +22,46 @@ describe("RepositoriesPage", () => {
   it("renders the repositories management surface from the HTML mockup", async () => {
     await renderRepositoriesPage();
 
-    expect(screen.getByRole("heading", { name: "管理来源与扫描结果" })).toBeInTheDocument();
-    expect(screen.getByLabelText("来源筛选")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "来源管理" })).toBeInTheDocument();
+    expect(screen.getByText("管理 Git 和其他来源的Skills。")).toBeInTheDocument();
+    expect(screen.getByLabelText("来源筛选")).toHaveClass(
+      "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]"
+    );
+    expect(screen.getByLabelText("搜索")).toBeInTheDocument();
+    expect(screen.getByLabelText("类型")).toBeInTheDocument();
+    expect(screen.getByLabelText("状态")).toBeInTheDocument();
     expect(screen.queryByText("启用仓库")).not.toBeInTheDocument();
     expect(screen.queryByText("已索引技能")).not.toBeInTheDocument();
     expect(screen.queryByText("需要复核")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "同步" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "新增" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "强制重新扫描" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Team skills repository" })).toHaveAttribute(
       "aria-selected",
       "true"
     );
     expect(screen.getByRole("heading", { name: "Team skills repository" })).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" })
+    ).toBeInTheDocument();
     expect(screen.getByText("同步影响")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Team skills repository" }).closest("div")
+    ).toHaveClass(
+      "grid-cols-[34px_minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_minmax(52px,0.45fr)]"
+    );
   });
 
   it("filters sources by provider and status", async () => {
     await renderRepositoriesPage();
 
-    fireEvent.change(screen.getByLabelText("来源类型"), { target: { value: "GitLab" } });
+    fireEvent.change(screen.getByLabelText("类型"), { target: { value: "GitLab" } });
     expect(screen.getByRole("button", { name: "Design lab prompts" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Team skills repository" })
     ).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("扫描状态"), { target: { value: "ready" } });
+    fireEvent.change(screen.getByLabelText("状态"), { target: { value: "ready" } });
     expect(screen.getByText("没有匹配的来源。调整搜索或筛选条件。")).toBeInTheDocument();
   });
 
@@ -63,18 +80,18 @@ describe("RepositoriesPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("syncs and force rescans the selected source", async () => {
+  it("enables sync after a source is checked", async () => {
     await renderRepositoriesPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "Design lab prompts" }));
-    fireEvent.click(screen.getByRole("button", { name: "同步选中" }));
+    const syncButton = screen.getByRole("button", { name: "同步" });
+    expect(syncButton).toBeDisabled();
+
+    fireEvent.click(screen.getByLabelText("选择 Design lab prompts"));
+    expect(syncButton).toBeEnabled();
+
+    fireEvent.click(syncButton);
     expect(
       within(screen.getByLabelText("来源详情")).getAllByText("刚刚同步").length
-    ).toBeGreaterThan(0);
-
-    fireEvent.click(screen.getByRole("button", { name: "强制重新扫描" }));
-    expect(
-      within(screen.getByLabelText("来源详情")).getAllByText("刚刚强制扫描").length
     ).toBeGreaterThan(0);
   });
 
@@ -93,7 +110,7 @@ describe("RepositoriesPage", () => {
   it("adds a source through the modal form", async () => {
     await renderRepositoriesPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "新增来源" }));
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
     const dialog = screen.getByRole("dialog", { name: "新增来源" });
     const remoteUrlField = within(dialog).getByLabelText("URL / 本机路径");
     const nameField = within(dialog).getByLabelText("名称");
@@ -144,7 +161,7 @@ describe("RepositoriesPage", () => {
     };
     await renderRepositoriesPage();
 
-    fireEvent.click(screen.getByRole("button", { name: "新增来源" }));
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
     const dialog = screen.getByRole("dialog", { name: "新增来源" });
     fireEvent.change(within(dialog).getByLabelText("URL / 本机路径"), {
       target: { value: "https://github.com/anthropics/skills" }
@@ -168,6 +185,6 @@ describe("RepositoriesPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Source filters")).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "Source details" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add source" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
   });
 });

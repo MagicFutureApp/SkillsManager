@@ -47,9 +47,17 @@ export const RepositoryList = ({
     }
   }, [visibleAllChecked, visibleSomeChecked]);
 
+  const gridColumnsClassName =
+    "grid-cols-[34px_minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_minmax(52px,0.45fr)]";
+
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="grid grid-cols-[34px_minmax(220px,1.4fr)_118px_112px_110px_96px_68px] items-center gap-3 border-b border-border bg-muted/40 px-4 py-3 text-xs font-semibold text-muted-foreground max-[820px]:hidden">
+      <div
+        className={cn(
+          "grid items-center gap-3 border-b border-border bg-muted/40 px-4 py-3 text-xs font-semibold text-muted-foreground max-[820px]:hidden",
+          gridColumnsClassName
+        )}
+      >
         <span className="grid place-items-center">
           <input
             ref={selectAllRef}
@@ -76,7 +84,8 @@ export const RepositoryList = ({
           <div
             key={repository.id}
             className={cn(
-              "grid grid-cols-[34px_minmax(220px,1.4fr)_118px_112px_110px_96px_68px] items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_auto]",
+              "grid items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_auto]",
+              gridColumnsClassName,
               repository.id === selectedRepositoryId &&
                 "bg-primary/5 shadow-[inset_3px_0_0_theme(colors.primary)]"
             )}

@@ -49,7 +49,7 @@ export const RepositoryFilters = ({
 }: RepositoryFiltersProps) => {
   return (
     <section
-      className="grid grid-cols-[minmax(240px,1fr)_160px_150px_150px] items-end gap-3 rounded-xl border border-border bg-card p-4 max-[1180px]:grid-cols-2"
+      className="grid grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] items-end gap-3 rounded-xl border border-border bg-card p-4 max-[1180px]:grid-cols-2"
       aria-label={copy.ariaLabel}
     >
       <Field label={copy.search}>

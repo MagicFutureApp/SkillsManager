@@ -138,23 +138,21 @@ export const resources = {
       },
       repositories: {
         pageLabel: "Sources",
-        heading: "管理来源与扫描结果",
-        description:
-          "注册 Git 或市场来源后，系统在本机记录分支与 commit，并把扫描到的 skill unit 写入本地索引。",
+        heading: "来源管理",
+        description: "管理 Git 和其他来源的Skills。",
         empty: "没有匹配的来源。调整搜索或筛选条件。",
         actions: {
-          addRepository: "新增来源",
+          addRepository: "新增",
           copyCachePath: "复制缓存路径",
-          editRepository: "编辑来源",
-          forceRescan: "强制重新扫描",
-          syncSelected: "同步选中"
+          editRepository: "编辑",
+          syncSelected: "同步"
         },
         filters: {
           allProviders: "全部来源",
           allStatuses: "全部状态",
           ariaLabel: "来源筛选",
-          provider: "来源类型",
-          search: "搜索来源",
+          provider: "类型",
+          search: "搜索",
           searchPlaceholder: "搜索名称、URL、分支或发现入口",
           sort: "排序",
           sortName: "按名称",
@@ -162,7 +160,7 @@ export const resources = {
           sortProvider: "按来源类型",
           sortSkills: "按技能数量",
           sortStatus: "按扫描状态",
-          status: "扫描状态"
+          status: "状态"
         },
         summary: {
           enabledRepositories: "启用来源",
@@ -374,18 +372,17 @@ export const resources = {
           "After registering Git or marketplace sources, the app records branches and commits, and writes scanned skill units into the local index.",
         empty: "No matching sources. Adjust the search or filters.",
         actions: {
-          addRepository: "Add source",
+          addRepository: "Add",
           copyCachePath: "Copy cache path",
-          editRepository: "Edit source",
-          forceRescan: "Force rescan",
-          syncSelected: "Sync selected"
+          editRepository: "Edit",
+          syncSelected: "Sync"
         },
         filters: {
           allProviders: "All providers",
           allStatuses: "All statuses",
           ariaLabel: "Source filters",
-          provider: "Provider",
-          search: "Search sources",
+          provider: "Type",
+          search: "Search",
           searchPlaceholder: "Search name, URL, branch, or discovery entry",
           sort: "Sort",
           sortName: "Name",
@@ -393,7 +390,7 @@ export const resources = {
           sortProvider: "Provider",
           sortSkills: "Skill count",
           sortStatus: "Scan status",
-          status: "Scan status"
+          status: "Status"
         },
         summary: {
           enabledRepositories: "Enabled sources",

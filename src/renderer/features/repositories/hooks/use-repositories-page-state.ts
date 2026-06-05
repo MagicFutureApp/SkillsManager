@@ -64,6 +64,7 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
   const visibleAllChecked =
     visibleRepositories.length > 0 && visibleCheckedCount === visibleRepositories.length;
   const visibleSomeChecked = visibleCheckedCount > 0;
+  const hasCheckedRepositories = checkedIds.size > 0;
 
   const updateRepository = (
     repositoryId: string | null,
@@ -80,18 +81,29 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
     );
   };
 
-  const syncSelectedRepository = (force: boolean) => {
-    updateRepository(selectedRepositoryId, (repository) => ({
-      ...repository,
-      lastCommit: repository.provider === "Local Git" ? "local" : nextCommit(repository.lastCommit),
-      lastScanLabel: force ? scanLabels.justForceScanned : scanLabels.justSynced,
-      scan: {
-        ...repository.scan,
-        added: force ? Math.max(1, repository.scan.added) : repository.scan.added,
-        changed: force ? repository.scan.changed + 1 : repository.scan.changed
-      },
-      status: repository.scan.warnings > 0 ? "review" : "ready"
-    }));
+  const syncCheckedRepositories = () => {
+    if (!checkedIds.size) {
+      return;
+    }
+
+    const nextSelectedRepositoryId = checkedIds.has(selectedRepositoryId ?? "")
+      ? selectedRepositoryId
+      : (checkedIds.values().next().value ?? null);
+
+    setSelectedRepositoryId(nextSelectedRepositoryId);
+    setRepositories((currentRepositories) =>
+      currentRepositories.map((repository) =>
+        checkedIds.has(repository.id)
+          ? {
+              ...repository,
+              lastCommit:
+                repository.provider === "Local Git" ? "local" : nextCommit(repository.lastCommit),
+              lastScanLabel: scanLabels.justSynced,
+              status: repository.scan.warnings > 0 ? "review" : "ready"
+            }
+          : repository
+      )
+    );
   };
 
   const toggleRepositoryEnabled = (repositoryId: string) => {
@@ -103,6 +115,10 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
   };
 
   const toggleRepositoryChecked = (repositoryId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRepositoryId(repositoryId);
+    }
+
     setCheckedIds((currentIds) => {
       const nextIds = new Set(currentIds);
 
@@ -193,6 +209,7 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
   return {
     checkedIds,
     editingRepository,
+    hasCheckedRepositories,
     isModalOpen,
     providerFilter,
     query,
@@ -214,7 +231,7 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
     setSelectedRepositoryId,
     setSort,
     setStatusFilter,
-    syncSelectedRepository,
+    syncCheckedRepositories,
     toggleRepositoryChecked,
     toggleRepositoryEnabled
   };

@@ -24,18 +24,10 @@ export const RepositoriesPageMain = () => {
             <Button
               type="button"
               variant="outline"
-              disabled={!page.selectedRepository}
-              onClick={() => page.syncSelectedRepository(false)}
+              disabled={!page.hasCheckedRepositories}
+              onClick={page.syncCheckedRepositories}
             >
               {t("repositories.actions.syncSelected")}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!page.selectedRepository}
-              onClick={() => page.syncSelectedRepository(true)}
-            >
-              {t("repositories.actions.forceRescan")}
             </Button>
             <Button type="button" onClick={page.openCreateModal}>
               {t("repositories.actions.addRepository")}
