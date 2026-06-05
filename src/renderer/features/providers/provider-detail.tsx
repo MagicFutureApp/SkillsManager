@@ -42,10 +42,7 @@ export const ProviderDetail = ({
   onTest
 }: ProviderDetailProps) => {
   return (
-    <aside
-      className="grid content-start gap-3 border-l border-border bg-card px-5 py-6"
-      aria-label="Provider 详情"
-    >
+    <>
       <section className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-xl font-semibold">
           {provider ? provider.name : copy.defaultEmptyTitle}
@@ -116,7 +113,7 @@ export const ProviderDetail = ({
           {provider?.diagnostic ?? "尚未选择 Provider。"}
         </pre>
       </section>
-    </aside>
+    </>
   );
 };
 

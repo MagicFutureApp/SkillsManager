@@ -43,10 +43,7 @@ export const RepositoryDetail = ({
     : [];
 
   return (
-    <aside
-      className="grid content-start gap-3 border-l border-border bg-card px-5 py-6"
-      aria-label="来源详情"
-    >
+    <>
       <section className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-xl font-semibold">
           {repository ? repository.name : copy.defaultTitle}
@@ -99,7 +96,7 @@ export const RepositoryDetail = ({
           ))}
         </div>
       </section>
-    </aside>
+    </>
   );
 };
 

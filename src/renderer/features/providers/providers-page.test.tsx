@@ -76,6 +76,7 @@ describe("ProvidersPage", () => {
       screen.getByRole("heading", { name: "Manage providers and connection diagnostics" })
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Provider filters")).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Provider details" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Run diagnostics" })).toBeInTheDocument();
   });
 });

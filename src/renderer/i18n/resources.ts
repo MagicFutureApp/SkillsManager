@@ -120,6 +120,7 @@ export const resources = {
           status: "状态"
         },
         detail: {
+          ariaLabel: "Provider 详情",
           authMode: "认证方式",
           connected: "connected",
           connection: "连接",
@@ -183,6 +184,7 @@ export const resources = {
           toggleEnabled: "启用 {{name}}"
         },
         detail: {
+          ariaLabel: "来源详情",
           branch: "分支",
           cachePath: "缓存目录",
           emptyDescription: "右侧会显示最后扫描 commit、发现入口和同步影响。",
@@ -348,6 +350,7 @@ export const resources = {
           status: "Status"
         },
         detail: {
+          ariaLabel: "Provider details",
           authMode: "Auth mode",
           connected: "connected",
           connection: "Connection",
@@ -412,6 +415,7 @@ export const resources = {
           toggleEnabled: "Enable {{name}}"
         },
         detail: {
+          ariaLabel: "Source details",
           branch: "Branch",
           cachePath: "Cache path",
           emptyDescription: "Last scanned commit, discovery entries, and sync impact appear here.",

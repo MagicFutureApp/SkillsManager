@@ -111,10 +111,7 @@ describe("RepositoriesPage", () => {
       Node.DOCUMENT_POSITION_FOLLOWING
     );
     expect(patternsField).toHaveValue("");
-    expect(patternsField).toHaveAttribute(
-      "placeholder",
-      "例: skills/*/SKILL.md 或 SKILL.md 等"
-    );
+    expect(patternsField).toHaveAttribute("placeholder", "例: skills/*/SKILL.md 或 SKILL.md 等");
     expect(within(dialog).queryByText("缓存目录")).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("名称"), {
       target: { value: "Docs skill experiments" }
@@ -170,6 +167,7 @@ describe("RepositoriesPage", () => {
       screen.getByRole("heading", { name: "Manage sources and scan results" })
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Source filters")).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Source details" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add source" })).toBeInTheDocument();
   });
 });
