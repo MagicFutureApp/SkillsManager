@@ -38,6 +38,14 @@ describe("SkillsPage", () => {
   it("renders the skills design surface from the HTML mockup", async () => {
     await renderSkillsPage();
 
+    expect(screen.getByLabelText("技能筛选")).toHaveClass(
+      "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]"
+    );
+    expect(screen.getAllByText("Prompt Engineering Basic")[0].closest("div")).toHaveClass(
+      "grid-cols-[32px_minmax(0,1.7fr)_minmax(0,0.9fr)_minmax(0,0.65fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(44px,0.45fr)_minmax(56px,0.5fr)]"
+    );
+    expect(screen.getByRole("button", { name: "新增" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "编辑" })).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "浏览 skill unit 并预览分发计划" })
     ).toBeInTheDocument();

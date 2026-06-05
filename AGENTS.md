@@ -127,3 +127,4 @@ pnpm run electron:version
 - 优先支持信息密度、可读性和重复操作效率。
 - v1 主要区域是 `Sources`、`Repositories`、`Skills`、`Targets`、`Distribution`。
 - 视觉风格保持克制，符合本地工作工具定位。
+- 所有用到的组件，先去 shadcn 的 baseUI 找一找，尽量使用现成组件，必要时稍微调整样式，但不要大幅改动结构或交互。

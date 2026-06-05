@@ -6,6 +6,9 @@ import { useTranslation } from "react-i18next";
 import { Field, Select, statusClassName, Toggle } from "./skills-page-controls";
 import { selectedSkill, skills } from "./skills-page-data";
 
+const tableGridColumnsClassName =
+  "grid-cols-[32px_minmax(0,1.7fr)_minmax(0,0.9fr)_minmax(0,0.65fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(44px,0.45fr)_minmax(56px,0.5fr)]";
+
 export const SkillsPageMain = () => {
   const { t } = useTranslation();
   const reviewCount = skills.filter((skill) => skill.status === "review").length;
@@ -27,7 +30,7 @@ export const SkillsPageMain = () => {
       </header>
 
       <section
-        className="grid grid-cols-[minmax(240px,1fr)_168px_168px_168px] items-end gap-3 rounded-xl border border-border bg-card p-4"
+        className="grid grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] items-end gap-3 rounded-xl border border-border bg-card p-4 max-[1180px]:grid-cols-2"
         aria-label={t("skills.filters.ariaLabel")}
       >
         <Field label={t("skills.filters.search")}>
@@ -47,7 +50,7 @@ export const SkillsPageMain = () => {
         <Field label={t("skills.filters.repository")}>
           <Select>
             <option>{t("skills.filters.allRepositories")}</option>
-            <option>Team skills repository</option>
+            <option>Team skills repository-----------------------</option>
             <option>Design lab prompts</option>
           </Select>
         </Field>
@@ -75,7 +78,12 @@ export const SkillsPageMain = () => {
       </section>
 
       <section className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
-        <div className="grid grid-cols-[32px_minmax(190px,1.45fr)_132px_84px_84px_64px_56px_64px] items-center gap-2 border-b border-border px-4 py-3 text-xs font-semibold text-muted-foreground">
+        <div
+          className={cn(
+            "grid items-center gap-2 border-b border-border px-4 py-3 text-xs font-semibold text-muted-foreground",
+            tableGridColumnsClassName
+          )}
+        >
           <span className="grid place-items-center">
             <input
               className="size-[18px]"
@@ -96,7 +104,8 @@ export const SkillsPageMain = () => {
           <div
             key={skill.id}
             className={cn(
-              "grid grid-cols-[32px_minmax(190px,1.45fr)_132px_84px_84px_64px_56px_64px] items-center gap-2 border-b border-border px-4 py-3 last:border-b-0",
+              "grid items-center gap-2 border-b border-border px-4 py-3 last:border-b-0",
+              tableGridColumnsClassName,
               skill.id === selectedSkill.id && "bg-primary/5"
             )}
           >

@@ -36,8 +36,8 @@ export const resources = {
         description: "每个技能来自仓库扫描结果，可选择同步目标并查看计划预览。",
         actions: {
           sync: "同步",
-          addSkill: "新增技能",
-          editSkill: "编辑技能",
+          addSkill: "新增",
+          editSkill: "编辑",
           addSyncTarget: "新增同步目标",
           preview: "预览"
         },

@@ -7,7 +7,8 @@ describe("createI18nInstance", () => {
     const i18n = await createI18nInstance("zh-CN");
 
     expect(i18n.t("shell.navigation.workspace")).toBe("工作区");
-    expect(i18n.t("skills.actions.addSkill")).toBe("新增技能");
+    expect(i18n.t("skills.actions.addSkill")).toBe("新增");
+    expect(i18n.t("skills.actions.editSkill")).toBe("编辑");
   });
 
   it("can initialize English UI copy", async () => {
