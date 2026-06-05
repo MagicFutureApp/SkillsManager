@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { RepositoryScanStatus } from "../../../core/repositories/repository-api";
+import type { RepositoryScanStatus } from "../../../../core/repositories/repository-api";
 import React from "react";
 
 const statusClassName: Record<RepositoryScanStatus, string> = {

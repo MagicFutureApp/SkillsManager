@@ -1,4 +1,4 @@
-import type { RepositoriesPageState } from "./use-repositories-page-state";
+import type { RepositoriesPageState } from "../hooks/use-repositories-page-state";
 import React from "react";
 
 const RepositoriesPageContext = React.createContext<RepositoriesPageState | null>(null);

@@ -1,9 +1,9 @@
 import { PageLayout } from "@/components/layout/page-layout";
-import { RepositoriesPageProvider } from "./repositories-page-context";
-import { RepositoriesPageMain } from "./repositories-page-main";
-import { RepositoriesPageModal } from "./repositories-page-modal";
-import { RepositoriesPageSider } from "./repositories-page-sider";
-import { useRepositoriesPageState } from "./use-repositories-page-state";
+import { RepositoriesPageProvider } from "./components/repositories-page-context";
+import { RepositoriesPageMain } from "./components/repositories-page-main";
+import { RepositoriesPageModal } from "./components/repositories-page-modal";
+import { RepositoriesPageSider } from "./components/repositories-page-sider";
+import { useRepositoriesPageState } from "./hooks/use-repositories-page-state";
 import React from "react";
 import { useTranslation } from "react-i18next";
 

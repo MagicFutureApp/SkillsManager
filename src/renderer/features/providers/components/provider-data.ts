@@ -4,7 +4,7 @@ import {
   type ProviderConfig,
   type ProviderConnectionStatus,
   type ProviderType
-} from "../../../core/providers/provider-api";
+} from "../../../../core/providers/provider-api";
 
 export type ProviderFilter = ProviderType | "all";
 export type ProviderSort = "priority" | "name" | "status" | "provider";

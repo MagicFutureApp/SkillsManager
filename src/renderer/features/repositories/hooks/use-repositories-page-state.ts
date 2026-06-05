@@ -8,7 +8,7 @@ import {
   type RepositorySort,
   type RepositoryStatusFilter,
   type RepositoryViewModel
-} from "./repository-data";
+} from "../components/repository-data";
 import { useEffect, useMemo, useState } from "react";
 
 type RepositoryScanLabels = {

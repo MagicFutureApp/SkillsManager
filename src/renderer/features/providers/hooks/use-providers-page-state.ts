@@ -6,7 +6,7 @@ import {
   type ProviderSort,
   type ProviderStatusFilter,
   type ProviderViewModel
-} from "./provider-data";
+} from "../components/provider-data";
 import { useEffect, useMemo, useState } from "react";
 
 export const useProvidersPageState = () => {

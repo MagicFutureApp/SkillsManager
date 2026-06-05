@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { ProviderConnectionStatus } from "../../../core/providers/provider-api";
+import type { ProviderConnectionStatus } from "../../../../core/providers/provider-api";
 import React from "react";
 
 const statusClassName: Record<ProviderConnectionStatus, string> = {

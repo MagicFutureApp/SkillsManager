@@ -5,7 +5,7 @@ import {
   type RepositoryProviderName,
   type RepositoryScanStatus,
   type RepositoryScanSummary
-} from "../../../core/repositories/repository-api";
+} from "../../../../core/repositories/repository-api";
 
 export type RepositoryProviderFilter = RepositoryProviderName | "all";
 export type RepositorySort = "priority" | "name" | "provider" | "status" | "skills";

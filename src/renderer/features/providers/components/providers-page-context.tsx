@@ -1,4 +1,4 @@
-import type { ProvidersPageState } from "./use-providers-page-state";
+import type { ProvidersPageState } from "../hooks/use-providers-page-state";
 import React from "react";
 
 const ProvidersPageContext = React.createContext<ProvidersPageState | null>(null);
