@@ -5,6 +5,8 @@ import {
   type ProviderSort,
   type ProviderStatusFilter
 } from "./provider-data";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Select, type SelectOption } from "@/components/ui/select";
 import React from "react";
 
 type ProviderFiltersProps = {
@@ -26,22 +28,26 @@ type ProviderFiltersProps = {
   onStatusChange: (value: ProviderStatusFilter) => void;
 };
 
-const Field = ({
+const FilterField = ({
   label,
   children
 }: React.PropsWithChildren<{
   label: string;
 }>) => {
   return (
-    <label className="grid gap-1.5 text-xs font-semibold text-muted-foreground">
-      {label}
+    <Field>
+      <FieldLabel>{label}</FieldLabel>
       {children}
-    </label>
+    </Field>
   );
 };
 
-const selectClassName =
-  "h-10 rounded-lg border border-input bg-background px-3 text-sm font-normal text-foreground outline-none focus:border-ring";
+const providerSortOptions = (copy: ProviderFiltersProps["copy"]): SelectOption<ProviderSort>[] => [
+  { value: "priority", label: copy.sortPriority },
+  { value: "name", label: copy.sortName },
+  { value: "status", label: copy.sortStatus },
+  { value: "provider", label: copy.sortProvider }
+];
 
 export const ProviderFilters = ({
   copy,
@@ -57,44 +63,15 @@ export const ProviderFilters = ({
       className="grid grid-cols-3 items-end gap-3 rounded-xl border border-border bg-card p-4 max-[860px]:grid-cols-1"
       aria-label={copy.ariaLabel}
     >
-      <Field label={copy.provider}>
-        <select
-          className={selectClassName}
-          value={provider}
-          onChange={(event) => onProviderChange(event.target.value as ProviderFilter)}
-        >
-          {providerFilterOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label={copy.status}>
-        <select
-          className={selectClassName}
-          value={status}
-          onChange={(event) => onStatusChange(event.target.value as ProviderStatusFilter)}
-        >
-          {providerStatusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label={copy.sort}>
-        <select
-          className={selectClassName}
-          value={sort}
-          onChange={(event) => onSortChange(event.target.value as ProviderSort)}
-        >
-          <option value="priority">{copy.sortPriority}</option>
-          <option value="name">{copy.sortName}</option>
-          <option value="status">{copy.sortStatus}</option>
-          <option value="provider">{copy.sortProvider}</option>
-        </select>
-      </Field>
+      <FilterField label={copy.provider}>
+        <Select value={provider} options={providerFilterOptions} onValueChange={onProviderChange} />
+      </FilterField>
+      <FilterField label={copy.status}>
+        <Select value={status} options={providerStatusOptions} onValueChange={onStatusChange} />
+      </FilterField>
+      <FilterField label={copy.sort}>
+        <Select value={sort} options={providerSortOptions(copy)} onValueChange={onSortChange} />
+      </FilterField>
     </section>
   );
 };

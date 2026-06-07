@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { Field, Select, statusClassName, Toggle } from "./skills-page-controls";
+import { Field, StaticSelect, statusClassName, Toggle } from "./skills-page-controls";
 import { selectedSkill, skills } from "./skills-page-data";
 
 const tableGridColumnsClassName =
@@ -12,6 +14,22 @@ const tableGridColumnsClassName =
 export const SkillsPageMain = () => {
   const { t } = useTranslation();
   const reviewCount = skills.filter((skill) => skill.status === "review").length;
+  const sortOptions = [
+    { value: "recommended", label: t("skills.filters.sortRecommended") },
+    { value: "name", label: t("skills.filters.sortName") },
+    { value: "repository", label: t("skills.filters.sortRepository") }
+  ];
+  const repositoryOptions = [
+    { value: "all", label: t("skills.filters.allRepositories") },
+    { value: "team", label: "Team skills repository-----------------------" },
+    { value: "design", label: "Design lab prompts" }
+  ];
+  const statusOptions = [
+    { value: "all", label: t("skills.filters.allStatuses") },
+    { value: "ready", label: "ready" },
+    { value: "review", label: "review" },
+    { value: "installed", label: "installed" }
+  ];
 
   return (
     <>
@@ -34,33 +52,16 @@ export const SkillsPageMain = () => {
         aria-label={t("skills.filters.ariaLabel")}
       >
         <Field label={t("skills.filters.search")}>
-          <input
-            className="h-10 rounded-lg border border-input bg-background px-3 text-sm font-normal outline-none placeholder:text-muted-foreground focus:border-ring"
-            type="search"
-            placeholder={t("skills.filters.searchPlaceholder")}
-          />
+          <Input type="search" placeholder={t("skills.filters.searchPlaceholder")} />
         </Field>
         <Field label={t("skills.filters.sort")}>
-          <Select>
-            <option>{t("skills.filters.sortRecommended")}</option>
-            <option>{t("skills.filters.sortName")}</option>
-            <option>{t("skills.filters.sortRepository")}</option>
-          </Select>
+          <StaticSelect value="recommended" options={sortOptions} />
         </Field>
         <Field label={t("skills.filters.repository")}>
-          <Select>
-            <option>{t("skills.filters.allRepositories")}</option>
-            <option>Team skills repository-----------------------</option>
-            <option>Design lab prompts</option>
-          </Select>
+          <StaticSelect value="all" options={repositoryOptions} />
         </Field>
         <Field label={t("skills.filters.status")}>
-          <Select>
-            <option>{t("skills.filters.allStatuses")}</option>
-            <option>ready</option>
-            <option>review</option>
-            <option>installed</option>
-          </Select>
+          <StaticSelect value="all" options={statusOptions} />
         </Field>
       </section>
 
@@ -85,11 +86,7 @@ export const SkillsPageMain = () => {
           )}
         >
           <span className="grid place-items-center">
-            <input
-              className="size-[18px]"
-              type="checkbox"
-              aria-label={t("skills.table.selectAll")}
-            />
+            <Checkbox aria-label={t("skills.table.selectAll")} />
           </span>
           <span>{t("skills.table.skill")}</span>
           <span>{t("skills.table.repository")}</span>
@@ -110,11 +107,7 @@ export const SkillsPageMain = () => {
             )}
           >
             <span className="grid place-items-center">
-              <input
-                className="size-[18px]"
-                type="checkbox"
-                aria-label={t("skills.table.selectSkill", { name: skill.name })}
-              />
+              <Checkbox aria-label={t("skills.table.selectSkill", { name: skill.name })} />
             </span>
             <span className="min-w-0">
               <strong className="block truncate text-sm">{skill.name}</strong>

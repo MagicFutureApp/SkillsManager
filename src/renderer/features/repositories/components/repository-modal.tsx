@@ -1,4 +1,17 @@
+import { Form } from "@base-ui/react/form";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogClose,
+  DialogDescription,
+  DialogPopup,
+  DialogPortal,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input, Textarea } from "@/components/ui/input";
+import { Select, type SelectOption } from "@/components/ui/select";
 import {
   repositoryProviderOptions,
   type RepositoryFormValues,
@@ -133,9 +146,7 @@ export const RepositoryModal = ({
         ? copy.sourceInspectionError
         : "";
 
-  const submitForm = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const submitForm = () => {
     if (!values.name.trim() || !values.remoteUrl.trim()) {
       setError(copy.requiredError);
       return;
@@ -152,124 +163,97 @@ export const RepositoryModal = ({
     });
   };
 
+  const providerOptions: SelectOption<Exclude<RepositoryProviderFilter, "all">>[] =
+    repositoryProviderOptions
+      .filter((option) => option.value !== "all")
+      .map((option) => ({
+        value: option.value as Exclude<RepositoryProviderFilter, "all">,
+        label: option.label
+      }));
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/30 p-6">
-      <form
-        className="max-h-[calc(100vh-48px)] w-full max-w-[680px] overflow-auto rounded-xl border border-border bg-card p-5 shadow-lg"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="repository-modal-title"
-        onSubmit={submitForm}
-      >
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <h2 id="repository-modal-title" className="text-2xl font-semibold">
-              {editingRepository ? copy.editTitle : copy.newTitle}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {editingRepository ? copy.editDescription : copy.newDescription}
-            </p>
-          </div>
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            {copy.close}
-          </Button>
-        </div>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <DialogPortal>
+        <DialogBackdrop />
+        <DialogPopup>
+          <Form onFormSubmit={submitForm}>
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <DialogTitle>{editingRepository ? copy.editTitle : copy.newTitle}</DialogTitle>
+                <DialogDescription>
+                  {editingRepository ? copy.editDescription : copy.newDescription}
+                </DialogDescription>
+              </div>
+              <DialogClose render={<Button type="button" variant="outline" size="sm" />}>
+                {copy.close}
+              </DialogClose>
+            </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={copy.remoteUrl} span>
-            <input
-              className={controlClassName}
-              value={values.remoteUrl}
-              onChange={(event) => updateValue("remoteUrl", event.target.value)}
-            />
-            {sourceInspectionMessage ? (
-              <span className="text-xs font-normal text-muted-foreground">
-                {sourceInspectionMessage}
-              </span>
-            ) : null}
-          </Field>
-          <Field label={copy.name}>
-            <input
-              className={controlClassName}
-              value={values.name}
-              onChange={(event) => updateValue("name", event.target.value)}
-            />
-          </Field>
-          <Field label={copy.provider}>
-            <select
-              className={controlClassName}
-              value={values.provider}
-              onChange={(event) =>
-                updateValue(
-                  "provider",
-                  event.target.value as Exclude<RepositoryProviderFilter, "all">
-                )
-              }
-            >
-              {repositoryProviderOptions
-                .filter((option) => option.value !== "all")
-                .map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-            </select>
-          </Field>
-          <Field label={copy.branch}>
-            <input
-              className={controlClassName}
-              value={values.branch}
-              onChange={(event) => updateValue("branch", event.target.value)}
-            />
-          </Field>
-          <Field label={copy.patterns} span>
-            <input
-              className={controlClassName}
-              placeholder={copy.patternsPlaceholder}
-              value={values.patterns}
-              onChange={(event) => updateValue("patterns", event.target.value)}
-            />
-          </Field>
-          <Field label={copy.note} span>
-            <textarea
-              className="min-h-22 rounded-lg border border-input bg-background px-3 py-2 text-sm font-normal text-foreground outline-none focus:border-ring"
-              value={values.note}
-              onChange={(event) => updateValue("note", event.target.value)}
-            />
-          </Field>
-        </div>
+            <div className="grid grid-cols-2 gap-3">
+              <RepositoryField label={copy.remoteUrl} span>
+                <Input
+                  value={values.remoteUrl}
+                  onValueChange={(value) => updateValue("remoteUrl", value)}
+                />
+                {sourceInspectionMessage ? (
+                  <FieldDescription>{sourceInspectionMessage}</FieldDescription>
+                ) : null}
+              </RepositoryField>
+              <RepositoryField label={copy.name}>
+                <Input value={values.name} onValueChange={(value) => updateValue("name", value)} />
+              </RepositoryField>
+              <RepositoryField label={copy.provider}>
+                <Select
+                  value={values.provider}
+                  options={providerOptions}
+                  onValueChange={(value) => updateValue("provider", value)}
+                />
+              </RepositoryField>
+              <RepositoryField label={copy.branch}>
+                <Input
+                  value={values.branch}
+                  onValueChange={(value) => updateValue("branch", value)}
+                />
+              </RepositoryField>
+              <RepositoryField label={copy.patterns} span>
+                <Input
+                  placeholder={copy.patternsPlaceholder}
+                  value={values.patterns}
+                  onValueChange={(value) => updateValue("patterns", value)}
+                />
+              </RepositoryField>
+              <RepositoryField label={copy.note} span>
+                <Textarea
+                  value={values.note}
+                  onValueChange={(value) => updateValue("note", value)}
+                />
+              </RepositoryField>
+            </div>
 
-        {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
+            {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
 
-        <div className="mt-4 flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onClose}>
-            {copy.cancel}
-          </Button>
-          <Button type="submit">{copy.save}</Button>
-        </div>
-      </form>
-    </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <DialogClose render={<Button type="button" variant="outline" />}>
+                {copy.cancel}
+              </DialogClose>
+              <Button type="submit">{copy.save}</Button>
+            </div>
+          </Form>
+        </DialogPopup>
+      </DialogPortal>
+    </Dialog>
   );
 };
 
-const controlClassName =
-  "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-normal text-foreground outline-none focus:border-ring";
-
-const Field = ({
+const RepositoryField = ({
   children,
   label,
   span
 }: React.PropsWithChildren<{ label: string; span?: boolean }>) => {
   return (
-    <label
-      className={
-        span
-          ? "col-span-2 grid gap-1.5 text-xs font-semibold text-muted-foreground"
-          : "grid gap-1.5 text-xs font-semibold text-muted-foreground"
-      }
-    >
-      {label}
+    <Field className={span ? "col-span-2" : undefined}>
+      <FieldLabel>{label}</FieldLabel>
       {children}
-    </label>
+    </Field>
   );
 };

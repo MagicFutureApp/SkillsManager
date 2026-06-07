@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { RepositoryStatusPill } from "./repository-status-pill";
 import type { RepositoryViewModel } from "./repository-data";
@@ -39,14 +42,6 @@ export const RepositoryList = ({
   onToggleChecked,
   onToggleEnabled
 }: RepositoryListProps) => {
-  const selectAllRef = React.useRef<HTMLInputElement>(null);
-
-  React.useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = visibleSomeChecked && !visibleAllChecked;
-    }
-  }, [visibleAllChecked, visibleSomeChecked]);
-
   const gridColumnsClassName =
     "grid-cols-[34px_minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_minmax(52px,0.45fr)]";
 
@@ -59,14 +54,12 @@ export const RepositoryList = ({
         )}
       >
         <span className="grid place-items-center">
-          <input
-            ref={selectAllRef}
-            className="size-[18px]"
-            type="checkbox"
+          <Checkbox
             checked={visibleAllChecked}
+            indeterminate={visibleSomeChecked && !visibleAllChecked}
             disabled={!repositories.length}
             aria-label={copy.selectAll}
-            onChange={(event) => onSelectAllVisible(event.target.checked)}
+            onCheckedChange={onSelectAllVisible}
           />
         </span>
         <span>{copy.repository}</span>
@@ -91,17 +84,16 @@ export const RepositoryList = ({
             )}
           >
             <span className="grid place-items-center">
-              <input
-                className="size-[18px]"
-                type="checkbox"
+              <Checkbox
                 checked={checkedIds.has(repository.id)}
                 aria-label={copy.selectRepository(repository.name)}
-                onChange={(event) => onToggleChecked(repository.id, event.target.checked)}
+                onCheckedChange={(checked) => onToggleChecked(repository.id, checked)}
               />
             </span>
-            <button
+            <Button
               type="button"
-              className="grid min-w-0 gap-1 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              variant="ghost"
+              className="grid h-auto min-w-0 justify-start gap-1 px-0 py-0 text-left font-normal hover:bg-transparent focus-visible:ring-3 focus-visible:ring-ring/50"
               aria-label={repository.name}
               aria-selected={repository.id === selectedRepositoryId}
               onClick={() => onSelectRepository(repository.id)}
@@ -110,33 +102,18 @@ export const RepositoryList = ({
               <span className="truncate font-mono text-xs text-muted-foreground">
                 {repository.remoteUrl}
               </span>
-            </button>
+            </Button>
             <span className="text-sm max-[820px]:hidden">{repository.provider}</span>
             <span className="font-mono text-sm max-[820px]:hidden">{repository.branch}</span>
             <span className="max-[820px]:hidden">
               <RepositoryStatusPill status={repository.status} />
             </span>
             <span className="font-mono text-sm max-[820px]:hidden">{repository.skillUnits}</span>
-            <button
-              type="button"
-              className={cn(
-                "inline-flex h-[26px] w-[46px] items-center rounded-full border p-0.5",
-                repository.enabled
-                  ? "justify-end border-primary bg-primary"
-                  : "justify-start border-border bg-muted"
-              )}
-              role="switch"
-              aria-checked={repository.enabled}
+            <Switch
+              checked={repository.enabled}
               aria-label={copy.toggleEnabled(repository.name)}
-              onClick={() => onToggleEnabled(repository.id)}
-            >
-              <span
-                className={cn(
-                  "size-5 rounded-full border bg-background",
-                  repository.enabled ? "border-primary-foreground" : "border-border"
-                )}
-              />
-            </button>
+              onCheckedChange={() => onToggleEnabled(repository.id)}
+            />
           </div>
         ))
       )}

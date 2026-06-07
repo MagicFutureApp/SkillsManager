@@ -16,6 +16,14 @@ const renderProvidersPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
   );
 };
 
+const selectOption = async (label: string, optionName: string) => {
+  fireEvent.pointerDown(screen.getByLabelText(label), { pointerType: "mouse" });
+  fireEvent.mouseDown(screen.getByLabelText(label), { button: 0 });
+  const option = await screen.findByRole("option", { name: optionName });
+  fireEvent.pointerDown(option, { pointerType: "mouse" });
+  fireEvent.click(option);
+};
+
 describe("ProvidersPage", () => {
   it("renders the provider management surface from the HTML mockup", async () => {
     await renderProvidersPage();
@@ -33,11 +41,11 @@ describe("ProvidersPage", () => {
   it("filters providers by provider type and status", async () => {
     await renderProvidersPage();
 
-    fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "gitlab" } });
+    await selectOption("Provider", "GitLab");
     expect(screen.getByRole("button", { name: "GitLab" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "GitHub" })).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("状态"), { target: { value: "connected" } });
+    await selectOption("状态", "connected");
     expect(screen.getByText("没有匹配的 Provider。调整筛选条件。")).toBeInTheDocument();
   });
 

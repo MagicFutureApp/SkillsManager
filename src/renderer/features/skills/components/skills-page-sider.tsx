@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -56,8 +57,7 @@ export const SkillsPageSider = () => {
                     {target.path}
                   </span>
                 </span>
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={checked}
                   readOnly
                   aria-label={t("skills.detail.chooseTarget", {

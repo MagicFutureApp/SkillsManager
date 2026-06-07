@@ -18,6 +18,14 @@ const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
   );
 };
 
+const selectOption = async (label: string, optionName: string) => {
+  fireEvent.pointerDown(screen.getByLabelText(label), { pointerType: "mouse" });
+  fireEvent.mouseDown(screen.getByLabelText(label), { button: 0 });
+  const option = await screen.findByRole("option", { name: optionName });
+  fireEvent.pointerDown(option, { pointerType: "mouse" });
+  fireEvent.click(option);
+};
+
 describe("RepositoriesPage", () => {
   it("renders the repositories management surface from the HTML mockup", async () => {
     await renderRepositoriesPage();
@@ -55,13 +63,13 @@ describe("RepositoriesPage", () => {
   it("filters sources by provider and status", async () => {
     await renderRepositoriesPage();
 
-    fireEvent.change(screen.getByLabelText("类型"), { target: { value: "GitLab" } });
+    await selectOption("类型", "GitLab");
     expect(screen.getByRole("button", { name: "Design lab prompts" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Team skills repository" })
     ).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("状态"), { target: { value: "ready" } });
+    await selectOption("状态", "ready");
     expect(screen.getByText("没有匹配的来源。调整搜索或筛选条件。")).toBeInTheDocument();
   });
 
@@ -142,6 +150,17 @@ describe("RepositoriesPage", () => {
     expect(screen.getByRole("heading", { name: "Docs skill experiments" })).toBeInTheDocument();
   });
 
+  it("closes the source modal with Escape", async () => {
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    expect(screen.getByRole("dialog", { name: "新增来源" })).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(screen.queryByRole("dialog", { name: "新增来源" })).not.toBeInTheDocument();
+  });
+
   it("autofills source metadata without changing discovery entries after entering a GitHub repository URL", async () => {
     const inspectRepositorySource = vi.fn().mockResolvedValue({
       about: "Composable Claude skills from Anthropic.",
@@ -168,7 +187,7 @@ describe("RepositoriesPage", () => {
     });
 
     expect(await within(dialog).findByDisplayValue("anthropics/skills")).toBeInTheDocument();
-    expect(within(dialog).getByLabelText("来源类型")).toHaveValue("GitHub");
+    expect(within(dialog).getByLabelText("来源类型")).toHaveTextContent("GitHub");
     expect(within(dialog).getByLabelText("分支")).toHaveValue("main");
     expect(within(dialog).getByLabelText("发现入口")).toHaveValue("");
     expect(within(dialog).getByLabelText("备注")).toHaveValue(

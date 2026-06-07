@@ -5,6 +5,9 @@ import {
   type RepositorySort,
   type RepositoryStatusFilter
 } from "./repository-data";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Select, type SelectOption } from "@/components/ui/select";
 import React from "react";
 
 type RepositoryFiltersProps = {
@@ -33,8 +36,31 @@ type RepositoryFiltersProps = {
   onStatusChange: (value: RepositoryStatusFilter) => void;
 };
 
-const controlClassName =
-  "h-10 rounded-lg border border-input bg-background px-3 text-sm font-normal text-foreground outline-none focus:border-ring";
+const repositorySortOptions = (
+  copy: RepositoryFiltersProps["copy"]
+): SelectOption<RepositorySort>[] => [
+  { value: "priority", label: copy.sortPriority },
+  { value: "name", label: copy.sortName },
+  { value: "provider", label: copy.sortProvider },
+  { value: "status", label: copy.sortStatus },
+  { value: "skills", label: copy.sortSkills }
+];
+
+const repositoryProviderSelectOptions = (
+  copy: RepositoryFiltersProps["copy"]
+): SelectOption<RepositoryProviderFilter>[] =>
+  repositoryProviderOptions.map((option) => ({
+    value: option.value,
+    label: option.value === "all" ? copy.allProviders : option.label
+  }));
+
+const repositoryStatusSelectOptions = (
+  copy: RepositoryFiltersProps["copy"]
+): SelectOption<RepositoryStatusFilter>[] =>
+  repositoryStatusOptions.map((option) => ({
+    value: option.value,
+    label: option.value === "all" ? copy.allStatuses : option.label
+  }));
 
 export const RepositoryFilters = ({
   copy,
@@ -52,63 +78,40 @@ export const RepositoryFilters = ({
       className="grid grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] items-end gap-3 rounded-xl border border-border bg-card p-4 max-[1180px]:grid-cols-2"
       aria-label={copy.ariaLabel}
     >
-      <Field label={copy.search}>
-        <input
-          className={controlClassName}
+      <FilterField label={copy.search}>
+        <Input
           type="search"
           value={query}
           placeholder={copy.searchPlaceholder}
-          onChange={(event) => onQueryChange(event.target.value)}
+          onValueChange={onQueryChange}
         />
-      </Field>
-      <Field label={copy.sort}>
-        <select
-          className={controlClassName}
-          value={sort}
-          onChange={(event) => onSortChange(event.target.value as RepositorySort)}
-        >
-          <option value="priority">{copy.sortPriority}</option>
-          <option value="name">{copy.sortName}</option>
-          <option value="provider">{copy.sortProvider}</option>
-          <option value="status">{copy.sortStatus}</option>
-          <option value="skills">{copy.sortSkills}</option>
-        </select>
-      </Field>
-      <Field label={copy.provider}>
-        <select
-          className={controlClassName}
+      </FilterField>
+      <FilterField label={copy.sort}>
+        <Select value={sort} options={repositorySortOptions(copy)} onValueChange={onSortChange} />
+      </FilterField>
+      <FilterField label={copy.provider}>
+        <Select
           value={provider}
-          onChange={(event) => onProviderChange(event.target.value as RepositoryProviderFilter)}
-        >
-          {repositoryProviderOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.value === "all" ? copy.allProviders : option.label}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label={copy.status}>
-        <select
-          className={controlClassName}
+          options={repositoryProviderSelectOptions(copy)}
+          onValueChange={onProviderChange}
+        />
+      </FilterField>
+      <FilterField label={copy.status}>
+        <Select
           value={status}
-          onChange={(event) => onStatusChange(event.target.value as RepositoryStatusFilter)}
-        >
-          {repositoryStatusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.value === "all" ? copy.allStatuses : option.label}
-            </option>
-          ))}
-        </select>
-      </Field>
+          options={repositoryStatusSelectOptions(copy)}
+          onValueChange={onStatusChange}
+        />
+      </FilterField>
     </section>
   );
 };
 
-const Field = ({ children, label }: React.PropsWithChildren<{ label: string }>) => {
+const FilterField = ({ children, label }: React.PropsWithChildren<{ label: string }>) => {
   return (
-    <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-muted-foreground">
-      {label}
+    <Field>
+      <FieldLabel>{label}</FieldLabel>
       {children}
-    </label>
+    </Field>
   );
 };

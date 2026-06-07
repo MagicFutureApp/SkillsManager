@@ -45,9 +45,10 @@ export const ProviderList = ({
             className="grid grid-cols-[minmax(220px,1fr)_128px_96px_112px] items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 data-[selected=true]:bg-primary/5 max-[860px]:grid-cols-1"
             data-selected={provider.id === selectedProviderId}
           >
-            <button
+            <Button
               type="button"
-              className="grid min-w-0 gap-1 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              variant="ghost"
+              className="grid h-auto min-w-0 justify-start gap-1 px-0 py-0 text-left font-normal hover:bg-transparent focus-visible:ring-3 focus-visible:ring-ring/50"
               aria-label={provider.name}
               aria-selected={provider.id === selectedProviderId}
               onClick={() => onSelectProvider(provider.id)}
@@ -56,7 +57,7 @@ export const ProviderList = ({
               <span className="truncate font-mono text-xs text-muted-foreground" aria-hidden="true">
                 {providerLabels[provider.type]}
               </span>
-            </button>
+            </Button>
             <span className="truncate font-mono text-xs text-muted-foreground">
               {provider.authMode}
             </span>

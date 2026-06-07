@@ -52,7 +52,7 @@ export const AppShell = ({ children }: AppShellProps) => {
       <div
         className={cn(
           "fixed left-0 right-0 top-0 z-50 flex h-11 items-center border-b border-border bg-background",
-          isMacOs ? "justify-center px-34.5" : "pl-4 pr-34.5"
+          isMacOs ? "justify-center px-[138px]" : "pl-4 pr-[138px]"
         )}
         data-testid="app-titlebar-spacer"
         style={{ WebkitAppRegion: "drag" } as React.CSSProperties}

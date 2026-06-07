@@ -1,4 +1,6 @@
-import { cn } from "@/lib/utils";
+import { Field as BaseField, FieldLabel } from "@/components/ui/field";
+import { Select as BaseSelect, type SelectOption } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import React from "react";
 
 import type { SkillStatus } from "./skills-page-data";
@@ -16,37 +18,28 @@ export const Field = ({
   label: string;
 }>) => {
   return (
-    <label className="grid gap-1.5 text-xs font-semibold text-muted-foreground">
-      {label}
+    <BaseField>
+      <FieldLabel>{label}</FieldLabel>
       {children}
-    </label>
+    </BaseField>
   );
 };
 
-export const Select = ({ children }: React.PropsWithChildren) => {
-  return (
-    <select className="h-10 rounded-lg border border-input bg-background px-3 text-sm font-normal text-foreground outline-none focus:border-ring">
-      {children}
-    </select>
-  );
+type StaticSelectProps = {
+  options: SelectOption<string>[];
+  value: string;
+};
+
+export const StaticSelect = ({ options, value }: StaticSelectProps) => {
+  return <BaseSelect value={value} options={options} onValueChange={() => undefined} />;
 };
 
 export const Toggle = ({ enabled }: { enabled: boolean }) => {
   return (
-    <span
-      className={cn(
-        "inline-flex h-[22px] w-9 items-center rounded-full border p-0.5",
-        enabled ? "border-primary bg-primary" : "border-border bg-muted"
-      )}
-      role="switch"
-      aria-checked={enabled}
-    >
-      <span
-        className={cn(
-          "size-4 rounded-full border bg-background transition-transform",
-          enabled ? "translate-x-3.5 border-primary-foreground" : "translate-x-0 border-border"
-        )}
-      />
-    </span>
+    <Switch
+      checked={enabled}
+      className="h-[22px] w-9"
+      thumbClassName="size-4 data-checked:translate-x-3.5"
+    />
   );
 };
