@@ -70,7 +70,13 @@ function Select<Value extends string>({
                   value={option.value}
                   className="grid min-h-8 cursor-default grid-cols-[1rem_minmax(0,1fr)] items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none data-highlighted:bg-muted data-highlighted:text-foreground data-selected:font-medium data-disabled:pointer-events-none data-disabled:opacity-50"
                 >
-                  <SelectPrimitive.ItemIndicator className="flex items-center justify-center">
+                  <SelectPrimitive.ItemIndicator
+                    keepMounted
+                    className={cn(
+                      "flex items-center justify-center",
+                      option.value === value ? "opacity-100" : "opacity-0"
+                    )}
+                  >
                     <Check aria-hidden="true" className="size-3.5" />
                   </SelectPrimitive.ItemIndicator>
                   <SelectPrimitive.ItemText className="truncate">
