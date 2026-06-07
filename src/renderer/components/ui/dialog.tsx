@@ -15,7 +15,7 @@ function DialogBackdrop({ className, ...props }: DialogPrimitive.Backdrop.Props)
     <DialogPrimitive.Backdrop
       data-slot="dialog-backdrop"
       className={cn(
-        "fixed inset-0 z-50 bg-foreground/30 data-ending-style:animate-out data-ending-style:fade-out-0 data-starting-style:animate-in data-starting-style:fade-in-0",
+        "fixed inset-x-0 bottom-0 top-11 z-50 bg-foreground/30 data-ending-style:animate-out data-ending-style:fade-out-0 data-starting-style:animate-in data-starting-style:fade-in-0",
         className
       )}
       {...props}
@@ -28,7 +28,7 @@ function DialogPopup({ className, ...props }: DialogPrimitive.Popup.Props) {
     <DialogPrimitive.Popup
       data-slot="dialog-popup"
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 max-h-[calc(100vh-48px)] w-[calc(100vw-48px)] max-w-[680px] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-xl border border-border bg-card p-5 shadow-lg outline-none data-ending-style:animate-out data-ending-style:fade-out-0 data-ending-style:zoom-out-95 data-starting-style:animate-in data-starting-style:fade-in-0 data-starting-style:zoom-in-95",
+        "fixed left-1/2 top-[calc(50svh_+_22px)] z-50 max-h-[calc(100svh_-_92px)] w-[calc(100vw-48px)] max-w-[680px] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-xl border border-border bg-card p-5 shadow-lg outline-none data-ending-style:animate-out data-ending-style:fade-out-0 data-ending-style:zoom-out-95 data-starting-style:animate-in data-starting-style:fade-in-0 data-starting-style:zoom-in-95",
         className
       )}
       {...props}
