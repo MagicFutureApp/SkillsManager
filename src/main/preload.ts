@@ -16,5 +16,7 @@ contextBridge.exposeInMainWorld("skillsManager", {
       remoteUrl
     ) as Promise<RepositorySourceInspection>,
   listProviders: () => ipcRenderer.invoke("providers:list") as Promise<ProvidersListResult>,
-  listRepositories: () => ipcRenderer.invoke("repositories:list") as Promise<RepositoriesListResult>
+  listRepositories: () =>
+    ipcRenderer.invoke("repositories:list") as Promise<RepositoriesListResult>,
+  platform: process.platform
 });

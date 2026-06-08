@@ -176,7 +176,8 @@ describe("RepositoriesPage", () => {
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       inspectRepositorySource,
       listProviders: vi.fn().mockResolvedValue({ providers: defaultProviderApiRecords }),
-      listRepositories: vi.fn().mockResolvedValue({ repositories: defaultRepositoryApiRecords })
+      listRepositories: vi.fn().mockResolvedValue({ repositories: defaultRepositoryApiRecords }),
+      platform: "win32"
     };
     await renderRepositoriesPage();
 

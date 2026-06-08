@@ -52,7 +52,8 @@ describe("AppShell", () => {
       getInfo: vi.fn().mockResolvedValue({ version: "9.8.7" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: defaultProviderApiRecords }),
-      listRepositories: vi.fn().mockResolvedValue({ repositories: defaultRepositoryApiRecords })
+      listRepositories: vi.fn().mockResolvedValue({ repositories: defaultRepositoryApiRecords }),
+      platform: "win32"
     };
     setMockPlatform("win32");
 
