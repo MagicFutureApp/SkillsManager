@@ -6,6 +6,7 @@ import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
 import { registerProvidersIpc } from "./ipc/providers.js";
 import { registerRepositoriesIpc } from "./ipc/repositories.js";
 import { getMainMessages } from "./i18n/main-messages.js";
+import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
 import { getTrayIconPath } from "./tray-icon.js";
 import { buildMainWindowOptions, disableWindowMenuBar } from "./window-menu.js";
 import { APP_META } from "../core/app-constants.js";
@@ -27,6 +28,7 @@ const loadMainWindow = async (window: BrowserWindow): Promise<void> => {
 const createMainWindow = async (): Promise<void> => {
   mainWindow = new BrowserWindow(buildMainWindowOptions(__dirname));
   disableWindowMenuBar(mainWindow);
+  registerShiftDevToolsShortcut(mainWindow);
 
   mainWindow.on("closed", () => {
     mainWindow = null;
