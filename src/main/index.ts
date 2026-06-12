@@ -1,4 +1,5 @@
 import { app, BrowserWindow, Menu, Tray } from "electron";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { registerAppInfoIpc } from "./ipc/app-info.js";
 import { registerHealthIpc } from "./ipc/health";
@@ -10,6 +11,7 @@ import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
 import { getTrayIconPath } from "./tray-icon.js";
 import { buildMainWindowOptions, disableWindowMenuBar } from "./window-menu.js";
 import { APP_META } from "../core/app-constants.js";
+import { createDbClient } from "../db/client.js";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -85,14 +87,23 @@ const createTray = (): void => {
   });
 };
 
+const createAppDb = () => {
+  const dataDirectory = app.getPath("userData");
+  mkdirSync(dataDirectory, { recursive: true });
+
+  return createDbClient(path.join(dataDirectory, "skills-manager.sqlite"));
+};
+
 void app
   .whenReady()
   .then(async () => {
+    const db = createAppDb();
+
     registerAppInfoIpc();
     registerHealthIpc();
     registerLocaleIpc();
-    registerProvidersIpc();
-    registerRepositoriesIpc();
+    registerProvidersIpc(db);
+    registerRepositoriesIpc(db);
     await createMainWindow();
     createTray();
 

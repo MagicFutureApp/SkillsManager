@@ -1,19 +1,24 @@
 import { ipcMain } from "electron";
-import { defaultProviderApiRecords } from "../../core/providers/provider-api.js";
+import { createProviderRepository } from "../../db/repositories/providerRepository.js";
 import type { ProviderApiRecord } from "../../core/providers/provider-api.js";
+import type { createDbClient } from "../../db/client.js";
 
 export type ProvidersListResult = {
   providers: ProviderApiRecord[];
 };
 
-export const getProviders = (): ProvidersListResult => {
+type DbClient = ReturnType<typeof createDbClient>;
+
+export const getProviders = async (db: DbClient): Promise<ProvidersListResult> => {
+  const providerRepository = createProviderRepository(db);
+
   return {
-    providers: defaultProviderApiRecords
+    providers: await providerRepository.list()
   };
 };
 
-export const registerProvidersIpc = (): void => {
-  ipcMain.handle("providers:list", (): ProvidersListResult => {
-    return getProviders();
+export const registerProvidersIpc = (db: DbClient): void => {
+  ipcMain.handle("providers:list", (): Promise<ProvidersListResult> => {
+    return getProviders(db);
   });
 };

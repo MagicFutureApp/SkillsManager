@@ -5,17 +5,35 @@ import { I18nextProvider } from "react-i18next";
 
 import { RepositoriesPage } from "./repositories-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
-import { defaultProviderApiRecords } from "../../../core/providers/provider-api";
-import { defaultRepositoryApiRecords } from "../../../core/repositories/repository-api";
+import { providerApiRecordsFixture, repositoryApiRecordsFixture } from "@/test/api-fixtures";
 
 const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
   const i18n = await createI18nInstance(locale);
 
-  return render(
+  window.skillsManager = {
+    getHealth: vi.fn().mockResolvedValue({
+      chrome: "130.0.0",
+      electron: "42.2.0",
+      node: "25.0.0",
+      platform: "win32"
+    }),
+    getInfo: vi.fn().mockResolvedValue({ version: "0.1.0" }),
+    getLocale: vi.fn().mockResolvedValue("zh-CN"),
+    inspectRepositorySource: window.skillsManager?.inspectRepositorySource,
+    listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+    listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+    platform: "win32"
+  };
+
+  const result = render(
     <I18nextProvider i18n={i18n}>
       <RepositoriesPage />
     </I18nextProvider>
   );
+
+  await screen.findByRole("button", { name: "Team skills repository" });
+
+  return result;
 };
 
 const selectOption = async (label: string, optionName: string) => {
@@ -175,8 +193,8 @@ describe("RepositoriesPage", () => {
       getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       inspectRepositorySource,
-      listProviders: vi.fn().mockResolvedValue({ providers: defaultProviderApiRecords }),
-      listRepositories: vi.fn().mockResolvedValue({ repositories: defaultRepositoryApiRecords }),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
       platform: "win32"
     };
     await renderRepositoriesPage();

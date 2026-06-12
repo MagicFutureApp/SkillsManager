@@ -1,10 +1,9 @@
-import {
-  defaultRepositoryApiRecords,
-  type RepositoryApiRecord,
-  type RepositoryConfig,
-  type RepositoryProviderName,
-  type RepositoryScanStatus,
-  type RepositoryScanSummary
+import type {
+  RepositoryApiRecord,
+  RepositoryConfig,
+  RepositoryProviderName,
+  RepositoryScanStatus,
+  RepositoryScanSummary
 } from "../../../../core/repositories/repository-api";
 
 export type RepositoryProviderFilter = RepositoryProviderName | "all";
@@ -103,7 +102,7 @@ export const adaptRepositoryRecords = (records: RepositoryApiRecord[]): Reposito
 };
 
 export const createDefaultRepositories = (): RepositoryViewModel[] => {
-  return adaptRepositoryRecords(defaultRepositoryApiRecords);
+  return [];
 };
 
 export const filterRepositories = ({

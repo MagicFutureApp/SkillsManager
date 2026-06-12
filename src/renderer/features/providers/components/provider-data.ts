@@ -1,9 +1,8 @@
-import {
-  defaultProviderApiRecords,
-  type ProviderApiRecord,
-  type ProviderConfig,
-  type ProviderConnectionStatus,
-  type ProviderType
+import type {
+  ProviderApiRecord,
+  ProviderConfig,
+  ProviderConnectionStatus,
+  ProviderType
 } from "../../../../core/providers/provider-api";
 
 export type ProviderFilter = ProviderType | "all";
@@ -79,7 +78,7 @@ export const adaptProviderRecords = (records: ProviderApiRecord[]): ProviderView
 };
 
 export const createDefaultProviders = (): ProviderViewModel[] => {
-  return adaptProviderRecords(defaultProviderApiRecords);
+  return [];
 };
 
 export const filterProviders = ({

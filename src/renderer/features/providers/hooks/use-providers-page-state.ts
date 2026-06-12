@@ -26,7 +26,11 @@ export const useProvidersPageState = () => {
         return;
       }
 
-      setProviders(adaptProviderRecords(result.providers));
+      const nextProviders = adaptProviderRecords(result.providers);
+      setProviders(nextProviders);
+      setSelectedProviderId(
+        (currentProviderId) => currentProviderId ?? nextProviders[0]?.id ?? null
+      );
     });
 
     return () => {

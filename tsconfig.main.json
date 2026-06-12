@@ -11,5 +11,5 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["node", "electron"]
   },
-  "include": ["src/main/**/*.ts", "src/core/**/*.ts"]
+  "include": ["src/main/**/*.ts", "src/core/**/*.ts", "src/db/**/*.ts"]
 }

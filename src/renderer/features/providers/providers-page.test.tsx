@@ -1,19 +1,24 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
 
 import { ProvidersPage } from "./providers-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
+import { providerApiRecordsFixture } from "@/test/api-fixtures";
 
 const renderProvidersPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
   const i18n = await createI18nInstance(locale);
 
-  return render(
+  const result = render(
     <I18nextProvider i18n={i18n}>
       <ProvidersPage />
     </I18nextProvider>
   );
+
+  await screen.findByRole("button", { name: "GitHub" });
+
+  return result;
 };
 
 const selectOption = async (label: string, optionName: string) => {
@@ -25,6 +30,22 @@ const selectOption = async (label: string, optionName: string) => {
 };
 
 describe("ProvidersPage", () => {
+  beforeEach(() => {
+    window.skillsManager = {
+      getHealth: vi.fn().mockResolvedValue({
+        chrome: "130.0.0",
+        electron: "42.2.0",
+        node: "25.0.0",
+        platform: "win32"
+      }),
+      getInfo: vi.fn().mockResolvedValue({ version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
+      platform: "win32"
+    };
+  });
+
   it("renders the provider management surface from the HTML mockup", async () => {
     await renderProvidersPage();
 

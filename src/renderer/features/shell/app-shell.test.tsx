@@ -6,8 +6,7 @@ import { I18nextProvider } from "react-i18next";
 import { useShellStore } from "@/stores/shell-store";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import type { AppHealth } from "@/global";
-import { defaultProviderApiRecords } from "../../../core/providers/provider-api";
-import { defaultRepositoryApiRecords } from "../../../core/repositories/repository-api";
+import { providerApiRecordsFixture, repositoryApiRecordsFixture } from "@/test/api-fixtures";
 
 import { AppShell } from "./app-shell";
 
@@ -51,8 +50,8 @@ describe("AppShell", () => {
       getHealth: vi.fn(),
       getInfo: vi.fn().mockResolvedValue({ version: "9.8.7" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
-      listProviders: vi.fn().mockResolvedValue({ providers: defaultProviderApiRecords }),
-      listRepositories: vi.fn().mockResolvedValue({ repositories: defaultRepositoryApiRecords }),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
       platform: "win32"
     };
     setMockPlatform("win32");

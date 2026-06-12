@@ -36,7 +36,11 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
 
     void window.skillsManager?.listRepositories?.().then((result) => {
       if (isMounted) {
-        setRepositories(adaptRepositoryRecords(result.repositories));
+        const nextRepositories = adaptRepositoryRecords(result.repositories);
+        setRepositories(nextRepositories);
+        setSelectedRepositoryId(
+          (currentRepositoryId) => currentRepositoryId ?? nextRepositories[0]?.id ?? null
+        );
       }
     });
 

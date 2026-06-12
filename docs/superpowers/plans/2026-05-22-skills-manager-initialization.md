@@ -6,7 +6,7 @@
 
 **架构：** 应用将 Electron main/preload 代码与 React renderer 分离。Renderer 只通过类型化 IPC 与 main 通信。SQLite 和 Drizzle 隐藏在 `src/db` 与 `src/main` 边界之后，renderer 永远不直接打开数据库。
 
-**技术栈：** Electron 42.2.0、Node.js 24.11.1、React、TypeScript 6.0.3、Vite、SQLite、Drizzle ORM、`better-sqlite3`、`drizzle-kit`、Prettier、pnpm with `nodeLinker: hoisted`。
+**技术栈：** Electron 40.10.3、Node.js 24.11.1、React、TypeScript 6.0.3、Vite、SQLite、Drizzle ORM、`better-sqlite3`、`drizzle-kit`、Prettier、pnpm with `nodeLinker: hoisted`。
 
 ---
 
@@ -34,7 +34,7 @@ pnpm run electron:version
 ```text
 All matched files use Prettier code style!
 tsc exits with code 0
-v42.2.0
+v40.10.3
 ```
 
 ## 确认规则
@@ -129,7 +129,7 @@ pnpm run electron:version
 format:check passes
 check passes
 build:main passes
-electron:version prints v42.2.0
+electron:version prints v40.10.3
 ```
 
 - [x] **步骤 5：提交**
