@@ -22,6 +22,7 @@ import {
 } from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
+const DEFAULT_DISCOVERY_ENTRY = "skills/*/SKILL.md";
 
 export const createRepositoryRepository = (db: DbClient) => {
   return {
@@ -235,7 +236,7 @@ const mergeRepositoryConfig = ({
     enabled: savedConfig.enabled ?? true,
     lastScanLabel: savedConfig.lastScanLabel ?? (wasScanned ? "已扫描" : "未执行"),
     note: savedConfig.note ?? `真实来源记录 ${repositoryId}，等待手动同步扫描。`,
-    patterns: savedConfig.patterns ?? ["skills/*/SKILL.md"],
+    patterns: savedConfig.patterns ?? [DEFAULT_DISCOVERY_ENTRY],
     priority: savedConfig.priority ?? index + 1,
     providerName: savedConfig.providerName ?? providerName,
     scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
@@ -249,13 +250,19 @@ const buildCreatedRepositoryConfig = (input: CreateRepositoryInput): RepositoryC
     enabled: true,
     lastScanLabel: "未执行",
     note: input.note || "用户新增的来源，等待第一次同步扫描。",
-    patterns: input.patterns,
+    patterns: normalizeDiscoveryEntry(input.patterns),
     priority: 99,
     providerName: input.provider,
     scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
     skillUnits: 0,
     status: "review"
   };
+};
+
+const normalizeDiscoveryEntry = (entry: string): string[] => {
+  const trimmedEntry = entry.trim();
+
+  return trimmedEntry ? [trimmedEntry] : [];
 };
 
 const providerNameFor = (

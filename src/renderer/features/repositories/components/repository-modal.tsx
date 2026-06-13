@@ -19,7 +19,7 @@ import {
   type RepositoryViewModel
 } from "./repository-data";
 import type { RepositorySourceInspection } from "@/global";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type RepositoryModalProps = {
   copy: {
@@ -64,7 +64,7 @@ export const RepositoryModal = ({
       cachePath: editingRepository?.cachePath ?? "",
       name: editingRepository?.name ?? "",
       note: editingRepository?.note ?? "",
-      patterns: editingRepository?.patterns?.[0] ?? "",
+      patterns: editingRepository?.patterns[0] ?? "",
       provider: editingRepository?.provider ?? "GitHub",
       remoteUrl: editingRepository?.remoteUrl ?? ""
     }),
@@ -75,15 +75,13 @@ export const RepositoryModal = ({
   const [sourceInspectionStatus, setSourceInspectionStatus] = useState<
     "idle" | "loading" | "error"
   >("idle");
-  const [touchedFields, setTouchedFields] = useState<Set<keyof RepositoryFormValues>>(
-    () => new Set()
-  );
+  const touchedFieldsRef = useRef<Set<keyof RepositoryFormValues>>(new Set());
 
   useEffect(() => {
     setValues(initialValues);
     setError("");
     setSourceInspectionStatus("idle");
-    setTouchedFields(new Set());
+    touchedFieldsRef.current = new Set();
   }, [initialValues, open]);
 
   useEffect(() => {
@@ -123,11 +121,14 @@ export const RepositoryModal = ({
   }
 
   const updateValue = (key: keyof RepositoryFormValues, value: string) => {
-    setTouchedFields((currentFields) => new Set(currentFields).add(key));
+    touchedFieldsRef.current = new Set(touchedFieldsRef.current).add(key);
     setValues((currentValues) => ({ ...currentValues, [key]: value }));
   };
 
   const applyInspection = (inspection: RepositorySourceInspection) => {
+    const touchedFields = touchedFieldsRef.current;
+    const discoveredPattern = inspection.patterns?.find((pattern) => pattern.trim())?.trim();
+
     setValues((currentValues) => ({
       ...currentValues,
       branch:
@@ -139,7 +140,11 @@ export const RepositoryModal = ({
       provider:
         inspection.provider && !touchedFields.has("provider")
           ? inspection.provider
-          : currentValues.provider
+          : currentValues.provider,
+      patterns:
+        discoveredPattern && !touchedFields.has("patterns")
+          ? discoveredPattern
+          : currentValues.patterns
     }));
   };
 

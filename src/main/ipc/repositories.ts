@@ -107,7 +107,7 @@ const normalizeCreateRepositoryInput = (input: CreateRepositoryInput): CreateRep
     branch: input.branch.trim() || "main",
     name,
     note: input.note.trim(),
-    patterns: input.patterns.map((pattern) => pattern.trim()).filter(Boolean),
+    patterns: input.patterns.trim(),
     provider: input.provider,
     remoteUrl
   };

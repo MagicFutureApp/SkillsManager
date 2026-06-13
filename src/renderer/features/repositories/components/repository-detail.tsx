@@ -52,9 +52,9 @@ export const RepositoryDetail = ({
         <h2 className="text-xl font-semibold">
           {repository ? repository.name : copy.defaultTitle}
         </h2>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        {/*<p className="mt-3 text-sm leading-6 text-muted-foreground">
           {repository ? repository.note : copy.defaultDescription}
-        </p>
+        </p>*/}
         <div className="mt-4 flex flex-wrap gap-2">
           <Button type="button" variant="outline" disabled={!repository} onClick={onEdit}>
             {copy.edit}
@@ -62,13 +62,7 @@ export const RepositoryDetail = ({
           <Button type="button" variant="outline" disabled={!repository} onClick={onCopyCachePath}>
             {copy.copyCache}
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            className="ml-auto"
-            disabled={!repository}
-            onClick={onDelete}
-          >
+          <Button type="button" variant="destructive" disabled={!repository} onClick={onDelete}>
             <Trash2 aria-hidden="true" />
             {copy.delete}
           </Button>
@@ -118,7 +112,7 @@ const DetailRow = ({ label, mono, value }: { label: string; mono?: boolean; valu
   return (
     <div className="rounded-lg border border-border bg-muted/40 p-2">
       <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-      <p className={mono ? "mt-1 break-words font-mono text-sm" : "mt-1 break-words text-sm"}>
+      <p className={mono ? "mt-1 break-all font-mono text-sm" : "mt-1 break-all text-sm"}>
         {value}
       </p>
     </div>

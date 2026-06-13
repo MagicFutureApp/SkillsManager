@@ -225,10 +225,7 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
                 cachePath: formValues.cachePath || repository.cachePath,
                 name: formValues.name,
                 note: formValues.note || repository.note,
-                patterns: formValues.patterns
-                  .split(",")
-                  .map((pattern) => pattern.trim())
-                  .filter(Boolean),
+                patterns: normalizeFormDiscoveryEntry(formValues.patterns),
                 provider: formValues.provider,
                 remoteUrl: formValues.remoteUrl
               }
@@ -250,10 +247,7 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
           branch: formValues.branch,
           name: formValues.name,
           note: formValues.note,
-          patterns: formValues.patterns
-            .split(",")
-            .map((pattern) => pattern.trim())
-            .filter(Boolean),
+          patterns: formValues.patterns.trim(),
           provider: formValues.provider,
           remoteUrl: formValues.remoteUrl
         });
@@ -382,4 +376,10 @@ const nextCommit = (currentCommit: string): string => {
   }
 
   return currentCommit.slice(0, 6);
+};
+
+const normalizeFormDiscoveryEntry = (entry: string): string[] => {
+  const trimmedEntry = entry.trim();
+
+  return trimmedEntry ? [trimmedEntry] : [];
 };

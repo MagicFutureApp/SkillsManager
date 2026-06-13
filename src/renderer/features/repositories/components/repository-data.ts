@@ -176,10 +176,7 @@ export const buildRepositoryFromForm = ({
     lastScanLabel: "未执行",
     name: formValues.name,
     note: formValues.note || "用户新增的来源，等待第一次同步扫描。",
-    patterns: formValues.patterns
-      .split(",")
-      .map((pattern) => pattern.trim())
-      .filter(Boolean),
+    patterns: normalizeFormDiscoveryEntry(formValues.patterns),
     priority: index + 1,
     provider: formValues.provider,
     providerId: providerIdByName[formValues.provider],
@@ -206,6 +203,12 @@ const buildCachePath = (name: string): string => {
     .replace(/^-|-$/g, "");
 
   return `~/.skills-manager/cache/${slug || "repository"}`;
+};
+
+const normalizeFormDiscoveryEntry = (entry: string): string[] => {
+  const trimmedEntry = entry.trim();
+
+  return trimmedEntry ? [trimmedEntry] : [];
 };
 
 const isProviderName = (value: unknown): value is RepositoryProviderName => {

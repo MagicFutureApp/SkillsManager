@@ -58,7 +58,6 @@ export const inspectRepositorySource = async (
 
   const fallback: RepositorySourceInspection = {
     name: parsedUrl.name,
-    patterns: ["skills/*/SKILL.md"],
     provider: parsedUrl.provider
   };
 
@@ -192,7 +191,7 @@ const deriveSkillPatterns = (paths: string[]): string[] => {
   const skillPaths = paths.filter((path) => path.endsWith("SKILL.md"));
 
   if (skillPaths.length === 0) {
-    return ["skills/*/SKILL.md"];
+    return [];
   }
 
   if (skillPaths.includes("SKILL.md")) {

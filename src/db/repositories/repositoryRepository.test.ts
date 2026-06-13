@@ -99,7 +99,7 @@ describe("createRepositoryRepository", () => {
       branch: "main",
       name: "huashu-design",
       note: "GitHub 测试源",
-      patterns: ["skills/*/SKILL.md", "SKILL.md"],
+      patterns: "skills/*/SKILL.md",
       provider: "GitHub",
       remoteUrl: "https://github.com/alchaincyf/huashu-design"
     };
@@ -128,10 +128,30 @@ describe("createRepositoryRepository", () => {
     expect(JSON.parse(result[0]?.configJson ?? "{}")).toMatchObject({
       enabled: true,
       note: "GitHub 测试源",
-      patterns: ["skills/*/SKILL.md", "SKILL.md"],
+      patterns: ["skills/*/SKILL.md"],
       providerName: "GitHub",
       skillUnits: 0,
       status: "review"
+    });
+  });
+
+  it("keeps discovery entries empty when the create input is empty", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+
+    await repositoryRepository.create({
+      branch: "main",
+      name: "no-skills",
+      note: "",
+      patterns: "",
+      provider: "GitHub",
+      remoteUrl: "https://github.com/example/no-skills"
+    });
+
+    const result = await repositoryRepository.list();
+
+    expect(JSON.parse(result[0]?.configJson ?? "{}")).toMatchObject({
+      patterns: []
     });
   });
 

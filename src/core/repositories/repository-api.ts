@@ -31,7 +31,7 @@ export type CreateRepositoryInput = {
   branch: string;
   name: string;
   note: string;
-  patterns: string[];
+  patterns: string;
   provider: RepositoryProviderName;
   remoteUrl: string;
 };

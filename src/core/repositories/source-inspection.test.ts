@@ -93,8 +93,27 @@ describe("inspectRepositorySource", () => {
       inspectRepositorySource("https://gitlab.com/design/lab-skills.git", { fetchJson })
     ).resolves.toEqual({
       name: "design/lab-skills",
-      patterns: ["skills/*/SKILL.md"],
       provider: "GitLab"
+    });
+  });
+
+  it("omits discovery entries when no skill entry can be parsed from a repository tree", async () => {
+    const fetchJson = vi
+      .fn()
+      .mockResolvedValueOnce({ default_branch: "main", description: "No skills here." })
+      .mockResolvedValueOnce({
+        tree: [
+          { path: "README.md", type: "blob" },
+          { path: "docs/guide.md", type: "blob" }
+        ]
+      });
+
+    await expect(
+      inspectRepositorySource("https://github.com/example/no-skills", { fetchJson })
+    ).resolves.toMatchObject({
+      name: "example/no-skills",
+      patterns: [],
+      provider: "GitHub"
     });
   });
 

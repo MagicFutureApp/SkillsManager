@@ -240,7 +240,7 @@ describe("RepositoriesPage", () => {
         branch: "main",
         name: "huashu-design",
         note: "",
-        patterns: [],
+        patterns: "",
         provider: "GitHub",
         remoteUrl: "https://github.com/alchaincyf/huashu-design"
       })
@@ -333,12 +333,12 @@ describe("RepositoriesPage", () => {
     expect(screen.queryByRole("dialog", { name: "新增来源" })).not.toBeInTheDocument();
   });
 
-  it("autofills source metadata without changing discovery entries after entering a GitHub repository URL", async () => {
+  it("autofills source metadata and a string discovery entry after entering a GitHub repository URL", async () => {
     const inspectRepositorySource = vi.fn().mockResolvedValue({
       about: "Composable Claude skills from Anthropic.",
       branch: "main",
       name: "anthropics/skills",
-      patterns: ["skills/*/SKILL.md"],
+      patterns: ["SKILL.md"],
       provider: "GitHub"
     });
     window.skillsManager = {
@@ -362,11 +362,41 @@ describe("RepositoriesPage", () => {
     expect(await within(dialog).findByDisplayValue("anthropics/skills")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("来源类型")).toHaveTextContent("GitHub");
     expect(within(dialog).getByLabelText("分支")).toHaveValue("main");
-    expect(within(dialog).getByLabelText("发现入口")).toHaveValue("");
+    expect(within(dialog).getByLabelText("发现入口")).toHaveValue("SKILL.md");
     expect(within(dialog).getByLabelText("备注")).toHaveValue(
       "Composable Claude skills from Anthropic."
     );
     expect(inspectRepositorySource).toHaveBeenCalledWith("https://github.com/anthropics/skills");
+  });
+
+  it("keeps the discovery entry empty when source inspection does not find an entry", async () => {
+    const inspectRepositorySource = vi.fn().mockResolvedValue({
+      branch: "main",
+      name: "example/no-skills",
+      patterns: [],
+      provider: "GitHub"
+    });
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      inspectRepositorySource,
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32"
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    const dialog = screen.getByRole("dialog", { name: "新增来源" });
+    fireEvent.change(within(dialog).getByLabelText("URL / 本机路径"), {
+      target: { value: "https://github.com/example/no-skills" }
+    });
+
+    expect(await within(dialog).findByDisplayValue("example/no-skills")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("发现入口")).toHaveValue("");
+    expect(inspectRepositorySource).toHaveBeenCalledWith("https://github.com/example/no-skills");
   });
 
   it("renders English UI copy when initialized with en-US", async () => {
