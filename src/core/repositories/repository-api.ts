@@ -27,6 +27,15 @@ export type RepositoryConfig = {
   status: RepositoryScanStatus;
 };
 
+export type CreateRepositoryInput = {
+  branch: string;
+  name: string;
+  note: string;
+  patterns: string[];
+  provider: RepositoryProviderName;
+  remoteUrl: string;
+};
+
 export type RepositoryApiRecord = {
   branch: string;
   configJson: string;

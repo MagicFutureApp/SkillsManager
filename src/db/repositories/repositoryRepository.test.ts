@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { CreateRepositoryInput } from "../../core/repositories/repository-api";
 import { createDbClient } from "../client";
 import { providers, repositories, skillUnits } from "../schema";
 import { createRepositoryRepository } from "./repositoryRepository";
@@ -18,11 +19,13 @@ describe("createRepositoryRepository", () => {
       updatedAt: createdAt
     });
     await db.insert(repositories).values({
+      configJson: "{}",
       createdAt,
       defaultBranch: "main",
       id: "repo-1",
       lastScannedCommitSha: "abcdef123456",
       localCachePath: "D:/Users/andrewliang/.skills-manager/cache/skills-manager",
+      name: "skills-manager",
       providerId: "local-git",
       remoteUrl: "D:/code/skills-manager",
       updatedAt: createdAt
@@ -78,5 +81,48 @@ describe("createRepositoryRepository", () => {
     const db = createDbClient(":memory:");
 
     await expect(createRepositoryRepository(db).list()).resolves.toEqual([]);
+  });
+
+  it("creates a source row and reads the saved form values back from SQLite", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+    const input: CreateRepositoryInput = {
+      branch: "main",
+      name: "huashu-design",
+      note: "GitHub 测试源",
+      patterns: ["skills/*/SKILL.md", "SKILL.md"],
+      provider: "GitHub",
+      remoteUrl: "https://github.com/alchaincyf/huashu-design"
+    };
+
+    const created = await repositoryRepository.create(input);
+    const result = await repositoryRepository.list();
+
+    expect(created).toMatchObject({
+      branch: "main",
+      name: "huashu-design",
+      providerId: "github",
+      remoteUrl: "https://github.com/alchaincyf/huashu-design"
+    });
+    expect(created.id).toMatch(/^repo-/);
+    expect(created.localCachePath).toBe("~/.skills-manager/cache/huashu-design");
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      branch: "main",
+      id: created.id,
+      lastScannedCommitSha: null,
+      localCachePath: "~/.skills-manager/cache/huashu-design",
+      name: "huashu-design",
+      providerId: "github",
+      remoteUrl: "https://github.com/alchaincyf/huashu-design"
+    });
+    expect(JSON.parse(result[0]?.configJson ?? "{}")).toMatchObject({
+      enabled: true,
+      note: "GitHub 测试源",
+      patterns: ["skills/*/SKILL.md", "SKILL.md"],
+      providerName: "GitHub",
+      skillUnits: 0,
+      status: "review"
+    });
   });
 });

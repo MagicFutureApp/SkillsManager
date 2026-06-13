@@ -29,6 +29,8 @@ export const RepositoriesPageModal = () => {
         sourceInspectionLoading: t("repositories.modal.sourceInspectionLoading")
       }}
       editingRepository={page.editingRepository}
+      error={page.modalError}
+      isSaving={page.isSavingRepository}
       open={page.isModalOpen}
       onClose={page.closeModal}
       onSave={page.saveRepository}

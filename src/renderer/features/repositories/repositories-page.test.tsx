@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
 
@@ -9,6 +9,7 @@ import { providerApiRecordsFixture, repositoryApiRecordsFixture } from "@/test/a
 
 const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
   const i18n = await createI18nInstance(locale);
+  const skillsManager = window.skillsManager;
 
   window.skillsManager = {
     getHealth: vi.fn().mockResolvedValue({
@@ -19,9 +20,12 @@ const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
     }),
     getInfo: vi.fn().mockResolvedValue({ version: "0.1.0" }),
     getLocale: vi.fn().mockResolvedValue("zh-CN"),
-    inspectRepositorySource: window.skillsManager?.inspectRepositorySource,
+    createRepository: skillsManager?.createRepository,
+    inspectRepositorySource: skillsManager?.inspectRepositorySource,
     listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
-    listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+    listRepositories:
+      skillsManager?.listRepositories ??
+      vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
     platform: "win32"
   };
 
@@ -45,6 +49,10 @@ const selectOption = async (label: string, optionName: string) => {
 };
 
 describe("RepositoriesPage", () => {
+  beforeEach(() => {
+    window.skillsManager = undefined;
+  });
+
   it("renders the repositories management surface from the HTML mockup", async () => {
     await renderRepositoriesPage();
 
@@ -134,6 +142,67 @@ describe("RepositoriesPage", () => {
   });
 
   it("adds a source through the modal form", async () => {
+    const createRepository = vi.fn().mockResolvedValue({
+      branch: "main",
+      configJson: JSON.stringify({
+        enabled: true,
+        lastScanLabel: "未执行",
+        note: "用户新增的来源，等待第一次同步扫描。",
+        patterns: [],
+        priority: 1,
+        providerName: "GitHub",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+        skillUnits: 0,
+        status: "review"
+      }),
+      id: "repo-huashu-design",
+      lastScannedCommitSha: null,
+      localCachePath: "~/.skills-manager/cache/huashu-design",
+      name: "huashu-design",
+      providerId: "github",
+      remoteUrl: "https://github.com/alchaincyf/huashu-design",
+      updatedAt: "2026-06-12T00:00:00.000Z"
+    });
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({
+        repositories: [
+          {
+            branch: "main",
+            configJson: JSON.stringify({
+              enabled: true,
+              lastScanLabel: "未执行",
+              note: "用户新增的来源，等待第一次同步扫描。",
+              patterns: [],
+              priority: 1,
+              providerName: "GitHub",
+              scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+              skillUnits: 0,
+              status: "review"
+            }),
+            id: "repo-huashu-design",
+            lastScannedCommitSha: null,
+            localCachePath: "~/.skills-manager/cache/huashu-design",
+            name: "huashu-design",
+            providerId: "github",
+            remoteUrl: "https://github.com/alchaincyf/huashu-design",
+            updatedAt: "2026-06-12T00:00:00.000Z"
+          },
+          ...repositoryApiRecordsFixture
+        ]
+      });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      createRepository,
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      platform: "win32"
+    };
     await renderRepositoriesPage();
 
     fireEvent.click(screen.getByRole("button", { name: "新增" }));
@@ -157,15 +226,26 @@ describe("RepositoriesPage", () => {
     expect(patternsField).toHaveAttribute("placeholder", "例: skills/*/SKILL.md 或 SKILL.md 等");
     expect(within(dialog).queryByText("缓存目录")).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("名称"), {
-      target: { value: "Docs skill experiments" }
+      target: { value: "huashu-design" }
     });
     fireEvent.change(within(dialog).getByLabelText("URL / 本机路径"), {
-      target: { value: "git@github.com:team/docs-skills.git" }
+      target: { value: "https://github.com/alchaincyf/huashu-design" }
     });
     fireEvent.click(within(dialog).getByRole("button", { name: "保存来源" }));
 
-    expect(screen.getByRole("button", { name: "Docs skill experiments" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Docs skill experiments" })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(createRepository).toHaveBeenCalledWith({
+        branch: "main",
+        name: "huashu-design",
+        note: "",
+        patterns: [],
+        provider: "GitHub",
+        remoteUrl: "https://github.com/alchaincyf/huashu-design"
+      })
+    );
+    expect(listRepositories).toHaveBeenCalledTimes(2);
+    expect(await screen.findByRole("button", { name: "huashu-design" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "huashu-design" })).toBeInTheDocument();
   });
 
   it("closes the source modal with Escape", async () => {

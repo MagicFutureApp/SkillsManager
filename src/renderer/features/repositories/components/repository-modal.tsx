@@ -42,14 +42,18 @@ type RepositoryModalProps = {
     sourceInspectionLoading: string;
   };
   editingRepository: RepositoryViewModel | null;
+  error: string;
+  isSaving: boolean;
   open: boolean;
   onClose: () => void;
-  onSave: (values: RepositoryFormValues) => void;
+  onSave: (values: RepositoryFormValues) => Promise<void>;
 };
 
 export const RepositoryModal = ({
   copy,
   editingRepository,
+  error: saveError,
+  isSaving,
   open,
   onClose,
   onSave
@@ -60,7 +64,7 @@ export const RepositoryModal = ({
       cachePath: editingRepository?.cachePath ?? "",
       name: editingRepository?.name ?? "",
       note: editingRepository?.note ?? "",
-      patterns: editingRepository?.patterns.join(", ") ?? "",
+      patterns: editingRepository?.patterns?.[0] ?? "",
       provider: editingRepository?.provider ?? "GitHub",
       remoteUrl: editingRepository?.remoteUrl ?? ""
     }),
@@ -152,7 +156,8 @@ export const RepositoryModal = ({
       return;
     }
 
-    onSave({
+    setError("");
+    void onSave({
       ...values,
       branch: values.branch.trim() || "main",
       cachePath: values.cachePath.trim(),
@@ -184,7 +189,9 @@ export const RepositoryModal = ({
                   {editingRepository ? copy.editDescription : copy.newDescription}
                 </DialogDescription>
               </div>
-              <DialogClose render={<Button type="button" variant="outline" size="sm" />}>
+              <DialogClose
+                render={<Button type="button" variant="outline" size="sm" disabled={isSaving} />}
+              >
                 {copy.close}
               </DialogClose>
             </div>
@@ -192,6 +199,7 @@ export const RepositoryModal = ({
             <div className="grid grid-cols-2 gap-3">
               <RepositoryField label={copy.remoteUrl} span>
                 <Input
+                  disabled={isSaving}
                   value={values.remoteUrl}
                   onValueChange={(value) => updateValue("remoteUrl", value)}
                 />
@@ -200,10 +208,15 @@ export const RepositoryModal = ({
                 ) : null}
               </RepositoryField>
               <RepositoryField label={copy.name}>
-                <Input value={values.name} onValueChange={(value) => updateValue("name", value)} />
+                <Input
+                  disabled={isSaving}
+                  value={values.name}
+                  onValueChange={(value) => updateValue("name", value)}
+                />
               </RepositoryField>
               <RepositoryField label={copy.provider}>
                 <Select
+                  disabled={isSaving}
                   value={values.provider}
                   options={providerOptions}
                   onValueChange={(value) => updateValue("provider", value)}
@@ -211,12 +224,14 @@ export const RepositoryModal = ({
               </RepositoryField>
               <RepositoryField label={copy.branch}>
                 <Input
+                  disabled={isSaving}
                   value={values.branch}
                   onValueChange={(value) => updateValue("branch", value)}
                 />
               </RepositoryField>
               <RepositoryField label={copy.patterns} span>
                 <Input
+                  disabled={isSaving}
                   placeholder={copy.patternsPlaceholder}
                   value={values.patterns}
                   onValueChange={(value) => updateValue("patterns", value)}
@@ -224,19 +239,24 @@ export const RepositoryModal = ({
               </RepositoryField>
               <RepositoryField label={copy.note} span>
                 <Textarea
+                  disabled={isSaving}
                   value={values.note}
                   onValueChange={(value) => updateValue("note", value)}
                 />
               </RepositoryField>
             </div>
 
-            {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
+            {error || saveError ? (
+              <p className="mt-3 text-sm text-destructive">{error || saveError}</p>
+            ) : null}
 
             <div className="mt-4 flex justify-end gap-2">
-              <DialogClose render={<Button type="button" variant="outline" />}>
+              <DialogClose render={<Button type="button" variant="outline" disabled={isSaving} />}>
                 {copy.cancel}
               </DialogClose>
-              <Button type="submit">{copy.save}</Button>
+              <Button type="submit" disabled={isSaving}>
+                {copy.save}
+              </Button>
             </div>
           </Form>
         </DialogPopup>

@@ -1,6 +1,5 @@
 import {
   adaptRepositoryRecords,
-  buildRepositoryFromForm,
   createDefaultRepositories,
   filterRepositories,
   type RepositoryFormValues,
@@ -23,6 +22,8 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [editingRepositoryId, setEditingRepositoryId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSavingRepository, setIsSavingRepository] = useState(false);
+  const [modalError, setModalError] = useState("");
   const [providerFilter, setProviderFilter] = useState<RepositoryProviderFilter>("all");
   const [query, setQuery] = useState("");
   const [selectedRepositoryId, setSelectedRepositoryId] = useState<string | null>(
@@ -34,9 +35,8 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
   useEffect(() => {
     let isMounted = true;
 
-    void window.skillsManager?.listRepositories?.().then((result) => {
+    void loadRepositories().then((nextRepositories) => {
       if (isMounted) {
-        const nextRepositories = adaptRepositoryRecords(result.repositories);
         setRepositories(nextRepositories);
         setSelectedRepositoryId(
           (currentRepositoryId) => currentRepositoryId ?? nextRepositories[0]?.id ?? null
@@ -154,19 +154,29 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
 
   const openCreateModal = () => {
     setEditingRepositoryId(null);
+    setModalError("");
     setIsModalOpen(true);
   };
 
   const openEditModal = () => {
     setEditingRepositoryId(selectedRepositoryId);
+    setModalError("");
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
+    if (isSavingRepository) {
+      return;
+    }
+
     setIsModalOpen(false);
+    setModalError("");
   };
 
-  const saveRepository = (formValues: RepositoryFormValues) => {
+  const saveRepository = async (formValues: RepositoryFormValues) => {
+    setModalError("");
+    setIsSavingRepository(true);
+
     if (editingRepositoryId) {
       setRepositories((currentRepositories) =>
         currentRepositories.map((repository) =>
@@ -188,18 +198,41 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
         )
       );
       setSelectedRepositoryId(editingRepositoryId);
+      setIsModalOpen(false);
+      setEditingRepositoryId(null);
+      setIsSavingRepository(false);
+      return;
     } else {
-      const nextRepository = buildRepositoryFromForm({
-        formValues,
-        index: repositories.length
-      });
+      try {
+        if (!window.skillsManager?.createRepository) {
+          throw new Error("保存来源接口不可用。");
+        }
 
-      setRepositories((currentRepositories) => [nextRepository, ...currentRepositories]);
-      setSelectedRepositoryId(nextRepository.id);
+        const createdRepository = await window.skillsManager?.createRepository?.({
+          branch: formValues.branch,
+          name: formValues.name,
+          note: formValues.note,
+          patterns: formValues.patterns
+            .split(",")
+            .map((pattern) => pattern.trim())
+            .filter(Boolean),
+          provider: formValues.provider,
+          remoteUrl: formValues.remoteUrl
+        });
+        const nextRepositories = await loadRepositories();
+
+        setRepositories(nextRepositories);
+        setSelectedRepositoryId(createdRepository?.id ?? nextRepositories[0]?.id ?? null);
+        setIsModalOpen(false);
+        setEditingRepositoryId(null);
+      } catch (error) {
+        setModalError(error instanceof Error ? error.message : "保存来源失败。");
+      } finally {
+        setIsSavingRepository(false);
+      }
+
+      return;
     }
-
-    setIsModalOpen(false);
-    setEditingRepositoryId(null);
   };
 
   const copyCachePath = () => {
@@ -215,6 +248,8 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
     editingRepository,
     hasCheckedRepositories,
     isModalOpen,
+    isSavingRepository,
+    modalError,
     providerFilter,
     query,
     selectedRepository,
@@ -242,6 +277,12 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
 };
 
 export type RepositoriesPageState = ReturnType<typeof useRepositoriesPageState>;
+
+const loadRepositories = async (): Promise<RepositoryViewModel[]> => {
+  const result = await window.skillsManager?.listRepositories?.();
+
+  return adaptRepositoryRecords(result?.repositories ?? []);
+};
 
 const nextCommit = (currentCommit: string): string => {
   if (!currentCommit || currentCommit === "--" || currentCommit === "remote") {

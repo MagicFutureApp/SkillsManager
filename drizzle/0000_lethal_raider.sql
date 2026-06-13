@@ -73,10 +73,12 @@ CREATE TABLE `providers` (
 CREATE TABLE `repositories` (
 	`id` text PRIMARY KEY NOT NULL,
 	`provider_id` text NOT NULL,
+	`name` text NOT NULL,
 	`remote_url` text NOT NULL,
 	`local_cache_path` text NOT NULL,
 	`default_branch` text,
 	`last_scanned_commit_sha` text,
+	`config_json` text DEFAULT '{}' NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL
 );
