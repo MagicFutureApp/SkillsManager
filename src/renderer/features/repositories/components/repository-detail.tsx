@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import type { RepositoryViewModel } from "./repository-data";
+import { Trash2 } from "lucide-react";
 import React from "react";
 
 type RepositoryDetailProps = {
@@ -9,6 +10,7 @@ type RepositoryDetailProps = {
     copyCache: string;
     defaultDescription: string;
     defaultTitle: string;
+    delete: string;
     edit: string;
     enabled: string;
     lastCommit: string;
@@ -24,6 +26,7 @@ type RepositoryDetailProps = {
   };
   repository: RepositoryViewModel | null;
   onCopyCachePath: () => void;
+  onDelete: () => void;
   onEdit: () => void;
 };
 
@@ -31,6 +34,7 @@ export const RepositoryDetail = ({
   copy,
   repository,
   onCopyCachePath,
+  onDelete,
   onEdit
 }: RepositoryDetailProps) => {
   const scanRows = repository
@@ -57,6 +61,16 @@ export const RepositoryDetail = ({
           </Button>
           <Button type="button" variant="outline" disabled={!repository} onClick={onCopyCachePath}>
             {copy.copyCache}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            className="ml-auto"
+            disabled={!repository}
+            onClick={onDelete}
+          >
+            <Trash2 aria-hidden="true" />
+            {copy.delete}
           </Button>
         </div>
       </section>

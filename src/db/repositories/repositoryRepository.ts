@@ -1,14 +1,25 @@
-import { asc } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 
 import type {
   CreateRepositoryInput,
+  DeleteRepositoryResult,
   RepositoryApiRecord,
   RepositoryConfig,
+  RepositoryDeletePreview,
   RepositoryProviderName
 } from "../../core/repositories/repository-api";
 import type { ProviderType } from "../../core/providers/provider-api";
 import type { createDbClient } from "../client";
-import { providers, repositories, skillUnits } from "../schema";
+import {
+  distributionPlanItems,
+  installInstances,
+  providers,
+  repositories,
+  skillTargetPreferences,
+  skillUnits,
+  skillVersions,
+  syncRuns
+} from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
 
@@ -53,6 +64,48 @@ export const createRepositoryRepository = (db: DbClient) => {
       };
     },
 
+    async delete(repositoryId: string): Promise<DeleteRepositoryResult> {
+      const preview = await getDeletePreview(db, repositoryId);
+      const skillUnitIds = preview.skills.map((skill) => skill.id);
+      const versionRows = skillUnitIds.length
+        ? await db
+            .select({ id: skillVersions.id })
+            .from(skillVersions)
+            .where(inArray(skillVersions.skillUnitId, skillUnitIds))
+        : [];
+      const skillVersionIds = versionRows.map((version) => version.id);
+
+      if (skillVersionIds.length) {
+        await db
+          .delete(distributionPlanItems)
+          .where(inArray(distributionPlanItems.skillVersionId, skillVersionIds));
+        await db
+          .delete(installInstances)
+          .where(inArray(installInstances.skillVersionId, skillVersionIds));
+        await db.delete(skillVersions).where(inArray(skillVersions.id, skillVersionIds));
+      }
+
+      if (skillUnitIds.length) {
+        await db
+          .delete(skillTargetPreferences)
+          .where(inArray(skillTargetPreferences.skillUnitId, skillUnitIds));
+        await db.delete(skillUnits).where(inArray(skillUnits.id, skillUnitIds));
+      }
+
+      await db.delete(syncRuns).where(eq(syncRuns.repositoryId, repositoryId));
+      await db.delete(repositories).where(eq(repositories.id, repositoryId));
+
+      return {
+        deletedRepositoryId: repositoryId,
+        deletedSkillUnitIds: skillUnitIds,
+        localCachePath: preview.localCachePath
+      };
+    },
+
+    async getDeletePreview(repositoryId: string): Promise<RepositoryDeletePreview> {
+      return getDeletePreview(db, repositoryId);
+    },
+
     async list(): Promise<RepositoryApiRecord[]> {
       const repositoryRows = await db.select().from(repositories).orderBy(asc(repositories.id));
       const providerRows = await db.select().from(providers);
@@ -86,6 +139,39 @@ export const createRepositoryRepository = (db: DbClient) => {
         };
       });
     }
+  };
+};
+
+const getDeletePreview = async (
+  db: DbClient,
+  repositoryId: string
+): Promise<RepositoryDeletePreview> => {
+  const repositoryRows = await db
+    .select()
+    .from(repositories)
+    .where(eq(repositories.id, repositoryId))
+    .limit(1);
+  const repository = repositoryRows[0];
+
+  if (!repository) {
+    throw new Error("Repository source not found.");
+  }
+
+  const skills = await db
+    .select({
+      entryPath: skillUnits.entryPath,
+      id: skillUnits.id,
+      name: skillUnits.name
+    })
+    .from(skillUnits)
+    .where(eq(skillUnits.repositoryId, repositoryId))
+    .orderBy(asc(skillUnits.name));
+
+  return {
+    localCachePath: repository.localCachePath,
+    repositoryId: repository.id,
+    repositoryName: repository.name,
+    skills
   };
 };
 

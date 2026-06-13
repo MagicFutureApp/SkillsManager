@@ -15,6 +15,7 @@ export const RepositoriesPageSider = () => {
         copyCache: t("repositories.actions.copyCachePath"),
         defaultDescription: t("repositories.detail.emptyDescription"),
         defaultTitle: t("repositories.detail.emptyTitle"),
+        delete: t("repositories.actions.deleteRepository"),
         edit: t("repositories.actions.editRepository"),
         enabled: t("repositories.detail.enabled"),
         lastCommit: t("repositories.detail.lastCommit"),
@@ -30,6 +31,7 @@ export const RepositoriesPageSider = () => {
       }}
       repository={page.selectedRepository}
       onCopyCachePath={page.copyCachePath}
+      onDelete={page.openDeleteDialog}
       onEdit={page.openEditModal}
     />
   );

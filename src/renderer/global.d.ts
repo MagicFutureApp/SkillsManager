@@ -4,7 +4,9 @@ import type { ProvidersListResult as MainProvidersListResult } from "../main/ipc
 import type { RepositoriesListResult as MainRepositoriesListResult } from "../main/ipc/repositories";
 import type {
   CreateRepositoryInput as CoreCreateRepositoryInput,
-  RepositoryApiRecord as CoreRepositoryApiRecord
+  DeleteRepositoryResult as CoreDeleteRepositoryResult,
+  RepositoryApiRecord as CoreRepositoryApiRecord,
+  RepositoryDeletePreview as CoreRepositoryDeletePreview
 } from "../core/repositories/repository-api";
 import type { RepositorySourceInspection as CoreRepositorySourceInspection } from "../core/repositories/source-inspection";
 import type { SupportedLocale as CoreSupportedLocale } from "../core/i18n/locale";
@@ -15,7 +17,9 @@ export type AppInfo = MainAppInfo;
 export type ProvidersListResult = MainProvidersListResult;
 export type RepositoriesListResult = MainRepositoriesListResult;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
+export type DeleteRepositoryResult = CoreDeleteRepositoryResult;
 export type RepositoryApiRecord = CoreRepositoryApiRecord;
+export type RepositoryDeletePreview = CoreRepositoryDeletePreview;
 export type RepositorySourceInspection = CoreRepositorySourceInspection;
 export type RuntimePlatform = RendererRuntimePlatform;
 export type SupportedLocale = CoreSupportedLocale;
@@ -24,9 +28,11 @@ declare global {
   interface Window {
     skillsManager?: {
       createRepository?: (input: CreateRepositoryInput) => Promise<RepositoryApiRecord>;
+      deleteRepository?: (repositoryId: string) => Promise<DeleteRepositoryResult>;
       getHealth: () => Promise<AppHealth>;
       getInfo: () => Promise<AppInfo>;
       getLocale: () => Promise<SupportedLocale>;
+      getRepositoryDeletePreview?: (repositoryId: string) => Promise<RepositoryDeletePreview>;
       inspectRepositorySource?: (remoteUrl: string) => Promise<RepositorySourceInspection>;
       listProviders: () => Promise<ProvidersListResult>;
       listRepositories: () => Promise<RepositoriesListResult>;

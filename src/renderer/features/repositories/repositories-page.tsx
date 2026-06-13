@@ -1,4 +1,5 @@
 import { PageLayout } from "@/components/layout/page-layout";
+import { RepositoriesPageDeleteDialog } from "./components/repositories-page-delete-dialog";
 import { RepositoriesPageProvider } from "./components/repositories-page-context";
 import { RepositoriesPageMain } from "./components/repositories-page-main";
 import { RepositoriesPageModal } from "./components/repositories-page-modal";
@@ -21,6 +22,7 @@ export const RepositoriesPage = () => {
         Sider={RepositoriesPageSider}
         siderLabel={t("repositories.detail.ariaLabel")}
       />
+      <RepositoriesPageDeleteDialog />
       <RepositoriesPageModal />
     </RepositoriesPageProvider>
   );

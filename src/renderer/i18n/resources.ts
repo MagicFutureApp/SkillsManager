@@ -144,6 +144,7 @@ export const resources = {
         actions: {
           addRepository: "新增",
           copyCachePath: "复制缓存路径",
+          deleteRepository: "删除",
           editRepository: "编辑",
           syncSelected: "同步"
         },
@@ -198,6 +199,17 @@ export const resources = {
           scanHeading: "同步影响",
           scanRemoved: "移除 skill unit",
           scanWarnings: "扫描警告"
+        },
+        deleteDialog: {
+          cachePath: "来源本地缓存",
+          cancel: "取消",
+          confirm: "确认删除",
+          description:
+            "会删除此来源对应的 Skills 记录和来源同步到本地的缓存文件。不会删除已经同步到 Codex、Claude Code、Gemini CLI 或自定义目标目录的文件。",
+          emptySkills: "此来源当前没有已索引的 Skills 记录。",
+          loading: "正在读取需要删除的 Skills...",
+          skillsHeading: "将删除的 Skills",
+          title: "删除来源"
         },
         modal: {
           branch: "分支",
@@ -374,6 +386,7 @@ export const resources = {
         actions: {
           addRepository: "Add",
           copyCachePath: "Copy cache path",
+          deleteRepository: "Delete",
           editRepository: "Edit",
           syncSelected: "Sync"
         },
@@ -428,6 +441,17 @@ export const resources = {
           scanHeading: "Sync impact",
           scanRemoved: "Removed skill units",
           scanWarnings: "Scan warnings"
+        },
+        deleteDialog: {
+          cachePath: "Source cache",
+          cancel: "Cancel",
+          confirm: "Delete",
+          description:
+            "This deletes the source's Skills records and locally synced source cache. It does not delete files already synced to Codex, Claude Code, Gemini CLI, or custom target folders.",
+          emptySkills: "This source has no indexed Skills records.",
+          loading: "Loading Skills to delete...",
+          skillsHeading: "Skills to delete",
+          title: "Delete source"
         },
         modal: {
           branch: "Branch",

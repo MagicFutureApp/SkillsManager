@@ -36,6 +36,25 @@ export type CreateRepositoryInput = {
   remoteUrl: string;
 };
 
+export type RepositoryDeleteSkill = {
+  entryPath: string;
+  id: string;
+  name: string;
+};
+
+export type RepositoryDeletePreview = {
+  localCachePath: string;
+  repositoryId: string;
+  repositoryName: string;
+  skills: RepositoryDeleteSkill[];
+};
+
+export type DeleteRepositoryResult = {
+  deletedRepositoryId: string;
+  deletedSkillUnitIds: string[];
+  localCachePath: string;
+};
+
 export type RepositoryApiRecord = {
   branch: string;
   configJson: string;

@@ -8,6 +8,7 @@ import {
   type RepositoryStatusFilter,
   type RepositoryViewModel
 } from "../components/repository-data";
+import type { RepositoryDeletePreview } from "@/global";
 import { useEffect, useMemo, useState } from "react";
 
 type RepositoryScanLabels = {
@@ -21,7 +22,12 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
   );
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [editingRepositoryId, setEditingRepositoryId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deletePreview, setDeletePreview] = useState<RepositoryDeletePreview | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeletingRepository, setIsDeletingRepository] = useState(false);
+  const [isLoadingDeletePreview, setIsLoadingDeletePreview] = useState(false);
   const [isSavingRepository, setIsSavingRepository] = useState(false);
   const [modalError, setModalError] = useState("");
   const [providerFilter, setProviderFilter] = useState<RepositoryProviderFilter>("all");
@@ -164,6 +170,28 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
     setIsModalOpen(true);
   };
 
+  const openDeleteDialog = () => {
+    if (!selectedRepositoryId) {
+      return;
+    }
+
+    setDeleteError("");
+    setDeletePreview(null);
+    setIsDeleteDialogOpen(true);
+    setIsLoadingDeletePreview(true);
+
+    void loadRepositoryDeletePreview(selectedRepositoryId)
+      .then((preview) => {
+        setDeletePreview(preview);
+      })
+      .catch((error) => {
+        setDeleteError(error instanceof Error ? error.message : "读取删除信息失败。");
+      })
+      .finally(() => {
+        setIsLoadingDeletePreview(false);
+      });
+  };
+
   const closeModal = () => {
     if (isSavingRepository) {
       return;
@@ -171,6 +199,16 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
 
     setIsModalOpen(false);
     setModalError("");
+  };
+
+  const closeDeleteDialog = () => {
+    if (isDeletingRepository || isLoadingDeletePreview) {
+      return;
+    }
+
+    setIsDeleteDialogOpen(false);
+    setDeleteError("");
+    setDeletePreview(null);
   };
 
   const saveRepository = async (formValues: RepositoryFormValues) => {
@@ -243,10 +281,47 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
     void navigator.clipboard?.writeText(selectedRepository.cachePath);
   };
 
+  const confirmDeleteRepository = async () => {
+    if (!deletePreview) {
+      return;
+    }
+
+    setDeleteError("");
+    setIsDeletingRepository(true);
+
+    try {
+      if (!window.skillsManager?.deleteRepository) {
+        throw new Error("删除来源接口不可用。");
+      }
+
+      await window.skillsManager.deleteRepository(deletePreview.repositoryId);
+      const nextRepositories = await loadRepositories();
+
+      setRepositories(nextRepositories);
+      setCheckedIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(deletePreview.repositoryId);
+        return nextIds;
+      });
+      setSelectedRepositoryId(nextRepositories[0]?.id ?? null);
+      setIsDeleteDialogOpen(false);
+      setDeletePreview(null);
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : "删除来源失败。");
+    } finally {
+      setIsDeletingRepository(false);
+    }
+  };
+
   return {
     checkedIds,
+    deleteError,
+    deletePreview,
     editingRepository,
     hasCheckedRepositories,
+    isDeleteDialogOpen,
+    isDeletingRepository,
+    isLoadingDeletePreview,
     isModalOpen,
     isSavingRepository,
     modalError,
@@ -259,8 +334,11 @@ export const useRepositoriesPageState = (scanLabels: RepositoryScanLabels) => {
     visibleAllChecked,
     visibleRepositories,
     visibleSomeChecked,
+    closeDeleteDialog,
     closeModal,
+    confirmDeleteRepository,
     copyCachePath,
+    openDeleteDialog,
     openCreateModal,
     openEditModal,
     saveRepository,
@@ -282,6 +360,16 @@ const loadRepositories = async (): Promise<RepositoryViewModel[]> => {
   const result = await window.skillsManager?.listRepositories?.();
 
   return adaptRepositoryRecords(result?.repositories ?? []);
+};
+
+const loadRepositoryDeletePreview = async (
+  repositoryId: string
+): Promise<RepositoryDeletePreview> => {
+  if (!window.skillsManager?.getRepositoryDeletePreview) {
+    throw new Error("删除预览接口不可用。");
+  }
+
+  return window.skillsManager.getRepositoryDeletePreview(repositoryId);
 };
 
 const nextCommit = (currentCommit: string): string => {

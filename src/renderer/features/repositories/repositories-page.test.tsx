@@ -21,6 +21,8 @@ const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
     getInfo: vi.fn().mockResolvedValue({ version: "0.1.0" }),
     getLocale: vi.fn().mockResolvedValue("zh-CN"),
     createRepository: skillsManager?.createRepository,
+    deleteRepository: skillsManager?.deleteRepository,
+    getRepositoryDeletePreview: skillsManager?.getRepositoryDeletePreview,
     inspectRepositorySource: skillsManager?.inspectRepositorySource,
     listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
     listRepositories:
@@ -246,6 +248,78 @@ describe("RepositoriesPage", () => {
     expect(listRepositories).toHaveBeenCalledTimes(2);
     expect(await screen.findByRole("button", { name: "huashu-design" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "huashu-design" })).toBeInTheDocument();
+  });
+
+  it("deletes a source from the detail pane after confirming affected skills", async () => {
+    const getRepositoryDeletePreview = vi.fn().mockResolvedValue({
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      repositoryId: "team-skills",
+      repositoryName: "Team skills repository",
+      skills: [
+        {
+          entryPath: "skills/review-bot/SKILL.md",
+          id: "skill-1",
+          name: "review-bot"
+        },
+        {
+          entryPath: "skills/release-notes/SKILL.md",
+          id: "skill-2",
+          name: "release-notes"
+        }
+      ]
+    });
+    const deleteRepository = vi.fn().mockResolvedValue({
+      deletedRepositoryId: "team-skills",
+      deletedSkillUnitIds: ["skill-1", "skill-2"],
+      localCachePath: "~/.skills-manager/cache/team-skills"
+    });
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({
+        repositories: repositoryApiRecordsFixture.filter(
+          (repository) => repository.id !== "team-skills"
+        )
+      });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      deleteRepository,
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      getRepositoryDeletePreview,
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      platform: "win32"
+    };
+    await renderRepositoriesPage();
+
+    const detail = screen.getByLabelText("来源详情");
+    fireEvent.click(within(detail).getByRole("button", { name: "删除" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "删除来源" });
+    expect(getRepositoryDeletePreview).toHaveBeenCalledWith("team-skills");
+    expect(
+      within(dialog).getByText(
+        "会删除此来源对应的 Skills 记录和来源同步到本地的缓存文件。不会删除已经同步到 Codex、Claude Code、Gemini CLI 或自定义目标目录的文件。"
+      )
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText("review-bot")).toBeInTheDocument();
+    expect(within(dialog).getByText("skills/review-bot/SKILL.md")).toBeInTheDocument();
+    expect(within(dialog).getByText("release-notes")).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "确认删除" }));
+
+    await waitFor(() => expect(deleteRepository).toHaveBeenCalledWith("team-skills"));
+    expect(listRepositories).toHaveBeenCalledTimes(2);
+    expect(
+      screen.queryByRole("button", { name: "Team skills repository" })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Local development skills" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
   });
 
   it("closes the source modal with Escape", async () => {
