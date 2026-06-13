@@ -9,6 +9,17 @@ import { selectedSkill, targetOptions } from "./skills-page-data";
 export const SkillsPageSider = () => {
   const { t } = useTranslation();
 
+  if (!selectedSkill) {
+    return (
+      <section className="rounded-xl border border-border bg-card p-4">
+        <h2 className="text-xl font-semibold">{t("skills.detail.emptyTitle")}</h2>
+        <p className="mt-7 text-sm leading-6 text-muted-foreground">
+          {t("skills.detail.emptyDescription")}
+        </p>
+      </section>
+    );
+  }
+
   return (
     <>
       <section className="rounded-xl border border-border bg-card p-4">

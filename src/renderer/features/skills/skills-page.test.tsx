@@ -35,26 +35,19 @@ describe("SkillsPage", () => {
     );
   });
 
-  it("renders the skills design surface from the HTML mockup", async () => {
+  it("renders an empty skills surface without demo skill data", async () => {
     await renderSkillsPage();
 
     expect(screen.getByLabelText("技能筛选")).toHaveClass(
       "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]"
     );
-    expect(screen.getAllByText("Prompt Engineering Basic")[0].closest("div")).toHaveClass(
-      "grid-cols-[32px_minmax(0,1.7fr)_minmax(0,0.9fr)_minmax(0,0.65fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(44px,0.45fr)_minmax(56px,0.5fr)]"
-    );
     expect(screen.getByRole("button", { name: "新增" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "编辑" })).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "浏览 skill unit 并预览分发计划" })
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Prompt Engineering Basic")).toHaveLength(2);
-    expect(screen.getByText("Browser QA checklist")).toBeInTheDocument();
-    expect(screen.getByText("Refactor notes")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "同步目标" })).toBeInTheDocument();
-    expect(screen.getByText("~/.codex/skills")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "计划预览" })).toBeInTheDocument();
+    expect(screen.getByText("暂无已索引技能。")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "选择一个技能" })).toBeInTheDocument();
+    expect(screen.getByText("从来源同步并扫描后，这里会显示技能详情。")).toBeInTheDocument();
   });
 
   it("renders English UI copy when initialized with en-US", async () => {

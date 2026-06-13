@@ -34,6 +34,7 @@ export const resources = {
         pageLabel: "Skills",
         heading: "浏览 skill unit 并预览分发计划",
         description: "每个技能来自仓库扫描结果，可选择同步目标并查看计划预览。",
+        empty: "暂无已索引技能。",
         actions: {
           sync: "同步",
           addSkill: "新增",
@@ -74,6 +75,8 @@ export const resources = {
         },
         detail: {
           ariaLabel: "技能详情",
+          emptyDescription: "从来源同步并扫描后，这里会显示技能详情。",
+          emptyTitle: "选择一个技能",
           syncTargets: "同步目标",
           syncTargetsDescription: "选择默认同步范围；安装前仍会先生成计划预览。",
           chooseTarget: "选择 {{name}}",
@@ -272,6 +275,7 @@ export const resources = {
         heading: "Browse skill units and preview distribution plans",
         description:
           "Each skill comes from repository scan results. Choose sync targets and review the plan before execution.",
+        empty: "No indexed skills yet.",
         actions: {
           sync: "Sync",
           addSkill: "Add skill",
@@ -312,6 +316,8 @@ export const resources = {
         },
         detail: {
           ariaLabel: "Skill details",
+          emptyDescription: "Skill details appear here after sources are synced and scanned.",
+          emptyTitle: "Choose a skill",
           syncTargets: "Sync targets",
           syncTargetsDescription:
             "Choose the default sync scope. Installation still starts with a plan preview.",

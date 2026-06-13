@@ -13,17 +13,14 @@ const tableGridColumnsClassName =
 
 export const SkillsPageMain = () => {
   const { t } = useTranslation();
+  const hasSkills = skills.length > 0;
   const reviewCount = skills.filter((skill) => skill.status === "review").length;
   const sortOptions = [
     { value: "recommended", label: t("skills.filters.sortRecommended") },
     { value: "name", label: t("skills.filters.sortName") },
     { value: "repository", label: t("skills.filters.sortRepository") }
   ];
-  const repositoryOptions = [
-    { value: "all", label: t("skills.filters.allRepositories") },
-    { value: "team", label: "Team skills repository-----------------------" },
-    { value: "design", label: "Design lab prompts" }
-  ];
+  const repositoryOptions = [{ value: "all", label: t("skills.filters.allRepositories") }];
   const statusOptions = [
     { value: "all", label: t("skills.filters.allStatuses") },
     { value: "ready", label: "ready" },
@@ -86,7 +83,7 @@ export const SkillsPageMain = () => {
           )}
         >
           <span className="grid place-items-center">
-            <Checkbox aria-label={t("skills.table.selectAll")} />
+            <Checkbox aria-label={t("skills.table.selectAll")} disabled={!hasSkills} />
           </span>
           <span>{t("skills.table.skill")}</span>
           <span>{t("skills.table.repository")}</span>
@@ -97,43 +94,47 @@ export const SkillsPageMain = () => {
           <span>{t("skills.table.actions")}</span>
         </div>
 
-        {skills.map((skill) => (
-          <div
-            key={skill.id}
-            className={cn(
-              "grid items-center gap-2 border-b border-border px-4 py-3 last:border-b-0",
-              tableGridColumnsClassName,
-              skill.id === selectedSkill.id && "bg-primary/5"
-            )}
-          >
-            <span className="grid place-items-center">
-              <Checkbox aria-label={t("skills.table.selectSkill", { name: skill.name })} />
-            </span>
-            <span className="min-w-0">
-              <strong className="block truncate text-sm">{skill.name}</strong>
-              <span className="block truncate font-mono text-xs text-muted-foreground">
-                {skill.skillId}
+        {hasSkills ? (
+          skills.map((skill) => (
+            <div
+              key={skill.id}
+              className={cn(
+                "grid items-center gap-2 border-b border-border px-4 py-3 last:border-b-0",
+                tableGridColumnsClassName,
+                skill.id === selectedSkill?.id && "bg-primary/5"
+              )}
+            >
+              <span className="grid place-items-center">
+                <Checkbox aria-label={t("skills.table.selectSkill", { name: skill.name })} />
               </span>
-            </span>
-            <span className="text-sm">{skill.repository}</span>
-            <span className="font-mono text-sm">{skill.version}</span>
-            <span>
-              <span
-                className={cn(
-                  "inline-flex min-h-6 items-center rounded-full border px-2 text-xs",
-                  statusClassName[skill.status]
-                )}
-              >
-                {skill.status}
+              <span className="min-w-0">
+                <strong className="block truncate text-sm">{skill.name}</strong>
+                <span className="block truncate font-mono text-xs text-muted-foreground">
+                  {skill.skillId}
+                </span>
               </span>
-            </span>
-            <span className="font-mono text-sm">{skill.targets.length}</span>
-            <Toggle enabled={skill.enabled} />
-            <Button type="button" variant="outline" size="sm">
-              {t("skills.actions.sync")}
-            </Button>
-          </div>
-        ))}
+              <span className="text-sm">{skill.repository}</span>
+              <span className="font-mono text-sm">{skill.version}</span>
+              <span>
+                <span
+                  className={cn(
+                    "inline-flex min-h-6 items-center rounded-full border px-2 text-xs",
+                    statusClassName[skill.status]
+                  )}
+                >
+                  {skill.status}
+                </span>
+              </span>
+              <span className="font-mono text-sm">{skill.targets.length}</span>
+              <Toggle enabled={skill.enabled} />
+              <Button type="button" variant="outline" size="sm">
+                {t("skills.actions.sync")}
+              </Button>
+            </div>
+          ))
+        ) : (
+          <div className="px-4 py-8 text-sm text-muted-foreground">{t("skills.empty")}</div>
+        )}
       </section>
     </>
   );
