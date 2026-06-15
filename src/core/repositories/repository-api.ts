@@ -1,4 +1,5 @@
 export type RepositoryScanStatus = "ready" | "review" | "failed";
+export type RepositorySyncItemStatus = RepositoryScanStatus | "skipped";
 
 export type RepositoryProviderName =
   | "Bitbucket"
@@ -13,6 +14,30 @@ export type RepositoryScanSummary = {
   changed: number;
   removed: number;
   warnings: number;
+};
+
+export type RepositorySyncFailureCategory =
+  | "auth"
+  | "filesystem"
+  | "git"
+  | "network"
+  | "not-a-skill"
+  | "source-not-found"
+  | "unknown";
+
+export type RepositorySyncFailure = {
+  category: RepositorySyncFailureCategory;
+  logPath: string | null;
+  message: string;
+};
+
+export type RepositorySyncResultItem = {
+  commitSha?: string;
+  error?: RepositorySyncFailure;
+  repositoryId: string;
+  scan: RepositoryScanSummary;
+  skillUnits: number;
+  status: RepositorySyncItemStatus;
 };
 
 export type RepositoryConfig = {

@@ -1,7 +1,11 @@
 import type { AppHealth as MainAppHealth } from "../main/ipc/health";
 import type { AppInfo as MainAppInfo } from "../main/ipc/app-info";
 import type { ProvidersListResult as MainProvidersListResult } from "../main/ipc/providers";
-import type { RepositoriesListResult as MainRepositoriesListResult } from "../main/ipc/repositories";
+import type {
+  RepositoriesListResult as MainRepositoriesListResult,
+  RepositoriesSyncResult as MainRepositoriesSyncResult
+} from "../main/ipc/repositories";
+import type { SkillsListResult as MainSkillsListResult } from "../main/ipc/skills";
 import type {
   CreateRepositoryInput as CoreCreateRepositoryInput,
   DeleteRepositoryResult as CoreDeleteRepositoryResult,
@@ -16,6 +20,8 @@ export type AppHealth = MainAppHealth;
 export type AppInfo = MainAppInfo;
 export type ProvidersListResult = MainProvidersListResult;
 export type RepositoriesListResult = MainRepositoriesListResult;
+export type RepositoriesSyncResult = MainRepositoriesSyncResult;
+export type SkillsListResult = MainSkillsListResult;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
 export type DeleteRepositoryResult = CoreDeleteRepositoryResult;
 export type RepositoryApiRecord = CoreRepositoryApiRecord;
@@ -36,6 +42,8 @@ declare global {
       inspectRepositorySource?: (remoteUrl: string) => Promise<RepositorySourceInspection>;
       listProviders: () => Promise<ProvidersListResult>;
       listRepositories: () => Promise<RepositoriesListResult>;
+      listSkills?: () => Promise<SkillsListResult>;
+      syncRepositories?: (repositoryIds: string[]) => Promise<RepositoriesSyncResult>;
       platform: RuntimePlatform;
     };
   }

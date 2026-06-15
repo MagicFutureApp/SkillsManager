@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { RepositoryStatusPill } from "./repository-status-pill";
 import type { RepositoryViewModel } from "./repository-data";
+import type { RepositorySyncState } from "../hooks/use-repositories-page-state";
+import { AlertCircle, CheckCircle2, RefreshCw, SearchX } from "lucide-react";
 import React from "react";
 
 type RepositoryListProps = {
@@ -20,12 +23,14 @@ type RepositoryListProps = {
     toggleEnabled: (name: string) => string;
   };
   checkedIds: Set<string>;
+  repositorySyncStates: Record<string, RepositorySyncState>;
   repositories: RepositoryViewModel[];
   selectedRepositoryId: string | null;
   visibleAllChecked: boolean;
   visibleSomeChecked: boolean;
   onSelectAllVisible: (checked: boolean) => void;
   onSelectRepository: (repositoryId: string) => void;
+  onSyncRepository: (repositoryId: string) => void;
   onToggleChecked: (repositoryId: string, checked: boolean) => void;
   onToggleEnabled: (repositoryId: string) => void;
 };
@@ -33,17 +38,19 @@ type RepositoryListProps = {
 export const RepositoryList = ({
   checkedIds,
   copy,
+  repositorySyncStates,
   repositories,
   selectedRepositoryId,
   visibleAllChecked,
   visibleSomeChecked,
   onSelectAllVisible,
   onSelectRepository,
+  onSyncRepository,
   onToggleChecked,
   onToggleEnabled
 }: RepositoryListProps) => {
   const gridColumnsClassName =
-    "grid-cols-[34px_minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_minmax(52px,0.45fr)]";
+    "grid-cols-[34px_minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_34px_minmax(52px,0.45fr)]";
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
@@ -67,6 +74,7 @@ export const RepositoryList = ({
         <span>{copy.branch}</span>
         <span>{copy.status}</span>
         <span>{copy.skills}</span>
+        <span aria-hidden="true" />
         <span>{copy.actions}</span>
       </div>
 
@@ -77,7 +85,7 @@ export const RepositoryList = ({
           <div
             key={repository.id}
             className={cn(
-              "grid items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_auto]",
+              "grid items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_34px_auto]",
               gridColumnsClassName,
               repository.id === selectedRepositoryId &&
                 "bg-primary/5 shadow-[inset_3px_0_0_theme(colors.primary)]"
@@ -109,6 +117,12 @@ export const RepositoryList = ({
               <RepositoryStatusPill status={repository.status} />
             </span>
             <span className="font-mono text-sm max-[820px]:hidden">{repository.skillUnits}</span>
+            <RepositorySyncIndicator
+              repositoryId={repository.id}
+              repositoryName={repository.name}
+              state={repositorySyncStates[repository.id]}
+              onSyncRepository={onSyncRepository}
+            />
             <Switch
               checked={repository.enabled}
               aria-label={copy.toggleEnabled(repository.name)}
@@ -119,4 +133,64 @@ export const RepositoryList = ({
       )}
     </section>
   );
+};
+
+const RepositorySyncIndicator = ({
+  repositoryId,
+  repositoryName,
+  state,
+  onSyncRepository
+}: {
+  repositoryId: string;
+  repositoryName: string;
+  state?: RepositorySyncState;
+  onSyncRepository: (repositoryId: string) => void;
+}) => {
+  const status = state?.status ?? "idle";
+  const message = state?.message ?? "尚未开始同步。";
+  const ariaLabel = `${repositoryName} ${message}`;
+  const Icon = syncIconByStatus[status];
+  const isSyncing = status === "syncing";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        aria-label={ariaLabel}
+        aria-disabled={isSyncing}
+        type="button"
+        className={cn(
+          "grid size-7 place-items-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
+          syncClassNameByStatus[status]
+        )}
+        onClick={(event) => {
+          event.stopPropagation();
+          if (isSyncing) {
+            return;
+          }
+          void onSyncRepository(repositoryId);
+        }}
+      >
+        <Icon aria-hidden="true" className={cn("size-4", isSyncing && "animate-spin")} />
+      </TooltipTrigger>
+      <TooltipContent side="top" align="center" className="max-w-sm leading-5">
+        {message}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
+const syncIconByStatus = {
+  empty: SearchX,
+  failed: AlertCircle,
+  idle: RefreshCw,
+  success: CheckCircle2,
+  syncing: RefreshCw
+};
+
+const syncClassNameByStatus = {
+  empty: "text-amber-600 dark:text-amber-400",
+  failed: "text-destructive",
+  idle: "text-muted-foreground/70",
+  success: "text-emerald-600 dark:text-emerald-400",
+  syncing: "text-primary"
 };

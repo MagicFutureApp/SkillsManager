@@ -1,4 +1,6 @@
-export type SkillStatus = "ready" | "review" | "installed";
+import type { SkillApiRecord, SkillApiStatus } from "../../../../core/skills/skill-api";
+
+export type SkillStatus = SkillApiStatus;
 
 export type Skill = {
   id: string;
@@ -27,6 +29,18 @@ export const targetOptions: TargetOption[] = [
   { id: "custom", name: "skills.targets.customDirectory", path: "D:/Agents/shared-skills" }
 ];
 
-export const skills: Skill[] = [];
-
-export const selectedSkill = skills[0] ?? null;
+export const adaptSkillRecord = (record: SkillApiRecord): Skill => {
+  return {
+    description: record.description,
+    enabled: record.enabled,
+    entry: record.entry,
+    id: record.id,
+    name: record.name,
+    repository: record.repository,
+    skillId: record.skillId,
+    status: record.status,
+    tags: record.tags,
+    targets: record.targets,
+    version: record.version
+  };
+};

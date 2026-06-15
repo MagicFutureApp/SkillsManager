@@ -25,7 +25,7 @@ export const RepositoriesPageMain = () => {
               type="button"
               variant="outline"
               disabled={!page.hasCheckedRepositories}
-              onClick={page.syncCheckedRepositories}
+              onClick={() => void page.syncCheckedRepositories()}
             >
               {t("repositories.actions.syncSelected")}
             </Button>
@@ -77,12 +77,14 @@ export const RepositoriesPageMain = () => {
             status: t("repositories.table.status"),
             toggleEnabled: (name) => t("repositories.table.toggleEnabled", { name })
           }}
+          repositorySyncStates={page.repositorySyncStates}
           repositories={page.visibleRepositories}
           selectedRepositoryId={page.selectedRepositoryId}
           visibleAllChecked={page.visibleAllChecked}
           visibleSomeChecked={page.visibleSomeChecked}
           onSelectAllVisible={page.selectAllVisible}
           onSelectRepository={page.setSelectedRepositoryId}
+          onSyncRepository={page.syncRepository}
           onToggleChecked={page.toggleRepositoryChecked}
           onToggleEnabled={page.toggleRepositoryEnabled}
         />

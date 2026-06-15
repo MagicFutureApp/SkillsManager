@@ -6,8 +6,13 @@ import type {
   RepositoryApiRecord,
   RepositoryConfig,
   RepositoryDeletePreview,
-  RepositoryProviderName
+  RepositoryProviderName,
+  RepositoryScanStatus,
+  RepositoryScanSummary,
+  RepositorySyncFailure,
+  RepositorySyncResultItem
 } from "../../core/repositories/repository-api";
+import type { DiscoveredSkill } from "../../core/skills/skill-scanner";
 import type { ProviderType } from "../../core/providers/provider-api";
 import type { createDbClient } from "../client";
 import {
@@ -23,6 +28,34 @@ import {
 
 type DbClient = ReturnType<typeof createDbClient>;
 const DEFAULT_DISCOVERY_ENTRY = "skills/*/SKILL.md";
+
+export type RepositorySyncRecordInput = {
+  commitSha: string;
+  discoveredSkills: DiscoveredSkill[];
+  repositoryId: string;
+  startedAt: Date;
+  syncRunId?: string;
+};
+
+export type RepositorySyncRecordResult = {
+  commitSha: string;
+  repositoryId: string;
+  scan: RepositoryScanSummary;
+  skillUnits: number;
+  status: RepositoryScanStatus;
+};
+
+export type RepositorySyncFailureRecordInput = {
+  error: RepositorySyncFailure;
+  repositoryId: string;
+  startedAt: Date;
+  syncRunId?: string;
+};
+
+export type RepositorySyncRunStartInput = {
+  repositoryId: string;
+  startedAt: Date;
+};
 
 export const createRepositoryRepository = (db: DbClient) => {
   return {
@@ -107,6 +140,242 @@ export const createRepositoryRepository = (db: DbClient) => {
       return getDeletePreview(db, repositoryId);
     },
 
+    async markInterruptedSyncRuns(): Promise<number> {
+      const runningRows = await db
+        .select({ id: syncRuns.id })
+        .from(syncRuns)
+        .where(eq(syncRuns.status, "running"));
+
+      if (!runningRows.length) {
+        return 0;
+      }
+
+      await db
+        .update(syncRuns)
+        .set({
+          errorMessage: "上次同步被中断，可能是应用异常退出。",
+          finishedAt: new Date(),
+          status: "interrupted",
+          summaryJson: JSON.stringify({
+            category: "interrupted",
+            message: "上次同步被中断，可能是应用异常退出。"
+          })
+        })
+        .where(eq(syncRuns.status, "running"));
+
+      return runningRows.length;
+    },
+
+    async recordSyncFailure(
+      input: RepositorySyncFailureRecordInput
+    ): Promise<RepositorySyncResultItem> {
+      const now = new Date();
+      const repositoryRows = await db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.id, input.repositoryId))
+        .limit(1);
+      const repository = repositoryRows[0];
+
+      if (!repository) {
+        throw new Error("Repository source not found.");
+      }
+
+      const scan: RepositoryScanSummary = { added: 0, changed: 0, removed: 0, warnings: 1 };
+      const existingSkillRows = await db
+        .select({ id: skillUnits.id })
+        .from(skillUnits)
+        .where(eq(skillUnits.repositoryId, input.repositoryId));
+
+      const syncRunId =
+        input.syncRunId ??
+        (await startSyncRun({
+          db,
+          repositoryId: input.repositoryId,
+          startedAt: input.startedAt
+        }));
+
+      await db
+        .update(syncRuns)
+        .set({
+          endCommitSha: null,
+          errorMessage: input.error.message,
+          finishedAt: now,
+          logPath: input.error.logPath,
+          status: "failed",
+          summaryJson: JSON.stringify({
+            category: input.error.category,
+            scan
+          })
+        })
+        .where(eq(syncRuns.id, syncRunId));
+
+      await db
+        .update(repositories)
+        .set({
+          configJson: JSON.stringify(
+            mergeFailedRepositoryConfig({
+              configJson: repository.configJson,
+              providerName: providerNameFor(undefined, repository.remoteUrl),
+              repositoryId: repository.id,
+              scan,
+              skillUnits: existingSkillRows.length
+            })
+          ),
+          updatedAt: now
+        })
+        .where(eq(repositories.id, input.repositoryId));
+
+      return {
+        error: input.error,
+        repositoryId: input.repositoryId,
+        scan,
+        skillUnits: 0,
+        status: "failed"
+      };
+    },
+
+    async recordSyncResult(input: RepositorySyncRecordInput): Promise<RepositorySyncRecordResult> {
+      const now = new Date();
+      const repositoryRows = await db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.id, input.repositoryId))
+        .limit(1);
+      const repository = repositoryRows[0];
+
+      if (!repository) {
+        throw new Error("Repository source not found.");
+      }
+
+      const previousSkillRows = await db
+        .select({ id: skillUnits.id })
+        .from(skillUnits)
+        .where(eq(skillUnits.repositoryId, input.repositoryId));
+      const previousSkillIds = previousSkillRows.map((skill) => skill.id);
+      const nextSkillIds = input.discoveredSkills.map((skill) =>
+        buildSkillUnitId(input.repositoryId, skill.skillKey)
+      );
+      const removed = previousSkillIds.filter((id) => !nextSkillIds.includes(id)).length;
+      const changed = previousSkillIds.filter((id) => nextSkillIds.includes(id)).length;
+      const added = nextSkillIds.filter((id) => !previousSkillIds.includes(id)).length;
+      const scan: RepositoryScanSummary = { added, changed, removed, warnings: 0 };
+      const status: RepositoryScanStatus = scan.warnings > 0 ? "review" : "ready";
+
+      if (previousSkillIds.length) {
+        const previousVersionRows = await db
+          .select({ id: skillVersions.id })
+          .from(skillVersions)
+          .where(inArray(skillVersions.skillUnitId, previousSkillIds));
+        const previousVersionIds = previousVersionRows.map((version) => version.id);
+
+        if (previousVersionIds.length) {
+          await db
+            .delete(distributionPlanItems)
+            .where(inArray(distributionPlanItems.skillVersionId, previousVersionIds));
+          await db
+            .delete(installInstances)
+            .where(inArray(installInstances.skillVersionId, previousVersionIds));
+          await db.delete(skillVersions).where(inArray(skillVersions.id, previousVersionIds));
+        }
+
+        await db
+          .delete(skillTargetPreferences)
+          .where(inArray(skillTargetPreferences.skillUnitId, previousSkillIds));
+        await db.delete(skillUnits).where(inArray(skillUnits.id, previousSkillIds));
+      }
+
+      if (input.discoveredSkills.length) {
+        await db.insert(skillUnits).values(
+          input.discoveredSkills.map((skill) => ({
+            createdAt: now,
+            discoveryMethod: skill.discoveryMethod,
+            entryPath: skill.entryPath,
+            id: buildSkillUnitId(input.repositoryId, skill.skillKey),
+            name: skill.name,
+            repositoryId: input.repositoryId,
+            rootPath: skill.rootPath,
+            status: skill.status,
+            updatedAt: now
+          }))
+        );
+        await db.insert(skillVersions).values(
+          input.discoveredSkills.map((skill) => {
+            const skillUnitId = buildSkillUnitId(input.repositoryId, skill.skillKey);
+
+            return {
+              commitSha: input.commitSha,
+              createdAt: now,
+              id: `${skillUnitId}__${input.commitSha}`,
+              metadataSnapshotJson: JSON.stringify({
+                description: skill.description,
+                discoveryMethod: skill.discoveryMethod,
+                entryPath: skill.entryPath,
+                rootPath: skill.rootPath,
+                skillKey: skill.skillKey,
+                tags: skill.tags
+              }),
+              skillUnitId
+            };
+          })
+        );
+      }
+
+      const syncRunId =
+        input.syncRunId ??
+        (await startSyncRun({
+          db,
+          repositoryId: input.repositoryId,
+          startedAt: input.startedAt
+        }));
+
+      await db
+        .update(syncRuns)
+        .set({
+          endCommitSha: input.commitSha,
+          errorMessage: null,
+          finishedAt: now,
+          logPath: null,
+          status: "success",
+          summaryJson: JSON.stringify(scan)
+        })
+        .where(eq(syncRuns.id, syncRunId));
+
+      await db
+        .update(repositories)
+        .set({
+          configJson: JSON.stringify(
+            mergeSyncedRepositoryConfig({
+              configJson: repository.configJson,
+              providerName: providerNameFor(undefined, repository.remoteUrl),
+              repositoryId: repository.id,
+              scan,
+              skillUnits: input.discoveredSkills.length,
+              status
+            })
+          ),
+          lastScannedCommitSha: input.commitSha,
+          updatedAt: now
+        })
+        .where(eq(repositories.id, input.repositoryId));
+
+      return {
+        commitSha: input.commitSha,
+        repositoryId: input.repositoryId,
+        scan,
+        skillUnits: input.discoveredSkills.length,
+        status
+      };
+    },
+
+    async startSyncRun(input: RepositorySyncRunStartInput): Promise<string> {
+      return startSyncRun({
+        db,
+        repositoryId: input.repositoryId,
+        startedAt: input.startedAt
+      });
+    },
+
     async list(): Promise<RepositoryApiRecord[]> {
       const repositoryRows = await db.select().from(repositories).orderBy(asc(repositories.id));
       const providerRows = await db.select().from(providers);
@@ -141,6 +410,46 @@ export const createRepositoryRepository = (db: DbClient) => {
       });
     }
   };
+};
+
+const startSyncRun = async ({
+  db,
+  repositoryId,
+  startedAt
+}: {
+  db: DbClient;
+  repositoryId: string;
+  startedAt: Date;
+}): Promise<string> => {
+  const repositoryRows = await db
+    .select()
+    .from(repositories)
+    .where(eq(repositories.id, repositoryId))
+    .limit(1);
+  const repository = repositoryRows[0];
+
+  if (!repository) {
+    throw new Error("Repository source not found.");
+  }
+
+  const syncRunId = `sync-${repositoryId}-${startedAt.getTime()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+
+  await db.insert(syncRuns).values({
+    endCommitSha: null,
+    errorMessage: null,
+    finishedAt: null,
+    id: syncRunId,
+    logPath: null,
+    repositoryId,
+    startCommitSha: repository.lastScannedCommitSha,
+    startedAt,
+    status: "running",
+    summaryJson: "{}"
+  });
+
+  return syncRunId;
 };
 
 const getDeletePreview = async (
@@ -239,7 +548,7 @@ const mergeRepositoryConfig = ({
     patterns: savedConfig.patterns ?? [DEFAULT_DISCOVERY_ENTRY],
     priority: savedConfig.priority ?? index + 1,
     providerName: savedConfig.providerName ?? providerName,
-    scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+    scan: savedConfig.scan ?? { added: 0, changed: 0, removed: 0, warnings: 0 },
     skillUnits: skillUnitCount,
     status: savedConfig.status ?? (wasScanned ? "ready" : "review")
   };
@@ -257,6 +566,73 @@ const buildCreatedRepositoryConfig = (input: CreateRepositoryInput): RepositoryC
     skillUnits: 0,
     status: "review"
   };
+};
+
+const mergeSyncedRepositoryConfig = ({
+  configJson,
+  providerName,
+  repositoryId,
+  scan,
+  skillUnits,
+  status
+}: {
+  configJson: string;
+  providerName: RepositoryProviderName;
+  repositoryId: string;
+  scan: RepositoryScanSummary;
+  skillUnits: number;
+  status: RepositoryScanStatus;
+}): RepositoryConfig => {
+  const savedConfig = mergeRepositoryConfig({
+    configJson,
+    index: 98,
+    providerName,
+    repositoryId,
+    skillUnitCount: skillUnits,
+    wasScanned: true
+  });
+
+  return {
+    ...savedConfig,
+    lastScanLabel: "刚刚同步",
+    scan,
+    skillUnits,
+    status
+  };
+};
+
+const mergeFailedRepositoryConfig = ({
+  configJson,
+  providerName,
+  repositoryId,
+  scan,
+  skillUnits
+}: {
+  configJson: string;
+  providerName: RepositoryProviderName;
+  repositoryId: string;
+  scan: RepositoryScanSummary;
+  skillUnits: number;
+}): RepositoryConfig => {
+  const savedConfig = mergeRepositoryConfig({
+    configJson,
+    index: 98,
+    providerName,
+    repositoryId,
+    skillUnitCount: skillUnits,
+    wasScanned: true
+  });
+
+  return {
+    ...savedConfig,
+    lastScanLabel: "同步失败",
+    scan,
+    status: "failed"
+  };
+};
+
+const buildSkillUnitId = (repositoryId: string, skillKey: string): string => {
+  return `${repositoryId}__${skillKey}`;
 };
 
 const normalizeDiscoveryEntry = (entry: string): string[] => {
@@ -366,11 +742,27 @@ const parseRepositoryConfig = (configJson: string): Partial<RepositoryConfig> =>
         : undefined,
       priority: typeof parsed.priority === "number" ? parsed.priority : undefined,
       providerName: isProviderName(parsed.providerName) ? parsed.providerName : undefined,
+      scan: normalizeScanSummary(parsed.scan),
       status: isScanStatus(parsed.status) ? parsed.status : undefined
     };
   } catch {
     return {};
   }
+};
+
+const normalizeScanSummary = (scan: unknown): RepositoryScanSummary | undefined => {
+  if (!scan || typeof scan !== "object") {
+    return undefined;
+  }
+
+  const partial = scan as Partial<RepositoryScanSummary>;
+
+  return {
+    added: typeof partial.added === "number" ? partial.added : 0,
+    changed: typeof partial.changed === "number" ? partial.changed : 0,
+    removed: typeof partial.removed === "number" ? partial.removed : 0,
+    warnings: typeof partial.warnings === "number" ? partial.warnings : 0
+  };
 };
 
 const isProviderName = (value: unknown): value is RepositoryProviderName => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CreateRepositoryInput } from "../../core/repositories/repository-api";
+import type { DiscoveredSkill } from "../../core/skills/skill-scanner";
 import { createDbClient } from "../client";
 import {
   distributionPlanItems,
@@ -296,5 +297,261 @@ describe("createRepositoryRepository", () => {
     await expect(db.select().from(installInstances)).resolves.toEqual([]);
     await expect(db.select().from(distributionPlanItems)).resolves.toEqual([]);
     await expect(db.select().from(syncRuns)).resolves.toEqual([]);
+  });
+
+  it("persists sync results as indexed skills, versions, and sync run history", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+    const createdAt = new Date("2026-06-14T00:00:00.000Z");
+    const discoveredSkills: DiscoveredSkill[] = [
+      {
+        description: "Reviews pull requests.",
+        discoveryMethod: "convention",
+        entryPath: "skills/review-bot/SKILL.md",
+        name: "Review Bot",
+        rootPath: "skills/review-bot",
+        skillKey: "skills-review-bot",
+        status: "ready",
+        tags: []
+      },
+      {
+        description: "Writes release notes.",
+        discoveryMethod: "convention",
+        entryPath: "skills/release-notes/SKILL.md",
+        name: "Release Notes",
+        rootPath: "skills/release-notes",
+        skillKey: "skills-release-notes",
+        status: "ready",
+        tags: []
+      }
+    ];
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({
+        enabled: true,
+        lastScanLabel: "未执行",
+        note: "Team source",
+        patterns: ["skills/*/SKILL.md"],
+        priority: 1,
+        providerName: "GitHub",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+        skillUnits: 0,
+        status: "review"
+      }),
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-1",
+      lastScannedCommitSha: null,
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills",
+      providerId: "github",
+      remoteUrl: "git@github.com:team/skills.git",
+      updatedAt: createdAt
+    });
+    await db.insert(skillUnits).values({
+      createdAt,
+      discoveryMethod: "convention",
+      entryPath: "old/SKILL.md",
+      id: "repo-1__old",
+      name: "Old Skill",
+      repositoryId: "repo-1",
+      rootPath: "old",
+      status: "ready",
+      updatedAt: createdAt
+    });
+
+    const syncRunId = await repositoryRepository.startSyncRun({
+      repositoryId: "repo-1",
+      startedAt: createdAt
+    });
+    await expect(db.select().from(syncRuns)).resolves.toMatchObject([
+      {
+        id: syncRunId,
+        repositoryId: "repo-1",
+        startedAt: createdAt,
+        status: "running"
+      }
+    ]);
+
+    const result = await repositoryRepository.recordSyncResult({
+      commitSha: "abcdef123456",
+      discoveredSkills,
+      repositoryId: "repo-1",
+      startedAt: createdAt,
+      syncRunId
+    });
+
+    expect(result).toEqual({
+      commitSha: "abcdef123456",
+      repositoryId: "repo-1",
+      scan: { added: 2, changed: 0, removed: 1, warnings: 0 },
+      skillUnits: 2,
+      status: "ready"
+    });
+    await expect(db.select().from(skillUnits).orderBy(skillUnits.entryPath)).resolves.toMatchObject(
+      [
+        {
+          entryPath: "skills/release-notes/SKILL.md",
+          id: "repo-1__skills-release-notes",
+          name: "Release Notes",
+          repositoryId: "repo-1"
+        },
+        {
+          entryPath: "skills/review-bot/SKILL.md",
+          id: "repo-1__skills-review-bot",
+          name: "Review Bot",
+          repositoryId: "repo-1"
+        }
+      ]
+    );
+    await expect(db.select().from(skillVersions).orderBy(skillVersions.id)).resolves.toMatchObject([
+      {
+        commitSha: "abcdef123456",
+        id: "repo-1__skills-release-notes__abcdef123456",
+        skillUnitId: "repo-1__skills-release-notes"
+      },
+      {
+        commitSha: "abcdef123456",
+        id: "repo-1__skills-review-bot__abcdef123456",
+        skillUnitId: "repo-1__skills-review-bot"
+      }
+    ]);
+    const repositoryRows = await repositoryRepository.list();
+    expect(repositoryRows[0]?.lastScannedCommitSha).toBe("abcdef123456");
+    expect(JSON.parse(repositoryRows[0]?.configJson ?? "{}")).toMatchObject({
+      lastScanLabel: "刚刚同步",
+      scan: { added: 2, changed: 0, removed: 1, warnings: 0 },
+      skillUnits: 2,
+      status: "ready"
+    });
+    await expect(db.select().from(syncRuns)).resolves.toMatchObject([
+      {
+        endCommitSha: "abcdef123456",
+        errorMessage: null,
+        id: syncRunId,
+        repositoryId: "repo-1",
+        startCommitSha: null,
+        status: "success"
+      }
+    ]);
+  });
+
+  it("updates the running sync run when sync fails", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+    const createdAt = new Date("2026-06-14T00:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: "{}",
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-1",
+      lastScannedCommitSha: "before-sha",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills",
+      providerId: "github",
+      remoteUrl: "git@github.com:team/skills.git",
+      updatedAt: createdAt
+    });
+
+    const syncRunId = await repositoryRepository.startSyncRun({
+      repositoryId: "repo-1",
+      startedAt: createdAt
+    });
+    const result = await repositoryRepository.recordSyncFailure({
+      error: {
+        category: "network",
+        logPath: "/tmp/sync.log",
+        message: "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。"
+      },
+      repositoryId: "repo-1",
+      startedAt: createdAt,
+      syncRunId
+    });
+
+    expect(result).toMatchObject({
+      error: {
+        category: "network"
+      },
+      repositoryId: "repo-1",
+      status: "failed"
+    });
+    await expect(db.select().from(syncRuns)).resolves.toMatchObject([
+      {
+        endCommitSha: null,
+        errorMessage:
+          "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。",
+        id: syncRunId,
+        logPath: "/tmp/sync.log",
+        repositoryId: "repo-1",
+        startCommitSha: "before-sha",
+        status: "failed"
+      }
+    ]);
+  });
+
+  it("marks stale running sync runs as interrupted on startup recovery", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+    const createdAt = new Date("2026-06-14T00:00:00.000Z");
+
+    await db.insert(syncRuns).values([
+      {
+        endCommitSha: null,
+        errorMessage: null,
+        finishedAt: null,
+        id: "sync-running",
+        logPath: null,
+        repositoryId: "repo-1",
+        startCommitSha: "before-sha",
+        startedAt: createdAt,
+        status: "running",
+        summaryJson: "{}"
+      },
+      {
+        endCommitSha: "after-sha",
+        errorMessage: null,
+        finishedAt: createdAt,
+        id: "sync-success",
+        logPath: null,
+        repositoryId: "repo-1",
+        startCommitSha: "before-sha",
+        startedAt: createdAt,
+        status: "success",
+        summaryJson: "{}"
+      }
+    ]);
+
+    const interrupted = await repositoryRepository.markInterruptedSyncRuns();
+
+    expect(interrupted).toBe(1);
+    await expect(db.select().from(syncRuns).orderBy(syncRuns.id)).resolves.toMatchObject([
+      {
+        errorMessage: "上次同步被中断，可能是应用异常退出。",
+        id: "sync-running",
+        status: "interrupted"
+      },
+      {
+        errorMessage: null,
+        id: "sync-success",
+        status: "success"
+      }
+    ]);
   });
 });

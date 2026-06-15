@@ -5,6 +5,7 @@ import { I18nextProvider } from "react-i18next";
 
 import { RepositoriesPage } from "./repositories-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
+import type { RepositoriesSyncResult } from "@/global";
 import { providerApiRecordsFixture, repositoryApiRecordsFixture } from "@/test/api-fixtures";
 
 const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
@@ -28,6 +29,7 @@ const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
     listRepositories:
       skillsManager?.listRepositories ??
       vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+    syncRepositories: skillsManager?.syncRepositories,
     platform: "win32"
   };
 
@@ -84,7 +86,7 @@ describe("RepositoriesPage", () => {
     expect(
       screen.getByRole("button", { name: "Team skills repository" }).closest("div")
     ).toHaveClass(
-      "grid-cols-[34px_minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_minmax(52px,0.45fr)]"
+      "grid-cols-[34px_minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_34px_minmax(52px,0.45fr)]"
     );
   });
 
@@ -124,11 +126,308 @@ describe("RepositoriesPage", () => {
 
     fireEvent.click(screen.getByLabelText("选择 Design lab prompts"));
     expect(syncButton).toBeEnabled();
+  });
 
-    fireEvent.click(syncButton);
+  it("confirms local source copy before syncing checked local paths", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const syncRepositories = vi.fn().mockResolvedValue({
+      results: [
+        {
+          commitSha: "local",
+          repositoryId: "local-dev-skills",
+          scan: { added: 1, changed: 0, removed: 0, warnings: 0 },
+          skillUnits: 1,
+          status: "ready"
+        }
+      ]
+    });
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByLabelText("选择 Local development skills"));
+    fireEvent.click(screen.getByRole("button", { name: "同步" }));
+
+    await waitFor(() => expect(confirmSpy).toHaveBeenCalled());
+    expect(confirmSpy.mock.calls[0]?.[0]).toContain("会复制文件");
+    expect(confirmSpy.mock.calls[0]?.[0]).toContain("旧地址的文件需要用户手动删除");
+    await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["local-dev-skills"]));
+    expect(listRepositories).toHaveBeenCalledTimes(2);
+
+    confirmSpy.mockRestore();
+  });
+
+  it("syncs a single source from the row sync icon", async () => {
+    const syncRepositories = vi.fn().mockResolvedValue({
+      results: [
+        {
+          commitSha: "8f2c91a",
+          repositoryId: "team-skills",
+          scan: { added: 0, changed: 1, removed: 0, warnings: 0 },
+          skillUnits: 12,
+          status: "ready"
+        }
+      ]
+    });
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByLabelText("Team skills repository 尚未开始同步。"));
+
+    await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
+    expect(listRepositories).toHaveBeenCalledTimes(2);
     expect(
-      within(screen.getByLabelText("来源详情")).getAllByText("刚刚同步").length
-    ).toBeGreaterThan(0);
+      await screen.findByLabelText(
+        "Team skills repository 同步完成。已入库 12 个 Skills。新增 0，更新 1，移除 0，警告 0。commit 8f2c91a"
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("选择 Team skills repository")).not.toBeChecked();
+  });
+
+  it("shows an animated per-source sync indicator while a source is syncing", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    let resolveSync: (value: RepositoriesSyncResult) => void = () => undefined;
+    const syncRepositories = vi.fn(
+      () =>
+        new Promise<RepositoriesSyncResult>((resolve) => {
+          resolveSync = resolve;
+        })
+    );
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByLabelText("选择 Local development skills"));
+    fireEvent.click(screen.getByRole("button", { name: "同步" }));
+
+    const indicator = await screen.findByLabelText(
+      "Local development skills 正在同步。正在复制或拉取来源，并扫描 SKILL.md。缓存目录 D:/workspace/local-skills"
+    );
+    expect(indicator).not.toHaveClass("animate-spin");
+    expect(indicator).not.toBeDisabled();
+    expect(indicator).toHaveAttribute("aria-disabled", "true");
+    expect(indicator.querySelector("svg")).toHaveClass("animate-spin");
+
+    resolveSync({
+      results: [
+        {
+          commitSha: "local",
+          repositoryId: "local-dev-skills",
+          scan: { added: 1, changed: 0, removed: 0, warnings: 0 },
+          skillUnits: 1,
+          status: "ready"
+        }
+      ]
+    });
+
+    confirmSpy.mockRestore();
+  });
+
+  it("keeps batch sync available and skips sources that are already syncing", async () => {
+    let resolveSync: (value: RepositoriesSyncResult) => void = () => undefined;
+    const syncRepositories = vi.fn((repositoryIds: string[]): Promise<RepositoriesSyncResult> => {
+      if (repositoryIds.includes("team-skills")) {
+        return new Promise<RepositoriesSyncResult>((resolve) => {
+          resolveSync = resolve;
+        });
+      }
+
+      return Promise.resolve({
+        results: [
+          {
+            commitSha: "21ab9d0",
+            repositoryId: "design-lab",
+            scan: { added: 0, changed: 1, removed: 0, warnings: 0 },
+            skillUnits: 7,
+            status: "ready"
+          }
+        ]
+      });
+    });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByLabelText("Team skills repository 尚未开始同步。"));
+    await screen.findByLabelText(
+      "Team skills repository 正在同步。正在复制或拉取来源，并扫描 SKILL.md。缓存目录 ~/.skills-manager/cache/team-skills"
+    );
+
+    fireEvent.click(screen.getByLabelText("选择 Team skills repository"));
+    fireEvent.click(screen.getByLabelText("选择 Design lab prompts"));
+    expect(screen.getByRole("button", { name: "同步" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "同步" }));
+
+    await waitFor(() => expect(syncRepositories).toHaveBeenCalledTimes(2));
+    expect(syncRepositories).toHaveBeenNthCalledWith(1, ["team-skills"]);
+    expect(syncRepositories).toHaveBeenNthCalledWith(2, ["design-lab"]);
+    expect(
+      await screen.findByLabelText(
+        "Design lab prompts 同步完成。已入库 7 个 Skills。新增 0，更新 1，移除 0，警告 0。commit 21ab9d0"
+      )
+    ).toBeInTheDocument();
+
+    resolveSync({
+      results: [
+        {
+          commitSha: "8f2c91a",
+          repositoryId: "team-skills",
+          scan: { added: 0, changed: 1, removed: 0, warnings: 0 },
+          skillUnits: 12,
+          status: "ready"
+        }
+      ]
+    });
+  });
+
+  it("keeps a successful per-source sync indicator with the result summary", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const syncRepositories = vi.fn().mockResolvedValue({
+      results: [
+        {
+          commitSha: "local",
+          repositoryId: "local-dev-skills",
+          scan: { added: 1, changed: 0, removed: 0, warnings: 0 },
+          skillUnits: 1,
+          status: "ready"
+        }
+      ]
+    });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByLabelText("选择 Local development skills"));
+    fireEvent.click(screen.getByRole("button", { name: "同步" }));
+
+    expect(
+      await screen.findByLabelText(
+        "Local development skills 同步完成。已入库 1 个 Skills。新增 1，更新 0，移除 0，警告 0。commit local"
+      )
+    ).toBeInTheDocument();
+
+    confirmSpy.mockRestore();
+  });
+
+  it("keeps a failed per-source sync indicator with the error message", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const syncRepositories = vi.fn().mockRejectedValue(new Error("Permission denied"));
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByLabelText("选择 Local development skills"));
+    fireEvent.click(screen.getByRole("button", { name: "同步" }));
+
+    expect(
+      await screen.findByLabelText("Local development skills 同步失败。Permission denied")
+    ).toBeInTheDocument();
+
+    confirmSpy.mockRestore();
+  });
+
+  it("shows the friendly failure from a per-source sync result", async () => {
+    const friendlyMessage =
+      "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。";
+    const syncRepositories = vi.fn().mockResolvedValue({
+      results: [
+        {
+          error: {
+            category: "network",
+            logPath: "/tmp/sync.log",
+            message: friendlyMessage
+          },
+          repositoryId: "team-skills",
+          scan: { added: 0, changed: 0, removed: 0, warnings: 1 },
+          skillUnits: 0,
+          status: "failed"
+        }
+      ]
+    });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByLabelText("选择 Team skills repository"));
+    fireEvent.click(screen.getByRole("button", { name: "同步" }));
+
+    expect(
+      await screen.findByLabelText(`Team skills repository 同步失败。${friendlyMessage}`)
+    ).toBeInTheDocument();
+    expect(screen.queryByText("RPC failed")).not.toBeInTheDocument();
   });
 
   it("toggles source enabled state from the table", async () => {

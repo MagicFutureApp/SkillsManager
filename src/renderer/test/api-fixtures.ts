@@ -1,5 +1,6 @@
 import type { ProviderApiRecord, ProviderConfig } from "../../core/providers/provider-api";
 import type { RepositoryApiRecord, RepositoryConfig } from "../../core/repositories/repository-api";
+import type { SkillApiRecord } from "../../core/skills/skill-api";
 
 const fixtureDate = "2026-04-28T00:00:00.000Z";
 
@@ -224,5 +225,22 @@ export const repositoryApiRecordsFixture: RepositoryApiRecord[] = [
     providerId: "bitbucket",
     remoteUrl: "git@bitbucket.org:support/legacy-skills.git",
     updatedAt: fixtureDate
+  }
+];
+
+export const skillApiRecordsFixture: SkillApiRecord[] = [
+  {
+    description: "Reviews pull requests with concise, actionable feedback.",
+    enabled: true,
+    entry: "skills/review-bot/SKILL.md",
+    id: "team-skills__skills-review-bot",
+    name: "Review Bot",
+    repository: "Team skills repository",
+    repositoryId: "team-skills",
+    skillId: "skills-review-bot",
+    status: "ready",
+    tags: ["review", "git"],
+    targets: [],
+    version: "8f2c91a"
   }
 ];

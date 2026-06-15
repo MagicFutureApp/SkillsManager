@@ -1,15 +1,20 @@
 import { ipcMain } from "electron";
-import { rm } from "node:fs/promises";
+import { cp, mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { createRepositoryRepository } from "../../db/repositories/repositoryRepository.js";
 import { inspectRepositorySource } from "../../core/repositories/source-inspection.js";
+import { scanSkillDirectory } from "../../core/skills/skill-scanner.js";
 import type { RepositorySourceInspection } from "../../core/repositories/source-inspection.js";
 import type {
   CreateRepositoryInput,
   DeleteRepositoryResult,
   RepositoryApiRecord,
-  RepositoryDeletePreview
+  RepositoryDeletePreview,
+  RepositorySyncFailure,
+  RepositorySyncFailureCategory,
+  RepositorySyncResultItem
 } from "../../core/repositories/repository-api.js";
 import type { createDbClient } from "../../db/client.js";
 
@@ -17,10 +22,22 @@ export type RepositoriesListResult = {
   repositories: RepositoryApiRecord[];
 };
 
+export type RepositoriesSyncResult = {
+  results: RepositorySyncResultItem[];
+};
+
 type DbClient = ReturnType<typeof createDbClient>;
 type RepositoryFileOperations = {
   removeLocalCache: (localCachePath: string) => Promise<void>;
 };
+type RepositorySyncOperations = {
+  copyLocalSource: (sourcePath: string, cachePath: string) => Promise<void>;
+  ensureGitRepository: (remoteUrl: string, cachePath: string, branch: string) => Promise<void>;
+  logDirectory?: string;
+  resolveCommitSha: (cachePath: string) => Promise<string>;
+};
+
+const syncingRepositoryIds = new Set<string>();
 
 export const getRepositories = async (db: DbClient): Promise<RepositoriesListResult> => {
   const repositoryRepository = createRepositoryRepository(db);
@@ -61,6 +78,91 @@ export const getRepositoryDeletePreview = async (
   return repositoryRepository.getDeletePreview(repositoryId);
 };
 
+export const syncRepositories = async (
+  db: DbClient,
+  repositoryIds: string[],
+  operations: RepositorySyncOperations = defaultSyncOperations
+): Promise<RepositoriesSyncResult> => {
+  const repositoryRepository = createRepositoryRepository(db);
+  const repositoriesResult = await getRepositories(db);
+  const repositoriesById = new Map(
+    repositoriesResult.repositories.map((repository) => [repository.id, repository])
+  );
+  const results: RepositoriesSyncResult["results"] = [];
+
+  for (const repositoryId of repositoryIds) {
+    const repository = repositoriesById.get(repositoryId);
+
+    if (!repository) {
+      throw new Error("Repository source not found.");
+    }
+
+    if (syncingRepositoryIds.has(repositoryId)) {
+      results.push(buildSkippedSyncResult(repositoryId));
+      continue;
+    }
+
+    syncingRepositoryIds.add(repositoryId);
+
+    const startedAt = new Date();
+    let syncRunId: string | null = null;
+    const cachePath = expandHomePath(repository.localCachePath);
+    const remoteUrl = expandHomePath(repository.remoteUrl);
+
+    try {
+      syncRunId = await repositoryRepository.startSyncRun({
+        repositoryId,
+        startedAt
+      });
+
+      if (isLocalPath(repository.remoteUrl)) {
+        await operations.copyLocalSource(remoteUrl, cachePath);
+      } else {
+        await operations.ensureGitRepository(repository.remoteUrl, cachePath, repository.branch);
+      }
+
+      const discoveredSkills = await scanSkillDirectory(cachePath);
+
+      if (!discoveredSkills.length) {
+        throw new EmptySkillSourceError(cachePath);
+      }
+
+      const commitSha = await operations.resolveCommitSha(cachePath);
+
+      results.push(
+        await repositoryRepository.recordSyncResult({
+          commitSha,
+          discoveredSkills,
+          repositoryId,
+          startedAt,
+          syncRunId
+        })
+      );
+    } catch (error) {
+      const failure = await buildSyncFailure({
+        cachePath,
+        error,
+        logDirectory: operations.logDirectory,
+        remoteUrl,
+        repositoryId
+      });
+
+      results.push(
+        await repositoryRepository.recordSyncFailure({
+          error: failure,
+          repositoryId,
+          startedAt,
+          ...(syncRunId ? { syncRunId } : {})
+        })
+      );
+    } finally {
+      syncingRepositoryIds.delete(repositoryId);
+    }
+  }
+
+  return { results };
+};
+
 export const registerRepositoriesIpc = (db: DbClient): void => {
   ipcMain.handle("repositories:list", (): Promise<RepositoriesListResult> => {
     return getRepositories(db);
@@ -93,6 +195,13 @@ export const registerRepositoriesIpc = (db: DbClient): void => {
       return inspectRepositorySource(remoteUrl);
     }
   );
+
+  ipcMain.handle(
+    "repositories:sync",
+    (_event, repositoryIds: string[]): Promise<RepositoriesSyncResult> => {
+      return syncRepositories(db, repositoryIds);
+    }
+  );
 };
 
 const normalizeCreateRepositoryInput = (input: CreateRepositoryInput): CreateRepositoryInput => {
@@ -117,6 +226,40 @@ const removeRepositoryLocalCache = async (localCachePath: string): Promise<void>
   await rm(expandHomePath(localCachePath), { force: true, recursive: true });
 };
 
+const defaultSyncOperations: RepositorySyncOperations = {
+  async copyLocalSource(sourcePath, cachePath) {
+    await rm(cachePath, { force: true, recursive: true });
+    await mkdir(path.dirname(cachePath), { recursive: true });
+    await cp(sourcePath, cachePath, {
+      dereference: false,
+      filter: (source) => !source.split(path.sep).includes(".git"),
+      force: true,
+      recursive: true
+    });
+  },
+
+  async ensureGitRepository(remoteUrl, cachePath, branch) {
+    await mkdir(path.dirname(cachePath), { recursive: true });
+
+    if (await pathExists(path.join(cachePath, ".git"))) {
+      await runGit(["-C", cachePath, "fetch", "--prune", "origin"]);
+      await runGit(["-C", cachePath, "checkout", branch]);
+      await runGit(["-C", cachePath, "pull", "--ff-only", "origin", branch]);
+      return;
+    }
+
+    await runGit(["clone", "--branch", branch, "--single-branch", remoteUrl, cachePath]);
+  },
+
+  async resolveCommitSha(cachePath) {
+    if (await pathExists(path.join(cachePath, ".git"))) {
+      return runGit(["-C", cachePath, "rev-parse", "HEAD"]);
+    }
+
+    return "local";
+  }
+};
+
 const expandHomePath = (value: string): string => {
   if (value === "~") {
     return os.homedir();
@@ -127,4 +270,238 @@ const expandHomePath = (value: string): string => {
   }
 
   return value;
+};
+
+const isLocalPath = (value: string): boolean => {
+  return /^[A-Za-z]:[\\/]/.test(value) || value.startsWith("/") || value.startsWith(".");
+};
+
+const pathExists = async (value: string): Promise<boolean> => {
+  try {
+    await stat(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const buildSkippedSyncResult = (repositoryId: string): RepositorySyncResultItem => {
+  return {
+    repositoryId,
+    scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+    skillUnits: 0,
+    status: "skipped"
+  };
+};
+
+class EmptySkillSourceError extends Error {
+  constructor(cachePath: string) {
+    super(`No SKILL.md files found in ${cachePath}`);
+    this.name = "EmptySkillSourceError";
+  }
+}
+
+const buildSyncFailure = async ({
+  cachePath,
+  error,
+  logDirectory,
+  remoteUrl,
+  repositoryId
+}: {
+  cachePath: string;
+  error: unknown;
+  logDirectory?: string;
+  remoteUrl: string;
+  repositoryId: string;
+}): Promise<RepositorySyncFailure> => {
+  const rawError = stringifySyncError(error);
+  const category = categorizeSyncError(error, rawError);
+  const message = friendlySyncErrorMessage(category);
+  const logPath = await writeSyncErrorLog({
+    cachePath,
+    category,
+    message,
+    rawError,
+    remoteUrl,
+    repositoryId,
+    rootDirectory: logDirectory
+  });
+
+  return {
+    category,
+    logPath,
+    message
+  };
+};
+
+const categorizeSyncError = (error: unknown, rawError: string): RepositorySyncFailureCategory => {
+  const normalized = rawError.toLowerCase();
+  const errorCode = typeof error === "object" && error ? (error as { code?: unknown }).code : null;
+
+  if (error instanceof EmptySkillSourceError || normalized.includes("no skill.md files found")) {
+    return "not-a-skill";
+  }
+
+  if (
+    normalized.includes("authentication failed") ||
+    normalized.includes("permission denied (publickey)") ||
+    normalized.includes("could not read from remote repository") ||
+    normalized.includes("repository not found") ||
+    normalized.includes("access denied")
+  ) {
+    return "auth";
+  }
+
+  if (
+    normalized.includes("connection reset") ||
+    normalized.includes("early eof") ||
+    normalized.includes("unexpected disconnect") ||
+    normalized.includes("could not resolve host") ||
+    normalized.includes("failed to connect") ||
+    normalized.includes("network is unreachable") ||
+    normalized.includes("operation timed out")
+  ) {
+    return "network";
+  }
+
+  if (
+    errorCode === "EACCES" ||
+    errorCode === "EPERM" ||
+    errorCode === "ENOENT" ||
+    errorCode === "ENOSPC" ||
+    normalized.includes("eacces") ||
+    normalized.includes("eperm") ||
+    normalized.includes("enoent") ||
+    normalized.includes("enospc") ||
+    normalized.includes("permission denied") ||
+    normalized.includes("no such file or directory") ||
+    normalized.includes("read-only file system")
+  ) {
+    return "filesystem";
+  }
+
+  if (normalized.includes("git") || normalized.includes("fatal:")) {
+    return "git";
+  }
+
+  return "unknown";
+};
+
+const friendlySyncErrorMessage = (category: RepositorySyncFailureCategory): string => {
+  if (category === "network") {
+    return "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。";
+  }
+
+  if (category === "auth") {
+    return "没有权限访问这个 Git 来源。请确认仓库地址正确，并在系统 Git/SSH 凭据中完成登录或授权。";
+  }
+
+  if (category === "filesystem") {
+    return "本地目录无法读取或缓存目录无法写入。请检查路径是否存在、磁盘空间和文件权限。";
+  }
+
+  if (category === "not-a-skill") {
+    return "没有找到可识别的 Skills。请确认来源目录里包含 SKILL.md。";
+  }
+
+  if (category === "source-not-found") {
+    return "没有找到这个来源记录，请刷新后重试。";
+  }
+
+  if (category === "git") {
+    return "Git 同步失败。请检查仓库地址、分支名称和本机 Git 配置后重试。";
+  }
+
+  return "同步失败。请稍后重试，或查看同步日志了解详细原因。";
+};
+
+const writeSyncErrorLog = async ({
+  cachePath,
+  category,
+  message,
+  rawError,
+  remoteUrl,
+  repositoryId,
+  rootDirectory
+}: {
+  cachePath: string;
+  category: RepositorySyncFailureCategory;
+  message: string;
+  rawError: string;
+  remoteUrl: string;
+  repositoryId: string;
+  rootDirectory?: string;
+}): Promise<string | null> => {
+  try {
+    const directory = rootDirectory ?? path.join(os.homedir(), ".skills-manager", "logs", "sync");
+    const timestamp = new Date().toISOString();
+    const logPath = path.join(
+      directory,
+      `${sanitizeLogFileName(repositoryId)}-${timestamp.replace(/[:.]/g, "-")}.log`
+    );
+
+    await mkdir(directory, { recursive: true });
+    await writeFile(
+      logPath,
+      [
+        `timestamp: ${timestamp}`,
+        `repositoryId: ${repositoryId}`,
+        `remoteUrl: ${remoteUrl}`,
+        `cachePath: ${cachePath}`,
+        `category: ${category}`,
+        `friendlyMessage: ${message}`,
+        "",
+        "rawError:",
+        rawError
+      ].join("\n"),
+      "utf8"
+    );
+
+    return logPath;
+  } catch {
+    return null;
+  }
+};
+
+const sanitizeLogFileName = (value: string): string => {
+  return value.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-|-$/g, "") || "repository";
+};
+
+const stringifySyncError = (error: unknown): string => {
+  if (error instanceof Error) {
+    return [error.message, error.stack].filter(Boolean).join("\n");
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error, null, 2);
+  } catch {
+    return String(error);
+  }
+};
+
+const runGit = (args: string[]): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const child = spawn("git", args, { stdio: ["ignore", "pipe", "pipe"] });
+    const stdout: Buffer[] = [];
+    const stderr: Buffer[] = [];
+
+    child.stdout.on("data", (chunk: Buffer) => stdout.push(chunk));
+    child.stderr.on("data", (chunk: Buffer) => stderr.push(chunk));
+    child.on("error", reject);
+    child.on("close", (code) => {
+      const output = Buffer.concat(stdout).toString("utf8").trim();
+      const errorOutput = Buffer.concat(stderr).toString("utf8").trim();
+
+      if (code === 0) {
+        resolve(output);
+        return;
+      }
+
+      reject(new Error(errorOutput || `git exited with code ${code ?? "unknown"}`));
+    });
+  });
 };

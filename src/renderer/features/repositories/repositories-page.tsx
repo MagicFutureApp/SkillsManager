@@ -10,10 +10,7 @@ import { useTranslation } from "react-i18next";
 
 export const RepositoriesPage = () => {
   const { t } = useTranslation();
-  const page = useRepositoriesPageState({
-    justForceScanned: t("repositories.scan.justForceScanned"),
-    justSynced: t("repositories.scan.justSynced")
-  });
+  const page = useRepositoriesPageState();
 
   return (
     <RepositoriesPageProvider state={page}>

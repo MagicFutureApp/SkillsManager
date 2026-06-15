@@ -6,12 +6,14 @@ import { registerHealthIpc } from "./ipc/health";
 import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
 import { registerProvidersIpc } from "./ipc/providers.js";
 import { registerRepositoriesIpc } from "./ipc/repositories.js";
+import { registerSkillsIpc } from "./ipc/skills.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
 import { getTrayIconPath } from "./tray-icon.js";
 import { buildMainWindowOptions, disableWindowMenuBar } from "./window-menu.js";
 import { APP_META } from "../core/app-constants.js";
 import { createDbClient } from "../db/client.js";
+import { createRepositoryRepository } from "../db/repositories/repositoryRepository.js";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -99,11 +101,18 @@ void app
   .then(async () => {
     const db = createAppDb();
 
+    try {
+      await createRepositoryRepository(db).markInterruptedSyncRuns();
+    } catch (error: unknown) {
+      console.error("Failed to recover interrupted repository sync runs.", error);
+    }
+
     registerAppInfoIpc();
     registerHealthIpc();
     registerLocaleIpc();
     registerProvidersIpc(db);
     registerRepositoriesIpc(db);
+    registerSkillsIpc(db);
     await createMainWindow();
     createTray();
 
