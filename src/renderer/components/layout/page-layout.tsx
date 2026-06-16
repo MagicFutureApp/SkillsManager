@@ -8,7 +8,7 @@ type PageLayoutProps = {
 
 export const PageLayout = ({ Main, Sider, siderLabel }: PageLayoutProps) => {
   return (
-    <div className="grid min-h-svh grid-cols-[minmax(620px,1fr)_360px] bg-background">
+    <div className="grid min-h-full grid-cols-[minmax(620px,1fr)_360px] bg-background">
       <main className="min-w-0 p-7">
         <Main />
       </main>

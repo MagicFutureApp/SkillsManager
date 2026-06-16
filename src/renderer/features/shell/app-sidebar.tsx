@@ -49,8 +49,7 @@ export const AppSidebar = ({
   return (
     <aside
       className={cn(
-        "flex min-h-svh flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,padding]",
-        "min-h-[calc(100svh-44px)]",
+        "flex min-h-[calc(100svh-44px)] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,padding]",
         isCollapsed ? "gap-4 px-3 py-4" : "gap-6 px-4 py-5"
       )}
       aria-label={t("shell.navigation.mainNavigation")}
