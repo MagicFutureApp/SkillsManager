@@ -31,9 +31,11 @@ describe("createSkillRepository", () => {
     });
     await db.insert(skillUnits).values({
       createdAt,
+      description: "Reviews pull requests from SKILL.md frontmatter.",
       discoveryMethod: "convention",
       entryPath: "skills/review-bot/SKILL.md",
       id: "skill-1",
+      license: "MIT",
       name: "Review Bot",
       repositoryId: "repo-1",
       rootPath: "skills/review-bot",
@@ -45,7 +47,7 @@ describe("createSkillRepository", () => {
       createdAt,
       id: "version-1",
       metadataSnapshotJson: JSON.stringify({
-        description: "Reviews pull requests.",
+        description: "Outdated snapshot description.",
         skillKey: "skills-review-bot",
         tags: ["review", "git"]
       }),
@@ -54,7 +56,7 @@ describe("createSkillRepository", () => {
 
     await expect(createSkillRepository(db).list()).resolves.toEqual([
       {
-        description: "Reviews pull requests.",
+        description: "Reviews pull requests from SKILL.md frontmatter.",
         enabled: true,
         entry: "skills/review-bot/SKILL.md",
         id: "skill-1",

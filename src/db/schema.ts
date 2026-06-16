@@ -26,6 +26,8 @@ export const skillUnits = sqliteTable("skill_units", {
   id: text("id").primaryKey(),
   repositoryId: text("repository_id").notNull(),
   name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  license: text("license").notNull().default(""),
   entryPath: text("entry_path").notNull(),
   rootPath: text("root_path").notNull(),
   discoveryMethod: text("discovery_method").notNull(),

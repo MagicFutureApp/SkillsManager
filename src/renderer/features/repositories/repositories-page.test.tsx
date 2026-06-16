@@ -524,7 +524,10 @@ describe("RepositoriesPage", () => {
       Node.DOCUMENT_POSITION_FOLLOWING
     );
     expect(patternsField).toHaveValue("");
-    expect(patternsField).toHaveAttribute("placeholder", "例: skills/*/SKILL.md 或 SKILL.md 等");
+    expect(patternsField).toHaveAttribute(
+      "placeholder",
+      "例: **/SKILL.md、skills/*/SKILL.md 或 SKILL.md"
+    );
     expect(within(dialog).queryByText("缓存目录")).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("名称"), {
       target: { value: "huashu-design" }
@@ -637,7 +640,7 @@ describe("RepositoriesPage", () => {
       about: "Composable Claude skills from Anthropic.",
       branch: "main",
       name: "anthropics/skills",
-      patterns: ["SKILL.md"],
+      patterns: ["skills/*/SKILL.md", "template/SKILL.md"],
       provider: "GitHub"
     });
     window.skillsManager = {
@@ -661,7 +664,9 @@ describe("RepositoriesPage", () => {
     expect(await within(dialog).findByDisplayValue("anthropics/skills")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("来源类型")).toHaveTextContent("GitHub");
     expect(within(dialog).getByLabelText("分支")).toHaveValue("main");
-    expect(within(dialog).getByLabelText("发现入口")).toHaveValue("SKILL.md");
+    expect(within(dialog).getByLabelText("发现入口")).toHaveValue(
+      "skills/*/SKILL.md, template/SKILL.md"
+    );
     expect(within(dialog).getByLabelText("备注")).toHaveValue(
       "Composable Claude skills from Anthropic."
     );
@@ -696,6 +701,31 @@ describe("RepositoriesPage", () => {
     expect(await within(dialog).findByDisplayValue("example/no-skills")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("发现入口")).toHaveValue("");
     expect(inspectRepositorySource).toHaveBeenCalledWith("https://github.com/example/no-skills");
+  });
+
+  it("shows the returned network problem when source inspection fails", async () => {
+    const networkError = "网络连接中断，暂时无法解析这个 GitHub 来源。请稍后重试。";
+    const inspectRepositorySource = vi.fn().mockRejectedValue(new Error(networkError));
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      inspectRepositorySource,
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32"
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    const dialog = screen.getByRole("dialog", { name: "新增来源" });
+    fireEvent.change(within(dialog).getByLabelText("URL / 本机路径"), {
+      target: { value: "https://github.com/anthropics/skills" }
+    });
+
+    expect(await within(dialog).findByText(networkError)).toBeInTheDocument();
+    expect(inspectRepositorySource).toHaveBeenCalledWith("https://github.com/anthropics/skills");
   });
 
   it("renders English UI copy when initialized with en-US", async () => {

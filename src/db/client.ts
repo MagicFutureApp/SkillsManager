@@ -117,6 +117,8 @@ const ensureDbSchema = (sqlite: Database.Database): void => {
       id text PRIMARY KEY NOT NULL,
       repository_id text NOT NULL,
       name text NOT NULL,
+      description text DEFAULT '' NOT NULL,
+      license text DEFAULT '' NOT NULL,
       entry_path text NOT NULL,
       root_path text NOT NULL,
       discovery_method text NOT NULL,

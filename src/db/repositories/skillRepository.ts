@@ -7,7 +7,6 @@ import { repositories, skillUnits, skillVersions } from "../schema";
 type DbClient = ReturnType<typeof createDbClient>;
 
 type SkillMetadataSnapshot = {
-  description?: unknown;
   skillKey?: unknown;
   tags?: unknown;
 };
@@ -18,6 +17,7 @@ export const createSkillRepository = (db: DbClient) => {
       const rows = await db
         .select({
           commitSha: skillVersions.commitSha,
+          description: skillUnits.description,
           entryPath: skillUnits.entryPath,
           id: skillUnits.id,
           metadataSnapshotJson: skillVersions.metadataSnapshotJson,
@@ -42,7 +42,7 @@ export const createSkillRepository = (db: DbClient) => {
         const metadata = parseMetadataSnapshot(row.metadataSnapshotJson);
 
         return {
-          description: metadata.description,
+          description: row.description,
           enabled: row.status !== "removed",
           entry: row.entryPath,
           id: row.id,
@@ -62,19 +62,18 @@ export const createSkillRepository = (db: DbClient) => {
 
 const parseMetadataSnapshot = (
   metadataSnapshotJson: string
-): { description: string; skillKey: string; tags: string[] } => {
+): { skillKey: string; tags: string[] } => {
   try {
     const parsed = JSON.parse(metadataSnapshotJson) as SkillMetadataSnapshot;
 
     return {
-      description: typeof parsed.description === "string" ? parsed.description : "",
       skillKey: typeof parsed.skillKey === "string" ? parsed.skillKey : "",
       tags: Array.isArray(parsed.tags)
         ? parsed.tags.filter((tag): tag is string => typeof tag === "string")
         : []
     };
   } catch {
-    return { description: "", skillKey: "", tags: [] };
+    return { skillKey: "", tags: [] };
   }
 };
 

@@ -2,7 +2,6 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import skillportMark from "../../assets/skillport-mark.svg";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AppRouteId } from "@/app/route-config";
@@ -83,7 +82,6 @@ export const AppSidebar = ({
               .map((item) => {
                 const isActive = item.routeId === activeRouteId;
                 const Icon = item.icon;
-                const shouldShowBadge = Number(item.badge) > 0;
                 const label = t(item.labelKey);
 
                 const button = (
@@ -109,21 +107,6 @@ export const AppSidebar = ({
                         <span className="truncate">{label}</span>
                       </span>
                     )}
-                    {shouldShowBadge ? (
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "bg-background font-mono tabular-nums text-muted-foreground",
-                          isCollapsed
-                            ? "absolute -right-1 -top-0.5 h-4 min-w-4 px-1 text-[10px]"
-                            : "ml-3",
-                          isActive && "text-foreground"
-                        )}
-                        aria-hidden={isCollapsed ? "true" : undefined}
-                      >
-                        {item.badge}
-                      </Badge>
-                    ) : null}
                   </Button>
                 );
 

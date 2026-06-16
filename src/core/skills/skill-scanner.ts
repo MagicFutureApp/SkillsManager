@@ -1,10 +1,12 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { minimatch } from "minimatch";
 
 export type DiscoveredSkill = {
   description: string;
   discoveryMethod: "convention";
   entryPath: string;
+  license: string;
   name: string;
   rootPath: string;
   skillKey: string;
@@ -12,8 +14,14 @@ export type DiscoveredSkill = {
   tags: string[];
 };
 
-export const scanSkillDirectory = async (rootPath: string): Promise<DiscoveredSkill[]> => {
-  const skillEntries = await findSkillEntries(rootPath, rootPath);
+export const scanSkillDirectory = async (
+  rootPath: string,
+  discoveryEntries: string[] = []
+): Promise<DiscoveredSkill[]> => {
+  const skillEntries = filterSkillEntries(
+    await findSkillEntries(rootPath, rootPath),
+    normalizeDiscoveryEntries(discoveryEntries)
+  );
 
   return Promise.all(
     skillEntries.sort().map(async (entryPath) => {
@@ -26,6 +34,7 @@ export const scanSkillDirectory = async (rootPath: string): Promise<DiscoveredSk
         description: metadata.description,
         discoveryMethod: "convention",
         entryPath,
+        license: metadata.license,
         name: metadata.name,
         rootPath: rootPathRelative,
         skillKey: toSkillKey(rootPathRelative),
@@ -56,21 +65,94 @@ const findSkillEntries = async (rootPath: string, currentPath: string): Promise<
   return skillEntries;
 };
 
+const normalizeDiscoveryEntries = (entries: string[]): string[] => {
+  return entries
+    .map((entry) => toPosixPath(entry).trim().replace(/^\.\//, ""))
+    .filter((entry) => entry.endsWith("SKILL.md"));
+};
+
+const filterSkillEntries = (skillEntries: string[], discoveryEntries: string[]): string[] => {
+  if (!discoveryEntries.length) {
+    return skillEntries;
+  }
+
+  return skillEntries.filter((entryPath) =>
+    discoveryEntries.some((discoveryEntry) => matchesDiscoveryEntry(entryPath, discoveryEntry))
+  );
+};
+
+const matchesDiscoveryEntry = (entryPath: string, discoveryEntry: string): boolean => {
+  return minimatch(entryPath, discoveryEntry, { dot: true });
+};
+
 const parseSkillMarkdown = (
   markdown: string,
   rootPath: string
-): { description: string; name: string } => {
+): { description: string; license: string; name: string } => {
   const lines = markdown.split(/\r?\n/);
-  const heading = lines.find((line) => line.trim().startsWith("# "));
-  const description = lines.find((line) => {
+  const frontmatter = parseFrontmatter(lines);
+  const markdownLines = frontmatter.bodyLines;
+  const heading = markdownLines.find((line) => line.trim().startsWith("# "));
+  const description = markdownLines.find((line) => {
     const trimmedLine = line.trim();
     return trimmedLine && !trimmedLine.startsWith("#");
   });
 
   return {
-    description: description?.trim() ?? "",
-    name: heading?.replace(/^#\s+/, "").trim() || titleize(path.basename(rootPath))
+    description: frontmatter.description || description?.trim() || "",
+    license: frontmatter.license,
+    name:
+      frontmatter.name || heading?.replace(/^#\s+/, "").trim() || titleize(path.basename(rootPath))
   };
+};
+
+const parseFrontmatter = (
+  lines: string[]
+): { bodyLines: string[]; description: string; license: string; name: string } => {
+  if (lines[0]?.trim() !== "---") {
+    return { bodyLines: lines, description: "", license: "", name: "" };
+  }
+
+  const endIndex = lines.findIndex((line, index) => index > 0 && line.trim() === "---");
+
+  if (endIndex === -1) {
+    return { bodyLines: lines, description: "", license: "", name: "" };
+  }
+
+  const metadata = new Map<string, string>();
+
+  lines.slice(1, endIndex).forEach((line) => {
+    const separatorIndex = line.indexOf(":");
+
+    if (separatorIndex === -1) {
+      return;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+    const value = line.slice(separatorIndex + 1).trim();
+
+    if (key) {
+      metadata.set(key, unquoteYamlScalar(value));
+    }
+  });
+
+  return {
+    bodyLines: lines.slice(endIndex + 1),
+    description: metadata.get("description") ?? "",
+    license: metadata.get("license") ?? "",
+    name: metadata.get("name") ?? ""
+  };
+};
+
+const unquoteYamlScalar = (value: string): string => {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1);
+  }
+
+  return value;
 };
 
 const titleize = (value: string): string => {
@@ -84,6 +166,10 @@ const titleize = (value: string): string => {
 };
 
 const toSkillKey = (rootPath: string): string => {
+  if (rootPath === ".") {
+    return "skill";
+  }
+
   return rootPath
     .replace(/^\.+\//, "")
     .replace(/[^a-zA-Z0-9]+/g, "-")

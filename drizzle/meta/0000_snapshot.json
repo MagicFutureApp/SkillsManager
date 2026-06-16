@@ -75,10 +75,7 @@
       "indexes": {
         "agent_targets_type_normalized_path_uq": {
           "name": "agent_targets_type_normalized_path_uq",
-          "columns": [
-            "type",
-            "normalized_path"
-          ],
+          "columns": ["type", "normalized_path"],
           "isUnique": true
         }
       },
@@ -591,10 +588,7 @@
       "indexes": {
         "skill_target_preferences_skill_target_uq": {
           "name": "skill_target_preferences_skill_target_uq",
-          "columns": [
-            "skill_unit_id",
-            "agent_target_id"
-          ],
+          "columns": ["skill_unit_id", "agent_target_id"],
           "isUnique": true
         }
       },
@@ -626,6 +620,22 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "license": {
+          "name": "license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
         },
         "entry_path": {
           "name": "entry_path",

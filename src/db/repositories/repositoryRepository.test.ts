@@ -136,6 +136,26 @@ describe("createRepositoryRepository", () => {
     });
   });
 
+  it("splits multiple discovery entries from the saved form value", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+
+    await repositoryRepository.create({
+      branch: "main",
+      name: "anthropics-skills",
+      note: "",
+      patterns: "*/SKILL.md, skills/*/SKILL.md",
+      provider: "GitHub",
+      remoteUrl: "https://github.com/anthropics/skills"
+    });
+
+    const result = await repositoryRepository.list();
+
+    expect(JSON.parse(result[0]?.configJson ?? "{}")).toMatchObject({
+      patterns: ["*/SKILL.md", "skills/*/SKILL.md"]
+    });
+  });
+
   it("keeps discovery entries empty when the create input is empty", async () => {
     const db = createDbClient(":memory:");
     const repositoryRepository = createRepositoryRepository(db);
@@ -308,6 +328,7 @@ describe("createRepositoryRepository", () => {
         description: "Reviews pull requests.",
         discoveryMethod: "convention",
         entryPath: "skills/review-bot/SKILL.md",
+        license: "MIT",
         name: "Review Bot",
         rootPath: "skills/review-bot",
         skillKey: "skills-review-bot",
@@ -318,6 +339,7 @@ describe("createRepositoryRepository", () => {
         description: "Writes release notes.",
         discoveryMethod: "convention",
         entryPath: "skills/release-notes/SKILL.md",
+        license: "Proprietary",
         name: "Release Notes",
         rootPath: "skills/release-notes",
         skillKey: "skills-release-notes",
@@ -399,14 +421,18 @@ describe("createRepositoryRepository", () => {
     await expect(db.select().from(skillUnits).orderBy(skillUnits.entryPath)).resolves.toMatchObject(
       [
         {
+          description: "Writes release notes.",
           entryPath: "skills/release-notes/SKILL.md",
           id: "repo-1__skills-release-notes",
+          license: "Proprietary",
           name: "Release Notes",
           repositoryId: "repo-1"
         },
         {
+          description: "Reviews pull requests.",
           entryPath: "skills/review-bot/SKILL.md",
           id: "repo-1__skills-review-bot",
+          license: "MIT",
           name: "Review Bot",
           repositoryId: "repo-1"
         }

@@ -289,9 +289,11 @@ export const createRepositoryRepository = (db: DbClient) => {
         await db.insert(skillUnits).values(
           input.discoveredSkills.map((skill) => ({
             createdAt: now,
+            description: skill.description,
             discoveryMethod: skill.discoveryMethod,
             entryPath: skill.entryPath,
             id: buildSkillUnitId(input.repositoryId, skill.skillKey),
+            license: skill.license,
             name: skill.name,
             repositoryId: input.repositoryId,
             rootPath: skill.rootPath,
@@ -311,6 +313,7 @@ export const createRepositoryRepository = (db: DbClient) => {
                 description: skill.description,
                 discoveryMethod: skill.discoveryMethod,
                 entryPath: skill.entryPath,
+                license: skill.license,
                 rootPath: skill.rootPath,
                 skillKey: skill.skillKey,
                 tags: skill.tags
@@ -636,9 +639,10 @@ const buildSkillUnitId = (repositoryId: string, skillKey: string): string => {
 };
 
 const normalizeDiscoveryEntry = (entry: string): string[] => {
-  const trimmedEntry = entry.trim();
-
-  return trimmedEntry ? [trimmedEntry] : [];
+  return entry
+    .split(/[,\r\n]+/)
+    .map((pattern) => pattern.trim())
+    .filter(Boolean);
 };
 
 const providerNameFor = (

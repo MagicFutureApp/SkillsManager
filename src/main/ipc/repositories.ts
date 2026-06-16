@@ -6,6 +6,7 @@ import path from "node:path";
 import { createRepositoryRepository } from "../../db/repositories/repositoryRepository.js";
 import { inspectRepositorySource } from "../../core/repositories/source-inspection.js";
 import { scanSkillDirectory } from "../../core/skills/skill-scanner.js";
+import { getGitHubToken } from "./settings.js";
 import type { RepositorySourceInspection } from "../../core/repositories/source-inspection.js";
 import type {
   CreateRepositoryInput,
@@ -27,6 +28,10 @@ export type RepositoriesSyncResult = {
 };
 
 type DbClient = ReturnType<typeof createDbClient>;
+type RepositoryInspectionOperations = {
+  getGitHubToken: (db: DbClient) => Promise<string | null>;
+  inspectSource: typeof inspectRepositorySource;
+};
 type RepositoryFileOperations = {
   removeLocalCache: (localCachePath: string) => Promise<void>;
 };
@@ -78,6 +83,20 @@ export const getRepositoryDeletePreview = async (
   return repositoryRepository.getDeletePreview(repositoryId);
 };
 
+export const inspectRepositorySourceWithSettings = async (
+  db: DbClient,
+  remoteUrl: string,
+  operations: RepositoryInspectionOperations = {
+    getGitHubToken,
+    inspectSource: inspectRepositorySource
+  }
+): Promise<RepositorySourceInspection> => {
+  return operations.inspectSource(remoteUrl, {
+    githubToken: (await operations.getGitHubToken(db)) ?? undefined,
+    isDevelopment: isDevelopmentEnvironment()
+  });
+};
+
 export const syncRepositories = async (
   db: DbClient,
   repositoryIds: string[],
@@ -121,7 +140,10 @@ export const syncRepositories = async (
         await operations.ensureGitRepository(repository.remoteUrl, cachePath, repository.branch);
       }
 
-      const discoveredSkills = await scanSkillDirectory(cachePath);
+      const discoveredSkills = await scanSkillDirectory(
+        cachePath,
+        getRepositoryDiscoveryEntries(repository.configJson)
+      );
 
       if (!discoveredSkills.length) {
         throw new EmptySkillSourceError(cachePath);
@@ -191,8 +213,8 @@ export const registerRepositoriesIpc = (db: DbClient): void => {
 
   ipcMain.handle(
     "repositories:inspectSource",
-    (_event, remoteUrl: string): Promise<RepositorySourceInspection> => {
-      return inspectRepositorySource(remoteUrl);
+    async (_event, remoteUrl: string): Promise<RepositorySourceInspection> => {
+      return inspectRepositorySourceWithSettings(db, remoteUrl);
     }
   );
 
@@ -274,6 +296,22 @@ const expandHomePath = (value: string): string => {
 
 const isLocalPath = (value: string): boolean => {
   return /^[A-Za-z]:[\\/]/.test(value) || value.startsWith("/") || value.startsWith(".");
+};
+
+const isDevelopmentEnvironment = (): boolean => {
+  return process.env.NODE_ENV === "development" || Boolean(process.env.VITE_DEV_SERVER_URL);
+};
+
+const getRepositoryDiscoveryEntries = (configJson: string): string[] => {
+  try {
+    const parsed = JSON.parse(configJson) as { patterns?: unknown };
+
+    return Array.isArray(parsed.patterns)
+      ? parsed.patterns.filter((pattern): pattern is string => typeof pattern === "string")
+      : [];
+  } catch {
+    return [];
+  }
 };
 
 const pathExists = async (value: string): Promise<boolean> => {

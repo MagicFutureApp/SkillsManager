@@ -64,7 +64,7 @@ export const RepositoryModal = ({
       cachePath: editingRepository?.cachePath ?? "",
       name: editingRepository?.name ?? "",
       note: editingRepository?.note ?? "",
-      patterns: editingRepository?.patterns[0] ?? "",
+      patterns: formatDiscoveryPatterns(editingRepository?.patterns),
       provider: editingRepository?.provider ?? "GitHub",
       remoteUrl: editingRepository?.remoteUrl ?? ""
     }),
@@ -75,11 +75,13 @@ export const RepositoryModal = ({
   const [sourceInspectionStatus, setSourceInspectionStatus] = useState<
     "idle" | "loading" | "error"
   >("idle");
+  const [sourceInspectionErrorMessage, setSourceInspectionErrorMessage] = useState("");
   const touchedFieldsRef = useRef<Set<keyof RepositoryFormValues>>(new Set());
 
   useEffect(() => {
     setValues(initialValues);
     setError("");
+    setSourceInspectionErrorMessage("");
     setSourceInspectionStatus("idle");
     touchedFieldsRef.current = new Set();
   }, [initialValues, open]);
@@ -95,16 +97,19 @@ export const RepositoryModal = ({
     let isCurrent = true;
 
     setSourceInspectionStatus("loading");
+    setSourceInspectionErrorMessage("");
     const inspectTimer = window.setTimeout(() => {
       void inspectRepositorySource(remoteUrl)
         .then((inspection) => {
           if (isCurrent) {
             applyInspection(inspection);
+            setSourceInspectionErrorMessage("");
             setSourceInspectionStatus("idle");
           }
         })
-        .catch(() => {
+        .catch((error: unknown) => {
           if (isCurrent) {
+            setSourceInspectionErrorMessage(toErrorMessage(error));
             setSourceInspectionStatus("error");
           }
         });
@@ -127,7 +132,7 @@ export const RepositoryModal = ({
 
   const applyInspection = (inspection: RepositorySourceInspection) => {
     const touchedFields = touchedFieldsRef.current;
-    const discoveredPattern = inspection.patterns?.find((pattern) => pattern.trim())?.trim();
+    const discoveredPatterns = formatDiscoveryPatterns(inspection.patterns);
 
     setValues((currentValues) => ({
       ...currentValues,
@@ -142,8 +147,8 @@ export const RepositoryModal = ({
           ? inspection.provider
           : currentValues.provider,
       patterns:
-        discoveredPattern && !touchedFields.has("patterns")
-          ? discoveredPattern
+        discoveredPatterns && !touchedFields.has("patterns")
+          ? discoveredPatterns
           : currentValues.patterns
     }));
   };
@@ -152,7 +157,7 @@ export const RepositoryModal = ({
     sourceInspectionStatus === "loading"
       ? copy.sourceInspectionLoading
       : sourceInspectionStatus === "error"
-        ? copy.sourceInspectionError
+        ? sourceInspectionErrorMessage || copy.sourceInspectionError
         : "";
 
   const submitForm = () => {
@@ -267,6 +272,19 @@ export const RepositoryModal = ({
         </DialogPopup>
       </DialogPortal>
     </Dialog>
+  );
+};
+
+const toErrorMessage = (error: unknown): string => {
+  return error instanceof Error ? error.message : "";
+};
+
+const formatDiscoveryPatterns = (patterns: string[] | undefined): string => {
+  return (
+    patterns
+      ?.map((pattern) => pattern.trim())
+      .filter(Boolean)
+      .join(", ") ?? ""
   );
 };
 

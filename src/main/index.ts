@@ -6,6 +6,7 @@ import { registerHealthIpc } from "./ipc/health";
 import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
 import { registerProvidersIpc } from "./ipc/providers.js";
 import { registerRepositoriesIpc } from "./ipc/repositories.js";
+import { registerSettingsIpc } from "./ipc/settings.js";
 import { registerSkillsIpc } from "./ipc/skills.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
@@ -112,6 +113,7 @@ void app
     registerLocaleIpc();
     registerProvidersIpc(db);
     registerRepositoriesIpc(db);
+    registerSettingsIpc(db);
     registerSkillsIpc(db);
     await createMainWindow();
     createTray();

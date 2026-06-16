@@ -4,6 +4,7 @@ import React from "react";
 import { AppShell } from "@/features/shell/app-shell";
 import { ProvidersPage } from "@/features/providers/providers-page";
 import { RepositoriesPage } from "@/features/repositories/repositories-page";
+import { SettingsPage } from "@/features/settings/settings-page";
 import { SkillsPage } from "@/features/skills/skills-page";
 
 const PagePlaceholder = ({
@@ -83,13 +84,7 @@ const distributionRoute = createRoute({
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/settings",
-  component: () => (
-    <PagePlaceholder
-      eyebrow="Settings"
-      title="配置本地应用偏好"
-      copy="管理扫描策略、目标路径和安全执行边界。"
-    />
-  )
+  component: SettingsPage
 });
 
 const syncHistoryRoute = createRoute({

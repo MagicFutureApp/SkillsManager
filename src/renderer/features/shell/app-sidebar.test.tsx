@@ -61,29 +61,24 @@ describe("AppSidebar", () => {
     expect(screen.queryByRole("button", { name: "展开侧边栏" })).not.toBeInTheDocument();
   });
 
-  it("uses shared badge and tooltip components in collapsed navigation", async () => {
+  it("uses shared tooltip components in collapsed navigation without badges", async () => {
     await renderSidebar({ isCollapsed: true });
 
     const sidebar = screen.getByRole("complementary", { name: "主导航" });
-    const badges = sidebar.querySelectorAll('[data-slot="badge"]');
 
-    expect(badges.length).toBeGreaterThan(0);
+    expect(sidebar.querySelectorAll('[data-slot="badge"]')).toHaveLength(0);
     expect(screen.getByRole("button", { name: "技能" })).not.toHaveAttribute("title");
     expect(
       sidebar.querySelector('[data-slot="tooltip-trigger"][aria-label="Skillport"]')
     ).toBeTruthy();
   });
 
-  it("hides badges with a zero value", async () => {
+  it("does not render sidebar navigation badges", async () => {
     await renderSidebar();
 
     const sidebar = screen.getByRole("complementary", { name: "主导航" });
-    const badgeTexts = Array.from(sidebar.querySelectorAll('[data-slot="badge"]')).map((badge) =>
-      badge.textContent?.trim()
-    );
 
-    expect(badgeTexts).not.toContain("0");
-    expect(badgeTexts).toEqual(["5", "4", "8"]);
+    expect(sidebar.querySelectorAll('[data-slot="badge"]')).toHaveLength(0);
   });
 
   it("renders localized navigation labels without group headings", async () => {

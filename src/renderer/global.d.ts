@@ -5,6 +5,7 @@ import type {
   RepositoriesListResult as MainRepositoriesListResult,
   RepositoriesSyncResult as MainRepositoriesSyncResult
 } from "../main/ipc/repositories";
+import type { AppSettingsResult as MainAppSettingsResult } from "../main/ipc/settings";
 import type { SkillsListResult as MainSkillsListResult } from "../main/ipc/skills";
 import type {
   CreateRepositoryInput as CoreCreateRepositoryInput,
@@ -18,6 +19,7 @@ import type { RuntimePlatform as RendererRuntimePlatform } from "./platform-font
 
 export type AppHealth = MainAppHealth;
 export type AppInfo = MainAppInfo;
+export type AppSettingsResult = MainAppSettingsResult;
 export type ProvidersListResult = MainProvidersListResult;
 export type RepositoriesListResult = MainRepositoriesListResult;
 export type RepositoriesSyncResult = MainRepositoriesSyncResult;
@@ -33,16 +35,20 @@ export type SupportedLocale = CoreSupportedLocale;
 declare global {
   interface Window {
     skillsManager?: {
+      clearGitHubToken?: () => Promise<AppSettingsResult>;
       createRepository?: (input: CreateRepositoryInput) => Promise<RepositoryApiRecord>;
       deleteRepository?: (repositoryId: string) => Promise<DeleteRepositoryResult>;
       getHealth: () => Promise<AppHealth>;
       getInfo: () => Promise<AppInfo>;
       getLocale: () => Promise<SupportedLocale>;
+      getAppSettings?: () => Promise<AppSettingsResult>;
       getRepositoryDeletePreview?: (repositoryId: string) => Promise<RepositoryDeletePreview>;
       inspectRepositorySource?: (remoteUrl: string) => Promise<RepositorySourceInspection>;
       listProviders: () => Promise<ProvidersListResult>;
       listRepositories: () => Promise<RepositoriesListResult>;
       listSkills?: () => Promise<SkillsListResult>;
+      openExternalUrl?: (url: string) => Promise<void>;
+      saveGitHubToken?: (token: string) => Promise<AppSettingsResult>;
       syncRepositories?: (repositoryIds: string[]) => Promise<RepositoriesSyncResult>;
       platform: RuntimePlatform;
     };

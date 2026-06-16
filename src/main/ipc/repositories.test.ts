@@ -132,6 +132,84 @@ describe("repository IPC handlers", () => {
     ]);
   });
 
+  it("scans the saved discovery entry pattern into multiple skills during sync", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-14T00:00:00.000Z");
+    const sourcePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-pattern-source-"));
+    const cachePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-pattern-cache-"));
+    const copyLocalSource = vi.fn().mockImplementation(async () => {
+      await mkdir(path.join(cachePath, "skills", "review-bot"), { recursive: true });
+      await mkdir(path.join(cachePath, "skills", "release-notes"), { recursive: true });
+      await mkdir(path.join(cachePath, "docs", "ignored"), { recursive: true });
+      await writeFile(
+        path.join(cachePath, "skills", "review-bot", "SKILL.md"),
+        "# Review Bot\n\nReviews pull requests.\n",
+        "utf8"
+      );
+      await writeFile(
+        path.join(cachePath, "skills", "release-notes", "SKILL.md"),
+        "# Release Notes\n\nWrites release notes.\n",
+        "utf8"
+      );
+      await writeFile(
+        path.join(cachePath, "docs", "ignored", "SKILL.md"),
+        "# Ignored\n\nOutside the configured discovery entry.\n",
+        "utf8"
+      );
+    });
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "local-git",
+      name: "Local Git",
+      type: "local_git",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({
+        patterns: ["skills/*/SKILL.md"]
+      }),
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-pattern",
+      lastScannedCommitSha: null,
+      localCachePath: cachePath,
+      name: "Pattern skills",
+      providerId: "local-git",
+      remoteUrl: sourcePath,
+      updatedAt: createdAt
+    });
+
+    const result = await syncRepositories(db, ["repo-pattern"], {
+      copyLocalSource,
+      ensureGitRepository: vi.fn(),
+      resolveCommitSha: vi.fn().mockResolvedValue("local")
+    });
+
+    expect(result).toMatchObject({
+      results: [
+        {
+          repositoryId: "repo-pattern",
+          skillUnits: 2,
+          status: "ready"
+        }
+      ]
+    });
+    await expect(db.select().from(skillUnits)).resolves.toMatchObject([
+      {
+        entryPath: "skills/release-notes/SKILL.md",
+        id: "repo-pattern__skills-release-notes",
+        name: "Release Notes"
+      },
+      {
+        entryPath: "skills/review-bot/SKILL.md",
+        id: "repo-pattern__skills-review-bot",
+        name: "Review Bot"
+      }
+    ]);
+  });
+
   it("persists a running sync run before file work and updates it after success", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-14T00:00:00.000Z");
