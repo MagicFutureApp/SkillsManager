@@ -7,7 +7,7 @@ export type RepositoryProviderName =
   | "Gitea"
   | "GitHub"
   | "GitLab"
-  | "Local Git"
+  | "Local"
   | "skills.sh";
 
 export type RepositoryScanSummary = {

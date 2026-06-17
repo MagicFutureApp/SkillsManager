@@ -13,6 +13,8 @@ type RepositoryDetailProps = {
     delete: string;
     edit: string;
     enabled: string;
+    enabledNo: string;
+    enabledYes: string;
     lastCommit: string;
     lastScan: string;
     patterns: string;
@@ -41,10 +43,10 @@ export const RepositoryDetail = ({
     ? ([
         [copy.scanAdded, repository.scan.added],
         [copy.scanRemoved, repository.scan.removed],
-        [copy.scanChanged, repository.scan.changed],
-        [copy.scanWarnings, repository.scan.warnings]
+        [copy.scanChanged, repository.scan.changed]
       ] satisfies Array<[string, number]>)
     : [];
+  const isLocalRepository = repository?.provider === "Local";
 
   return (
     <>
@@ -75,11 +77,17 @@ export const RepositoryDetail = ({
           <div className="mt-3 grid gap-2">
             <DetailRow label={copy.provider} value={repository.provider} />
             <DetailRow label={copy.remoteUrl} value={repository.remoteUrl} mono />
-            <DetailRow label={copy.cachePath} value={repository.cachePath} mono />
-            <DetailRow label={copy.branch} value={repository.branch} mono />
-            <DetailRow label={copy.lastCommit} value={repository.lastCommit} mono />
-            <DetailRow label={copy.lastScan} value={repository.lastScanLabel} />
-            <DetailRow label={copy.enabled} value={String(repository.enabled)} mono />
+            {!isLocalRepository ? (
+              <>
+                <DetailRow label={copy.branch} value={repository.branch} mono />
+                <DetailRow label={copy.lastCommit} value={repository.lastCommit} mono />
+              </>
+            ) : null}
+            <DetailRow label={copy.lastScan} value={repository.lastScanTime} />
+            <DetailRow
+              label={copy.enabled}
+              value={repository.enabled ? copy.enabledYes : copy.enabledNo}
+            />
             <DetailRow label={copy.patterns} value={repository.patterns.join(", ")} mono />
           </div>
         ) : null}
@@ -96,7 +104,7 @@ export const RepositoryDetail = ({
               <span>
                 <strong className="block text-sm">{label}</strong>
                 <span className="text-xs text-muted-foreground">
-                  {repository?.lastScanLabel ?? "--"}
+                  {repository?.lastScanTime ?? "--"}
                 </span>
               </span>
               <span className="font-mono text-sm">{value}</span>

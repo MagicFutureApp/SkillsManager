@@ -18,6 +18,8 @@ export const RepositoriesPageSider = () => {
         delete: t("repositories.actions.deleteRepository"),
         edit: t("repositories.actions.editRepository"),
         enabled: t("repositories.detail.enabled"),
+        enabledNo: t("repositories.detail.enabledNo"),
+        enabledYes: t("repositories.detail.enabledYes"),
         lastCommit: t("repositories.detail.lastCommit"),
         lastScan: t("repositories.detail.lastScan"),
         patterns: t("repositories.detail.patterns"),

@@ -705,7 +705,7 @@ const providerNameFor = (
   }
 
   if (isLocalPath(remoteUrl)) {
-    return "Local Git";
+    return "Local";
   }
 
   return "GitHub";
@@ -716,7 +716,7 @@ const providerNamesByType: Record<ProviderType, RepositoryProviderName> = {
   gitea: "Gitea",
   github: "GitHub",
   gitlab: "GitLab",
-  local_git: "Local Git",
+  local_git: "Local",
   skills_sh: "skills.sh"
 };
 
@@ -725,7 +725,7 @@ const providerIdByName: Record<RepositoryProviderName, string> = {
   Gitea: "gitea",
   GitHub: "github",
   GitLab: "gitlab",
-  "Local Git": "local-git",
+  Local: "local-git",
   "skills.sh": "skills-sh"
 };
 
@@ -734,7 +734,7 @@ const providerTypeByName: Record<RepositoryProviderName, ProviderType> = {
   Gitea: "gitea",
   GitHub: "github",
   GitLab: "gitlab",
-  "Local Git": "local_git",
+  Local: "local_git",
   "skills.sh": "skills_sh"
 };
 
@@ -824,7 +824,7 @@ const isProviderName = (value: unknown): value is RepositoryProviderName => {
     value === "Gitea" ||
     value === "GitHub" ||
     value === "GitLab" ||
-    value === "Local Git" ||
+    value === "Local" ||
     value === "skills.sh"
   );
 };

@@ -130,9 +130,7 @@ export const useRepositoriesPageState = () => {
       return;
     }
 
-    const hasLocalPath = targetRepositories.some(
-      (repository) => repository.provider === "Local Git"
-    );
+    const hasLocalPath = targetRepositories.some((repository) => repository.provider === "Local");
 
     if (hasLocalPath) {
       setPendingLocalSyncRepositoryIds(targetRepositories.map((repository) => repository.id));

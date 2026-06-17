@@ -81,7 +81,7 @@ describe("createRepositoryRepository", () => {
     expect(JSON.parse(result[0]?.configJson ?? "{}")).toMatchObject({
       enabled: true,
       patterns: ["skills/*/SKILL.md"],
-      providerName: "Local Git",
+      providerName: "Local",
       skillUnits: 2,
       status: "ready"
     });

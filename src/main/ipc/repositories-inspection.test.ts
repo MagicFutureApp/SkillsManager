@@ -40,7 +40,7 @@ describe("inspectRepositorySourceWithSettings", () => {
       branch: "main",
       name: "local-skills",
       patterns: ["skills/*/SKILL.md"],
-      provider: "Local Git"
+      provider: "Local"
     });
 
     await expect(
@@ -53,7 +53,7 @@ describe("inspectRepositorySourceWithSettings", () => {
       branch: "main",
       name: "local-skills",
       patterns: ["skills/*/SKILL.md"],
-      provider: "Local Git"
+      provider: "Local"
     });
 
     expect(inspectLocalSource).toHaveBeenCalledWith("D:\\workspace\\local-skills");
@@ -83,7 +83,7 @@ describe("inspectRepositorySourceWithSettings", () => {
       branch: "main",
       name: path.basename(sourcePath),
       patterns: ["skills/*/SKILL.md"],
-      provider: "Local Git"
+      provider: "Local"
     });
   });
 });

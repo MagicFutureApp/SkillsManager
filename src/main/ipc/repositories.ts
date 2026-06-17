@@ -291,7 +291,7 @@ const inspectLocalRepositorySource = async (
     branch: "main",
     name: path.basename(path.resolve(sourcePath)),
     patterns: deriveSkillPatterns(discoveredSkills.map((skill) => skill.entryPath)),
-    provider: "Local Git"
+    provider: "Local"
   };
 };
 

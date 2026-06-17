@@ -126,6 +126,30 @@ describe("RepositoriesPage", () => {
     expect(
       within(detail).getByText("agents/skills/*/SKILL.md, skills/*/SKILL.md")
     ).toBeInTheDocument();
+    expect(within(detail).getByText("Local")).toBeInTheDocument();
+    expect(within(detail).queryByText("分支")).not.toBeInTheDocument();
+    expect(within(detail).queryByText("最后 commit")).not.toBeInTheDocument();
+    expect(within(detail).queryByText("缓存目录")).not.toBeInTheDocument();
+    expect(within(detail).queryByText("扫描警告")).not.toBeInTheDocument();
+    expect(within(detail).getAllByText("2026/04/28 09:00").length).toBeGreaterThan(0);
+    expect(within(detail).getByText("是")).toBeInTheDocument();
+  });
+
+  it("hides cache and warning details and formats enabled state for remote sources", async () => {
+    await renderRepositoriesPage();
+
+    const detail = screen.getByLabelText("来源详情");
+
+    expect(within(detail).queryByText("缓存目录")).not.toBeInTheDocument();
+    expect(within(detail).queryByText("扫描警告")).not.toBeInTheDocument();
+    expect(within(detail).getByText("分支")).toBeInTheDocument();
+    expect(within(detail).getByText("最后 commit")).toBeInTheDocument();
+    expect(within(detail).getAllByText("2026/04/28 09:00").length).toBeGreaterThan(0);
+    expect(within(detail).getByText("是")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "skills.sh market index" }));
+
+    expect(within(detail).getByText("否")).toBeInTheDocument();
   });
 
   it("enables sync after a source is checked", async () => {
@@ -529,7 +553,7 @@ describe("RepositoriesPage", () => {
 
     fireEvent.click(switchControl);
     expect(switchControl).toHaveAttribute("aria-checked", "true");
-    expect(within(screen.getByLabelText("来源详情")).getByText("true")).toBeInTheDocument();
+    expect(within(screen.getByLabelText("来源详情")).getByText("是")).toBeInTheDocument();
   });
 
   it("adds a source through the modal form", async () => {
@@ -771,7 +795,7 @@ describe("RepositoriesPage", () => {
       branch: "main",
       name: "local-skills",
       patterns: ["skills/*/SKILL.md"],
-      provider: "Local Git"
+      provider: "Local"
     });
     const selectLocalRepositoryPath = vi.fn().mockResolvedValue(localPath);
     window.skillsManager = {
@@ -794,7 +818,7 @@ describe("RepositoriesPage", () => {
     expect(selectLocalRepositoryPath).toHaveBeenCalled();
     expect(await within(dialog).findByDisplayValue(localPath)).toBeInTheDocument();
     expect(await within(dialog).findByDisplayValue("local-skills")).toBeInTheDocument();
-    expect(within(dialog).getByLabelText("来源类型")).toHaveTextContent("Local Git");
+    expect(within(dialog).getByLabelText("来源类型")).toHaveTextContent("Local");
     expect(within(dialog).getByLabelText("发现入口")).toHaveValue("skills/*/SKILL.md");
     expect(inspectRepositorySource).toHaveBeenCalledWith(localPath);
   });

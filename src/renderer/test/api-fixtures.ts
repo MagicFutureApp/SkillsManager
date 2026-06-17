@@ -160,7 +160,7 @@ export const repositoryApiRecordsFixture: RepositoryApiRecord[] = [
       note: "开发中的本机仓库，不需要 clone。",
       patterns: ["agents/skills/*/SKILL.md", "skills/*/SKILL.md"],
       priority: 2,
-      providerName: "Local Git",
+      providerName: "Local",
       scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
       skillUnits: 5,
       status: "ready"

@@ -18,6 +18,7 @@ export type RepositoryViewModel = {
   id: string;
   lastCommit: string;
   lastScanLabel: string;
+  lastScanTime: string;
   lastSync: RepositoryLastSync | null;
   name: string;
   note: string;
@@ -62,7 +63,7 @@ export const repositoryProviderOptions: Array<{
   { label: "GitLab", value: "GitLab" },
   { label: "Gitea", value: "Gitea" },
   { label: "Bitbucket", value: "Bitbucket" },
-  { label: "Local Git", value: "Local Git" },
+  { label: "Local", value: "Local" },
   { label: "skills.sh", value: "skills.sh" }
 ];
 
@@ -86,6 +87,7 @@ export const adaptRepositoryRecord = (record: RepositoryApiRecord): RepositoryVi
     id: record.id,
     lastCommit: record.lastScannedCommitSha ?? "--",
     lastScanLabel: config.lastScanLabel,
+    lastScanTime: formatRepositoryDateTime(record.lastSync?.finishedAt),
     lastSync: record.lastSync,
     name: record.name,
     note: config.note,
@@ -177,6 +179,7 @@ export const buildRepositoryFromForm = ({
     id: `repo-${Date.now()}`,
     lastCommit: "--",
     lastScanLabel: "未执行",
+    lastScanTime: "--",
     lastSync: null,
     name: formValues.name,
     note: formValues.note || "用户新增的来源，等待第一次同步扫描。",
@@ -196,7 +199,7 @@ const providerIdByName: Record<RepositoryProviderName, string> = {
   Gitea: "gitea",
   GitHub: "github",
   GitLab: "gitlab",
-  "Local Git": "local-git",
+  Local: "local-git",
   "skills.sh": "skills-sh"
 };
 
@@ -221,7 +224,7 @@ const isProviderName = (value: unknown): value is RepositoryProviderName => {
     value === "Gitea" ||
     value === "GitHub" ||
     value === "GitLab" ||
-    value === "Local Git" ||
+    value === "Local" ||
     value === "skills.sh"
   );
 };
@@ -271,4 +274,29 @@ const normalizeScanSummary = (scan: unknown): RepositoryScanSummary => {
     removed: typeof partial.removed === "number" ? partial.removed : 0,
     warnings: typeof partial.warnings === "number" ? partial.warnings : 0
   };
+};
+
+const formatRepositoryDateTime = (isoDate: string | null | undefined): string => {
+  if (!isoDate) {
+    return "--";
+  }
+
+  const date = new Date(isoDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return "--";
+  }
+
+  const parts = new Intl.DateTimeFormat("zh-CN", {
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+    month: "2-digit",
+    timeZone: "Asia/Tokyo",
+    year: "numeric"
+  }).formatToParts(date);
+  const valueByType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+  return `${valueByType.year}/${valueByType.month}/${valueByType.day} ${valueByType.hour}:${valueByType.minute}`;
 };
