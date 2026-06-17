@@ -93,6 +93,88 @@ describe("createRepositoryRepository", () => {
     await expect(createRepositoryRepository(db).list()).resolves.toEqual([]);
   });
 
+  it("returns the latest sync run separately from repository scan status", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+    const createdAt = new Date("2026-06-08T00:00:00.000Z");
+    const firstSyncAt = new Date("2026-06-08T01:00:00.000Z");
+    const latestSyncAt = new Date("2026-06-08T02:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({
+        enabled: true,
+        lastScanLabel: "刚刚同步",
+        note: "Team source",
+        patterns: ["skills/*/SKILL.md"],
+        priority: 1,
+        providerName: "GitHub",
+        scan: { added: 1, changed: 0, removed: 0, warnings: 0 },
+        skillUnits: 1,
+        status: "ready"
+      }),
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-1",
+      lastScannedCommitSha: "success-sha",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills",
+      providerId: "github",
+      remoteUrl: "git@github.com:team/skills.git",
+      updatedAt: createdAt
+    });
+    await db.insert(syncRuns).values([
+      {
+        endCommitSha: "success-sha",
+        errorMessage: null,
+        finishedAt: firstSyncAt,
+        id: "sync-success",
+        logPath: null,
+        repositoryId: "repo-1",
+        startCommitSha: null,
+        startedAt: firstSyncAt,
+        status: "success",
+        summaryJson: JSON.stringify({ added: 1, changed: 0, removed: 0, warnings: 0 })
+      },
+      {
+        endCommitSha: null,
+        errorMessage: "没有权限访问这个 Git 来源。",
+        finishedAt: latestSyncAt,
+        id: "sync-failed",
+        logPath: "/tmp/sync.log",
+        repositoryId: "repo-1",
+        startCommitSha: "success-sha",
+        startedAt: latestSyncAt,
+        status: "failed",
+        summaryJson: JSON.stringify({
+          category: "auth",
+          scan: { added: 0, changed: 0, removed: 0, warnings: 1 }
+        })
+      }
+    ]);
+
+    const result = await repositoryRepository.list();
+
+    expect(result[0]).toMatchObject({
+      id: "repo-1",
+      lastSync: {
+        errorMessage: "没有权限访问这个 Git 来源。",
+        finishedAt: "2026-06-08T02:00:00.000Z",
+        status: "failed"
+      }
+    });
+    expect(JSON.parse(result[0]?.configJson ?? "{}")).toMatchObject({
+      status: "ready"
+    });
+  });
+
   it("creates a source row and reads the saved form values back from SQLite", async () => {
     const db = createDbClient(":memory:");
     const repositoryRepository = createRepositoryRepository(db);

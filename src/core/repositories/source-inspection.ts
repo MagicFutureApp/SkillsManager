@@ -348,7 +348,7 @@ const parseGitHubTreeResponse = (response: unknown): string[] => {
     .map((entry) => entry.path as string);
 };
 
-const deriveSkillPatterns = (paths: string[]): string[] => {
+export const deriveSkillPatterns = (paths: string[]): string[] => {
   const skillPaths = Array.from(
     new Set(paths.filter((path) => path === "SKILL.md" || path.endsWith("/SKILL.md")))
   ).sort();

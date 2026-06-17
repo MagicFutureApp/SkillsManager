@@ -29,6 +29,7 @@ const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
     listRepositories:
       skillsManager?.listRepositories ??
       vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+    selectLocalRepositoryPath: skillsManager?.selectLocalRepositoryPath,
     syncRepositories: skillsManager?.syncRepositories,
     platform: "win32"
   };
@@ -50,6 +51,15 @@ const selectOption = async (label: string, optionName: string) => {
   const option = await screen.findByRole("option", { name: optionName });
   fireEvent.pointerDown(option, { pointerType: "mouse" });
   fireEvent.click(option);
+};
+
+const getRepositorySyncButton = (repositoryName: string) => {
+  return screen.getByLabelText((_content, element) => {
+    return (
+      element?.tagName.toLowerCase() === "button" &&
+      element.getAttribute("aria-label")?.startsWith(`${repositoryName} `) === true
+    );
+  });
 };
 
 describe("RepositoriesPage", () => {
@@ -128,8 +138,8 @@ describe("RepositoriesPage", () => {
     expect(syncButton).toBeEnabled();
   });
 
-  it("confirms local source copy before syncing checked local paths", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+  it("confirms local source copy with a Base UI dialog before syncing checked local paths", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm");
     const syncRepositories = vi.fn().mockResolvedValue({
       results: [
         {
@@ -161,13 +171,48 @@ describe("RepositoriesPage", () => {
     fireEvent.click(screen.getByLabelText("选择 Local development skills"));
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
 
-    await waitFor(() => expect(confirmSpy).toHaveBeenCalled());
-    expect(confirmSpy.mock.calls[0]?.[0]).toContain("会复制文件");
-    expect(confirmSpy.mock.calls[0]?.[0]).toContain("旧地址的文件需要用户手动删除");
+    const dialog = await screen.findByRole("alertdialog", { name: "本地路径同步确认" });
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(syncRepositories).not.toHaveBeenCalled();
+    expect(
+      within(dialog).getByText(
+        "本地路径同步会复制文件到 Skills Manager 的统一本地缓存目录。旧地址的文件需要用户手动删除。是否继续？"
+      )
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "确定" }));
+
     await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["local-dev-skills"]));
     expect(listRepositories).toHaveBeenCalledTimes(2);
 
     confirmSpy.mockRestore();
+  });
+
+  it("cancels local source sync from the Base UI confirmation dialog", async () => {
+    const syncRepositories = vi.fn().mockResolvedValue({
+      results: []
+    });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByLabelText("选择 Local development skills"));
+    fireEvent.click(screen.getByRole("button", { name: "同步" }));
+
+    const dialog = await screen.findByRole("alertdialog", { name: "本地路径同步确认" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "取消" }));
+
+    expect(screen.queryByRole("alertdialog", { name: "本地路径同步确认" })).not.toBeInTheDocument();
+    expect(syncRepositories).not.toHaveBeenCalled();
   });
 
   it("syncs a single source from the row sync icon", async () => {
@@ -199,7 +244,7 @@ describe("RepositoriesPage", () => {
     };
     await renderRepositoriesPage();
 
-    fireEvent.click(screen.getByLabelText("Team skills repository 尚未开始同步。"));
+    fireEvent.click(getRepositorySyncButton("Team skills repository"));
 
     await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
     expect(listRepositories).toHaveBeenCalledTimes(2);
@@ -211,8 +256,37 @@ describe("RepositoriesPage", () => {
     expect(screen.getByLabelText("选择 Team skills repository")).not.toBeChecked();
   });
 
+  it("shows the last persisted sync status on the row sync icon", async () => {
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({
+        repositories: repositoryApiRecordsFixture.map((repository) =>
+          repository.id === "team-skills"
+            ? {
+                ...repository,
+                lastSync: {
+                  errorMessage: "没有权限访问这个 Git 来源。",
+                  finishedAt: "2026-06-08T02:00:00.000Z",
+                  status: "failed"
+                }
+              }
+            : repository
+        )
+      }),
+      platform: "win32"
+    };
+    await renderRepositoriesPage();
+
+    expect(
+      screen.getByLabelText("Team skills repository 最后一次同步失败。没有权限访问这个 Git 来源。")
+    ).toBeInTheDocument();
+  });
+
   it("shows an animated per-source sync indicator while a source is syncing", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     let resolveSync: (value: RepositoriesSyncResult) => void = () => undefined;
     const syncRepositories = vi.fn(
       () =>
@@ -235,6 +309,14 @@ describe("RepositoriesPage", () => {
 
     fireEvent.click(screen.getByLabelText("选择 Local development skills"));
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
+    fireEvent.click(
+      within(await screen.findByRole("alertdialog", { name: "本地路径同步确认" })).getByRole(
+        "button",
+        {
+          name: "确定"
+        }
+      )
+    );
 
     const indicator = await screen.findByLabelText(
       "Local development skills 正在同步。正在复制或拉取来源，并扫描 SKILL.md。缓存目录 D:/workspace/local-skills"
@@ -255,8 +337,6 @@ describe("RepositoriesPage", () => {
         }
       ]
     });
-
-    confirmSpy.mockRestore();
   });
 
   it("keeps batch sync available and skips sources that are already syncing", async () => {
@@ -293,7 +373,7 @@ describe("RepositoriesPage", () => {
     };
     await renderRepositoriesPage();
 
-    fireEvent.click(screen.getByLabelText("Team skills repository 尚未开始同步。"));
+    fireEvent.click(getRepositorySyncButton("Team skills repository"));
     await screen.findByLabelText(
       "Team skills repository 正在同步。正在复制或拉取来源，并扫描 SKILL.md。缓存目录 ~/.skills-manager/cache/team-skills"
     );
@@ -327,7 +407,6 @@ describe("RepositoriesPage", () => {
   });
 
   it("keeps a successful per-source sync indicator with the result summary", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const syncRepositories = vi.fn().mockResolvedValue({
       results: [
         {
@@ -354,18 +433,23 @@ describe("RepositoriesPage", () => {
 
     fireEvent.click(screen.getByLabelText("选择 Local development skills"));
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
+    fireEvent.click(
+      within(await screen.findByRole("alertdialog", { name: "本地路径同步确认" })).getByRole(
+        "button",
+        {
+          name: "确定"
+        }
+      )
+    );
 
     expect(
       await screen.findByLabelText(
         "Local development skills 同步完成。已入库 1 个 Skills。新增 1，更新 0，移除 0，警告 0。commit local"
       )
     ).toBeInTheDocument();
-
-    confirmSpy.mockRestore();
   });
 
   it("keeps a failed per-source sync indicator with the error message", async () => {
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const syncRepositories = vi.fn().mockRejectedValue(new Error("Permission denied"));
 
     window.skillsManager = {
@@ -382,12 +466,18 @@ describe("RepositoriesPage", () => {
 
     fireEvent.click(screen.getByLabelText("选择 Local development skills"));
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
+    fireEvent.click(
+      within(await screen.findByRole("alertdialog", { name: "本地路径同步确认" })).getByRole(
+        "button",
+        {
+          name: "确定"
+        }
+      )
+    );
 
     expect(
       await screen.findByLabelText("Local development skills 同步失败。Permission denied")
     ).toBeInTheDocument();
-
-    confirmSpy.mockRestore();
   });
 
   it("shows the friendly failure from a per-source sync result", async () => {
@@ -457,6 +547,7 @@ describe("RepositoriesPage", () => {
         status: "review"
       }),
       id: "repo-huashu-design",
+      lastSync: null,
       lastScannedCommitSha: null,
       localCachePath: "~/.skills-manager/cache/huashu-design",
       name: "huashu-design",
@@ -483,6 +574,7 @@ describe("RepositoriesPage", () => {
               status: "review"
             }),
             id: "repo-huashu-design",
+            lastSync: null,
             lastScannedCommitSha: null,
             localCachePath: "~/.skills-manager/cache/huashu-design",
             name: "huashu-design",
@@ -671,6 +763,40 @@ describe("RepositoriesPage", () => {
       "Composable Claude skills from Anthropic."
     );
     expect(inspectRepositorySource).toHaveBeenCalledWith("https://github.com/anthropics/skills");
+  });
+
+  it("browses a local source directory and inspects it as a local path", async () => {
+    const localPath = "D:\\workspace\\local-skills";
+    const inspectRepositorySource = vi.fn().mockResolvedValue({
+      branch: "main",
+      name: "local-skills",
+      patterns: ["skills/*/SKILL.md"],
+      provider: "Local Git"
+    });
+    const selectLocalRepositoryPath = vi.fn().mockResolvedValue(localPath);
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      inspectRepositorySource,
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32",
+      selectLocalRepositoryPath
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    const dialog = screen.getByRole("dialog", { name: "新增来源" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "浏览" }));
+
+    expect(selectLocalRepositoryPath).toHaveBeenCalled();
+    expect(await within(dialog).findByDisplayValue(localPath)).toBeInTheDocument();
+    expect(await within(dialog).findByDisplayValue("local-skills")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("来源类型")).toHaveTextContent("Local Git");
+    expect(within(dialog).getByLabelText("发现入口")).toHaveValue("skills/*/SKILL.md");
+    expect(inspectRepositorySource).toHaveBeenCalledWith(localPath);
   });
 
   it("keeps the discovery entry empty when source inspection does not find an entry", async () => {

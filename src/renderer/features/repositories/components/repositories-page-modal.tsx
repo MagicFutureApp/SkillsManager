@@ -11,6 +11,7 @@ export const RepositoriesPageModal = () => {
     <RepositoryModal
       copy={{
         branch: t("repositories.modal.branch"),
+        browseLocalPath: t("repositories.modal.browseLocalPath"),
         cancel: t("repositories.modal.cancel"),
         close: t("repositories.modal.close"),
         editDescription: t("repositories.modal.editDescription"),

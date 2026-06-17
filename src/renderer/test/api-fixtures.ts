@@ -135,6 +135,16 @@ export const repositoryApiRecordsFixture: RepositoryApiRecord[] = [
       status: "ready"
     } satisfies RepositoryConfig),
     id: "team-skills",
+    lastSync: {
+      endCommitSha: "8f2c91a",
+      errorMessage: null,
+      finishedAt: fixtureDate,
+      logPath: null,
+      startedAt: fixtureDate,
+      startCommitSha: null,
+      status: "success",
+      summaryJson: JSON.stringify({ added: 0, changed: 0, removed: 0, warnings: 0 })
+    },
     lastScannedCommitSha: "8f2c91a",
     localCachePath: "~/.skills-manager/cache/team-skills",
     name: "Team skills repository",
@@ -156,6 +166,16 @@ export const repositoryApiRecordsFixture: RepositoryApiRecord[] = [
       status: "ready"
     } satisfies RepositoryConfig),
     id: "local-dev-skills",
+    lastSync: {
+      endCommitSha: "local",
+      errorMessage: null,
+      finishedAt: fixtureDate,
+      logPath: null,
+      startedAt: fixtureDate,
+      startCommitSha: null,
+      status: "success",
+      summaryJson: JSON.stringify({ added: 0, changed: 0, removed: 0, warnings: 0 })
+    },
     lastScannedCommitSha: "local",
     localCachePath: "D:/workspace/local-skills",
     name: "Local development skills",
@@ -177,6 +197,16 @@ export const repositoryApiRecordsFixture: RepositoryApiRecord[] = [
       status: "review"
     } satisfies RepositoryConfig),
     id: "design-lab",
+    lastSync: {
+      endCommitSha: "21ab9d0",
+      errorMessage: null,
+      finishedAt: fixtureDate,
+      logPath: null,
+      startedAt: fixtureDate,
+      startCommitSha: null,
+      status: "success",
+      summaryJson: JSON.stringify({ added: 2, changed: 1, removed: 0, warnings: 1 })
+    },
     lastScannedCommitSha: "21ab9d0",
     localCachePath: "~/.skills-manager/cache/design-lab",
     name: "Design lab prompts",
@@ -198,6 +228,7 @@ export const repositoryApiRecordsFixture: RepositoryApiRecord[] = [
       status: "review"
     } satisfies RepositoryConfig),
     id: "market-index",
+    lastSync: null,
     lastScannedCommitSha: "remote",
     localCachePath: "~/.skills-manager/cache/skills-market",
     name: "skills.sh market index",
@@ -219,6 +250,19 @@ export const repositoryApiRecordsFixture: RepositoryApiRecord[] = [
       status: "failed"
     } satisfies RepositoryConfig),
     id: "legacy-bitbucket",
+    lastSync: {
+      endCommitSha: null,
+      errorMessage: "认证失败",
+      finishedAt: fixtureDate,
+      logPath: null,
+      startedAt: fixtureDate,
+      startCommitSha: null,
+      status: "failed",
+      summaryJson: JSON.stringify({
+        category: "auth",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 1 }
+      })
+    },
     lastScannedCommitSha: null,
     localCachePath: "~/.skills-manager/cache/legacy-support",
     name: "Legacy support skills",

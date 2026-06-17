@@ -1,6 +1,7 @@
 import type {
   RepositoryApiRecord,
   RepositoryConfig,
+  RepositoryLastSync,
   RepositoryProviderName,
   RepositoryScanStatus,
   RepositoryScanSummary
@@ -17,6 +18,7 @@ export type RepositoryViewModel = {
   id: string;
   lastCommit: string;
   lastScanLabel: string;
+  lastSync: RepositoryLastSync | null;
   name: string;
   note: string;
   patterns: string[];
@@ -84,6 +86,7 @@ export const adaptRepositoryRecord = (record: RepositoryApiRecord): RepositoryVi
     id: record.id,
     lastCommit: record.lastScannedCommitSha ?? "--",
     lastScanLabel: config.lastScanLabel,
+    lastSync: record.lastSync,
     name: record.name,
     note: config.note,
     patterns: config.patterns,
@@ -174,6 +177,7 @@ export const buildRepositoryFromForm = ({
     id: `repo-${Date.now()}`,
     lastCommit: "--",
     lastScanLabel: "未执行",
+    lastSync: null,
     name: formValues.name,
     note: formValues.note || "用户新增的来源，等待第一次同步扫描。",
     patterns: normalizeFormDiscoveryEntry(formValues.patterns),

@@ -1,10 +1,13 @@
-import { ipcMain } from "electron";
+import { dialog, ipcMain } from "electron";
 import { cp, mkdir, rm, stat, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { createRepositoryRepository } from "../../db/repositories/repositoryRepository.js";
-import { inspectRepositorySource } from "../../core/repositories/source-inspection.js";
+import {
+  deriveSkillPatterns,
+  inspectRepositorySource
+} from "../../core/repositories/source-inspection.js";
 import { scanSkillDirectory } from "../../core/skills/skill-scanner.js";
 import { getGitHubToken } from "./settings.js";
 import type { RepositorySourceInspection } from "../../core/repositories/source-inspection.js";
@@ -30,10 +33,14 @@ export type RepositoriesSyncResult = {
 type DbClient = ReturnType<typeof createDbClient>;
 type RepositoryInspectionOperations = {
   getGitHubToken: (db: DbClient) => Promise<string | null>;
+  inspectLocalSource?: (sourcePath: string) => Promise<RepositorySourceInspection>;
   inspectSource: typeof inspectRepositorySource;
 };
 type RepositoryFileOperations = {
   removeLocalCache: (localCachePath: string) => Promise<void>;
+};
+type LocalPathSelectionOperations = {
+  showOpenDialog: typeof dialog.showOpenDialog;
 };
 type RepositorySyncOperations = {
   copyLocalSource: (sourcePath: string, cachePath: string) => Promise<void>;
@@ -88,13 +95,36 @@ export const inspectRepositorySourceWithSettings = async (
   remoteUrl: string,
   operations: RepositoryInspectionOperations = {
     getGitHubToken,
+    inspectLocalSource: inspectLocalRepositorySource,
     inspectSource: inspectRepositorySource
   }
 ): Promise<RepositorySourceInspection> => {
+  if (isLocalPath(remoteUrl)) {
+    return (operations.inspectLocalSource ?? inspectLocalRepositorySource)(
+      expandHomePath(remoteUrl)
+    );
+  }
+
   return operations.inspectSource(remoteUrl, {
     githubToken: (await operations.getGitHubToken(db)) ?? undefined,
     isDevelopment: isDevelopmentEnvironment()
   });
+};
+
+export const selectLocalRepositoryPath = async (
+  operations: LocalPathSelectionOperations = {
+    showOpenDialog: dialog.showOpenDialog
+  }
+): Promise<string | null> => {
+  const result = await operations.showOpenDialog({
+    properties: ["openDirectory"]
+  });
+
+  if (result.canceled) {
+    return null;
+  }
+
+  return result.filePaths[0] ?? null;
 };
 
 export const syncRepositories = async (
@@ -218,6 +248,10 @@ export const registerRepositoriesIpc = (db: DbClient): void => {
     }
   );
 
+  ipcMain.handle("repositories:selectLocalPath", (): Promise<string | null> => {
+    return selectLocalRepositoryPath();
+  });
+
   ipcMain.handle(
     "repositories:sync",
     (_event, repositoryIds: string[]): Promise<RepositoriesSyncResult> => {
@@ -246,6 +280,19 @@ const normalizeCreateRepositoryInput = (input: CreateRepositoryInput): CreateRep
 
 const removeRepositoryLocalCache = async (localCachePath: string): Promise<void> => {
   await rm(expandHomePath(localCachePath), { force: true, recursive: true });
+};
+
+const inspectLocalRepositorySource = async (
+  sourcePath: string
+): Promise<RepositorySourceInspection> => {
+  const discoveredSkills = await scanSkillDirectory(sourcePath);
+
+  return {
+    branch: "main",
+    name: path.basename(path.resolve(sourcePath)),
+    patterns: deriveSkillPatterns(discoveredSkills.map((skill) => skill.entryPath)),
+    provider: "Local Git"
+  };
 };
 
 const defaultSyncOperations: RepositorySyncOperations = {
@@ -295,7 +342,14 @@ const expandHomePath = (value: string): string => {
 };
 
 const isLocalPath = (value: string): boolean => {
-  return /^[A-Za-z]:[\\/]/.test(value) || value.startsWith("/") || value.startsWith(".");
+  return (
+    value === "~" ||
+    value.startsWith("~/") ||
+    value.startsWith(`~${path.sep}`) ||
+    /^[A-Za-z]:[\\/]/.test(value) ||
+    value.startsWith("/") ||
+    value.startsWith(".")
+  );
 };
 
 const isDevelopmentEnvironment = (): boolean => {

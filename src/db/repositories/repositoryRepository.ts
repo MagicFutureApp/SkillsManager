@@ -6,6 +6,8 @@ import type {
   RepositoryApiRecord,
   RepositoryConfig,
   RepositoryDeletePreview,
+  RepositoryLastSync,
+  RepositoryLastSyncStatus,
   RepositoryProviderName,
   RepositoryScanStatus,
   RepositoryScanSummary,
@@ -89,6 +91,7 @@ export const createRepositoryRepository = (db: DbClient) => {
         branch: input.branch || "main",
         configJson: JSON.stringify(config),
         id,
+        lastSync: null,
         lastScannedCommitSha: null,
         localCachePath: buildCachePath(input.name),
         name: input.name,
@@ -383,8 +386,10 @@ export const createRepositoryRepository = (db: DbClient) => {
       const repositoryRows = await db.select().from(repositories).orderBy(asc(repositories.id));
       const providerRows = await db.select().from(providers);
       const skillUnitRows = await db.select().from(skillUnits);
+      const syncRunRows = await db.select().from(syncRuns);
       const providersById = new Map(providerRows.map((provider) => [provider.id, provider]));
       const skillUnitCounts = countSkillUnitsByRepository(skillUnitRows);
+      const lastSyncByRepositoryId = latestSyncRunByRepository(syncRunRows);
 
       return repositoryRows.map((repository, index) => {
         const provider = providersById.get(repository.providerId);
@@ -403,6 +408,7 @@ export const createRepositoryRepository = (db: DbClient) => {
           branch: repository.defaultBranch ?? "main",
           configJson: JSON.stringify(config),
           id: repository.id,
+          lastSync: lastSyncByRepositoryId.get(repository.id) ?? null,
           lastScannedCommitSha: repository.lastScannedCommitSha,
           localCachePath: repository.localCachePath,
           name: repository.name || deriveRepositoryName(repository.remoteUrl, repository.id),
@@ -525,6 +531,49 @@ const countSkillUnitsByRepository = (
   });
 
   return counts;
+};
+
+const latestSyncRunByRepository = (
+  rows: Array<typeof syncRuns.$inferSelect>
+): Map<string, RepositoryLastSync> => {
+  const latestByRepositoryId = new Map<string, typeof syncRuns.$inferSelect>();
+
+  rows.forEach((row) => {
+    const current = latestByRepositoryId.get(row.repositoryId);
+
+    if (!current || row.startedAt.getTime() > current.startedAt.getTime()) {
+      latestByRepositoryId.set(row.repositoryId, row);
+    }
+  });
+
+  return new Map(
+    Array.from(latestByRepositoryId.entries()).map(([repositoryId, row]) => [
+      repositoryId,
+      {
+        endCommitSha: row.endCommitSha,
+        errorMessage: row.errorMessage,
+        finishedAt: row.finishedAt?.toISOString() ?? null,
+        logPath: row.logPath,
+        startedAt: row.startedAt.toISOString(),
+        startCommitSha: row.startCommitSha,
+        status: normalizeLastSyncStatus(row.status),
+        summaryJson: row.summaryJson
+      }
+    ])
+  );
+};
+
+const normalizeLastSyncStatus = (status: string): RepositoryLastSyncStatus => {
+  if (
+    status === "failed" ||
+    status === "interrupted" ||
+    status === "running" ||
+    status === "success"
+  ) {
+    return status;
+  }
+
+  return "failed";
 };
 
 const mergeRepositoryConfig = ({

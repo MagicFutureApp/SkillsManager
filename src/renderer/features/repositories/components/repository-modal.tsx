@@ -19,11 +19,13 @@ import {
   type RepositoryViewModel
 } from "./repository-data";
 import type { RepositorySourceInspection } from "@/global";
+import { FolderOpen } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type RepositoryModalProps = {
   copy: {
     branch: string;
+    browseLocalPath: string;
     cancel: string;
     close: string;
     editDescription: string;
@@ -130,6 +132,14 @@ export const RepositoryModal = ({
     setValues((currentValues) => ({ ...currentValues, [key]: value }));
   };
 
+  const browseLocalPath = async () => {
+    const selectedPath = await window.skillsManager?.selectLocalRepositoryPath?.();
+
+    if (selectedPath) {
+      updateValue("remoteUrl", selectedPath);
+    }
+  };
+
   const applyInspection = (inspection: RepositorySourceInspection) => {
     const touchedFields = touchedFieldsRef.current;
     const discoveredPatterns = formatDiscoveryPatterns(inspection.patterns);
@@ -208,11 +218,25 @@ export const RepositoryModal = ({
 
             <div className="grid grid-cols-2 gap-3">
               <RepositoryField label={copy.remoteUrl} span>
-                <Input
-                  disabled={isSaving}
-                  value={values.remoteUrl}
-                  onValueChange={(value) => updateValue("remoteUrl", value)}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    className="min-w-0 flex-1"
+                    disabled={isSaving}
+                    value={values.remoteUrl}
+                    onValueChange={(value) => updateValue("remoteUrl", value)}
+                  />
+                  {!editingRepository ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isSaving || !window.skillsManager?.selectLocalRepositoryPath}
+                      onClick={() => void browseLocalPath()}
+                    >
+                      <FolderOpen data-icon="inline-start" />
+                      {copy.browseLocalPath}
+                    </Button>
+                  ) : null}
+                </div>
                 {sourceInspectionMessage ? (
                   <FieldDescription>{sourceInspectionMessage}</FieldDescription>
                 ) : null}

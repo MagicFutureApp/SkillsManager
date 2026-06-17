@@ -214,8 +214,16 @@ export const resources = {
           skillsHeading: "将删除的 Skills",
           title: "删除来源"
         },
+        localSyncDialog: {
+          cancel: "取消",
+          confirm: "确定",
+          description:
+            "本地路径同步会复制文件到 Skills Manager 的统一本地缓存目录。旧地址的文件需要用户手动删除。是否继续？",
+          title: "本地路径同步确认"
+        },
         modal: {
           branch: "分支",
+          browseLocalPath: "浏览",
           cachePath: "缓存目录",
           cancel: "取消",
           close: "关闭",
@@ -459,8 +467,16 @@ export const resources = {
           skillsHeading: "Skills to delete",
           title: "Delete source"
         },
+        localSyncDialog: {
+          cancel: "Cancel",
+          confirm: "OK",
+          description:
+            "Local path sync copies files into Skills Manager's unified local cache. Files at the old path must be removed manually. Continue?",
+          title: "Local path sync confirmation"
+        },
         modal: {
           branch: "Branch",
+          browseLocalPath: "Browse",
           cachePath: "Cache path",
           cancel: "Cancel",
           close: "Close",

@@ -1,5 +1,6 @@
 import { PageLayout } from "@/components/layout/page-layout";
 import { RepositoriesPageDeleteDialog } from "./components/repositories-page-delete-dialog";
+import { RepositoriesPageLocalSyncConfirmDialog } from "./components/repositories-page-local-sync-confirm-dialog";
 import { RepositoriesPageProvider } from "./components/repositories-page-context";
 import { RepositoriesPageMain } from "./components/repositories-page-main";
 import { RepositoriesPageModal } from "./components/repositories-page-modal";
@@ -20,6 +21,7 @@ export const RepositoriesPage = () => {
         siderLabel={t("repositories.detail.ariaLabel")}
       />
       <RepositoriesPageDeleteDialog />
+      <RepositoriesPageLocalSyncConfirmDialog />
       <RepositoriesPageModal />
     </RepositoriesPageProvider>
   );

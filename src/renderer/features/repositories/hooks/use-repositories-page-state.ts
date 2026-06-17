@@ -34,6 +34,7 @@ export const useRepositoriesPageState = () => {
   const [isDeletingRepository, setIsDeletingRepository] = useState(false);
   const [isLoadingDeletePreview, setIsLoadingDeletePreview] = useState(false);
   const [isSavingRepository, setIsSavingRepository] = useState(false);
+  const [pendingLocalSyncRepositoryIds, setPendingLocalSyncRepositoryIds] = useState<string[]>([]);
   const [modalError, setModalError] = useState("");
   const [providerFilter, setProviderFilter] = useState<RepositoryProviderFilter>("all");
   const [query, setQuery] = useState("");
@@ -106,9 +107,9 @@ export const useRepositoriesPageState = () => {
     );
   };
 
-  const syncRepositoriesByIds = async (repositoryIds: string[]) => {
+  const getSyncTargetRepositories = (repositoryIds: string[]) => {
     if (!repositoryIds.length) {
-      return;
+      return [];
     }
 
     const targetIdSet = new Set(
@@ -116,23 +117,37 @@ export const useRepositoriesPageState = () => {
     );
 
     if (!targetIdSet.size) {
+      return [];
+    }
+
+    return repositories.filter((repository) => targetIdSet.has(repository.id));
+  };
+
+  const syncRepositoriesByIds = async (repositoryIds: string[]) => {
+    const targetRepositories = getSyncTargetRepositories(repositoryIds);
+
+    if (!targetRepositories.length) {
       return;
     }
 
-    const targetRepositories = repositories.filter((repository) => targetIdSet.has(repository.id));
     const hasLocalPath = targetRepositories.some(
       (repository) => repository.provider === "Local Git"
     );
 
-    if (
-      hasLocalPath &&
-      !window.confirm(
-        "本地路径同步会复制文件到 Skills Manager 的统一本地缓存目录。旧地址的文件需要用户手动删除。是否继续？"
-      )
-    ) {
+    if (hasLocalPath) {
+      setPendingLocalSyncRepositoryIds(targetRepositories.map((repository) => repository.id));
       return;
     }
 
+    await executeSyncRepositories(targetRepositories);
+  };
+
+  const executeSyncRepositories = async (targetRepositories: RepositoryViewModel[]) => {
+    if (!targetRepositories.length) {
+      return;
+    }
+
+    const targetIdSet = new Set(targetRepositories.map((repository) => repository.id));
     const targetRepositoryIds = targetRepositories.map((repository) => repository.id);
     const nextSelectedRepositoryId = targetIdSet.has(selectedRepositoryId ?? "")
       ? selectedRepositoryId
@@ -215,6 +230,17 @@ export const useRepositoriesPageState = () => {
       });
     } finally {
     }
+  };
+
+  const confirmLocalSyncRepositories = async () => {
+    const targetRepositories = getSyncTargetRepositories(pendingLocalSyncRepositoryIds);
+
+    setPendingLocalSyncRepositoryIds([]);
+    await executeSyncRepositories(targetRepositories);
+  };
+
+  const closeLocalSyncConfirmDialog = () => {
+    setPendingLocalSyncRepositoryIds([]);
   };
 
   const syncCheckedRepositories = async () => {
@@ -425,6 +451,7 @@ export const useRepositoriesPageState = () => {
     isDeleteDialogOpen,
     isDeletingRepository,
     isLoadingDeletePreview,
+    isLocalSyncConfirmDialogOpen: pendingLocalSyncRepositoryIds.length > 0,
     isModalOpen,
     isSavingRepository,
     isSyncingRepositories: syncingRepositoryIds.size > 0,
@@ -440,8 +467,10 @@ export const useRepositoriesPageState = () => {
     visibleRepositories,
     visibleSomeChecked,
     closeDeleteDialog,
+    closeLocalSyncConfirmDialog,
     closeModal,
     confirmDeleteRepository,
+    confirmLocalSyncRepositories,
     copyCachePath,
     openDeleteDialog,
     openCreateModal,

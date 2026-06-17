@@ -1,4 +1,5 @@
 export type RepositoryScanStatus = "ready" | "review" | "failed";
+export type RepositoryLastSyncStatus = "failed" | "interrupted" | "running" | "success";
 export type RepositorySyncItemStatus = RepositoryScanStatus | "skipped";
 
 export type RepositoryProviderName =
@@ -38,6 +39,17 @@ export type RepositorySyncResultItem = {
   scan: RepositoryScanSummary;
   skillUnits: number;
   status: RepositorySyncItemStatus;
+};
+
+export type RepositoryLastSync = {
+  endCommitSha: string | null;
+  errorMessage: string | null;
+  finishedAt: string | null;
+  logPath: string | null;
+  startedAt: string;
+  startCommitSha: string | null;
+  status: RepositoryLastSyncStatus;
+  summaryJson: string;
 };
 
 export type RepositoryConfig = {
@@ -84,6 +96,7 @@ export type RepositoryApiRecord = {
   branch: string;
   configJson: string;
   id: string;
+  lastSync: RepositoryLastSync | null;
   lastScannedCommitSha: string | null;
   localCachePath: string;
   name: string;

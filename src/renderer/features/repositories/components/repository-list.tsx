@@ -118,8 +118,7 @@ export const RepositoryList = ({
             </span>
             <span className="font-mono text-sm max-[820px]:hidden">{repository.skillUnits}</span>
             <RepositorySyncIndicator
-              repositoryId={repository.id}
-              repositoryName={repository.name}
+              repository={repository}
               state={repositorySyncStates[repository.id]}
               onSyncRepository={onSyncRepository}
             />
@@ -136,19 +135,17 @@ export const RepositoryList = ({
 };
 
 const RepositorySyncIndicator = ({
-  repositoryId,
-  repositoryName,
+  repository,
   state,
   onSyncRepository
 }: {
-  repositoryId: string;
-  repositoryName: string;
+  repository: RepositoryViewModel;
   state?: RepositorySyncState;
   onSyncRepository: (repositoryId: string) => void;
 }) => {
-  const status = state?.status ?? "idle";
-  const message = state?.message ?? "尚未开始同步。";
-  const ariaLabel = `${repositoryName} ${message}`;
+  const indicatorState = resolveSyncIndicatorState(repository, state);
+  const { message, status } = indicatorState;
+  const ariaLabel = `${repository.name} ${message}`;
   const Icon = syncIconByStatus[status];
   const isSyncing = status === "syncing";
 
@@ -167,7 +164,7 @@ const RepositorySyncIndicator = ({
           if (isSyncing) {
             return;
           }
-          void onSyncRepository(repositoryId);
+          void onSyncRepository(repository.id);
         }}
       >
         <Icon aria-hidden="true" className={cn("size-4", isSyncing && "animate-spin")} />
@@ -177,6 +174,61 @@ const RepositorySyncIndicator = ({
       </TooltipContent>
     </Tooltip>
   );
+};
+
+const resolveSyncIndicatorState = (
+  repository: RepositoryViewModel,
+  state?: RepositorySyncState
+): { message: string; status: RepositorySyncState["status"] | "idle" } => {
+  if (state) {
+    return state;
+  }
+
+  if (!repository.lastSync) {
+    return {
+      message: "尚未开始同步。",
+      status: "idle"
+    };
+  }
+
+  if (repository.lastSync.status === "running") {
+    return {
+      message: "最后一次同步仍在运行。",
+      status: "syncing"
+    };
+  }
+
+  if (repository.lastSync.status === "interrupted") {
+    return {
+      message: repository.lastSync.errorMessage
+        ? `最后一次同步被中断。${repository.lastSync.errorMessage}`
+        : "最后一次同步被中断。",
+      status: "failed"
+    };
+  }
+
+  if (repository.lastSync.status === "failed") {
+    return {
+      message: repository.lastSync.errorMessage
+        ? `最后一次同步失败。${repository.lastSync.errorMessage}`
+        : "最后一次同步失败。",
+      status: "failed"
+    };
+  }
+
+  return {
+    message: buildLastSuccessfulSyncMessage(repository),
+    status: repository.skillUnits > 0 ? "success" : "empty"
+  };
+};
+
+const buildLastSuccessfulSyncMessage = (repository: RepositoryViewModel): string => {
+  const skillSummary =
+    repository.skillUnits > 0
+      ? `最后一次同步成功。已入库 ${repository.skillUnits} 个 Skills。`
+      : "最后一次同步成功。未发现可入库的 Skills。";
+
+  return `${skillSummary}新增 ${repository.scan.added}，更新 ${repository.scan.changed}，移除 ${repository.scan.removed}，警告 ${repository.scan.warnings}。commit ${repository.lastCommit}`;
 };
 
 const syncIconByStatus = {
