@@ -288,7 +288,6 @@ const inspectLocalRepositorySource = async (
   const discoveredSkills = await scanSkillDirectory(sourcePath);
 
   return {
-    branch: "main",
     name: path.basename(path.resolve(sourcePath)),
     patterns: deriveSkillPatterns(discoveredSkills.map((skill) => skill.entryPath)),
     provider: "Local"

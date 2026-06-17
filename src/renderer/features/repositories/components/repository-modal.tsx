@@ -143,15 +143,19 @@ export const RepositoryModal = ({
   const applyInspection = (inspection: RepositorySourceInspection) => {
     const touchedFields = touchedFieldsRef.current;
     const discoveredPatterns = formatDiscoveryPatterns(inspection.patterns);
+    const isLocalSource = inspection.provider === "Local";
 
     setValues((currentValues) => ({
       ...currentValues,
-      branch:
-        inspection.branch && !touchedFields.has("branch")
-          ? inspection.branch
-          : currentValues.branch,
+      branch: !touchedFields.has("branch")
+        ? isLocalSource
+          ? ""
+          : inspection.branch || currentValues.branch
+        : currentValues.branch,
       name: inspection.name && !touchedFields.has("name") ? inspection.name : currentValues.name,
-      note: inspection.about && !touchedFields.has("note") ? inspection.about : currentValues.note,
+      note: !touchedFields.has("note")
+        ? inspection.about || (isLocalSource ? "" : currentValues.note)
+        : currentValues.note,
       provider:
         inspection.provider && !touchedFields.has("provider")
           ? inspection.provider
@@ -179,7 +183,7 @@ export const RepositoryModal = ({
     setError("");
     void onSave({
       ...values,
-      branch: values.branch.trim() || "main",
+      branch: values.branch.trim() || (values.provider === "Local" ? "" : "main"),
       cachePath: values.cachePath.trim(),
       name: values.name.trim(),
       note: values.note.trim(),

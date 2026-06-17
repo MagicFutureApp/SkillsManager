@@ -80,7 +80,6 @@ describe("inspectRepositorySourceWithSettings", () => {
     await expect(
       inspectRepositorySourceWithSettings({} as never, sourcePath)
     ).resolves.toMatchObject({
-      branch: "main",
       name: path.basename(sourcePath),
       patterns: ["skills/*/SKILL.md"],
       provider: "Local"

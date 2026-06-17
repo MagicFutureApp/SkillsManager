@@ -218,6 +218,29 @@ describe("createRepositoryRepository", () => {
     });
   });
 
+  it("keeps branch empty when creating a local source", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+
+    const created = await repositoryRepository.create({
+      branch: "",
+      name: "local-skills",
+      note: "",
+      patterns: "skills/*/SKILL.md",
+      provider: "Local",
+      remoteUrl: "D:/workspace/local-skills"
+    });
+    const result = await repositoryRepository.list();
+
+    expect(created.branch).toBe("");
+    expect(result[0]).toMatchObject({
+      branch: ""
+    });
+    expect(JSON.parse(result[0]?.configJson ?? "{}")).toMatchObject({
+      note: ""
+    });
+  });
+
   it("splits multiple discovery entries from the saved form value", async () => {
     const db = createDbClient(":memory:");
     const repositoryRepository = createRepositoryRepository(db);

@@ -792,7 +792,6 @@ describe("RepositoriesPage", () => {
   it("browses a local source directory and inspects it as a local path", async () => {
     const localPath = "D:\\workspace\\local-skills";
     const inspectRepositorySource = vi.fn().mockResolvedValue({
-      branch: "main",
       name: "local-skills",
       patterns: ["skills/*/SKILL.md"],
       provider: "Local"
@@ -819,8 +818,76 @@ describe("RepositoriesPage", () => {
     expect(await within(dialog).findByDisplayValue(localPath)).toBeInTheDocument();
     expect(await within(dialog).findByDisplayValue("local-skills")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("来源类型")).toHaveTextContent("Local");
+    expect(within(dialog).getByLabelText("分支")).toHaveValue("");
+    expect(within(dialog).getByLabelText("备注")).toHaveValue("");
     expect(within(dialog).getByLabelText("发现入口")).toHaveValue("skills/*/SKILL.md");
     expect(inspectRepositorySource).toHaveBeenCalledWith(localPath);
+  });
+
+  it("creates a browsed local source with empty branch and note defaults", async () => {
+    const localPath = "D:\\workspace\\local-skills";
+    const createRepository = vi.fn().mockResolvedValue({
+      branch: "",
+      configJson: JSON.stringify({
+        enabled: true,
+        lastScanLabel: "未执行",
+        note: "",
+        patterns: ["skills/*/SKILL.md"],
+        priority: 99,
+        providerName: "Local",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+        skillUnits: 0,
+        status: "review"
+      }),
+      id: "repo-local-skills",
+      lastSync: null,
+      lastScannedCommitSha: null,
+      localCachePath: "~/.skills-manager/cache/local-skills",
+      name: "local-skills",
+      providerId: "local-git",
+      remoteUrl: localPath,
+      updatedAt: "2026-06-12T00:00:00.000Z"
+    });
+    const inspectRepositorySource = vi.fn().mockResolvedValue({
+      name: "local-skills",
+      patterns: ["skills/*/SKILL.md"],
+      provider: "Local"
+    });
+    const selectLocalRepositoryPath = vi.fn().mockResolvedValue(localPath);
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      createRepository,
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      inspectRepositorySource,
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32",
+      selectLocalRepositoryPath
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    const dialog = screen.getByRole("dialog", { name: "新增来源" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "浏览" }));
+    await within(dialog).findByDisplayValue(localPath);
+    expect(await within(dialog).findByDisplayValue("local-skills")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("分支")).toHaveValue("");
+    expect(within(dialog).getByLabelText("备注")).toHaveValue("");
+    fireEvent.click(within(dialog).getByRole("button", { name: "保存来源" }));
+
+    await waitFor(() =>
+      expect(createRepository).toHaveBeenCalledWith({
+        branch: "",
+        name: "local-skills",
+        note: "",
+        patterns: "skills/*/SKILL.md",
+        provider: "Local",
+        remoteUrl: localPath
+      })
+    );
   });
 
   it("keeps the discovery entry empty when source inspection does not find an entry", async () => {

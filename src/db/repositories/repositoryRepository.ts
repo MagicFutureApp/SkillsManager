@@ -77,7 +77,7 @@ export const createRepositoryRepository = (db: DbClient) => {
       await db.insert(repositories).values({
         configJson: JSON.stringify(config),
         createdAt: now,
-        defaultBranch: input.branch || "main",
+        defaultBranch: normalizeRepositoryBranch(input),
         id,
         lastScannedCommitSha: null,
         localCachePath: buildCachePath(input.name),
@@ -88,7 +88,7 @@ export const createRepositoryRepository = (db: DbClient) => {
       });
 
       return {
-        branch: input.branch || "main",
+        branch: normalizeRepositoryBranch(input),
         configJson: JSON.stringify(config),
         id,
         lastSync: null,
@@ -610,7 +610,7 @@ const buildCreatedRepositoryConfig = (input: CreateRepositoryInput): RepositoryC
   return {
     enabled: true,
     lastScanLabel: "未执行",
-    note: input.note || "用户新增的来源，等待第一次同步扫描。",
+    note: input.note || (input.provider === "Local" ? "" : "用户新增的来源，等待第一次同步扫描。"),
     patterns: normalizeDiscoveryEntry(input.patterns),
     priority: 99,
     providerName: input.provider,
@@ -618,6 +618,14 @@ const buildCreatedRepositoryConfig = (input: CreateRepositoryInput): RepositoryC
     skillUnits: 0,
     status: "review"
   };
+};
+
+const normalizeRepositoryBranch = (input: CreateRepositoryInput): string => {
+  if (input.provider === "Local") {
+    return input.branch;
+  }
+
+  return input.branch || "main";
 };
 
 const mergeSyncedRepositoryConfig = ({
