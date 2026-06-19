@@ -11,7 +11,8 @@ import type {
   CreateRepositoryInput as CoreCreateRepositoryInput,
   DeleteRepositoryResult as CoreDeleteRepositoryResult,
   RepositoryApiRecord as CoreRepositoryApiRecord,
-  RepositoryDeletePreview as CoreRepositoryDeletePreview
+  RepositoryDeletePreview as CoreRepositoryDeletePreview,
+  UpdateRepositoryInput as CoreUpdateRepositoryInput
 } from "../core/repositories/repository-api";
 import type { RepositorySourceInspection as CoreRepositorySourceInspection } from "../core/repositories/source-inspection";
 import type { SupportedLocale as CoreSupportedLocale } from "../core/i18n/locale";
@@ -25,6 +26,7 @@ export type RepositoriesListResult = MainRepositoriesListResult;
 export type RepositoriesSyncResult = MainRepositoriesSyncResult;
 export type SkillsListResult = MainSkillsListResult;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
+export type UpdateRepositoryInput = CoreUpdateRepositoryInput;
 export type DeleteRepositoryResult = CoreDeleteRepositoryResult;
 export type RepositoryApiRecord = CoreRepositoryApiRecord;
 export type RepositoryDeletePreview = CoreRepositoryDeletePreview;
@@ -37,6 +39,10 @@ declare global {
     skillsManager?: {
       clearGitHubToken?: () => Promise<AppSettingsResult>;
       createRepository?: (input: CreateRepositoryInput) => Promise<RepositoryApiRecord>;
+      updateRepository?: (
+        repositoryId: string,
+        input: UpdateRepositoryInput
+      ) => Promise<RepositoryApiRecord>;
       deleteRepository?: (repositoryId: string) => Promise<DeleteRepositoryResult>;
       getHealth: () => Promise<AppHealth>;
       getInfo: () => Promise<AppInfo>;

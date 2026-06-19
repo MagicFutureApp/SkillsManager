@@ -11,7 +11,8 @@ import type {
   CreateRepositoryInput,
   DeleteRepositoryResult,
   RepositoryApiRecord,
-  RepositoryDeletePreview
+  RepositoryDeletePreview,
+  UpdateRepositoryInput
 } from "../core/repositories/repository-api";
 
 contextBridge.exposeInMainWorld("skillsManager", {
@@ -19,6 +20,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ipcRenderer.invoke("settings:clearGitHubToken") as Promise<AppSettingsResult>,
   createRepository: (input: CreateRepositoryInput) =>
     ipcRenderer.invoke("repositories:create", input) as Promise<RepositoryApiRecord>,
+  updateRepository: (repositoryId: string, input: UpdateRepositoryInput) =>
+    ipcRenderer.invoke("repositories:update", repositoryId, input) as Promise<RepositoryApiRecord>,
   deleteRepository: (repositoryId: string) =>
     ipcRenderer.invoke("repositories:delete", repositoryId) as Promise<DeleteRepositoryResult>,
   getHealth: () => ipcRenderer.invoke("app:getHealth") as Promise<AppHealth>,

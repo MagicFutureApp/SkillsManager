@@ -12,7 +12,8 @@ import type {
   RepositoryScanStatus,
   RepositoryScanSummary,
   RepositorySyncFailure,
-  RepositorySyncResultItem
+  RepositorySyncResultItem,
+  UpdateRepositoryInput
 } from "../../core/repositories/repository-api";
 import type { DiscoveredSkill } from "../../core/skills/skill-scanner";
 import type { ProviderType } from "../../core/providers/provider-api";
@@ -94,6 +95,62 @@ export const createRepositoryRepository = (db: DbClient) => {
         lastSync: null,
         lastScannedCommitSha: null,
         localCachePath: buildCachePath(input.name),
+        name: input.name,
+        providerId,
+        remoteUrl: input.remoteUrl,
+        updatedAt: now.toISOString()
+      };
+    },
+
+    async update(repositoryId: string, input: UpdateRepositoryInput): Promise<RepositoryApiRecord> {
+      const now = new Date();
+      const repositoryRows = await db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.id, repositoryId))
+        .limit(1);
+      const repository = repositoryRows[0];
+
+      if (!repository) {
+        throw new Error("Repository source not found.");
+      }
+
+      const providerId = providerIdByName[input.provider];
+      const branch = normalizeRepositoryBranch(input);
+      const config = mergeUpdatedRepositoryConfig({
+        configJson: repository.configJson,
+        input,
+        providerName: input.provider,
+        repositoryId: repository.id,
+        wasScanned: Boolean(repository.lastScannedCommitSha)
+      });
+
+      await ensureProvider({
+        db,
+        now,
+        providerId,
+        providerName: input.provider
+      });
+
+      await db
+        .update(repositories)
+        .set({
+          configJson: JSON.stringify(config),
+          defaultBranch: branch,
+          name: input.name,
+          providerId,
+          remoteUrl: input.remoteUrl,
+          updatedAt: now
+        })
+        .where(eq(repositories.id, repositoryId));
+
+      return {
+        branch,
+        configJson: JSON.stringify(config),
+        id: repository.id,
+        lastSync: null,
+        lastScannedCommitSha: repository.lastScannedCommitSha,
+        localCachePath: repository.localCachePath,
         name: input.name,
         providerId,
         remoteUrl: input.remoteUrl,
@@ -620,12 +677,42 @@ const buildCreatedRepositoryConfig = (input: CreateRepositoryInput): RepositoryC
   };
 };
 
+const mergeUpdatedRepositoryConfig = ({
+  configJson,
+  input,
+  providerName,
+  repositoryId,
+  wasScanned
+}: {
+  configJson: string;
+  input: UpdateRepositoryInput;
+  providerName: RepositoryProviderName;
+  repositoryId: string;
+  wasScanned: boolean;
+}): RepositoryConfig => {
+  const savedConfig = mergeRepositoryConfig({
+    configJson,
+    index: 98,
+    providerName,
+    repositoryId,
+    skillUnitCount: 0,
+    wasScanned
+  });
+
+  return {
+    ...savedConfig,
+    note: input.note,
+    patterns: normalizeDiscoveryEntry(input.patterns),
+    providerName
+  };
+};
+
 const normalizeRepositoryBranch = (input: CreateRepositoryInput): string => {
   if (input.provider === "Local") {
     return input.branch;
   }
 
-  return input.branch || "main";
+  return input.branch;
 };
 
 const mergeSyncedRepositoryConfig = ({

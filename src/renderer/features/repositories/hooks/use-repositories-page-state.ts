@@ -349,26 +349,32 @@ export const useRepositoriesPageState = () => {
     setIsSavingRepository(true);
 
     if (editingRepositoryId) {
-      setRepositories((currentRepositories) =>
-        currentRepositories.map((repository) =>
-          repository.id === editingRepositoryId
-            ? {
-                ...repository,
-                branch: formValues.branch,
-                cachePath: formValues.cachePath || repository.cachePath,
-                name: formValues.name,
-                note: formValues.note || repository.note,
-                patterns: normalizeFormDiscoveryEntry(formValues.patterns),
-                provider: formValues.provider,
-                remoteUrl: formValues.remoteUrl
-              }
-            : repository
-        )
-      );
-      setSelectedRepositoryId(editingRepositoryId);
-      setIsModalOpen(false);
-      setEditingRepositoryId(null);
-      setIsSavingRepository(false);
+      try {
+        if (!window.skillsManager?.updateRepository) {
+          throw new Error("保存来源接口不可用。");
+        }
+
+        const repositoryId = editingRepositoryId;
+
+        await window.skillsManager.updateRepository(repositoryId, {
+          branch: formValues.branch,
+          name: formValues.name,
+          note: formValues.note,
+          patterns: formValues.patterns.trim(),
+          provider: formValues.provider,
+          remoteUrl: formValues.remoteUrl
+        });
+        const nextRepositories = await loadRepositories();
+
+        setRepositories(nextRepositories);
+        setSelectedRepositoryId(repositoryId);
+        setIsModalOpen(false);
+        setEditingRepositoryId(null);
+      } catch (error) {
+        setModalError(error instanceof Error ? error.message : "保存来源失败。");
+      } finally {
+        setIsSavingRepository(false);
+      }
       return;
     } else {
       try {
@@ -514,10 +520,4 @@ const buildSyncResultMessage = (result: Awaited<RepositoriesSyncResult>["results
     result.skillUnits > 0 ? `已入库 ${result.skillUnits} 个 Skills。` : "未发现可入库的 Skills。";
 
   return `同步完成。${skillSummary}新增 ${result.scan.added}，更新 ${result.scan.changed}，移除 ${result.scan.removed}，警告 ${result.scan.warnings}。commit ${result.commitSha ?? "--"}`;
-};
-
-const normalizeFormDiscoveryEntry = (entry: string): string[] => {
-  const trimmedEntry = entry.trim();
-
-  return trimmedEntry ? [trimmedEntry] : [];
 };

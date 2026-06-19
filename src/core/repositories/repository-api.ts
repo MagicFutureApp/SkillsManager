@@ -73,6 +73,8 @@ export type CreateRepositoryInput = {
   remoteUrl: string;
 };
 
+export type UpdateRepositoryInput = CreateRepositoryInput;
+
 export type RepositoryDeleteSkill = {
   entryPath: string;
   id: string;

@@ -18,7 +18,8 @@ import type {
   RepositoryDeletePreview,
   RepositorySyncFailure,
   RepositorySyncFailureCategory,
-  RepositorySyncResultItem
+  RepositorySyncResultItem,
+  UpdateRepositoryInput
 } from "../../core/repositories/repository-api.js";
 import type { createDbClient } from "../../db/client.js";
 
@@ -66,6 +67,16 @@ export const createRepository = async (
   const repositoryRepository = createRepositoryRepository(db);
 
   return repositoryRepository.create(normalizeCreateRepositoryInput(input));
+};
+
+export const updateRepository = async (
+  db: DbClient,
+  repositoryId: string,
+  input: UpdateRepositoryInput
+): Promise<RepositoryApiRecord> => {
+  const repositoryRepository = createRepositoryRepository(db);
+
+  return repositoryRepository.update(repositoryId, normalizeUpdateRepositoryInput(input));
 };
 
 export const deleteRepository = async (
@@ -228,6 +239,13 @@ export const registerRepositoriesIpc = (db: DbClient): void => {
   );
 
   ipcMain.handle(
+    "repositories:update",
+    (_event, repositoryId: string, input: UpdateRepositoryInput): Promise<RepositoryApiRecord> => {
+      return updateRepository(db, repositoryId, input);
+    }
+  );
+
+  ipcMain.handle(
     "repositories:delete",
     (_event, repositoryId: string): Promise<DeleteRepositoryResult> => {
       return deleteRepository(db, repositoryId);
@@ -270,6 +288,24 @@ const normalizeCreateRepositoryInput = (input: CreateRepositoryInput): CreateRep
 
   return {
     branch: input.branch.trim() || "main",
+    name,
+    note: input.note.trim(),
+    patterns: input.patterns.trim(),
+    provider: input.provider,
+    remoteUrl
+  };
+};
+
+const normalizeUpdateRepositoryInput = (input: UpdateRepositoryInput): UpdateRepositoryInput => {
+  const name = input.name.trim();
+  const remoteUrl = input.remoteUrl.trim();
+
+  if (!name || !remoteUrl) {
+    throw new Error("Repository source name and remote URL are required.");
+  }
+
+  return {
+    branch: input.branch.trim(),
     name,
     note: input.note.trim(),
     patterns: input.patterns.trim(),

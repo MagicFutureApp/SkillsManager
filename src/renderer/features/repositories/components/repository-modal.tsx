@@ -183,7 +183,11 @@ export const RepositoryModal = ({
     setError("");
     void onSave({
       ...values,
-      branch: values.branch.trim() || (values.provider === "Local" ? "" : "main"),
+      branch: normalizeSubmittedBranch({
+        branch: values.branch,
+        isEditing: Boolean(editingRepository),
+        provider: values.provider
+      }),
       cachePath: values.cachePath.trim(),
       name: values.name.trim(),
       note: values.note.trim(),
@@ -314,6 +318,24 @@ const formatDiscoveryPatterns = (patterns: string[] | undefined): string => {
       .filter(Boolean)
       .join(", ") ?? ""
   );
+};
+
+const normalizeSubmittedBranch = ({
+  branch,
+  isEditing,
+  provider
+}: {
+  branch: string;
+  isEditing: boolean;
+  provider: RepositoryFormValues["provider"];
+}): string => {
+  const trimmedBranch = branch.trim();
+
+  if (isEditing || provider === "Local") {
+    return trimmedBranch;
+  }
+
+  return trimmedBranch || "main";
 };
 
 const RepositoryField = ({

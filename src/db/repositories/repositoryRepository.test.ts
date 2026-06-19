@@ -218,6 +218,120 @@ describe("createRepositoryRepository", () => {
     });
   });
 
+  it("updates an existing source row and preserves sync metadata", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+    const createdAt = new Date("2026-06-08T00:00:00.000Z");
+
+    await db.insert(providers).values([
+      {
+        configJson: "{}",
+        createdAt,
+        id: "github",
+        name: "GitHub",
+        type: "github",
+        updatedAt: createdAt
+      },
+      {
+        configJson: "{}",
+        createdAt,
+        id: "gitlab",
+        name: "GitLab",
+        type: "gitlab",
+        updatedAt: createdAt
+      }
+    ]);
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({
+        enabled: false,
+        lastScanLabel: "刚刚同步",
+        note: "Team source",
+        patterns: ["skills/*/SKILL.md"],
+        priority: 4,
+        providerName: "GitHub",
+        scan: { added: 2, changed: 1, removed: 0, warnings: 0 },
+        skillUnits: 3,
+        status: "ready"
+      }),
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-1",
+      lastScannedCommitSha: "abcdef123456",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills",
+      providerId: "github",
+      remoteUrl: "git@github.com:team/skills.git",
+      updatedAt: createdAt
+    });
+    await db.insert(skillUnits).values([
+      {
+        createdAt,
+        discoveryMethod: "convention",
+        entryPath: "skills/one/SKILL.md",
+        id: "repo-1__one",
+        name: "One",
+        repositoryId: "repo-1",
+        rootPath: "skills/one",
+        status: "ready",
+        updatedAt: createdAt
+      },
+      {
+        createdAt,
+        discoveryMethod: "convention",
+        entryPath: "skills/two/SKILL.md",
+        id: "repo-1__two",
+        name: "Two",
+        repositoryId: "repo-1",
+        rootPath: "skills/two",
+        status: "ready",
+        updatedAt: createdAt
+      },
+      {
+        createdAt,
+        discoveryMethod: "convention",
+        entryPath: "skills/three/SKILL.md",
+        id: "repo-1__three",
+        name: "Three",
+        repositoryId: "repo-1",
+        rootPath: "skills/three",
+        status: "ready",
+        updatedAt: createdAt
+      }
+    ]);
+
+    await repositoryRepository.update("repo-1", {
+      branch: "",
+      name: "Design lab",
+      note: "迁移到 GitLab 后继续手动同步。",
+      patterns: "skills/*/SKILL.md, template/SKILL.md",
+      provider: "GitLab",
+      remoteUrl: "git@gitlab.com:design/lab-skills.git"
+    });
+
+    const result = await repositoryRepository.list();
+
+    expect(result[0]).toMatchObject({
+      branch: "",
+      id: "repo-1",
+      lastScannedCommitSha: "abcdef123456",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Design lab",
+      providerId: "gitlab",
+      remoteUrl: "git@gitlab.com:design/lab-skills.git"
+    });
+    expect(JSON.parse(result[0]?.configJson ?? "{}")).toMatchObject({
+      enabled: false,
+      lastScanLabel: "刚刚同步",
+      note: "迁移到 GitLab 后继续手动同步。",
+      patterns: ["skills/*/SKILL.md", "template/SKILL.md"],
+      priority: 4,
+      providerName: "GitLab",
+      scan: { added: 2, changed: 1, removed: 0, warnings: 0 },
+      skillUnits: 3,
+      status: "ready"
+    });
+  });
+
   it("keeps branch empty when creating a local source", async () => {
     const db = createDbClient(":memory:");
     const repositoryRepository = createRepositoryRepository(db);

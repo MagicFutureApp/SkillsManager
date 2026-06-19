@@ -31,6 +31,7 @@ const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
       vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
     selectLocalRepositoryPath: skillsManager?.selectLocalRepositoryPath,
     syncRepositories: skillsManager?.syncRepositories,
+    updateRepository: skillsManager?.updateRepository,
     platform: "win32"
   };
 
@@ -666,6 +667,108 @@ describe("RepositoriesPage", () => {
     expect(listRepositories).toHaveBeenCalledTimes(2);
     expect(await screen.findByRole("button", { name: "huashu-design" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "huashu-design" })).toBeInTheDocument();
+  });
+
+  it("persists edits from the source modal form", async () => {
+    const updateRepository = vi.fn().mockResolvedValue({
+      branch: "",
+      configJson: JSON.stringify({
+        enabled: true,
+        lastScanLabel: "未执行",
+        note: "迁移到 GitLab 后继续手动同步。",
+        patterns: ["skills/*/SKILL.md", "template/SKILL.md"],
+        priority: 1,
+        providerName: "GitHub",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+        skillUnits: 12,
+        status: "ready"
+      }),
+      id: "team-skills",
+      lastSync: null,
+      lastScannedCommitSha: "8f2c91a",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills edited",
+      providerId: "github",
+      remoteUrl: "git@gitlab.com:design/lab-skills.git",
+      updatedAt: "2026-06-12T00:00:00.000Z"
+    });
+    const updatedRepositories = repositoryApiRecordsFixture.map((repository) =>
+      repository.id === "team-skills"
+        ? {
+            ...repository,
+            branch: "",
+            configJson: JSON.stringify({
+              enabled: true,
+              lastScanLabel: "未执行",
+              note: "迁移到 GitLab 后继续手动同步。",
+              patterns: ["skills/*/SKILL.md", "template/SKILL.md"],
+              priority: 1,
+              providerName: "GitHub",
+              scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+              skillUnits: 12,
+              status: "ready"
+            }),
+            name: "Team skills edited",
+            providerId: "github",
+            remoteUrl: "git@gitlab.com:design/lab-skills.git"
+          }
+        : repository
+    );
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({ repositories: updatedRepositories });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      platform: "win32",
+      updateRepository
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(
+      within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" })
+    );
+    const dialog = screen.getByRole("dialog", { name: "编辑来源" });
+    fireEvent.change(within(dialog).getByLabelText("名称"), {
+      target: { value: "Team skills edited" }
+    });
+    fireEvent.change(within(dialog).getByLabelText("URL / 本机路径"), {
+      target: { value: "git@gitlab.com:design/lab-skills.git" }
+    });
+    fireEvent.change(within(dialog).getByLabelText("分支"), {
+      target: { value: "" }
+    });
+    fireEvent.change(within(dialog).getByLabelText("发现入口"), {
+      target: { value: "skills/*/SKILL.md, template/SKILL.md" }
+    });
+    fireEvent.change(within(dialog).getByLabelText("备注"), {
+      target: { value: "迁移到 GitLab 后继续手动同步。" }
+    });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "保存来源" }));
+
+    await waitFor(() =>
+      expect(updateRepository).toHaveBeenCalledWith("team-skills", {
+        branch: "",
+        name: "Team skills edited",
+        note: "迁移到 GitLab 后继续手动同步。",
+        patterns: "skills/*/SKILL.md, template/SKILL.md",
+        provider: "GitHub",
+        remoteUrl: "git@gitlab.com:design/lab-skills.git"
+      })
+    );
+    expect(listRepositories).toHaveBeenCalledTimes(2);
+    expect(await screen.findByRole("button", { name: "Team skills edited" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByRole("heading", { name: "Team skills edited" })).toBeInTheDocument();
   });
 
   it("deletes a source from the detail pane after confirming affected skills", async () => {
