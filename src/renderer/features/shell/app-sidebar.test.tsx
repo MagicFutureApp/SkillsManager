@@ -25,11 +25,10 @@ const renderSidebar = async (props: Partial<React.ComponentProps<typeof AppSideb
 };
 
 describe("AppSidebar", () => {
-  it("hides Providers and Sync History from the visible sidebar navigation", async () => {
+  it("hides Providers from the visible sidebar navigation", async () => {
     await renderSidebar();
 
     expect(screen.queryByRole("button", { name: /Provider/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Sync history/i })).not.toBeInTheDocument();
     expect(screen.queryByText("Sources")).not.toBeInTheDocument();
   });
 
@@ -90,6 +89,7 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("button", { name: "技能" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /目标/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "同步记录" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "同步历史" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /设置/ })).toBeInTheDocument();
   });
 
@@ -118,8 +118,8 @@ describe("AppSidebar", () => {
     const visibleButtons = screen.getAllByRole("button").filter((button) => button !== null);
     const navigationButtons = visibleButtons.filter((button) => button.closest("nav"));
 
-    expect(navigationButtons).toHaveLength(5);
-    expect(sidebar.querySelectorAll("nav button svg")).toHaveLength(5);
+    expect(navigationButtons).toHaveLength(6);
+    expect(sidebar.querySelectorAll("nav button svg")).toHaveLength(6);
   });
 });
 
@@ -134,7 +134,8 @@ describe("shellNavigationGroups", () => {
       "skills",
       "targets",
       "distribution",
-      "settings"
+      "settings",
+      "sync-history"
     ]);
   });
 });

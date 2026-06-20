@@ -6,6 +6,7 @@ import { ProvidersPage } from "@/features/providers/providers-page";
 import { RepositoriesPage } from "@/features/repositories/repositories-page";
 import { SettingsPage } from "@/features/settings/settings-page";
 import { SkillsPage } from "@/features/skills/skills-page";
+import { SyncHistoryPage } from "@/features/sync-history/sync-history-page";
 
 const PagePlaceholder = ({
   eyebrow,
@@ -90,13 +91,7 @@ const settingsRoute = createRoute({
 const syncHistoryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sync-history",
-  component: () => (
-    <PagePlaceholder
-      eyebrow="Sync history"
-      title="追溯仓库同步与扫描运行"
-      copy="查看手动同步运行、commit 变化、扫描步骤和失败原因。"
-    />
-  )
+  component: SyncHistoryPage
 });
 
 export const routeTree = rootRoute.addChildren([

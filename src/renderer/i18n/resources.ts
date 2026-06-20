@@ -27,6 +27,7 @@ export const resources = {
           skills: "浏览 skill unit，选择目标并预览分发计划。",
           targets: "维护 Codex、Claude Code、Gemini CLI 和自定义目录目标。",
           distribution: "查看技能同步和分发执行记录。",
+          syncHistory: "查看 source sync 运行记录、扫描摘要和失败日志。",
           versionLabel: "版本: {{version}}"
         }
       },
@@ -248,6 +249,65 @@ export const resources = {
           justForceScanned: "刚刚强制扫描",
           justSynced: "刚刚同步"
         }
+      },
+      syncHistory: {
+        pageLabel: "Sync history",
+        heading: "同步历史",
+        description: "查看 source sync 写入的运行记录和失败日志。",
+        empty: "暂无同步历史。",
+        loading: "正在读取同步历史...",
+        error: "读取同步历史失败。",
+        filters: {
+          allStatuses: "全部状态",
+          ariaLabel: "同步历史筛选",
+          search: "搜索",
+          searchPlaceholder: "搜索仓库、URL、commit、错误或日志路径",
+          sort: "排序",
+          sortNewest: "最新优先",
+          sortRepository: "仓库",
+          sortStatus: "状态",
+          status: "状态"
+        },
+        list: {
+          ariaLabel: "同步运行列表",
+          scanSummary: "新增 {{added}} / 更新 {{changed}} / 移除 {{removed}} / 警告 {{warnings}}",
+          selectRun: "{{repository}} {{status}}"
+        },
+        table: {
+          log: "日志",
+          repository: "仓库",
+          scan: "Scan summary",
+          startedAt: "开始时间",
+          status: "状态"
+        },
+        status: {
+          failed: "失败",
+          interrupted: "中断",
+          running: "运行中",
+          success: "成功"
+        },
+        detail: {
+          ariaLabel: "同步运行详情",
+          duration: "耗时",
+          emptyTitle: "选择一次同步",
+          emptyDescription: "选择左侧记录后查看仓库、时间、状态、扫描摘要和失败日志。",
+          endCommit: "结束 commit",
+          errorMessage: "错误信息",
+          finishedAt: "结束时间",
+          logPath: "日志路径",
+          noValue: "无",
+          repository: "仓库",
+          remoteUrl: "URL / 路径",
+          scanAdded: "新增 skill unit",
+          scanChanged: "元数据变更",
+          scanHeading: "Scan summary",
+          scanRemoved: "移除 skill unit",
+          scanWarnings: "扫描警告",
+          startCommit: "开始 commit",
+          startedAt: "开始时间",
+          status: "状态",
+          summaryJson: "原始 summary"
+        }
       }
     }
   },
@@ -277,6 +337,7 @@ export const resources = {
           skills: "Browse skill units, choose targets, and preview distribution plans.",
           targets: "Maintain Codex, Claude Code, Gemini CLI, and custom directory targets.",
           distribution: "Review skill sync and distribution execution records.",
+          syncHistory: "Review source sync runs, scan summaries, and failure logs.",
           versionLabel: "Version: {{version}}"
         }
       },
@@ -504,6 +565,67 @@ export const resources = {
         scan: {
           justForceScanned: "Just force scanned",
           justSynced: "Just synced"
+        }
+      },
+      syncHistory: {
+        pageLabel: "Sync history",
+        heading: "Sync history",
+        description: "Review run records and failure logs written by source sync.",
+        empty: "No sync history yet.",
+        loading: "Loading sync history...",
+        error: "Failed to load sync history.",
+        filters: {
+          allStatuses: "All statuses",
+          ariaLabel: "Sync history filters",
+          search: "Search",
+          searchPlaceholder: "Search repository, URL, commit, error, or log path",
+          sort: "Sort",
+          sortNewest: "Newest first",
+          sortRepository: "Repository",
+          sortStatus: "Status",
+          status: "Status"
+        },
+        list: {
+          ariaLabel: "Sync run list",
+          scanSummary:
+            "Added {{added}} / changed {{changed}} / removed {{removed}} / warnings {{warnings}}",
+          selectRun: "{{repository}} {{status}}"
+        },
+        table: {
+          log: "Log",
+          repository: "Repository",
+          scan: "Scan summary",
+          startedAt: "Started at",
+          status: "Status"
+        },
+        status: {
+          failed: "Failed",
+          interrupted: "Interrupted",
+          running: "Running",
+          success: "Success"
+        },
+        detail: {
+          ariaLabel: "Sync run details",
+          duration: "Duration",
+          emptyTitle: "Choose a sync run",
+          emptyDescription:
+            "Select a run on the left to inspect repository, time, status, scan summary, and failure logs.",
+          endCommit: "End commit",
+          errorMessage: "Error message",
+          finishedAt: "Finished at",
+          logPath: "Log path",
+          noValue: "None",
+          repository: "Repository",
+          remoteUrl: "URL / path",
+          scanAdded: "Added skill units",
+          scanChanged: "Metadata changes",
+          scanHeading: "Scan summary",
+          scanRemoved: "Removed skill units",
+          scanWarnings: "Scan warnings",
+          startCommit: "Start commit",
+          startedAt: "Started at",
+          status: "Status",
+          summaryJson: "Raw summary"
         }
       }
     }

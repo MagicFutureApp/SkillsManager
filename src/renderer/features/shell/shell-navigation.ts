@@ -75,8 +75,8 @@ export const shellNavigationGroups: ShellNavigationGroup[] = [
       {
         routeId: "sync-history",
         labelKey: "shell.navigation.syncHistory",
+        descriptionKey: "shell.navigationDescriptions.syncHistory",
         badge: "4",
-        hidden: true,
         icon: History
       },
       {

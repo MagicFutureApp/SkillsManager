@@ -8,6 +8,7 @@ import { registerProvidersIpc } from "./ipc/providers.js";
 import { registerRepositoriesIpc } from "./ipc/repositories.js";
 import { registerSettingsIpc } from "./ipc/settings.js";
 import { registerSkillsIpc } from "./ipc/skills.js";
+import { registerSyncHistoryIpc } from "./ipc/sync-history.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
 import { getTrayIconPath } from "./tray-icon.js";
@@ -115,6 +116,7 @@ void app
     registerRepositoriesIpc(db);
     registerSettingsIpc(db);
     registerSkillsIpc(db);
+    registerSyncHistoryIpc(db);
     await createMainWindow();
     createTray();
 

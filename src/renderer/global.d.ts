@@ -7,6 +7,7 @@ import type {
 } from "../main/ipc/repositories";
 import type { AppSettingsResult as MainAppSettingsResult } from "../main/ipc/settings";
 import type { SkillsListResult as MainSkillsListResult } from "../main/ipc/skills";
+import type { SyncHistoryListResult as CoreSyncHistoryListResult } from "../core/repositories/sync-history-api";
 import type {
   CreateRepositoryInput as CoreCreateRepositoryInput,
   DeleteRepositoryResult as CoreDeleteRepositoryResult,
@@ -25,6 +26,7 @@ export type ProvidersListResult = MainProvidersListResult;
 export type RepositoriesListResult = MainRepositoriesListResult;
 export type RepositoriesSyncResult = MainRepositoriesSyncResult;
 export type SkillsListResult = MainSkillsListResult;
+export type SyncHistoryListResult = CoreSyncHistoryListResult;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
 export type UpdateRepositoryInput = CoreUpdateRepositoryInput;
 export type DeleteRepositoryResult = CoreDeleteRepositoryResult;
@@ -53,6 +55,7 @@ declare global {
       listProviders: () => Promise<ProvidersListResult>;
       listRepositories: () => Promise<RepositoriesListResult>;
       listSkills?: () => Promise<SkillsListResult>;
+      listSyncHistory?: () => Promise<SyncHistoryListResult>;
       openExternalUrl?: (url: string) => Promise<void>;
       saveGitHubToken?: (token: string) => Promise<AppSettingsResult>;
       selectLocalRepositoryPath?: () => Promise<string | null>;
