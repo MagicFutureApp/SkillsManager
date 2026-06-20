@@ -5,6 +5,7 @@ import type { createDbClient } from "../../db/client.js";
 import { createSyncHistoryRepository } from "../../db/repositories/syncHistoryRepository.js";
 
 type DbClient = ReturnType<typeof createDbClient>;
+type DbProvider = DbClient | (() => DbClient);
 
 export const getSyncHistory = async (db: DbClient): Promise<SyncHistoryListResult> => {
   const syncHistoryRepository = createSyncHistoryRepository(db);
@@ -14,8 +15,12 @@ export const getSyncHistory = async (db: DbClient): Promise<SyncHistoryListResul
   };
 };
 
-export const registerSyncHistoryIpc = (db: DbClient): void => {
+export const registerSyncHistoryIpc = (db: DbProvider): void => {
   ipcMain.handle("syncHistory:list", (): Promise<SyncHistoryListResult> => {
-    return getSyncHistory(db);
+    return getSyncHistory(resolveDb(db));
   });
+};
+
+const resolveDb = (db: DbProvider): DbClient => {
+  return typeof db === "function" ? db() : db;
 };

@@ -5,9 +5,23 @@ import React from "react";
 import { SettingsPage } from "./settings-page";
 
 describe("SettingsPage", () => {
+  const writeText = vi.fn().mockResolvedValue(undefined);
+
   beforeEach(() => {
+    writeText.mockClear();
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText
+      }
+    });
+
     window.skillsManager = {
       clearGitHubToken: vi.fn().mockResolvedValue({ github: { hasToken: false } }),
+      getAppStoragePaths: vi.fn().mockResolvedValue({
+        databasePath: "/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite",
+        localCachePath: "/Users/andrew/.skills-manager/cache"
+      }),
       getAppSettings: vi.fn().mockResolvedValue({ github: { hasToken: true } }),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
       getInfo: vi.fn().mockResolvedValue({ version: "0.1.0" }),
@@ -16,6 +30,13 @@ describe("SettingsPage", () => {
       listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
       openExternalUrl: vi.fn().mockResolvedValue(undefined),
       platform: "win32",
+      resetLocalDatabase: vi.fn().mockResolvedValue({
+        settings: { github: { hasToken: false } },
+        storage: {
+          databasePath: "/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite",
+          localCachePath: "/Users/andrew/.skills-manager/cache"
+        }
+      }),
       saveGitHubToken: vi.fn().mockResolvedValue({ github: { hasToken: true } })
     };
   });
@@ -68,6 +89,45 @@ describe("SettingsPage", () => {
     fireEvent.click(await screen.findByRole("button", { name: "清除 GitHub token" }));
 
     await waitFor(() => expect(window.skillsManager?.clearGitHubToken).toHaveBeenCalled());
+    expect(screen.getByText("未配置")).toBeInTheDocument();
+  });
+
+  it("shows copyable local cache and database paths", async () => {
+    render(<SettingsPage />);
+
+    expect(await screen.findByText("/Users/andrew/.skills-manager/cache")).toBeInTheDocument();
+    expect(
+      screen.getByText("/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite")
+    ).toBeInTheDocument();
+
+    const copyPathButtons = screen.getAllByRole("button", { name: "复制路径" });
+
+    expect(copyPathButtons).toHaveLength(2);
+
+    fireEvent.click(copyPathButtons[0]);
+    expect(writeText).toHaveBeenCalledWith("/Users/andrew/.skills-manager/cache");
+
+    fireEvent.click(copyPathButtons[1]);
+    expect(writeText).toHaveBeenCalledWith(
+      "/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite"
+    );
+  });
+
+  it("requires confirmation before rebuilding the local database", async () => {
+    render(<SettingsPage />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "重建本地数据库" }));
+
+    const dialog = await screen.findByRole("alertdialog", { name: "重建本地数据库？" });
+    expect(dialog).toHaveTextContent(
+      "会清空本地索引、来源、Skills、同步历史和应用设置，但不会删除已安装到 agent 目标目录的文件，也不会清空本地缓存目录。"
+    );
+    expect(window.skillsManager?.resetLocalDatabase).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "确认重建" }));
+
+    await waitFor(() => expect(window.skillsManager?.resetLocalDatabase).toHaveBeenCalled());
+    expect(screen.getByText("本地数据库已重建。")).toBeInTheDocument();
     expect(screen.getByText("未配置")).toBeInTheDocument();
   });
 });

@@ -32,6 +32,7 @@ export type RepositoriesSyncResult = {
 };
 
 type DbClient = ReturnType<typeof createDbClient>;
+type DbProvider = DbClient | (() => DbClient);
 type RepositoryInspectionOperations = {
   getGitHubToken: (db: DbClient) => Promise<string | null>;
   inspectLocalSource?: (sourcePath: string) => Promise<RepositorySourceInspection>;
@@ -256,43 +257,43 @@ export const syncRepositories = async (
   return { results };
 };
 
-export const registerRepositoriesIpc = (db: DbClient): void => {
+export const registerRepositoriesIpc = (db: DbProvider): void => {
   ipcMain.handle("repositories:list", (): Promise<RepositoriesListResult> => {
-    return getRepositories(db);
+    return getRepositories(resolveDb(db));
   });
 
   ipcMain.handle(
     "repositories:create",
     (_event, input: CreateRepositoryInput): Promise<RepositoryApiRecord> => {
-      return createRepository(db, input);
+      return createRepository(resolveDb(db), input);
     }
   );
 
   ipcMain.handle(
     "repositories:update",
     (_event, repositoryId: string, input: UpdateRepositoryInput): Promise<RepositoryApiRecord> => {
-      return updateRepository(db, repositoryId, input);
+      return updateRepository(resolveDb(db), repositoryId, input);
     }
   );
 
   ipcMain.handle(
     "repositories:delete",
     (_event, repositoryId: string): Promise<DeleteRepositoryResult> => {
-      return deleteRepository(db, repositoryId);
+      return deleteRepository(resolveDb(db), repositoryId);
     }
   );
 
   ipcMain.handle(
     "repositories:getDeletePreview",
     (_event, repositoryId: string): Promise<RepositoryDeletePreview> => {
-      return getRepositoryDeletePreview(db, repositoryId);
+      return getRepositoryDeletePreview(resolveDb(db), repositoryId);
     }
   );
 
   ipcMain.handle(
     "repositories:inspectSource",
     async (_event, remoteUrl: string): Promise<RepositorySourceInspection> => {
-      return inspectRepositorySourceWithSettings(db, remoteUrl);
+      return inspectRepositorySourceWithSettings(resolveDb(db), remoteUrl);
     }
   );
 
@@ -307,9 +308,13 @@ export const registerRepositoriesIpc = (db: DbClient): void => {
   ipcMain.handle(
     "repositories:sync",
     (_event, repositoryIds: string[]): Promise<RepositoriesSyncResult> => {
-      return syncRepositories(db, repositoryIds);
+      return syncRepositories(resolveDb(db), repositoryIds);
     }
   );
+};
+
+const resolveDb = (db: DbProvider): DbClient => {
+  return typeof db === "function" ? db() : db;
 };
 
 const normalizeCreateRepositoryInput = (input: CreateRepositoryInput): CreateRepositoryInput => {

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, Menu, Tray } from "electron";
-import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { createAppDbRuntime, type AppDbRuntime } from "./app-storage.js";
 import { registerAppInfoIpc } from "./ipc/app-info.js";
 import { registerHealthIpc } from "./ipc/health";
 import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
@@ -14,11 +14,11 @@ import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
 import { getTrayIconPath } from "./tray-icon.js";
 import { buildMainWindowOptions, disableWindowMenuBar } from "./window-menu.js";
 import { APP_META } from "../core/app-constants.js";
-import { createDbClient } from "../db/client.js";
 import { createRepositoryRepository } from "../db/repositories/repositoryRepository.js";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+let dbRuntime: AppDbRuntime | null = null;
 
 const loadMainWindow = async (window: BrowserWindow): Promise<void> => {
   const devServerUrl = process.env.VITE_DEV_SERVER_URL;
@@ -91,20 +91,15 @@ const createTray = (): void => {
   });
 };
 
-const createAppDb = () => {
-  const dataDirectory = app.getPath("userData");
-  mkdirSync(dataDirectory, { recursive: true });
-
-  return createDbClient(path.join(dataDirectory, "skills-manager.sqlite"));
-};
-
 void app
   .whenReady()
   .then(async () => {
-    const db = createAppDb();
+    dbRuntime = createAppDbRuntime({
+      dataDirectory: app.getPath("userData")
+    });
 
     try {
-      await createRepositoryRepository(db).markInterruptedSyncRuns();
+      await createRepositoryRepository(dbRuntime.getDb()).markInterruptedSyncRuns();
     } catch (error: unknown) {
       console.error("Failed to recover interrupted repository sync runs.", error);
     }
@@ -112,11 +107,11 @@ void app
     registerAppInfoIpc();
     registerHealthIpc();
     registerLocaleIpc();
-    registerProvidersIpc(db);
-    registerRepositoriesIpc(db);
-    registerSettingsIpc(db);
-    registerSkillsIpc(db);
-    registerSyncHistoryIpc(db);
+    registerProvidersIpc(dbRuntime.getDb);
+    registerRepositoriesIpc(dbRuntime.getDb);
+    registerSettingsIpc(dbRuntime);
+    registerSkillsIpc(dbRuntime.getDb);
+    registerSyncHistoryIpc(dbRuntime.getDb);
     await createMainWindow();
     createTray();
 
@@ -136,4 +131,9 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+
+app.on("before-quit", () => {
+  dbRuntime?.close();
+  dbRuntime = null;
 });

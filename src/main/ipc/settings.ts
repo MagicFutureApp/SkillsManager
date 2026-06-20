@@ -1,5 +1,6 @@
 import { ipcMain, shell } from "electron";
 import { createAppSettingsRepository } from "../../db/repositories/appSettingsRepository.js";
+import type { AppDbRuntime, AppStoragePaths } from "../app-storage.js";
 import type { createDbClient } from "../../db/client.js";
 
 const GITHUB_TOKEN_SETTING_KEY = "githubToken";
@@ -13,6 +14,16 @@ export type AppSettingsResult = {
   github: {
     hasToken: boolean;
   };
+};
+
+export type AppStoragePathsResult = {
+  databasePath: string;
+  localCachePath: string;
+};
+
+export type ResetLocalDatabaseResult = {
+  settings: AppSettingsResult;
+  storage: AppStoragePathsResult;
 };
 
 export const getGitHubToken = async (db: DbClient): Promise<string | null> => {
@@ -57,6 +68,24 @@ export const clearGitHubToken = async (db: DbClient): Promise<AppSettingsResult>
   return getAppSettings(db);
 };
 
+export const getAppStoragePaths = (paths: AppStoragePaths): AppStoragePathsResult => {
+  return {
+    databasePath: paths.databasePath,
+    localCachePath: paths.repositoryCachePath
+  };
+};
+
+export const resetLocalDatabase = async (
+  runtime: Pick<AppDbRuntime, "getDb" | "resetDatabase">
+): Promise<ResetLocalDatabaseResult> => {
+  const paths = await runtime.resetDatabase();
+
+  return {
+    settings: await getAppSettings(runtime.getDb()),
+    storage: getAppStoragePaths(paths)
+  };
+};
+
 export const openExternalUrl = async (
   url: string,
   operations: OpenExternalOperations = shell
@@ -70,20 +99,28 @@ export const openExternalUrl = async (
   await operations.openExternal(url);
 };
 
-export const registerSettingsIpc = (db: DbClient): void => {
+export const registerSettingsIpc = (runtime: AppDbRuntime): void => {
   ipcMain.handle("settings:get", (): Promise<AppSettingsResult> => {
-    return getAppSettings(db);
+    return getAppSettings(runtime.getDb());
+  });
+
+  ipcMain.handle("settings:getStoragePaths", (): AppStoragePathsResult => {
+    return getAppStoragePaths(runtime.getStoragePaths());
+  });
+
+  ipcMain.handle("settings:resetLocalDatabase", (): Promise<ResetLocalDatabaseResult> => {
+    return resetLocalDatabase(runtime);
   });
 
   ipcMain.handle(
     "settings:saveGitHubToken",
     (_event, token: string): Promise<AppSettingsResult> => {
-      return saveGitHubToken(db, token);
+      return saveGitHubToken(runtime.getDb(), token);
     }
   );
 
   ipcMain.handle("settings:clearGitHubToken", (): Promise<AppSettingsResult> => {
-    return clearGitHubToken(db);
+    return clearGitHubToken(runtime.getDb());
   });
 
   ipcMain.handle("settings:openExternalUrl", (_event, url: string): Promise<void> => {

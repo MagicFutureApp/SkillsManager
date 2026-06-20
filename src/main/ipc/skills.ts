@@ -9,6 +9,7 @@ export type SkillsListResult = {
 };
 
 type DbClient = ReturnType<typeof createDbClient>;
+type DbProvider = DbClient | (() => DbClient);
 
 export const getSkills = async (db: DbClient): Promise<SkillsListResult> => {
   const skillRepository = createSkillRepository(db);
@@ -18,8 +19,12 @@ export const getSkills = async (db: DbClient): Promise<SkillsListResult> => {
   };
 };
 
-export const registerSkillsIpc = (db: DbClient): void => {
+export const registerSkillsIpc = (db: DbProvider): void => {
   ipcMain.handle("skills:list", (): Promise<SkillsListResult> => {
-    return getSkills(db);
+    return getSkills(resolveDb(db));
   });
+};
+
+const resolveDb = (db: DbProvider): DbClient => {
+  return typeof db === "function" ? db() : db;
 };

@@ -4,7 +4,11 @@ import type { AppInfo } from "./ipc/app-info";
 import type { AppHealth } from "./ipc/health";
 import type { ProvidersListResult } from "./ipc/providers";
 import type { RepositoriesListResult, RepositoriesSyncResult } from "./ipc/repositories";
-import type { AppSettingsResult } from "./ipc/settings";
+import type {
+  AppSettingsResult,
+  AppStoragePathsResult,
+  ResetLocalDatabaseResult
+} from "./ipc/settings";
 import type { SkillsListResult } from "./ipc/skills";
 import type { SyncHistoryListResult } from "../core/repositories/sync-history-api";
 import type { RepositorySourceInspection } from "../core/repositories/source-inspection";
@@ -28,6 +32,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
   getHealth: () => ipcRenderer.invoke("app:getHealth") as Promise<AppHealth>,
   getInfo: () => ipcRenderer.invoke("app:getInfo") as Promise<AppInfo>,
   getLocale: () => ipcRenderer.invoke("app:getLocale") as Promise<SupportedLocale>,
+  getAppStoragePaths: () =>
+    ipcRenderer.invoke("settings:getStoragePaths") as Promise<AppStoragePathsResult>,
   getAppSettings: () => ipcRenderer.invoke("settings:get") as Promise<AppSettingsResult>,
   getRepositoryDeletePreview: (repositoryId: string) =>
     ipcRenderer.invoke(
@@ -48,6 +54,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ipcRenderer.invoke("settings:openExternalUrl", url) as Promise<void>,
   openRepositoryLocation: (location: string) =>
     ipcRenderer.invoke("repositories:openLocation", location) as Promise<void>,
+  resetLocalDatabase: () =>
+    ipcRenderer.invoke("settings:resetLocalDatabase") as Promise<ResetLocalDatabaseResult>,
   saveGitHubToken: (token: string) =>
     ipcRenderer.invoke("settings:saveGitHubToken", token) as Promise<AppSettingsResult>,
   selectLocalRepositoryPath: () =>

@@ -8,6 +8,7 @@ export type ProvidersListResult = {
 };
 
 type DbClient = ReturnType<typeof createDbClient>;
+type DbProvider = DbClient | (() => DbClient);
 
 export const getProviders = async (db: DbClient): Promise<ProvidersListResult> => {
   const providerRepository = createProviderRepository(db);
@@ -17,8 +18,12 @@ export const getProviders = async (db: DbClient): Promise<ProvidersListResult> =
   };
 };
 
-export const registerProvidersIpc = (db: DbClient): void => {
+export const registerProvidersIpc = (db: DbProvider): void => {
   ipcMain.handle("providers:list", (): Promise<ProvidersListResult> => {
-    return getProviders(db);
+    return getProviders(resolveDb(db));
   });
+};
+
+const resolveDb = (db: DbProvider): DbClient => {
+  return typeof db === "function" ? db() : db;
 };

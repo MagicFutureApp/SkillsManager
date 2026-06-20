@@ -5,7 +5,11 @@ import type {
   RepositoriesListResult as MainRepositoriesListResult,
   RepositoriesSyncResult as MainRepositoriesSyncResult
 } from "../main/ipc/repositories";
-import type { AppSettingsResult as MainAppSettingsResult } from "../main/ipc/settings";
+import type {
+  AppSettingsResult as MainAppSettingsResult,
+  AppStoragePathsResult as MainAppStoragePathsResult,
+  ResetLocalDatabaseResult as MainResetLocalDatabaseResult
+} from "../main/ipc/settings";
 import type { SkillsListResult as MainSkillsListResult } from "../main/ipc/skills";
 import type { SyncHistoryListResult as CoreSyncHistoryListResult } from "../core/repositories/sync-history-api";
 import type {
@@ -22,6 +26,8 @@ import type { RuntimePlatform as RendererRuntimePlatform } from "./platform-font
 export type AppHealth = MainAppHealth;
 export type AppInfo = MainAppInfo;
 export type AppSettingsResult = MainAppSettingsResult;
+export type AppStoragePathsResult = MainAppStoragePathsResult;
+export type ResetLocalDatabaseResult = MainResetLocalDatabaseResult;
 export type ProvidersListResult = MainProvidersListResult;
 export type RepositoriesListResult = MainRepositoriesListResult;
 export type RepositoriesSyncResult = MainRepositoriesSyncResult;
@@ -49,6 +55,7 @@ declare global {
       getHealth: () => Promise<AppHealth>;
       getInfo: () => Promise<AppInfo>;
       getLocale: () => Promise<SupportedLocale>;
+      getAppStoragePaths?: () => Promise<AppStoragePathsResult>;
       getAppSettings?: () => Promise<AppSettingsResult>;
       getRepositoryDeletePreview?: (repositoryId: string) => Promise<RepositoryDeletePreview>;
       inspectRepositorySource?: (remoteUrl: string) => Promise<RepositorySourceInspection>;
@@ -58,6 +65,7 @@ declare global {
       listSyncHistory?: () => Promise<SyncHistoryListResult>;
       openExternalUrl?: (url: string) => Promise<void>;
       openRepositoryLocation?: (location: string) => Promise<void>;
+      resetLocalDatabase?: () => Promise<ResetLocalDatabaseResult>;
       saveGitHubToken?: (token: string) => Promise<AppSettingsResult>;
       selectLocalRepositoryPath?: () => Promise<string | null>;
       syncRepositories?: (repositoryIds: string[]) => Promise<RepositoriesSyncResult>;

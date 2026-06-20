@@ -1,19 +1,43 @@
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, KeyRound, Save, Trash2 } from "lucide-react";
+import {
+  Copy,
+  Database,
+  ExternalLink,
+  FolderOpen,
+  KeyRound,
+  RotateCcw,
+  Save,
+  Trash2
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
-import type { AppSettingsResult } from "@/global";
+import type { AppSettingsResult, AppStoragePathsResult } from "@/global";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+type StorageStatus = "loading" | "idle" | "resetting" | "reset" | "error";
 const GITHUB_TOKEN_CREATION_URL =
   "https://github.com/settings/personal-access-tokens/new?name=Skills+Manager&description=Read+repository+metadata+and+SKILL.md+files&contents=read";
 
 export const SettingsPage = () => {
   const [settings, setSettings] = useState<AppSettingsResult>({ github: { hasToken: false } });
+  const [storagePaths, setStoragePaths] = useState<AppStoragePathsResult | null>(null);
   const [githubToken, setGithubToken] = useState("");
   const [status, setStatus] = useState<SaveStatus>("idle");
+  const [storageStatus, setStorageStatus] = useState<StorageStatus>("loading");
   const [error, setError] = useState("");
+  const [storageError, setStorageError] = useState("");
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
@@ -29,6 +53,21 @@ export const SettingsPage = () => {
         if (isCurrent) {
           setError(toErrorMessage(unknownError) || "读取设置失败。");
           setStatus("error");
+        }
+      });
+
+    void window.skillsManager
+      ?.getAppStoragePaths?.()
+      .then((nextStoragePaths) => {
+        if (isCurrent) {
+          setStoragePaths(nextStoragePaths);
+          setStorageStatus("idle");
+        }
+      })
+      .catch((unknownError: unknown) => {
+        if (isCurrent) {
+          setStorageError(toErrorMessage(unknownError) || "读取本地存储路径失败。");
+          setStorageStatus("error");
         }
       });
 
@@ -86,7 +125,40 @@ export const SettingsPage = () => {
       });
   };
 
+  const copyPath = (value: string) => {
+    void navigator.clipboard?.writeText(value);
+  };
+
+  const confirmResetLocalDatabase = () => {
+    if (!window.skillsManager?.resetLocalDatabase) {
+      setStorageError("重建本地数据库接口不可用。");
+      setStorageStatus("error");
+      setIsResetDialogOpen(false);
+      return;
+    }
+
+    setStorageStatus("resetting");
+    setStorageError("");
+
+    void window.skillsManager
+      .resetLocalDatabase()
+      .then((result) => {
+        setSettings(result.settings);
+        setStoragePaths(result.storage);
+        setGithubToken("");
+        setStatus("idle");
+        setStorageStatus("reset");
+        setIsResetDialogOpen(false);
+      })
+      .catch((unknownError: unknown) => {
+        setStorageError(toErrorMessage(unknownError) || "重建本地数据库失败。");
+        setStorageStatus("error");
+        setIsResetDialogOpen(false);
+      });
+  };
+
   const isSaving = status === "saving";
+  const isResetting = storageStatus === "resetting";
 
   return (
     <div className="grid gap-5 p-7">
@@ -150,6 +222,61 @@ export const SettingsPage = () => {
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
       </section>
 
+      <section className="grid gap-4 border-t border-border pt-5" aria-labelledby="local-storage">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Database className="size-4 text-muted-foreground" aria-hidden="true" />
+              <h2 id="local-storage" className="text-base font-semibold text-foreground">
+                本地存储
+              </h2>
+            </div>
+            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+              查看 Skills Manager 的本地缓存根目录和 SQLite
+              数据库文件路径。重建数据库会清空本地索引，不会删除缓存目录或 agent 目标目录中的文件。
+            </p>
+          </div>
+        </div>
+
+        <div className="grid max-w-4xl gap-3">
+          <StoragePathRow
+            icon={<FolderOpen aria-hidden="true" />}
+            label="本地缓存总路径"
+            value={
+              storagePaths?.localCachePath ?? (storageStatus === "loading" ? "读取中..." : "--")
+            }
+            copyLabel="复制路径"
+            disabled={!storagePaths?.localCachePath}
+            onCopy={() => storagePaths?.localCachePath && copyPath(storagePaths.localCachePath)}
+          />
+          <StoragePathRow
+            icon={<Database aria-hidden="true" />}
+            label="本地数据库路径"
+            value={storagePaths?.databasePath ?? (storageStatus === "loading" ? "读取中..." : "--")}
+            copyLabel="复制路径"
+            disabled={!storagePaths?.databasePath}
+            onCopy={() => storagePaths?.databasePath && copyPath(storagePaths.databasePath)}
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={isResetting}
+            onClick={() => setIsResetDialogOpen(true)}
+          >
+            <RotateCcw aria-hidden="true" />
+            重建本地数据库
+          </Button>
+          {storageStatus === "reset" ? (
+            <p className="text-sm text-muted-foreground">本地数据库已重建。</p>
+          ) : null}
+        </div>
+
+        {storageError ? <p className="text-sm text-destructive">{storageError}</p> : null}
+      </section>
+
       <section
         className="grid max-w-3xl gap-4 border-t border-border pt-5"
         aria-labelledby="github-token-help"
@@ -186,6 +313,71 @@ export const SettingsPage = () => {
           打开 GitHub token 创建页面
         </Button>
       </section>
+
+      <AlertDialog
+        open={isResetDialogOpen}
+        onOpenChange={(nextOpen) => {
+          if (!isResetting) {
+            setIsResetDialogOpen(nextOpen);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>重建本地数据库？</AlertDialogTitle>
+            <AlertDialogDescription>
+              会清空本地索引、来源、Skills、同步历史和应用设置，但不会删除已安装到 agent
+              目标目录的文件，也不会清空本地缓存目录。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isResetting}>取消</AlertDialogCancel>
+            <AlertDialogAction
+              type="button"
+              variant="destructive"
+              disabled={isResetting}
+              onClick={confirmResetLocalDatabase}
+            >
+              <RotateCcw aria-hidden="true" />
+              确认重建
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+const StoragePathRow = ({
+  copyLabel,
+  disabled,
+  icon,
+  label,
+  value,
+  onCopy
+}: {
+  copyLabel: string;
+  disabled: boolean;
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  onCopy: () => void;
+}) => {
+  return (
+    <div className="grid gap-3 rounded-lg border border-border bg-muted/40 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+          <span className="inline-flex size-4 items-center justify-center [&_svg]:size-4">
+            {icon}
+          </span>
+          {label}
+        </div>
+        <p className="mt-1 break-all font-mono text-sm text-foreground">{value}</p>
+      </div>
+      <Button type="button" variant="outline" disabled={disabled} onClick={onCopy}>
+        <Copy aria-hidden="true" />
+        {copyLabel}
+      </Button>
     </div>
   );
 };
