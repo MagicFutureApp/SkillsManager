@@ -72,7 +72,7 @@ describe("RepositoriesPage", () => {
     await renderRepositoriesPage();
 
     expect(screen.getByRole("heading", { name: "来源管理" })).toBeInTheDocument();
-    expect(screen.getByText("管理 Git 和其他来源的Skills。")).toBeInTheDocument();
+    expect(screen.getByText("管理 Git 和其他来源的 Skills。")).toBeInTheDocument();
     expect(screen.getByLabelText("来源筛选")).toHaveClass(
       "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]"
     );
@@ -114,6 +114,27 @@ describe("RepositoriesPage", () => {
     expect(screen.getByText("没有匹配的来源。调整搜索或筛选条件。")).toBeInTheDocument();
   });
 
+  it("searches sources by name, URL, or note", async () => {
+    await renderRepositoriesPage();
+
+    const searchField = screen.getByLabelText("搜索");
+
+    expect(searchField).toHaveAttribute("placeholder", "搜索名称、URL 或备注");
+
+    fireEvent.change(searchField, { target: { value: "stable" } });
+    expect(screen.getByText("没有匹配的来源。调整搜索或筛选条件。")).toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "gitlab.com:design" } });
+    expect(screen.getByRole("button", { name: "Design lab prompts" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Team skills repository" })
+    ).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "系统 Git 凭据" } });
+    expect(screen.getByRole("button", { name: "Team skills repository" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Design lab prompts" })).not.toBeInTheDocument();
+  });
+
   it("updates the detail pane when a source row is selected", async () => {
     await renderRepositoriesPage();
 
@@ -124,6 +145,7 @@ describe("RepositoriesPage", () => {
       within(detail).getByRole("heading", { name: "Local development skills" })
     ).toBeInTheDocument();
     expect(within(detail).getAllByText("D:/workspace/local-skills").length).toBeGreaterThan(0);
+    expect(within(detail).getByText("开发中的本机仓库，不需要 clone。")).toBeInTheDocument();
     expect(
       within(detail).getByText("agents/skills/*/SKILL.md, skills/*/SKILL.md")
     ).toBeInTheDocument();

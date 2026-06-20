@@ -125,15 +125,7 @@ export const filterRepositories = ({
 }): RepositoryViewModel[] => {
   const normalizedQuery = query.trim().toLowerCase();
   const visible = repositories.filter((repository) => {
-    const searchable = [
-      repository.name,
-      repository.provider,
-      repository.remoteUrl,
-      repository.branch,
-      repository.cachePath,
-      repository.patterns.join(", "),
-      repository.note
-    ]
+    const searchable = [repository.name, repository.remoteUrl, repository.note]
       .join(" ")
       .toLowerCase();
 

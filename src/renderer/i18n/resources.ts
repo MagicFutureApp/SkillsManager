@@ -143,7 +143,7 @@ export const resources = {
       repositories: {
         pageLabel: "Sources",
         heading: "来源管理",
-        description: "管理 Git 和其他来源的Skills。",
+        description: "管理 Git 和其他来源的 Skills。",
         empty: "没有匹配的来源。调整搜索或筛选条件。",
         actions: {
           addRepository: "新增",
@@ -158,7 +158,7 @@ export const resources = {
           ariaLabel: "来源筛选",
           provider: "类型",
           search: "搜索",
-          searchPlaceholder: "搜索名称、URL、分支或发现入口",
+          searchPlaceholder: "搜索名称、URL 或备注",
           sort: "排序",
           sortName: "名称",
           sortPriority: "优先",
@@ -473,7 +473,7 @@ export const resources = {
           ariaLabel: "Source filters",
           provider: "Type",
           search: "Search",
-          searchPlaceholder: "Search name, URL, branch, or discovery entry",
+          searchPlaceholder: "Search name, URL, or note",
           sort: "Sort",
           sortName: "Name",
           sortPriority: "Sync priority",

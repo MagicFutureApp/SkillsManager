@@ -47,6 +47,7 @@ export const RepositoryDetail = ({
       ] satisfies Array<[string, number]>)
     : [];
   const isLocalRepository = repository?.provider === "Local";
+  const detailDescription = repository ? repository.note : copy.defaultDescription;
 
   return (
     <>
@@ -54,9 +55,9 @@ export const RepositoryDetail = ({
         <h2 className="text-xl font-semibold">
           {repository ? repository.name : copy.defaultTitle}
         </h2>
-        {/*<p className="mt-3 text-sm leading-6 text-muted-foreground">
-          {repository ? repository.note : copy.defaultDescription}
-        </p>*/}
+        {detailDescription ? (
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">{detailDescription}</p>
+        ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
           <Button type="button" variant="outline" disabled={!repository} onClick={onEdit}>
             {copy.edit}
