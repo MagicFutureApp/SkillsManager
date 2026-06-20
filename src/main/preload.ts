@@ -46,6 +46,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
   listSyncHistory: () => ipcRenderer.invoke("syncHistory:list") as Promise<SyncHistoryListResult>,
   openExternalUrl: (url: string) =>
     ipcRenderer.invoke("settings:openExternalUrl", url) as Promise<void>,
+  openRepositoryLocation: (location: string) =>
+    ipcRenderer.invoke("repositories:openLocation", location) as Promise<void>,
   saveGitHubToken: (token: string) =>
     ipcRenderer.invoke("settings:saveGitHubToken", token) as Promise<AppSettingsResult>,
   selectLocalRepositoryPath: () =>

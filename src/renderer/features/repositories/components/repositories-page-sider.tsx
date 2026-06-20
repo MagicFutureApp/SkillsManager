@@ -22,6 +22,7 @@ export const RepositoriesPageSider = () => {
         enabledYes: t("repositories.detail.enabledYes"),
         lastCommit: t("repositories.detail.lastCommit"),
         lastScan: t("repositories.detail.lastScan"),
+        openLocation: (location) => t("repositories.detail.openLocation", { location }),
         patterns: t("repositories.detail.patterns"),
         provider: t("repositories.detail.provider"),
         remoteUrl: t("repositories.detail.remoteUrl"),
@@ -35,6 +36,7 @@ export const RepositoriesPageSider = () => {
       onCopyCachePath={page.copyCachePath}
       onDelete={page.openDeleteDialog}
       onEdit={page.openEditModal}
+      onOpenLocation={page.openRepositoryLocation}
     />
   );
 };

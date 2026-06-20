@@ -3,7 +3,11 @@ import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { inspectRepositorySourceWithSettings, selectLocalRepositoryPath } from "./repositories";
+import {
+  inspectRepositorySourceWithSettings,
+  openRepositoryLocation,
+  selectLocalRepositoryPath
+} from "./repositories";
 
 vi.mock("electron", () => ({
   dialog: {
@@ -11,6 +15,10 @@ vi.mock("electron", () => ({
   },
   ipcMain: {
     handle: vi.fn()
+  },
+  shell: {
+    openExternal: vi.fn(),
+    openPath: vi.fn()
   }
 }));
 
@@ -109,5 +117,27 @@ describe("selectLocalRepositoryPath", () => {
     });
 
     await expect(selectLocalRepositoryPath({ showOpenDialog })).resolves.toBeNull();
+  });
+});
+
+describe("openRepositoryLocation", () => {
+  it("opens Git SSH sources as repository web URLs", async () => {
+    const openExternal = vi.fn().mockResolvedValue(undefined);
+    const openPath = vi.fn().mockResolvedValue("");
+
+    await openRepositoryLocation("git@github.com:team/skills.git", { openExternal, openPath });
+
+    expect(openExternal).toHaveBeenCalledWith("https://github.com/team/skills");
+    expect(openPath).not.toHaveBeenCalled();
+  });
+
+  it("opens local source paths with the system file browser", async () => {
+    const openExternal = vi.fn().mockResolvedValue(undefined);
+    const openPath = vi.fn().mockResolvedValue("");
+
+    await openRepositoryLocation("~/workspace/local-skills", { openExternal, openPath });
+
+    expect(openPath).toHaveBeenCalledWith(path.join(os.homedir(), "workspace", "local-skills"));
+    expect(openExternal).not.toHaveBeenCalled();
   });
 });

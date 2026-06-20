@@ -414,6 +414,14 @@ export const useRepositoriesPageState = () => {
     void navigator.clipboard?.writeText(selectedRepository.cachePath);
   };
 
+  const openRepositoryLocation = (location: string) => {
+    if (!window.skillsManager?.openRepositoryLocation) {
+      return;
+    }
+
+    void window.skillsManager.openRepositoryLocation(location);
+  };
+
   const confirmDeleteRepository = async () => {
     if (!deletePreview) {
       return;
@@ -479,6 +487,7 @@ export const useRepositoriesPageState = () => {
     openDeleteDialog,
     openCreateModal,
     openEditModal,
+    openRepositoryLocation,
     saveRepository,
     selectAllVisible,
     setProviderFilter,

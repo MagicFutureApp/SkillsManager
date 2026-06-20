@@ -29,6 +29,7 @@ const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
     listRepositories:
       skillsManager?.listRepositories ??
       vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+    openRepositoryLocation: skillsManager?.openRepositoryLocation,
     selectLocalRepositoryPath: skillsManager?.selectLocalRepositoryPath,
     syncRepositories: skillsManager?.syncRepositories,
     updateRepository: skillsManager?.updateRepository,
@@ -173,6 +174,38 @@ describe("RepositoriesPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "skills.sh market index" }));
 
     expect(within(detail).getByText("否")).toBeInTheDocument();
+  });
+
+  it("opens the selected source URL or path from the detail pane", async () => {
+    const openRepositoryLocation = vi.fn().mockResolvedValue(undefined);
+
+    window.skillsManager = {
+      getHealth: vi.fn().mockResolvedValue({
+        chrome: "130.0.0",
+        electron: "42.2.0",
+        node: "25.0.0",
+        platform: "win32"
+      }),
+      getInfo: vi.fn().mockResolvedValue({ version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      openRepositoryLocation,
+      platform: "win32"
+    };
+    await renderRepositoriesPage();
+
+    const detail = screen.getByLabelText("来源详情");
+
+    fireEvent.click(
+      within(detail).getByRole("button", { name: "打开 git@github.com:team/skills.git" })
+    );
+    expect(openRepositoryLocation).toHaveBeenCalledWith("git@github.com:team/skills.git");
+
+    fireEvent.click(screen.getByRole("button", { name: "Local development skills" }));
+    fireEvent.click(within(detail).getByRole("button", { name: "打开 D:/workspace/local-skills" }));
+
+    expect(openRepositoryLocation).toHaveBeenLastCalledWith("D:/workspace/local-skills");
   });
 
   it("enables sync after a source is checked", async () => {

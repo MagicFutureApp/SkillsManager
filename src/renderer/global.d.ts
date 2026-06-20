@@ -57,6 +57,7 @@ declare global {
       listSkills?: () => Promise<SkillsListResult>;
       listSyncHistory?: () => Promise<SyncHistoryListResult>;
       openExternalUrl?: (url: string) => Promise<void>;
+      openRepositoryLocation?: (location: string) => Promise<void>;
       saveGitHubToken?: (token: string) => Promise<AppSettingsResult>;
       selectLocalRepositoryPath?: () => Promise<string | null>;
       syncRepositories?: (repositoryIds: string[]) => Promise<RepositoriesSyncResult>;

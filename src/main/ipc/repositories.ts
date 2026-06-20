@@ -1,4 +1,4 @@
-import { dialog, ipcMain } from "electron";
+import { dialog, ipcMain, shell } from "electron";
 import { cp, mkdir, rm, stat, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import os from "node:os";
@@ -42,6 +42,10 @@ type RepositoryFileOperations = {
 };
 type LocalPathSelectionOperations = {
   showOpenDialog: typeof dialog.showOpenDialog;
+};
+type RepositoryLocationOperations = {
+  openExternal: (url: string) => Promise<void>;
+  openPath: (path: string) => Promise<string>;
 };
 type RepositorySyncOperations = {
   copyLocalSource: (sourcePath: string, cachePath: string) => Promise<void>;
@@ -136,6 +140,32 @@ export const selectLocalRepositoryPath = async (
   }
 
   return result.filePaths[0] ?? null;
+};
+
+export const openRepositoryLocation = async (
+  location: string,
+  operations: RepositoryLocationOperations = {
+    openExternal: shell.openExternal,
+    openPath: shell.openPath
+  }
+): Promise<void> => {
+  const normalizedLocation = location.trim();
+
+  if (!normalizedLocation) {
+    throw new Error("Repository location is required.");
+  }
+
+  if (isLocalPath(normalizedLocation)) {
+    const errorMessage = await operations.openPath(expandHomePath(normalizedLocation));
+
+    if (errorMessage) {
+      throw new Error(errorMessage);
+    }
+
+    return;
+  }
+
+  await operations.openExternal(toRepositoryWebUrl(normalizedLocation));
 };
 
 export const syncRepositories = async (
@@ -270,6 +300,10 @@ export const registerRepositoriesIpc = (db: DbClient): void => {
     return selectLocalRepositoryPath();
   });
 
+  ipcMain.handle("repositories:openLocation", (_event, location: string): Promise<void> => {
+    return openRepositoryLocation(location);
+  });
+
   ipcMain.handle(
     "repositories:sync",
     (_event, repositoryIds: string[]): Promise<RepositoriesSyncResult> => {
@@ -385,6 +419,43 @@ const isLocalPath = (value: string): boolean => {
     value.startsWith("/") ||
     value.startsWith(".")
   );
+};
+
+const toRepositoryWebUrl = (location: string): string => {
+  try {
+    const parsedUrl = new URL(location);
+
+    if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+      parsedUrl.pathname = stripGitSuffix(parsedUrl.pathname);
+      parsedUrl.search = "";
+      parsedUrl.hash = "";
+      return parsedUrl.toString();
+    }
+
+    if (parsedUrl.protocol === "ssh:") {
+      return buildRepositoryWebUrl(parsedUrl.hostname, parsedUrl.pathname);
+    }
+  } catch {
+    // Fall through to scp-like Git URL parsing.
+  }
+
+  const scpLikeMatch = /^(?:[^@\s]+@)?([^:\s]+):(.+)$/.exec(location);
+
+  if (scpLikeMatch) {
+    return buildRepositoryWebUrl(scpLikeMatch[1], scpLikeMatch[2]);
+  }
+
+  throw new Error("Unsupported repository location.");
+};
+
+const buildRepositoryWebUrl = (host: string, repositoryPath: string): string => {
+  const normalizedRepositoryPath = stripGitSuffix(repositoryPath.replace(/^\/+/, ""));
+
+  return `https://${host}/${normalizedRepositoryPath}`;
+};
+
+const stripGitSuffix = (value: string): string => {
+  return value.replace(/\.git$/i, "");
 };
 
 const isDevelopmentEnvironment = (): boolean => {
