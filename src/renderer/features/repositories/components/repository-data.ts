@@ -6,6 +6,12 @@ import type {
   RepositoryScanStatus,
   RepositoryScanSummary
 } from "../../../../core/repositories/repository-api";
+import {
+  buildRepositoryCachePath,
+  formatRepositoryDateTime,
+  normalizeDiscoveryEntries,
+  normalizeRepositoryScanSummary
+} from "../../../../core/repositories/repository-utils";
 
 export type RepositoryProviderFilter = RepositoryProviderName | "all";
 export type RepositorySort = "priority" | "name" | "provider" | "status" | "skills";
@@ -166,7 +172,7 @@ export const buildRepositoryFromForm = ({
 }): RepositoryViewModel => {
   return {
     branch: formValues.branch || "main",
-    cachePath: formValues.cachePath || buildCachePath(formValues.name),
+    cachePath: formValues.cachePath || buildRepositoryCachePath(formValues.name),
     enabled: true,
     id: `repo-${Date.now()}`,
     lastCommit: "--",
@@ -175,7 +181,7 @@ export const buildRepositoryFromForm = ({
     lastSync: null,
     name: formValues.name,
     note: formValues.note || "用户新增的来源，等待第一次同步扫描。",
-    patterns: normalizeFormDiscoveryEntry(formValues.patterns),
+    patterns: normalizeDiscoveryEntries(formValues.patterns),
     priority: index + 1,
     provider: formValues.provider,
     providerId: providerIdByName[formValues.provider],
@@ -193,21 +199,6 @@ const providerIdByName: Record<RepositoryProviderName, string> = {
   GitLab: "gitlab",
   Local: "local-git",
   "skills.sh": "skills-sh"
-};
-
-const buildCachePath = (name: string): string => {
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-
-  return `~/.skills-manager/cache/${slug || "repository"}`;
-};
-
-const normalizeFormDiscoveryEntry = (entry: string): string[] => {
-  const trimmedEntry = entry.trim();
-
-  return trimmedEntry ? [trimmedEntry] : [];
 };
 
 const isProviderName = (value: unknown): value is RepositoryProviderName => {
@@ -243,7 +234,7 @@ const parseRepositoryConfig = (configJson: string): RepositoryConfig => {
       providerName: isProviderName(parsed.providerName)
         ? parsed.providerName
         : defaultConfig.providerName,
-      scan: normalizeScanSummary(parsed.scan),
+      scan: normalizeRepositoryScanSummary(parsed.scan, defaultConfig.scan),
       skillUnits:
         typeof parsed.skillUnits === "number" ? parsed.skillUnits : defaultConfig.skillUnits,
       status: isScanStatus(parsed.status) ? parsed.status : defaultConfig.status
@@ -251,44 +242,4 @@ const parseRepositoryConfig = (configJson: string): RepositoryConfig => {
   } catch {
     return defaultConfig;
   }
-};
-
-const normalizeScanSummary = (scan: unknown): RepositoryScanSummary => {
-  if (!scan || typeof scan !== "object") {
-    return defaultConfig.scan;
-  }
-
-  const partial = scan as Partial<RepositoryScanSummary>;
-
-  return {
-    added: typeof partial.added === "number" ? partial.added : 0,
-    changed: typeof partial.changed === "number" ? partial.changed : 0,
-    removed: typeof partial.removed === "number" ? partial.removed : 0,
-    warnings: typeof partial.warnings === "number" ? partial.warnings : 0
-  };
-};
-
-const formatRepositoryDateTime = (isoDate: string | null | undefined): string => {
-  if (!isoDate) {
-    return "--";
-  }
-
-  const date = new Date(isoDate);
-
-  if (Number.isNaN(date.getTime())) {
-    return "--";
-  }
-
-  const parts = new Intl.DateTimeFormat("zh-CN", {
-    day: "2-digit",
-    hour: "2-digit",
-    hour12: false,
-    minute: "2-digit",
-    month: "2-digit",
-    timeZone: "Asia/Tokyo",
-    year: "numeric"
-  }).formatToParts(date);
-  const valueByType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-
-  return `${valueByType.year}/${valueByType.month}/${valueByType.day} ${valueByType.hour}:${valueByType.minute}`;
 };

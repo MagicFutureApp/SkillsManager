@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
+import { DetailRow } from "@/components/detail-row";
 import type { RepositoryViewModel } from "./repository-data";
-import { ExternalLink, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import React from "react";
 
 type RepositoryDetailProps = {
@@ -84,13 +85,19 @@ export const RepositoryDetail = ({
               label={copy.remoteUrl}
               value={repository.remoteUrl}
               mono
+              breakMode="all"
               openLabel={copy.openLocation(repository.remoteUrl)}
               onOpen={() => onOpenLocation(repository.remoteUrl)}
             />
             {!isLocalRepository ? (
               <>
-                <DetailRow label={copy.branch} value={repository.branch} mono />
-                <DetailRow label={copy.lastCommit} value={repository.lastCommit} mono />
+                <DetailRow label={copy.branch} value={repository.branch} mono breakMode="all" />
+                <DetailRow
+                  label={copy.lastCommit}
+                  value={repository.lastCommit}
+                  mono
+                  breakMode="all"
+                />
               </>
             ) : null}
             <DetailRow label={copy.lastScan} value={repository.lastScanTime} />
@@ -123,42 +130,5 @@ export const RepositoryDetail = ({
         </div>
       </section>
     </>
-  );
-};
-
-const DetailRow = ({
-  label,
-  mono,
-  openLabel,
-  value,
-  onOpen
-}: {
-  label: string;
-  mono?: boolean;
-  openLabel?: string;
-  value: string;
-  onOpen?: () => void;
-}) => {
-  return (
-    <div className="rounded-lg border border-border bg-muted/40 p-2">
-      <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-      {onOpen ? (
-        <button
-          type="button"
-          className="mt-1 flex w-full items-start justify-between gap-2 rounded-md text-left text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
-          aria-label={openLabel}
-          onClick={onOpen}
-        >
-          <span className={mono ? "break-all font-mono text-sm" : "break-all text-sm"}>
-            {value}
-          </span>
-          <ExternalLink className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        </button>
-      ) : (
-        <p className={mono ? "mt-1 break-all font-mono text-sm" : "mt-1 break-all text-sm"}>
-          {value}
-        </p>
-      )}
-    </div>
   );
 };

@@ -1,33 +1,11 @@
 import type { SyncHistoryListResult } from "@/global";
+import { formatRepositoryDateTime } from "../../../../core/repositories/repository-utils";
 
 export type SyncHistoryRun = SyncHistoryListResult["syncRuns"][number];
 export type SyncHistoryStatusFilter = SyncHistoryRun["status"] | "all";
 export type SyncHistorySort = "newest" | "repository" | "status";
 
-export const formatSyncHistoryDateTime = (isoDate: string | null): string => {
-  if (!isoDate) {
-    return "--";
-  }
-
-  const date = new Date(isoDate);
-
-  if (Number.isNaN(date.getTime())) {
-    return "--";
-  }
-
-  const parts = new Intl.DateTimeFormat("zh-CN", {
-    day: "2-digit",
-    hour: "2-digit",
-    hour12: false,
-    minute: "2-digit",
-    month: "2-digit",
-    timeZone: "Asia/Shanghai",
-    year: "numeric"
-  }).formatToParts(date);
-  const valueByType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-
-  return `${valueByType.year}/${valueByType.month}/${valueByType.day} ${valueByType.hour}:${valueByType.minute}`;
-};
+export const formatSyncHistoryDateTime = formatRepositoryDateTime;
 
 export const formatSyncHistoryDuration = (run: SyncHistoryRun): string => {
   if (!run.finishedAt) {

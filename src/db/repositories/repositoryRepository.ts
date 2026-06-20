@@ -19,6 +19,12 @@ import type { DiscoveredSkill } from "../../core/skills/skill-scanner";
 import type { ProviderType } from "../../core/providers/provider-api";
 import type { createDbClient } from "../client";
 import {
+  buildRepositoryCachePath,
+  normalizeDiscoveryEntries,
+  normalizeRepositoryScanSummary,
+  slugifyRepositoryName
+} from "../../core/repositories/repository-utils";
+import {
   distributionPlanItems,
   installInstances,
   providers,
@@ -81,7 +87,7 @@ export const createRepositoryRepository = (db: DbClient) => {
         defaultBranch: normalizeRepositoryBranch(input),
         id,
         lastScannedCommitSha: null,
-        localCachePath: buildCachePath(input.name),
+        localCachePath: buildRepositoryCachePath(input.name),
         name: input.name,
         providerId,
         remoteUrl: input.remoteUrl,
@@ -94,7 +100,7 @@ export const createRepositoryRepository = (db: DbClient) => {
         id,
         lastSync: null,
         lastScannedCommitSha: null,
-        localCachePath: buildCachePath(input.name),
+        localCachePath: buildRepositoryCachePath(input.name),
         name: input.name,
         providerId,
         remoteUrl: input.remoteUrl,
@@ -668,7 +674,7 @@ const buildCreatedRepositoryConfig = (input: CreateRepositoryInput): RepositoryC
     enabled: true,
     lastScanLabel: "未执行",
     note: input.note || (input.provider === "Local" ? "" : "用户新增的来源，等待第一次同步扫描。"),
-    patterns: normalizeDiscoveryEntry(input.patterns),
+    patterns: normalizeDiscoveryEntries(input.patterns),
     priority: 99,
     providerName: input.provider,
     scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
@@ -702,7 +708,7 @@ const mergeUpdatedRepositoryConfig = ({
   return {
     ...savedConfig,
     note: input.note,
-    patterns: normalizeDiscoveryEntry(input.patterns),
+    patterns: normalizeDiscoveryEntries(input.patterns),
     providerName
   };
 };
@@ -782,13 +788,6 @@ const buildSkillUnitId = (repositoryId: string, skillKey: string): string => {
   return `${repositoryId}__${skillKey}`;
 };
 
-const normalizeDiscoveryEntry = (entry: string): string[] => {
-  return entry
-    .split(/[,\r\n]+/)
-    .map((pattern) => pattern.trim())
-    .filter(Boolean);
-};
-
 const providerNameFor = (
   providerType: string | undefined,
   remoteUrl: string
@@ -862,19 +861,7 @@ const deriveRepositoryName = (remoteUrl: string, fallbackId: string): string => 
 };
 
 const buildRepositoryId = (name: string, now: Date): string => {
-  return `repo-${slugify(name) || "source"}-${now.getTime()}`;
-};
-
-const buildCachePath = (name: string): string => {
-  return `~/.skills-manager/cache/${slugify(name) || "repository"}`;
-};
-
-const slugify = (value: string): string => {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+  return `repo-${slugifyRepositoryName(name) || "source"}-${now.getTime()}`;
 };
 
 const parseRepositoryConfig = (configJson: string): Partial<RepositoryConfig> => {
@@ -890,27 +877,12 @@ const parseRepositoryConfig = (configJson: string): Partial<RepositoryConfig> =>
         : undefined,
       priority: typeof parsed.priority === "number" ? parsed.priority : undefined,
       providerName: isProviderName(parsed.providerName) ? parsed.providerName : undefined,
-      scan: normalizeScanSummary(parsed.scan),
+      scan: normalizeRepositoryScanSummary(parsed.scan),
       status: isScanStatus(parsed.status) ? parsed.status : undefined
     };
   } catch {
     return {};
   }
-};
-
-const normalizeScanSummary = (scan: unknown): RepositoryScanSummary | undefined => {
-  if (!scan || typeof scan !== "object") {
-    return undefined;
-  }
-
-  const partial = scan as Partial<RepositoryScanSummary>;
-
-  return {
-    added: typeof partial.added === "number" ? partial.added : 0,
-    changed: typeof partial.changed === "number" ? partial.changed : 0,
-    removed: typeof partial.removed === "number" ? partial.removed : 0,
-    warnings: typeof partial.warnings === "number" ? partial.warnings : 0
-  };
 };
 
 const isProviderName = (value: unknown): value is RepositoryProviderName => {

@@ -1,3 +1,4 @@
+import { DetailRow } from "@/components/detail-row";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -55,11 +56,13 @@ export const SyncHistoryDetail = ({ run }: { run: SyncHistoryRun | null }) => {
             label={t("syncHistory.detail.startCommit")}
             value={run.startCommitSha ?? noValue}
             mono
+            breakMode="all"
           />
           <DetailRow
             label={t("syncHistory.detail.endCommit")}
             value={run.endCommitSha ?? noValue}
             mono
+            breakMode="all"
           />
         </div>
       </section>
@@ -84,17 +87,6 @@ export const SyncHistoryDetail = ({ run }: { run: SyncHistoryRun | null }) => {
         </div>
       </section>
     </>
-  );
-};
-
-const DetailRow = ({ label, mono, value }: { label: string; mono?: boolean; value: string }) => {
-  return (
-    <div className="rounded-lg border border-border bg-muted/40 p-2">
-      <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-      <p className={mono ? "mt-1 break-all font-mono text-sm" : "mt-1 break-words text-sm"}>
-        {value}
-      </p>
-    </div>
   );
 };
 

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/input";
+import { toErrorMessage } from "@/lib/errors";
 import { Select, type SelectOption } from "@/components/ui/select";
 import {
   repositoryProviderOptions,
@@ -305,10 +306,6 @@ export const RepositoryModal = ({
       </DialogPortal>
     </Dialog>
   );
-};
-
-const toErrorMessage = (error: unknown): string => {
-  return error instanceof Error ? error.message : "";
 };
 
 const formatDiscoveryPatterns = (patterns: string[] | undefined): string => {

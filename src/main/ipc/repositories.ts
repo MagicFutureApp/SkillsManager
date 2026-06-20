@@ -9,6 +9,7 @@ import {
   inspectRepositorySource
 } from "../../core/repositories/source-inspection.js";
 import { scanSkillDirectory } from "../../core/skills/skill-scanner.js";
+import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
 import { getGitHubToken } from "./settings.js";
 import type { RepositorySourceInspection } from "../../core/repositories/source-inspection.js";
 import type {
@@ -21,7 +22,6 @@ import type {
   RepositorySyncResultItem,
   UpdateRepositoryInput
 } from "../../core/repositories/repository-api.js";
-import type { createDbClient } from "../../db/client.js";
 
 export type RepositoriesListResult = {
   repositories: RepositoryApiRecord[];
@@ -31,8 +31,6 @@ export type RepositoriesSyncResult = {
   results: RepositorySyncResultItem[];
 };
 
-type DbClient = ReturnType<typeof createDbClient>;
-type DbProvider = DbClient | (() => DbClient);
 type RepositoryInspectionOperations = {
   getGitHubToken: (db: DbClient) => Promise<string | null>;
   inspectLocalSource?: (sourcePath: string) => Promise<RepositorySourceInspection>;
@@ -311,10 +309,6 @@ export const registerRepositoriesIpc = (db: DbProvider): void => {
       return syncRepositories(resolveDb(db), repositoryIds);
     }
   );
-};
-
-const resolveDb = (db: DbProvider): DbClient => {
-  return typeof db === "function" ? db() : db;
 };
 
 const normalizeCreateRepositoryInput = (input: CreateRepositoryInput): CreateRepositoryInput => {

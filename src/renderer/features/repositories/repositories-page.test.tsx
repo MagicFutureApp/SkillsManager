@@ -155,7 +155,7 @@ describe("RepositoriesPage", () => {
     expect(within(detail).queryByText("最后 commit")).not.toBeInTheDocument();
     expect(within(detail).queryByText("缓存目录")).not.toBeInTheDocument();
     expect(within(detail).queryByText("扫描警告")).not.toBeInTheDocument();
-    expect(within(detail).getAllByText("2026/04/28 09:00").length).toBeGreaterThan(0);
+    expect(within(detail).getAllByText("2026/04/28 08:00").length).toBeGreaterThan(0);
     expect(within(detail).getByText("是")).toBeInTheDocument();
   });
 
@@ -168,7 +168,7 @@ describe("RepositoriesPage", () => {
     expect(within(detail).queryByText("扫描警告")).not.toBeInTheDocument();
     expect(within(detail).getByText("分支")).toBeInTheDocument();
     expect(within(detail).getByText("最后 commit")).toBeInTheDocument();
-    expect(within(detail).getAllByText("2026/04/28 09:00").length).toBeGreaterThan(0);
+    expect(within(detail).getAllByText("2026/04/28 08:00").length).toBeGreaterThan(0);
     expect(within(detail).getByText("是")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "skills.sh market index" }));

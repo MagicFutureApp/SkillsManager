@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { toErrorMessage } from "@/lib/errors";
 import {
   Copy,
   Database,
@@ -380,8 +381,4 @@ const StoragePathRow = ({
       </Button>
     </div>
   );
-};
-
-const toErrorMessage = (error: unknown): string => {
-  return error instanceof Error ? error.message : "";
 };

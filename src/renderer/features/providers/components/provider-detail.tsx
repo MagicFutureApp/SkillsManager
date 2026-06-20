@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { DetailRow } from "@/components/detail-row";
 import { providerLabels, type ProviderViewModel } from "./provider-data";
 import { ProviderStatusPill } from "./provider-status-pill";
 import React from "react";
@@ -114,16 +115,5 @@ export const ProviderDetail = ({
         </pre>
       </section>
     </>
-  );
-};
-
-const DetailRow = ({ label, mono, value }: { label: string; mono?: boolean; value: string }) => {
-  return (
-    <div className="rounded-lg border border-border bg-muted/40 p-2">
-      <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-      <p className={mono ? "mt-1 break-words font-mono text-sm" : "mt-1 break-words text-sm"}>
-        {value}
-      </p>
-    </div>
   );
 };

@@ -5,17 +5,14 @@ import type {
   SourceSyncRunRecord,
   SourceSyncRunStatus
 } from "../../core/repositories/sync-history-api";
+import {
+  EMPTY_REPOSITORY_SCAN_SUMMARY,
+  normalizeRepositoryScanSummary
+} from "../../core/repositories/repository-utils";
 import type { createDbClient } from "../client";
 import { repositories, syncRuns } from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
-
-const defaultScanSummary: RepositoryScanSummary = {
-  added: 0,
-  changed: 0,
-  removed: 0,
-  warnings: 0
-};
 
 export const createSyncHistoryRepository = (db: DbClient) => {
   return {
@@ -72,7 +69,7 @@ const parseScanSummary = (summaryJson: string): RepositoryScanSummary => {
 
     return normalizeScanSummary(extractScanSummary(parsed));
   } catch {
-    return defaultScanSummary;
+    return EMPTY_REPOSITORY_SCAN_SUMMARY;
   }
 };
 
@@ -92,15 +89,8 @@ const extractScanSummary = (value: unknown): unknown => {
 
 const normalizeScanSummary = (scan: unknown): RepositoryScanSummary => {
   if (!scan || typeof scan !== "object") {
-    return defaultScanSummary;
+    return EMPTY_REPOSITORY_SCAN_SUMMARY;
   }
 
-  const partial = scan as Partial<RepositoryScanSummary>;
-
-  return {
-    added: typeof partial.added === "number" ? partial.added : 0,
-    changed: typeof partial.changed === "number" ? partial.changed : 0,
-    removed: typeof partial.removed === "number" ? partial.removed : 0,
-    warnings: typeof partial.warnings === "number" ? partial.warnings : 0
-  };
+  return normalizeRepositoryScanSummary(scan);
 };
