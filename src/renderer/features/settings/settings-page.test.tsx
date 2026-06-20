@@ -59,6 +59,19 @@ describe("SettingsPage", () => {
     expect(window.skillsManager?.getAppSettings).toHaveBeenCalled();
   });
 
+  it("uses the standard app split layout with a settings support sidebar", async () => {
+    render(<SettingsPage />);
+
+    expect(await screen.findByRole("main")).toHaveAttribute("aria-labelledby", "settings-heading");
+    expect(screen.getByRole("heading", { name: "配置本地应用偏好" })).toHaveAttribute(
+      "id",
+      "settings-heading"
+    );
+    expect(screen.getByRole("complementary", { name: "设置辅助信息" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "凭据状态" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "危险操作" })).toBeInTheDocument();
+  });
+
   it("opens the GitHub token creation page through the system browser", async () => {
     render(<SettingsPage />);
 

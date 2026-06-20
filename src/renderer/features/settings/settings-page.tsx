@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +14,8 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { toErrorMessage } from "@/lib/errors";
 import {
+  AlertTriangle,
+  CheckCircle2,
   Copy,
   Database,
   ExternalLink,
@@ -160,107 +163,170 @@ export const SettingsPage = () => {
 
   const isSaving = status === "saving";
   const isResetting = storageStatus === "resetting";
+  const tokenStatusLabel = settings.github.hasToken ? "已配置" : "未配置";
 
   return (
-    <div className="grid gap-5 p-7">
-      <header>
-        <p className="text-sm font-medium text-muted-foreground">Settings</p>
-        <h1 className="mt-1 text-2xl font-semibold text-foreground">配置本地应用偏好</h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          管理 GitHub API 访问凭据和本地扫描相关设置。GitHub token
-          仅保存在本机设置中，不会回显到界面。
-        </p>
-      </header>
+    <div className="grid min-h-full grid-cols-[minmax(620px,1fr)_360px] bg-background">
+      <main className="min-w-0 p-7" aria-labelledby="settings-heading">
+        <header className="mb-6">
+          <p className="mb-1 text-sm">Settings</p>
+          <h1 id="settings-heading" className="text-[28px] font-semibold leading-tight">
+            配置本地应用偏好
+          </h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+            管理 GitHub API 访问凭据和本地扫描相关设置。GitHub token
+            仅保存在本机设置中，不会回显到界面。
+          </p>
+        </header>
 
-      <section className="grid gap-4 border-t border-border pt-5" aria-labelledby="github-token">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <KeyRound className="size-4 text-muted-foreground" aria-hidden="true" />
-              <h2 id="github-token" className="text-base font-semibold text-foreground">
-                GitHub API token
-              </h2>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              用于解析 GitHub repo metadata 和 tree API，避免未认证请求的低频率限制。
-            </p>
-          </div>
-          <span className="rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground">
-            {settings.github.hasToken ? "已配置" : "未配置"}
-          </span>
-        </div>
-
-        <Field className="max-w-2xl">
-          <FieldLabel>GitHub token</FieldLabel>
-          <Input
-            type="password"
-            value={githubToken}
-            placeholder="github_pat_..."
-            disabled={isSaving}
-            onValueChange={setGithubToken}
-          />
-          <FieldDescription>
-            {settings.github.hasToken
-              ? "当前 token 不会回显，输入新 token 后保存即可替换。"
-              : "建议使用 fine-grained token，并授予 Metadata read 与 Contents read。"}
-          </FieldDescription>
-        </Field>
-
-        <div className="flex gap-2">
-          <Button type="button" disabled={isSaving} onClick={saveToken}>
-            <Save aria-hidden="true" />
-            保存 GitHub token
-          </Button>
-          <Button type="button" variant="outline" disabled={isSaving} onClick={clearToken}>
-            <Trash2 aria-hidden="true" />
-            清除 GitHub token
-          </Button>
-        </div>
-
-        {status === "saved" ? (
-          <p className="text-sm text-muted-foreground">已保存 GitHub token。</p>
-        ) : null}
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      </section>
-
-      <section className="grid gap-4 border-t border-border pt-5" aria-labelledby="local-storage">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Database className="size-4 text-muted-foreground" aria-hidden="true" />
-              <h2 id="local-storage" className="text-base font-semibold text-foreground">
-                本地存储
-              </h2>
-            </div>
-            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-              查看 Skills Manager 的本地缓存根目录和 SQLite
-              数据库文件路径。重建数据库会清空本地索引，不会删除缓存目录或 agent 目标目录中的文件。
-            </p>
-          </div>
-        </div>
-
-        <div className="grid max-w-4xl gap-3">
-          <StoragePathRow
-            icon={<FolderOpen aria-hidden="true" />}
-            label="本地缓存总路径"
-            value={
-              storagePaths?.localCachePath ?? (storageStatus === "loading" ? "读取中..." : "--")
+        <div className="grid gap-5">
+          <SettingsPanel
+            id="github-token"
+            icon={<KeyRound aria-hidden="true" />}
+            title="GitHub API token"
+            description="用于解析 GitHub repo metadata 和 tree API，避免未认证请求的低频率限制。"
+            action={
+              <Badge variant={settings.github.hasToken ? "secondary" : "outline"}>
+                {tokenStatusLabel}
+              </Badge>
             }
-            copyLabel="复制路径"
-            disabled={!storagePaths?.localCachePath}
-            onCopy={() => storagePaths?.localCachePath && copyPath(storagePaths.localCachePath)}
-          />
-          <StoragePathRow
-            icon={<Database aria-hidden="true" />}
-            label="本地数据库路径"
-            value={storagePaths?.databasePath ?? (storageStatus === "loading" ? "读取中..." : "--")}
-            copyLabel="复制路径"
-            disabled={!storagePaths?.databasePath}
-            onCopy={() => storagePaths?.databasePath && copyPath(storagePaths.databasePath)}
-          />
-        </div>
+          >
+            <div className="grid max-w-2xl gap-4">
+              <Field>
+                <FieldLabel>GitHub token</FieldLabel>
+                <Input
+                  type="password"
+                  value={githubToken}
+                  placeholder="github_pat_..."
+                  disabled={isSaving}
+                  onValueChange={setGithubToken}
+                />
+                <FieldDescription>
+                  {settings.github.hasToken
+                    ? "当前 token 不会回显，输入新 token 后保存即可替换。"
+                    : "建议使用 fine-grained token，并授予 Metadata read 与 Contents read。"}
+                </FieldDescription>
+              </Field>
 
-        <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" disabled={isSaving} onClick={saveToken}>
+                  <Save aria-hidden="true" />
+                  保存 GitHub token
+                </Button>
+                <Button type="button" variant="outline" disabled={isSaving} onClick={clearToken}>
+                  <Trash2 aria-hidden="true" />
+                  清除 GitHub token
+                </Button>
+              </div>
+
+              {status === "saved" ? (
+                <p className="text-sm text-muted-foreground">已保存 GitHub token。</p>
+              ) : null}
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            </div>
+          </SettingsPanel>
+
+          <SettingsPanel
+            id="local-storage"
+            icon={<Database aria-hidden="true" />}
+            title="本地存储"
+            description="查看 Skills Manager 的本地缓存根目录和 SQLite 数据库文件路径。重建数据库会清空本地索引，不会删除缓存目录或 agent 目标目录中的文件。"
+          >
+            <div className="grid gap-3">
+              <StoragePathRow
+                icon={<FolderOpen aria-hidden="true" />}
+                label="本地缓存总路径"
+                value={
+                  storagePaths?.localCachePath ?? (storageStatus === "loading" ? "读取中..." : "--")
+                }
+                copyLabel="复制路径"
+                disabled={!storagePaths?.localCachePath}
+                onCopy={() => storagePaths?.localCachePath && copyPath(storagePaths.localCachePath)}
+              />
+              <StoragePathRow
+                icon={<Database aria-hidden="true" />}
+                label="本地数据库路径"
+                value={
+                  storagePaths?.databasePath ?? (storageStatus === "loading" ? "读取中..." : "--")
+                }
+                copyLabel="复制路径"
+                disabled={!storagePaths?.databasePath}
+                onCopy={() => storagePaths?.databasePath && copyPath(storagePaths.databasePath)}
+              />
+            </div>
+          </SettingsPanel>
+        </div>
+      </main>
+
+      <aside
+        className="grid content-start gap-3 border-l border-border bg-card px-5 py-6"
+        aria-label="设置辅助信息"
+      >
+        <section className="rounded-xl border border-border bg-background p-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="size-4 text-muted-foreground" aria-hidden="true" />
+            <h2 className="font-semibold">凭据状态</h2>
+          </div>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            {settings.github.hasToken
+              ? "GitHub token 已保存在本机设置中。替换时只需要输入新 token 并保存。"
+              : "尚未保存 GitHub token。公共仓库仍可扫描，但请求频率限制更低。"}
+          </p>
+          <div className="mt-3 rounded-lg border border-border bg-muted/40 p-3">
+            <span className="text-xs font-semibold text-muted-foreground">安全提示</span>
+            <p className="mt-1 text-sm leading-6">
+              保存后的 token 不会回显到界面，也不会离开本机应用设置。
+            </p>
+          </div>
+        </section>
+
+        <section
+          className="grid gap-4 rounded-xl border border-border bg-background p-4"
+          aria-labelledby="github-token-help"
+        >
+          <div>
+            <h2 id="github-token-help" className="font-semibold">
+              如何创建 GitHub token
+            </h2>
+            <p className="mt-4 text-sm leading-6 text-muted-foreground">
+              请选择 Fine-grained personal access token。它可以限制资源 owner、仓库范围和权限，比
+              classic token 更适合这里的只读访问。
+            </p>
+          </div>
+
+          <ol className="grid gap-2 text-sm leading-6 text-muted-foreground">
+            <li>1. 打开 GitHub 的 Fine-grained tokens 创建页，填写 token 名称和过期时间。</li>
+            <li>2. Repository access 选择只需要扫描的仓库。</li>
+            <li>
+              3. Repository permissions 至少确认 <strong>Contents: Read-only</strong> 和{" "}
+              <strong>Metadata: Read-only</strong>。
+            </li>
+            <li>4. 生成后复制 token，回到本页粘贴并保存。</li>
+          </ol>
+
+          <Button type="button" variant="outline" onClick={openGitHubTokenCreationPage}>
+            <ExternalLink aria-hidden="true" />
+            打开 GitHub token 创建页面
+          </Button>
+        </section>
+
+        <section
+          className="grid gap-4 rounded-xl border border-destructive/25 bg-destructive/5 p-4"
+          aria-labelledby="settings-danger-zone"
+        >
+          <div>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="size-4 text-destructive" aria-hidden="true" />
+              <h2 id="settings-danger-zone" className="font-semibold">
+                危险操作
+              </h2>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-muted-foreground">
+              重建数据库会清空本地索引、来源、Skills、同步历史和应用设置。已安装到 agent
+              目标目录的文件不会被删除。
+            </p>
+          </div>
+
           <Button
             type="button"
             variant="destructive"
@@ -273,47 +339,9 @@ export const SettingsPage = () => {
           {storageStatus === "reset" ? (
             <p className="text-sm text-muted-foreground">本地数据库已重建。</p>
           ) : null}
-        </div>
-
-        {storageError ? <p className="text-sm text-destructive">{storageError}</p> : null}
-      </section>
-
-      <section
-        className="grid max-w-3xl gap-4 border-t border-border pt-5"
-        aria-labelledby="github-token-help"
-      >
-        <div>
-          <h2 id="github-token-help" className="text-base font-semibold text-foreground">
-            如何创建 GitHub token
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            请选择 Fine-grained personal access token。它可以限制资源 owner、仓库范围和权限，比
-            classic token 更适合这里的只读访问。
-          </p>
-        </div>
-
-        <ol className="grid gap-2 text-sm text-muted-foreground">
-          <li>1. 打开 GitHub 的 Fine-grained tokens 创建页，填写 token 名称、过期时间和说明。</li>
-          <li>
-            2. Repository access 选择只需要扫描的仓库；如果只扫 public repo，可保留默认公开访问。
-          </li>
-          <li>
-            3. Repository permissions 至少确认 <strong>Contents: Read-only</strong> 和{" "}
-            <strong>Metadata: Read-only</strong>。
-          </li>
-          <li>4. 生成后复制 token，回到本页粘贴并保存。保存后 token 不会在界面回显。</li>
-        </ol>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="w-fit"
-          onClick={openGitHubTokenCreationPage}
-        >
-          <ExternalLink aria-hidden="true" />
-          打开 GitHub token 创建页面
-        </Button>
-      </section>
+          {storageError ? <p className="text-sm text-destructive">{storageError}</p> : null}
+        </section>
+      </aside>
 
       <AlertDialog
         open={isResetDialogOpen}
@@ -346,6 +374,42 @@ export const SettingsPage = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+};
+
+const SettingsPanel = ({
+  action,
+  children,
+  description,
+  icon,
+  id,
+  title
+}: React.PropsWithChildren<{
+  action?: React.ReactNode;
+  description: string;
+  icon: React.ReactNode;
+  id: string;
+  title: string;
+}>) => {
+  return (
+    <section className="rounded-xl border border-border bg-card p-4" aria-labelledby={id}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex size-4 items-center justify-center text-muted-foreground [&_svg]:size-4">
+              {icon}
+            </span>
+            <h2 id={id} className="text-base font-semibold text-foreground">
+              {title}
+            </h2>
+          </div>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>
+        </div>
+        {action ? <div className="shrink-0">{action}</div> : null}
+      </div>
+
+      <div className="mt-4">{children}</div>
+    </section>
   );
 };
 
