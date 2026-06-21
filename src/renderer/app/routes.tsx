@@ -7,6 +7,7 @@ import { RepositoriesPage } from "@/features/repositories/repositories-page";
 import { SettingsPage } from "@/features/settings/settings-page";
 import { SkillsPage } from "@/features/skills/skills-page";
 import { SyncHistoryPage } from "@/features/sync-history/sync-history-page";
+import { TargetsPage } from "@/features/targets/targets-page";
 
 const PagePlaceholder = ({
   eyebrow,
@@ -61,13 +62,7 @@ const skillsRoute = createRoute({
 const targetsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/targets",
-  component: () => (
-    <PagePlaceholder
-      eyebrow="Targets"
-      title="管理 agent 安装目标"
-      copy="配置 Codex、Claude Code、Gemini CLI 和自定义目录的安装边界。"
-    />
-  )
+  component: TargetsPage
 });
 
 const distributionRoute = createRoute({

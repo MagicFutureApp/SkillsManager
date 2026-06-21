@@ -11,6 +11,7 @@ import type {
   ResetLocalDatabaseResult as MainResetLocalDatabaseResult
 } from "../main/ipc/settings";
 import type { SkillsListResult as MainSkillsListResult } from "../main/ipc/skills";
+import type { TargetsListResult as MainTargetsListResult } from "../main/ipc/targets";
 import type { SyncHistoryListResult as CoreSyncHistoryListResult } from "../core/repositories/sync-history-api";
 import type {
   CreateRepositoryInput as CoreCreateRepositoryInput,
@@ -32,6 +33,7 @@ export type ProvidersListResult = MainProvidersListResult;
 export type RepositoriesListResult = MainRepositoriesListResult;
 export type RepositoriesSyncResult = MainRepositoriesSyncResult;
 export type SkillsListResult = MainSkillsListResult;
+export type TargetsListResult = MainTargetsListResult;
 export type SyncHistoryListResult = CoreSyncHistoryListResult;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
 export type UpdateRepositoryInput = CoreUpdateRepositoryInput;
@@ -63,6 +65,7 @@ declare global {
       listRepositories: () => Promise<RepositoriesListResult>;
       listSkills?: () => Promise<SkillsListResult>;
       listSyncHistory?: () => Promise<SyncHistoryListResult>;
+      listTargets?: () => Promise<TargetsListResult>;
       openExternalUrl?: (url: string) => Promise<void>;
       openRepositoryLocation?: (location: string) => Promise<void>;
       resetLocalDatabase?: () => Promise<ResetLocalDatabaseResult>;

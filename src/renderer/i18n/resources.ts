@@ -100,6 +100,51 @@ export const resources = {
           customDirectory: "Custom directory"
         }
       },
+      targets: {
+        pageLabel: "Targets",
+        heading: "目标管理",
+        description: "扫描本机 agent 目录，并汇总 Skills 页面已选择的本地目标。",
+        empty: "没有匹配的目标。调整搜索条件。",
+        actions: {
+          addTarget: "新增目标",
+          addTargetUnavailable: "新增目标暂未实现",
+          rescan: "重新扫描"
+        },
+        filters: {
+          ariaLabel: "目标筛选",
+          search: "搜索目标",
+          searchPlaceholder: "搜索名称、类型、路径或已选择技能",
+          sort: "排序",
+          sortName: "名称",
+          sortSkills: "技能数"
+        },
+        table: {
+          headerAriaLabel: "目标列表表头",
+          path: "路径",
+          skillCount: "{{count}} 个技能",
+          skills: "技能",
+          target: "目标"
+        },
+        status: {
+          detected: "已检测",
+          disabled: "已停用",
+          missing: "未发现",
+          registered: "已登记"
+        },
+        detail: {
+          ariaLabel: "目标详情",
+          emptyDescription: "选择左侧目标后查看检测状态、安装路径和已选择的技能。",
+          emptyTitle: "选择一个目标",
+          executablePath: "CLI 路径",
+          installPath: "安装目录",
+          noSelectedSkills: "没有 Skills 页面选择到这个目标。",
+          normalizedPath: "规范化路径",
+          noValue: "无",
+          paths: "路径",
+          selectedSkills: "已选择技能",
+          skillPath: "技能目录"
+        }
+      },
       providers: {
         pageLabel: "Provider",
         heading: "管理 Provider 与连接诊断",
@@ -417,6 +462,53 @@ export const resources = {
         },
         targets: {
           customDirectory: "Custom directory"
+        }
+      },
+      targets: {
+        pageLabel: "Targets",
+        heading: "Manage targets",
+        description:
+          "Scan local agent directories and summarize local targets selected from the Skills page.",
+        empty: "No matching targets. Adjust the search.",
+        actions: {
+          addTarget: "Add target",
+          addTargetUnavailable: "Adding targets is not implemented yet",
+          rescan: "Rescan"
+        },
+        filters: {
+          ariaLabel: "Target filters",
+          search: "Search targets",
+          searchPlaceholder: "Search name, type, path, or selected skill",
+          sort: "Sort",
+          sortName: "Name",
+          sortSkills: "Skill count"
+        },
+        table: {
+          headerAriaLabel: "Target list header",
+          path: "Path",
+          skillCount: "{{count}} skills",
+          skills: "Skills",
+          target: "Target"
+        },
+        status: {
+          detected: "Detected",
+          disabled: "Disabled",
+          missing: "Missing",
+          registered: "Registered"
+        },
+        detail: {
+          ariaLabel: "Target details",
+          emptyDescription:
+            "Choose a target to inspect detection status, paths, and selected skills.",
+          emptyTitle: "Choose a target",
+          executablePath: "CLI path",
+          installPath: "Install path",
+          noSelectedSkills: "No skills select this target from the Skills page.",
+          normalizedPath: "Normalized path",
+          noValue: "None",
+          paths: "Paths",
+          selectedSkills: "Selected skills",
+          skillPath: "Skill directory"
         }
       },
       providers: {

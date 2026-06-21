@@ -11,6 +11,7 @@ import type {
 } from "./ipc/settings";
 import type { SkillsListResult } from "./ipc/skills";
 import type { SyncHistoryListResult } from "../core/repositories/sync-history-api";
+import type { TargetsListResult } from "./ipc/targets";
 import type { RepositorySourceInspection } from "../core/repositories/source-inspection";
 import type {
   CreateRepositoryInput,
@@ -50,6 +51,7 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ipcRenderer.invoke("repositories:list") as Promise<RepositoriesListResult>,
   listSkills: () => ipcRenderer.invoke("skills:list") as Promise<SkillsListResult>,
   listSyncHistory: () => ipcRenderer.invoke("syncHistory:list") as Promise<SyncHistoryListResult>,
+  listTargets: () => ipcRenderer.invoke("targets:list") as Promise<TargetsListResult>,
   openExternalUrl: (url: string) =>
     ipcRenderer.invoke("settings:openExternalUrl", url) as Promise<void>,
   openRepositoryLocation: (location: string) =>
