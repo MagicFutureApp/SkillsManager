@@ -72,7 +72,12 @@ describe("RepositoriesPage", () => {
   it("renders the repositories management surface from the HTML mockup", async () => {
     await renderRepositoriesPage();
 
-    expect(screen.getByRole("heading", { name: "来源管理" })).toBeInTheDocument();
+    const pageHeading = screen.getByRole("heading", { name: "来源管理" });
+    const pageHeader = pageHeading.closest("header");
+
+    expect(pageHeading).toBeInTheDocument();
+    expect(pageHeader).not.toBeNull();
+    expect(within(pageHeader as HTMLElement).queryByText("Sources")).not.toBeInTheDocument();
     expect(screen.getByText("管理 Git 和其他来源的 Skills。")).toBeInTheDocument();
     expect(screen.getByLabelText("来源筛选")).toHaveClass(
       "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]"

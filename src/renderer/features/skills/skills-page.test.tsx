@@ -104,14 +104,17 @@ describe("SkillsPage", () => {
       "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]"
     );
     expect(screen.getByLabelText("选择全部可见技能").closest("div")).toHaveClass("bg-muted/40");
-    expect(screen.getByRole("button", { name: "新增" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "浏览 skill unit 并预览分发计划" })
-    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "新增" })).not.toBeInTheDocument();
+    const pageHeading = screen.getByRole("heading", { name: "技能分发" });
+    const pageHeader = pageHeading.closest("header");
+
+    expect(pageHeading).toBeInTheDocument();
+    expect(pageHeader).not.toBeNull();
+    expect(within(pageHeader as HTMLElement).queryByText("Skills")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("技能摘要")).not.toBeInTheDocument();
     expect(screen.getByText("暂无已索引技能。")).toHaveClass("text-center");
     expect(screen.getByRole("heading", { name: "选择一个技能" })).toBeInTheDocument();
-    expect(screen.getByText("从来源同步并扫描后，这里会显示技能详情。")).toBeInTheDocument();
+    expect(screen.getByText("从来源分发并扫描后，这里会显示技能详情。")).toBeInTheDocument();
   });
 
   it("renders English UI copy when initialized with en-US", async () => {
@@ -120,7 +123,8 @@ describe("SkillsPage", () => {
     expect(
       screen.getByRole("heading", { name: "Browse skill units and preview distribution plans" })
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add skill" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add skill" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Distribute selected skills" })).toBeInTheDocument();
     expect(screen.getByLabelText("Skill filters")).toBeInTheDocument();
   });
 
@@ -133,6 +137,9 @@ describe("SkillsPage", () => {
     expect(screen.getAllByText("Team skills repository").length).toBeGreaterThan(0);
     expect(screen.getAllByText("8f2c91a").length).toBeGreaterThan(0);
     expect(within(screen.getByLabelText("技能详情")).getByText("Review Bot")).toBeInTheDocument();
+    expect(screen.getByText("分发目标")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "新增分发目标" })).toBeInTheDocument();
+    expect(screen.queryByText("同步目标")).not.toBeInTheDocument();
     await waitFor(() => expect(window.skillsManager?.listSkills).toHaveBeenCalled());
   });
 
@@ -202,24 +209,24 @@ describe("SkillsPage", () => {
     await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
     await screen.findByRole("button", { name: "Review Bot" });
 
-    const syncButton = screen.getByRole("button", { name: "同步选中的技能" });
-    expect(syncButton).toBeDisabled();
-    expect(syncButton).toHaveAttribute("title", "同步暂未实现");
+    const distributeButton = screen.getByRole("button", { name: "分发选中的技能" });
+    expect(distributeButton).toBeDisabled();
+    expect(distributeButton).toHaveAttribute("title", "分发暂未实现");
 
     fireEvent.click(screen.getByLabelText("选择 Review Bot"));
     expect(screen.getByLabelText("选择 Review Bot")).toBeChecked();
-    expect(syncButton).toHaveTextContent("同步 (1)");
-    expect(syncButton).toBeDisabled();
+    expect(distributeButton).toHaveTextContent("分发 (1)");
+    expect(distributeButton).toBeDisabled();
 
     fireEvent.click(screen.getByLabelText("选择全部可见技能"));
     expect(screen.getByLabelText("选择 Review Bot")).toBeChecked();
     expect(screen.getByLabelText("选择 Design Helper")).toBeChecked();
     expect(screen.getByLabelText("选择 Release Notes")).toBeChecked();
-    expect(syncButton).toHaveTextContent("同步 (3)");
+    expect(distributeButton).toHaveTextContent("分发 (3)");
 
     await selectOption("状态", "ready");
     fireEvent.click(screen.getByLabelText("选择全部可见技能"));
     expect(screen.getByLabelText("选择 Review Bot")).not.toBeChecked();
-    expect(syncButton).toHaveTextContent("同步 (2)");
+    expect(distributeButton).toHaveTextContent("分发 (2)");
   });
 });

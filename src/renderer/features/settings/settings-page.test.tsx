@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 
@@ -63,10 +63,12 @@ describe("SettingsPage", () => {
     render(<SettingsPage />);
 
     expect(await screen.findByRole("main")).toHaveAttribute("aria-labelledby", "settings-heading");
-    expect(screen.getByRole("heading", { name: "配置本地应用偏好" })).toHaveAttribute(
-      "id",
-      "settings-heading"
-    );
+    const pageHeading = screen.getByRole("heading", { name: "配置本地应用偏好" });
+    const pageHeader = pageHeading.closest("header");
+
+    expect(pageHeading).toHaveAttribute("id", "settings-heading");
+    expect(pageHeader).not.toBeNull();
+    expect(within(pageHeader as HTMLElement).queryByText("Settings")).not.toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "设置辅助信息" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "凭据状态" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "危险操作" })).toBeInTheDocument();

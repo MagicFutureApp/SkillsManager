@@ -9,19 +9,10 @@ import { SkillsPage } from "@/features/skills/skills-page";
 import { SyncHistoryPage } from "@/features/sync-history/sync-history-page";
 import { TargetsPage } from "@/features/targets/targets-page";
 
-const PagePlaceholder = ({
-  eyebrow,
-  title,
-  copy
-}: {
-  eyebrow: string;
-  title: string;
-  copy: string;
-}) => {
+const PagePlaceholder = ({ title, copy }: { title: string; copy: string }) => {
   return (
     <section className="rounded-lg border border-dashed border-border bg-card p-8 text-card-foreground">
-      <p className="text-sm font-medium text-muted-foreground">{eyebrow}</p>
-      <h3 className="mt-2 font-semibold">{title}</h3>
+      <h3 className="font-semibold">{title}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{copy}</p>
     </section>
   );
@@ -70,7 +61,6 @@ const distributionRoute = createRoute({
   path: "/distribution",
   component: () => (
     <PagePlaceholder
-      eyebrow="Distribution"
       title="预览 dry-run 分发计划"
       copy="先确认 commit 锁定、冲突和目标路径，再执行安装或更新。"
     />

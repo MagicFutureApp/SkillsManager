@@ -12,7 +12,6 @@ export const RepositoriesPageMain = () => {
   return (
     <>
       <header className="mb-6">
-        <p className="mb-1 text-sm">{t("repositories.pageLabel")}</p>
         <div className="flex items-center justify-between gap-4 max-[860px]:items-start">
           <div className="min-w-0">
             <h1 className="text-[28px] font-semibold leading-tight">{t("repositories.heading")}</h1>

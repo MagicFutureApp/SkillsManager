@@ -49,7 +49,12 @@ describe("ProvidersPage", () => {
   it("renders the provider management surface from the HTML mockup", async () => {
     await renderProvidersPage();
 
-    expect(screen.getByRole("heading", { name: "管理 Provider 与连接诊断" })).toBeInTheDocument();
+    const pageHeading = screen.getByRole("heading", { name: "管理 Provider 与连接诊断" });
+    const pageHeader = pageHeading.closest("header");
+
+    expect(pageHeading).toBeInTheDocument();
+    expect(pageHeader).not.toBeNull();
+    expect(within(pageHeader as HTMLElement).queryByText("Provider")).not.toBeInTheDocument();
     expect(screen.getByLabelText("筛选 Provider")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "GitHub" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("heading", { name: "GitHub" })).toBeInTheDocument();

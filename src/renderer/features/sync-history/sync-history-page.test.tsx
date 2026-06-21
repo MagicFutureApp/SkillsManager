@@ -74,7 +74,12 @@ describe("SyncHistoryPage", () => {
   it("renders source sync runs and shows failed run details", async () => {
     const { container } = await renderSyncHistoryPage();
 
-    expect(screen.getByRole("heading", { name: "同步历史" })).toBeInTheDocument();
+    const pageHeading = screen.getByRole("heading", { name: "同步历史" });
+    const pageHeader = pageHeading.closest("header");
+
+    expect(pageHeading).toBeInTheDocument();
+    expect(pageHeader).not.toBeNull();
+    expect(within(pageHeader as HTMLElement).queryByText("Sync history")).not.toBeInTheDocument();
     expect(screen.getByText("查看 source sync 写入的运行记录和失败日志。")).toBeInTheDocument();
     expect(window.skillsManager?.listSyncHistory).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("complementary", { name: "同步运行详情" })).toHaveClass(

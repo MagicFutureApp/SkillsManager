@@ -169,7 +169,6 @@ export const SettingsPage = () => {
     <div className="grid min-h-full grid-cols-[minmax(620px,1fr)_360px] bg-background">
       <main className="min-w-0 p-7" aria-labelledby="settings-heading">
         <header className="mb-6">
-          <p className="mb-1 text-sm">Settings</p>
           <h1 id="settings-heading" className="text-[28px] font-semibold leading-tight">
             配置本地应用偏好
           </h1>

@@ -80,7 +80,12 @@ describe("TargetsPage", () => {
   it("renders detected app targets and selected local project targets without sync actions", async () => {
     await renderTargetsPage();
 
-    expect(await screen.findByRole("heading", { name: "目标管理" })).toBeInTheDocument();
+    const pageHeading = await screen.findByRole("heading", { name: "目标管理" });
+    const pageHeader = pageHeading.closest("header");
+
+    expect(pageHeading).toBeInTheDocument();
+    expect(pageHeader).not.toBeNull();
+    expect(within(pageHeader as HTMLElement).queryByText("Targets")).not.toBeInTheDocument();
     expect(
       screen.getByText("扫描本机 agent 目录，并汇总 Skills 页面已选择的本地目标。")
     ).toBeInTheDocument();
