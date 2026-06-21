@@ -12,7 +12,7 @@ import { registerSyncHistoryIpc } from "./ipc/sync-history.js";
 import { registerTargetsIpc } from "./ipc/targets.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
-import { getTrayIconPath } from "./tray-icon.js";
+import { createTrayIconImage } from "./tray-icon.js";
 import { buildMainWindowOptions, disableWindowMenuBar } from "./window-menu.js";
 import { APP_META } from "../core/app-constants.js";
 import { createRepositoryRepository } from "../db/repositories/repositoryRepository.js";
@@ -47,7 +47,7 @@ const createMainWindow = async (): Promise<void> => {
 const createTray = (): void => {
   const messages = getMainMessages(getAppLocale());
 
-  tray = new Tray(getTrayIconPath(__dirname));
+  tray = new Tray(createTrayIconImage(__dirname));
   tray.setToolTip(APP_META.title);
   tray.setContextMenu(
     Menu.buildFromTemplate([

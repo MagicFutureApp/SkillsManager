@@ -9,16 +9,16 @@ const copyAppIcons = (): Plugin => ({
   closeBundle() {
     const sourceDirectory = path.resolve(__dirname, "src/renderer/assets");
     const targetDirectory = path.resolve(__dirname, "dist/renderer");
+    const iconFiles = ["skillport-mark.svg", "skillport-mark.png", path.join("macOS", "32.png")];
 
     mkdirSync(targetDirectory, { recursive: true });
-    copyFileSync(
-      path.join(sourceDirectory, "skillport-mark.svg"),
-      path.join(targetDirectory, "skillport-mark.svg")
-    );
-    copyFileSync(
-      path.join(sourceDirectory, "skillport-mark.png"),
-      path.join(targetDirectory, "skillport-mark.png")
-    );
+
+    for (const iconFile of iconFiles) {
+      const iconTargetPath = path.join(targetDirectory, iconFile);
+
+      mkdirSync(path.dirname(iconTargetPath), { recursive: true });
+      copyFileSync(path.join(sourceDirectory, iconFile), iconTargetPath);
+    }
   }
 });
 
