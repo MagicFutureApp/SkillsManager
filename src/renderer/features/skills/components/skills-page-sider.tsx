@@ -10,6 +10,7 @@ import { targetOptions } from "./skills-page-data";
 export const SkillsPageSider = () => {
   const { t } = useTranslation();
   const { selectedSkill } = useSkillsPageContext();
+  const syncTitle = t("skills.actions.syncUnavailable");
 
   if (!selectedSkill) {
     return (
@@ -25,7 +26,12 @@ export const SkillsPageSider = () => {
           <Button type="button" variant="outline" disabled>
             {t("skills.actions.preview")}
           </Button>
-          <Button type="button" disabled>
+          <Button
+            type="button"
+            disabled
+            title={syncTitle}
+            aria-label={t("skills.actions.syncSelectedSkillUnavailable")}
+          >
             {t("skills.actions.sync")}
           </Button>
         </div>
@@ -106,7 +112,14 @@ export const SkillsPageSider = () => {
         <Button type="button" variant="outline">
           {t("skills.actions.preview")}
         </Button>
-        <Button type="button">{t("skills.actions.sync")}</Button>
+        <Button
+          type="button"
+          disabled
+          title={syncTitle}
+          aria-label={t("skills.actions.syncSelectedSkillUnavailable")}
+        >
+          {t("skills.actions.sync")}
+        </Button>
       </div>
 
       <section className="rounded-xl border border-border bg-card p-4">

@@ -38,6 +38,11 @@ export const resources = {
         empty: "暂无已索引技能。",
         actions: {
           sync: "同步",
+          syncSelected: "同步 ({{count}})",
+          syncSelectedAria: "同步选中的技能",
+          syncSelectedSkillUnavailable: "同步当前技能（暂未实现）",
+          syncSkillUnavailable: "同步 {{name}}（暂未实现）",
+          syncUnavailable: "同步暂未实现",
           addSkill: "新增",
           editSkill: "编辑",
           addSyncTarget: "新增同步目标",
@@ -350,6 +355,11 @@ export const resources = {
         empty: "No indexed skills yet.",
         actions: {
           sync: "Sync",
+          syncSelected: "Sync ({{count}})",
+          syncSelectedAria: "Sync selected skills",
+          syncSelectedSkillUnavailable: "Sync current skill (not implemented yet)",
+          syncSkillUnavailable: "Sync {{name}} (not implemented yet)",
+          syncUnavailable: "Sync is not implemented yet",
           addSkill: "Add skill",
           editSkill: "Edit skill",
           addSyncTarget: "Add sync target",

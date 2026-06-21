@@ -1,5 +1,4 @@
 import { Field as BaseField, FieldLabel } from "@/components/ui/field";
-import { Select as BaseSelect, type SelectOption } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import React from "react";
 
@@ -23,15 +22,6 @@ export const Field = ({
       {children}
     </BaseField>
   );
-};
-
-type StaticSelectProps = {
-  options: SelectOption<string>[];
-  value: string;
-};
-
-export const StaticSelect = ({ options, value }: StaticSelectProps) => {
-  return <BaseSelect value={value} options={options} onValueChange={() => undefined} />;
 };
 
 export const Toggle = ({ enabled }: { enabled: boolean }) => {

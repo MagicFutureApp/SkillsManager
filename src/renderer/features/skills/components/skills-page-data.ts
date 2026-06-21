@@ -1,6 +1,9 @@
 import type { SkillApiRecord, SkillApiStatus } from "../../../../core/skills/skill-api";
 
 export type SkillStatus = SkillApiStatus;
+export type SkillRepositoryFilter = string;
+export type SkillSort = "recommended" | "name" | "repository";
+export type SkillStatusFilter = SkillStatus | "all";
 
 export type Skill = {
   id: string;
@@ -14,6 +17,14 @@ export type Skill = {
   enabled: boolean;
   targets: string[];
   tags: string[];
+};
+
+export type SkillFilterInput = {
+  query: string;
+  repository: SkillRepositoryFilter;
+  skills: Skill[];
+  sort: SkillSort;
+  status: SkillStatusFilter;
 };
 
 export type TargetOption = {
@@ -43,4 +54,69 @@ export const adaptSkillRecord = (record: SkillApiRecord): Skill => {
     targets: record.targets,
     version: record.version
   };
+};
+
+export const skillStatusOptions: SkillStatusFilter[] = ["all", "ready", "review", "installed"];
+
+export const getSkillRepositoryOptions = (skills: Skill[]): SkillRepositoryFilter[] => {
+  const repositories = new Set(skills.map((skill) => skill.repository).filter(Boolean));
+
+  return ["all", ...Array.from(repositories).sort((first, second) => first.localeCompare(second))];
+};
+
+export const filterSkills = ({
+  query,
+  repository,
+  skills,
+  sort,
+  status
+}: SkillFilterInput): Skill[] => {
+  const normalizedQuery = query.trim().toLowerCase();
+  const visible = skills.filter((skill) => {
+    const searchable = [
+      skill.name,
+      skill.skillId,
+      skill.repository,
+      skill.version,
+      skill.entry,
+      skill.description,
+      ...skill.tags
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return (
+      (!normalizedQuery || searchable.includes(normalizedQuery)) &&
+      (repository === "all" || skill.repository === repository) &&
+      (status === "all" || skill.status === status)
+    );
+  });
+
+  return [...visible].sort((first, second) => {
+    if (sort === "name") {
+      return first.name.localeCompare(second.name);
+    }
+
+    if (sort === "repository") {
+      return (
+        first.repository.localeCompare(second.repository) || first.name.localeCompare(second.name)
+      );
+    }
+
+    return compareRecommendedSkills(first, second);
+  });
+};
+
+const compareRecommendedSkills = (first: Skill, second: Skill): number => {
+  return (
+    statusPriority[first.status] - statusPriority[second.status] ||
+    Number(second.enabled) - Number(first.enabled) ||
+    first.name.localeCompare(second.name)
+  );
+};
+
+const statusPriority: Record<SkillStatus, number> = {
+  ready: 0,
+  review: 1,
+  installed: 2
 };

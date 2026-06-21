@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Select, type SelectOption } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { Field, StaticSelect, statusClassName, Toggle } from "./skills-page-controls";
+import type { SkillRepositoryFilter, SkillSort, SkillStatusFilter } from "./skills-page-data";
+import { skillStatusOptions } from "./skills-page-data";
+import { Field, statusClassName, Toggle } from "./skills-page-controls";
 import { useSkillsPageContext } from "./skills-page-context";
 
 const tableGridColumnsClassName =
@@ -14,20 +17,28 @@ const tableGridColumnsClassName =
 export const SkillsPageMain = () => {
   const { t } = useTranslation();
   const page = useSkillsPageContext();
-  const { selectedSkill, skills } = page;
-  const hasSkills = skills.length > 0;
-  const sortOptions = [
+  const { selectedSkill, visibleSkills } = page;
+  const hasVisibleSkills = visibleSkills.length > 0;
+  const syncTitle = t("skills.actions.syncUnavailable");
+  const syncLabel =
+    page.checkedCount > 0
+      ? t("skills.actions.syncSelected", { count: page.checkedCount })
+      : t("skills.actions.sync");
+  const sortOptions: SelectOption<SkillSort>[] = [
     { value: "recommended", label: t("skills.filters.sortRecommended") },
     { value: "name", label: t("skills.filters.sortName") },
     { value: "repository", label: t("skills.filters.sortRepository") }
   ];
-  const repositoryOptions = [{ value: "all", label: t("skills.filters.allRepositories") }];
-  const statusOptions = [
-    { value: "all", label: t("skills.filters.allStatuses") },
-    { value: "ready", label: "ready" },
-    { value: "review", label: "review" },
-    { value: "installed", label: "installed" }
-  ];
+  const repositoryOptions: SelectOption<SkillRepositoryFilter>[] = page.repositoryOptions.map(
+    (repository) => ({
+      value: repository,
+      label: repository === "all" ? t("skills.filters.allRepositories") : repository
+    })
+  );
+  const statusOptions: SelectOption<SkillStatusFilter>[] = skillStatusOptions.map((status) => ({
+    value: status,
+    label: status === "all" ? t("skills.filters.allStatuses") : status
+  }));
 
   return (
     <>
@@ -41,8 +52,14 @@ export const SkillsPageMain = () => {
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="outline" disabled>
-              {t("skills.actions.sync")}
+            <Button
+              type="button"
+              variant="outline"
+              disabled
+              title={syncTitle}
+              aria-label={t("skills.actions.syncSelectedAria")}
+            >
+              {syncLabel}
             </Button>
             <Button type="button">{t("skills.actions.addSkill")}</Button>
           </div>
@@ -54,16 +71,29 @@ export const SkillsPageMain = () => {
         aria-label={t("skills.filters.ariaLabel")}
       >
         <Field label={t("skills.filters.search")}>
-          <Input type="search" placeholder={t("skills.filters.searchPlaceholder")} />
+          <Input
+            type="search"
+            value={page.query}
+            placeholder={t("skills.filters.searchPlaceholder")}
+            onValueChange={page.setQuery}
+          />
         </Field>
         <Field label={t("skills.filters.sort")}>
-          <StaticSelect value="recommended" options={sortOptions} />
+          <Select value={page.sort} options={sortOptions} onValueChange={page.setSort} />
         </Field>
         <Field label={t("skills.filters.repository")}>
-          <StaticSelect value="all" options={repositoryOptions} />
+          <Select
+            value={page.repositoryFilter}
+            options={repositoryOptions}
+            onValueChange={page.setRepositoryFilter}
+          />
         </Field>
         <Field label={t("skills.filters.status")}>
-          <StaticSelect value="all" options={statusOptions} />
+          <Select
+            value={page.statusFilter}
+            options={statusOptions}
+            onValueChange={page.setStatusFilter}
+          />
         </Field>
       </section>
 
@@ -75,7 +105,13 @@ export const SkillsPageMain = () => {
           )}
         >
           <span className="grid place-items-center">
-            <Checkbox aria-label={t("skills.table.selectAll")} disabled={!hasSkills} />
+            <Checkbox
+              checked={page.visibleAllChecked}
+              indeterminate={page.visibleSomeChecked && !page.visibleAllChecked}
+              aria-label={t("skills.table.selectAll")}
+              disabled={!hasVisibleSkills}
+              onCheckedChange={page.selectAllVisible}
+            />
           </span>
           <span>{t("skills.table.skill")}</span>
           <span>{t("skills.table.repository")}</span>
@@ -86,8 +122,8 @@ export const SkillsPageMain = () => {
           <span>{t("skills.table.actions")}</span>
         </div>
 
-        {hasSkills ? (
-          skills.map((skill) => (
+        {hasVisibleSkills ? (
+          visibleSkills.map((skill) => (
             <div
               key={skill.id}
               className={cn(
@@ -98,7 +134,11 @@ export const SkillsPageMain = () => {
               )}
             >
               <span className="grid place-items-center">
-                <Checkbox aria-label={t("skills.table.selectSkill", { name: skill.name })} />
+                <Checkbox
+                  checked={page.checkedIds.has(skill.id)}
+                  aria-label={t("skills.table.selectSkill", { name: skill.name })}
+                  onCheckedChange={(checked) => page.toggleSkillChecked(skill.id, checked)}
+                />
               </span>
               <Button
                 type="button"
@@ -113,8 +153,8 @@ export const SkillsPageMain = () => {
                   {skill.skillId}
                 </span>
               </Button>
-              <span className="text-sm">{skill.repository}</span>
-              <span className="font-mono text-sm">{skill.version}</span>
+              <span className="truncate text-sm">{skill.repository}</span>
+              <span className="truncate font-mono text-sm">{skill.version}</span>
               <span>
                 <span
                   className={cn(
@@ -127,7 +167,14 @@ export const SkillsPageMain = () => {
               </span>
               <span className="font-mono text-sm">{skill.targets.length}</span>
               <Toggle enabled={skill.enabled} />
-              <Button type="button" variant="outline" size="sm">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled
+                title={syncTitle}
+                aria-label={t("skills.actions.syncSkillUnavailable", { name: skill.name })}
+              >
                 {t("skills.actions.sync")}
               </Button>
             </div>

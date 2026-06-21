@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
@@ -7,6 +7,39 @@ import { PageLayout } from "@/components/layout/page-layout";
 import { SkillsPage } from "./skills-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import { skillApiRecordsFixture } from "@/test/api-fixtures";
+import type { SkillApiRecord } from "../../../core/skills/skill-api";
+
+const interactiveSkillRecordsFixture: SkillApiRecord[] = [
+  ...skillApiRecordsFixture,
+  {
+    description: "Creates starter prompts for design reviews and product critique.",
+    enabled: true,
+    entry: "skills/design-helper/SKILL.md",
+    id: "design-lab__design-helper",
+    name: "Design Helper",
+    repository: "Design lab prompts",
+    repositoryId: "design-lab",
+    skillId: "design-helper",
+    status: "review",
+    tags: ["design", "critique"],
+    targets: ["codex"],
+    version: "21ab9d0"
+  },
+  {
+    description: "Installs release notes and changelog helpers.",
+    enabled: false,
+    entry: "skills/release-notes/SKILL.md",
+    id: "local-dev-skills__release-notes",
+    name: "Release Notes",
+    repository: "Local development skills",
+    repositoryId: "local-dev-skills",
+    skillId: "release-notes",
+    status: "installed",
+    tags: ["release", "writing"],
+    targets: ["codex", "claude"],
+    version: "local"
+  }
+];
 
 const renderSkillsPage = async ({
   locale = "zh-CN",
@@ -32,6 +65,14 @@ const renderSkillsPage = async ({
       <SkillsPage />
     </I18nextProvider>
   );
+};
+
+const selectOption = async (label: string, optionName: string) => {
+  fireEvent.pointerDown(screen.getByLabelText(label), { pointerType: "mouse" });
+  fireEvent.mouseDown(screen.getByLabelText(label), { button: 0 });
+  const option = await screen.findByRole("option", { name: optionName });
+  fireEvent.pointerDown(option, { pointerType: "mouse" });
+  fireEvent.click(option);
 };
 
 describe("SkillsPage", () => {
@@ -93,5 +134,92 @@ describe("SkillsPage", () => {
     expect(screen.getAllByText("8f2c91a").length).toBeGreaterThan(0);
     expect(within(screen.getByLabelText("技能详情")).getByText("Review Bot")).toBeInTheDocument();
     await waitFor(() => expect(window.skillsManager?.listSkills).toHaveBeenCalled());
+  });
+
+  it("searches skills by name, ID, repository, tags, description, or entry path", async () => {
+    await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    const searchField = screen.getByLabelText("搜索技能");
+
+    fireEvent.change(searchField, { target: { value: "critique" } });
+    expect(screen.getByRole("button", { name: "Design Helper" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Review Bot" })).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "release-notes/SKILL.md" } });
+    expect(screen.getByRole("button", { name: "Release Notes" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Design Helper" })).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "Team skills repository" } });
+    expect(screen.getByRole("button", { name: "Review Bot" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Release Notes" })).not.toBeInTheDocument();
+  });
+
+  it("filters skills by repository and status", async () => {
+    await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    await selectOption("仓库", "Design lab prompts");
+    expect(screen.getByRole("button", { name: "Design Helper" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Review Bot" })).not.toBeInTheDocument();
+
+    await selectOption("状态", "ready");
+    expect(screen.getByText("暂无已索引技能。")).toBeInTheDocument();
+  });
+
+  it("sorts skills by name and repository", async () => {
+    await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    await selectOption("排序", "名称");
+
+    let rows = screen.getAllByRole("button", {
+      name: (name, element) =>
+        element.tagName.toLowerCase() === "button" &&
+        ["Design Helper", "Release Notes", "Review Bot"].includes(name)
+    });
+    expect(rows.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Design Helper",
+      "Release Notes",
+      "Review Bot"
+    ]);
+
+    await selectOption("排序", "仓库");
+
+    rows = screen.getAllByRole("button", {
+      name: (name, element) =>
+        element.tagName.toLowerCase() === "button" &&
+        ["Design Helper", "Release Notes", "Review Bot"].includes(name)
+    });
+    expect(rows.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Design Helper",
+      "Release Notes",
+      "Review Bot"
+    ]);
+  });
+
+  it("checks individual skills and all currently visible skills", async () => {
+    await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    const syncButton = screen.getByRole("button", { name: "同步选中的技能" });
+    expect(syncButton).toBeDisabled();
+    expect(syncButton).toHaveAttribute("title", "同步暂未实现");
+
+    fireEvent.click(screen.getByLabelText("选择 Review Bot"));
+    expect(screen.getByLabelText("选择 Review Bot")).toBeChecked();
+    expect(syncButton).toHaveTextContent("同步 (1)");
+    expect(syncButton).toBeDisabled();
+
+    fireEvent.click(screen.getByLabelText("选择全部可见技能"));
+    expect(screen.getByLabelText("选择 Review Bot")).toBeChecked();
+    expect(screen.getByLabelText("选择 Design Helper")).toBeChecked();
+    expect(screen.getByLabelText("选择 Release Notes")).toBeChecked();
+    expect(syncButton).toHaveTextContent("同步 (3)");
+
+    await selectOption("状态", "ready");
+    fireEvent.click(screen.getByLabelText("选择全部可见技能"));
+    expect(screen.getByLabelText("选择 Review Bot")).not.toBeChecked();
+    expect(syncButton).toHaveTextContent("同步 (2)");
   });
 });
