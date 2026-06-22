@@ -175,6 +175,61 @@ describe("createRepositoryRepository", () => {
     });
   });
 
+  it("uses the latest persisted sync summary for repository scan impact", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+    const createdAt = new Date("2026-06-08T00:00:00.000Z");
+    const latestSyncAt = new Date("2026-06-08T02:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({
+        enabled: true,
+        note: "Team source",
+        patterns: ["skills/*/SKILL.md"],
+        priority: 1,
+        providerName: "GitHub",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+        skillUnits: 3,
+        status: "ready"
+      }),
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-1",
+      lastScannedCommitSha: "success-sha",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills",
+      providerId: "github",
+      remoteUrl: "git@github.com:team/skills.git",
+      updatedAt: createdAt
+    });
+    await db.insert(syncRuns).values({
+      endCommitSha: "success-sha",
+      errorMessage: null,
+      finishedAt: latestSyncAt,
+      id: "sync-success",
+      logPath: null,
+      repositoryId: "repo-1",
+      startCommitSha: "previous-sha",
+      startedAt: latestSyncAt,
+      status: "success",
+      summaryJson: JSON.stringify({ added: 2, changed: 0, removed: 1, warnings: 0 })
+    });
+
+    const result = await repositoryRepository.list();
+
+    expect(JSON.parse(result[0]?.configJson ?? "{}")).toMatchObject({
+      scan: { added: 2, changed: 0, removed: 1, warnings: 0 }
+    });
+  });
+
   it("creates a source row and reads the saved form values back from SQLite", async () => {
     const db = createDbClient(":memory:");
     const repositoryRepository = createRepositoryRepository(db);

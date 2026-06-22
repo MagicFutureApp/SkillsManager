@@ -358,7 +358,7 @@ describe("RepositoriesPage", () => {
     expect(listRepositories).toHaveBeenCalledTimes(2);
     expect(
       await screen.findByLabelText(
-        "Team skills repository 同步完成。已入库 12 个 Skills。新增 0，更新 1，移除 0，警告 0。commit 8f2c91a"
+        "Team skills repository 同步完成。已入库 12 个 Skills。新增 0，更新 1，移除 0，警告 0。"
       )
     ).toBeInTheDocument();
     expect(screen.getByLabelText("选择 Team skills repository")).not.toBeChecked();
@@ -497,7 +497,7 @@ describe("RepositoriesPage", () => {
     expect(syncRepositories).toHaveBeenNthCalledWith(2, ["design-lab"]);
     expect(
       await screen.findByLabelText(
-        "Design lab prompts 同步完成。已入库 7 个 Skills。新增 0，更新 1，移除 0，警告 0。commit 21ab9d0"
+        "Design lab prompts 同步完成。已入库 7 个 Skills。新增 0，更新 1，移除 0，警告 0。"
       )
     ).toBeInTheDocument();
 
@@ -552,7 +552,7 @@ describe("RepositoriesPage", () => {
 
     expect(
       await screen.findByLabelText(
-        "Local development skills 同步完成。已入库 1 个 Skills。新增 1，更新 0，移除 0，警告 0。commit local"
+        "Local development skills 同步完成。已入库 1 个 Skills。新增 1，更新 0，移除 0，警告 0。"
       )
     ).toBeInTheDocument();
   });

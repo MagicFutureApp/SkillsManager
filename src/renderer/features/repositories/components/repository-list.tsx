@@ -225,7 +225,7 @@ const buildLastSuccessfulSyncMessage = (repository: RepositoryViewModel): string
       ? `最后一次同步成功。已入库 ${repository.skillUnits} 个 Skills。`
       : "最后一次同步成功。未发现可入库的 Skills。";
 
-  return `${skillSummary}新增 ${repository.scan.added}，更新 ${repository.scan.changed}，移除 ${repository.scan.removed}，警告 ${repository.scan.warnings}。commit ${repository.lastCommit}`;
+  return `${skillSummary}新增 ${repository.scan.added}，更新 ${repository.scan.changed}，移除 ${repository.scan.removed}，警告 ${repository.scan.warnings}。`;
 };
 
 const syncIconByStatus = {

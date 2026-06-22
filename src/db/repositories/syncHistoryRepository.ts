@@ -1,14 +1,10 @@
 import { desc, eq } from "drizzle-orm";
 
-import type { RepositoryScanSummary } from "../../core/repositories/repository-api";
 import type {
   SourceSyncRunRecord,
   SourceSyncRunStatus
 } from "../../core/repositories/sync-history-api";
-import {
-  EMPTY_REPOSITORY_SCAN_SUMMARY,
-  normalizeRepositoryScanSummary
-} from "../../core/repositories/repository-utils";
+import { parseRepositoryScanSummaryJson } from "../../core/repositories/repository-utils";
 import type { createDbClient } from "../client";
 import { repositories, syncRuns } from "../schema";
 
@@ -45,7 +41,7 @@ export const createSyncHistoryRepository = (db: DbClient) => {
         repositoryId: row.repositoryId,
         repositoryName: row.repositoryName,
         repositoryRemoteUrl: row.repositoryRemoteUrl,
-        scan: parseScanSummary(row.summaryJson),
+        scan: parseRepositoryScanSummaryJson(row.summaryJson),
         startCommitSha: row.startCommitSha,
         startedAt: row.startedAt.toISOString(),
         status: normalizeSyncRunStatus(row.status),
@@ -61,36 +57,4 @@ const normalizeSyncRunStatus = (status: string): SourceSyncRunStatus => {
   }
 
   return "success";
-};
-
-const parseScanSummary = (summaryJson: string): RepositoryScanSummary => {
-  try {
-    const parsed = JSON.parse(summaryJson) as unknown;
-
-    return normalizeScanSummary(extractScanSummary(parsed));
-  } catch {
-    return EMPTY_REPOSITORY_SCAN_SUMMARY;
-  }
-};
-
-const extractScanSummary = (value: unknown): unknown => {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const record = value as { scan?: unknown };
-
-  if (record.scan) {
-    return record.scan;
-  }
-
-  return value;
-};
-
-const normalizeScanSummary = (scan: unknown): RepositoryScanSummary => {
-  if (!scan || typeof scan !== "object") {
-    return EMPTY_REPOSITORY_SCAN_SUMMARY;
-  }
-
-  return normalizeRepositoryScanSummary(scan);
 };

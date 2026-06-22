@@ -5,6 +5,7 @@ import {
   formatRepositoryDateTime,
   normalizeDiscoveryEntries,
   normalizeRepositoryScanSummary,
+  parseRepositoryScanSummaryJson,
   slugifyRepositoryName
 } from "./repository-utils";
 
@@ -33,6 +34,36 @@ describe("repository utils", () => {
       warnings: 1
     });
     expect(normalizeRepositoryScanSummary(null)).toEqual({
+      added: 0,
+      changed: 0,
+      removed: 0,
+      warnings: 0
+    });
+  });
+
+  it("parses persisted scan summaries from sync run JSON", () => {
+    expect(
+      parseRepositoryScanSummaryJson(JSON.stringify({ added: 2, changed: 0, removed: 1 }))
+    ).toEqual({
+      added: 2,
+      changed: 0,
+      removed: 1,
+      warnings: 0
+    });
+    expect(
+      parseRepositoryScanSummaryJson(
+        JSON.stringify({
+          category: "network",
+          scan: { added: 0, changed: 0, removed: 0, warnings: 1 }
+        })
+      )
+    ).toEqual({
+      added: 0,
+      changed: 0,
+      removed: 0,
+      warnings: 1
+    });
+    expect(parseRepositoryScanSummaryJson("{not json")).toEqual({
       added: 0,
       changed: 0,
       removed: 0,

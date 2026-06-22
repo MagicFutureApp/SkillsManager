@@ -528,5 +528,5 @@ const buildSyncResultMessage = (result: Awaited<RepositoriesSyncResult>["results
   const skillSummary =
     result.skillUnits > 0 ? `已入库 ${result.skillUnits} 个 Skills。` : "未发现可入库的 Skills。";
 
-  return `同步完成。${skillSummary}新增 ${result.scan.added}，更新 ${result.scan.changed}，移除 ${result.scan.removed}，警告 ${result.scan.warnings}。commit ${result.commitSha ?? "--"}`;
+  return `同步完成。${skillSummary}新增 ${result.scan.added}，更新 ${result.scan.changed}，移除 ${result.scan.removed}，警告 ${result.scan.warnings}。`;
 };

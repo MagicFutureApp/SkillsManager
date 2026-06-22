@@ -22,6 +22,7 @@ import {
   buildRepositoryCachePath,
   normalizeDiscoveryEntries,
   normalizeRepositoryScanSummary,
+  parseRepositoryScanSummaryJson,
   slugifyRepositoryName
 } from "../../core/repositories/repository-utils";
 import {
@@ -458,6 +459,7 @@ export const createRepositoryRepository = (db: DbClient) => {
         const provider = providersById.get(repository.providerId);
         const providerName = providerNameFor(provider?.type, repository.remoteUrl);
         const skillUnitCount = skillUnitCounts.get(repository.id) ?? 0;
+        const lastSync = lastSyncByRepositoryId.get(repository.id) ?? null;
         const config = mergeRepositoryConfig({
           configJson: repository.configJson,
           index,
@@ -466,12 +468,18 @@ export const createRepositoryRepository = (db: DbClient) => {
           skillUnitCount,
           wasScanned: Boolean(repository.lastScannedCommitSha)
         });
+        const displayedConfig = lastSync
+          ? {
+              ...config,
+              scan: parseRepositoryScanSummaryJson(lastSync.summaryJson)
+            }
+          : config;
 
         return {
           branch: repository.defaultBranch ?? "main",
-          configJson: JSON.stringify(config),
+          configJson: JSON.stringify(displayedConfig),
           id: repository.id,
-          lastSync: lastSyncByRepositoryId.get(repository.id) ?? null,
+          lastSync,
           lastScannedCommitSha: repository.lastScannedCommitSha,
           localCachePath: repository.localCachePath,
           name: repository.name || deriveRepositoryName(repository.remoteUrl, repository.id),

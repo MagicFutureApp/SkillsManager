@@ -44,6 +44,26 @@ export const normalizeRepositoryScanSummary = (
   };
 };
 
+export const parseRepositoryScanSummaryJson = (summaryJson: string): RepositoryScanSummary => {
+  try {
+    const parsed = JSON.parse(summaryJson) as unknown;
+
+    return normalizeRepositoryScanSummary(extractRepositoryScanSummary(parsed));
+  } catch {
+    return EMPTY_REPOSITORY_SCAN_SUMMARY;
+  }
+};
+
+const extractRepositoryScanSummary = (value: unknown): unknown => {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const record = value as { scan?: unknown };
+
+  return record.scan ?? value;
+};
+
 export const formatRepositoryDateTime = (
   isoDate: string | null | undefined,
   timeZone = "Asia/Shanghai"
