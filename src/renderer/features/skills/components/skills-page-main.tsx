@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, type SelectOption } from "@/components/ui/select";
+import { shouldIgnoreRowSelection } from "@/lib/row-selection";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -111,11 +112,18 @@ export const SkillsPageMain = () => {
             <div
               key={skill.id}
               className={cn(
-                "grid items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_auto]",
+                "grid cursor-pointer items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_auto]",
                 tableGridColumnsClassName,
                 skill.id === selectedSkill?.id &&
                   "bg-primary/5 shadow-[inset_3px_0_0_theme(colors.primary)]"
               )}
+              onClick={(event) => {
+                if (shouldIgnoreRowSelection(event)) {
+                  return;
+                }
+
+                page.setSelectedSkillId(skill.id);
+              }}
             >
               <span className="grid place-items-center">
                 <Checkbox

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { shouldIgnoreRowSelection } from "@/lib/row-selection";
 import { providerLabels, type ProviderViewModel } from "./provider-data";
 import { ProviderStatusPill } from "./provider-status-pill";
 import React from "react";
@@ -42,8 +43,15 @@ export const ProviderList = ({
         providers.map((provider) => (
           <div
             key={provider.id}
-            className="grid grid-cols-[minmax(220px,1fr)_128px_96px_112px] items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 data-[selected=true]:bg-primary/5 max-[860px]:grid-cols-1"
+            className="grid cursor-pointer grid-cols-[minmax(220px,1fr)_128px_96px_112px] items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 last:border-b-0 data-[selected=true]:bg-primary/5 max-[860px]:grid-cols-1"
             data-selected={provider.id === selectedProviderId}
+            onClick={(event) => {
+              if (shouldIgnoreRowSelection(event)) {
+                return;
+              }
+
+              onSelectProvider(provider.id);
+            }}
           >
             <Button
               type="button"

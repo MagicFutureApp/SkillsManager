@@ -187,6 +187,14 @@ describe("RepositoriesPage", () => {
     expect(within(detail).getByText("是")).toBeInTheDocument();
   });
 
+  it("selects a source when clicking a non-interactive row cell", async () => {
+    await renderRepositoriesPage();
+
+    fireEvent.click(within(screen.getByRole("main")).getByText("GitLab"));
+
+    expect(screen.getByRole("heading", { name: "Design lab prompts" })).toBeInTheDocument();
+  });
+
   it("hides cache and warning details and formats enabled state for remote sources", async () => {
     await renderRepositoriesPage();
 

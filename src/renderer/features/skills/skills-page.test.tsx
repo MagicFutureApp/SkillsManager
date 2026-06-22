@@ -184,6 +184,17 @@ describe("SkillsPage", () => {
     expect(screen.queryByRole("button", { name: "Review Bot" })).not.toBeInTheDocument();
   });
 
+  it("selects a skill when clicking a non-interactive row cell", async () => {
+    await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    fireEvent.click(screen.getByText("Design lab prompts"));
+
+    expect(
+      within(screen.getByLabelText("技能详情")).getByText("Design Helper")
+    ).toBeInTheDocument();
+  });
+
   it("sorts skills by name and repository", async () => {
     await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
     await screen.findByRole("button", { name: "Review Bot" });

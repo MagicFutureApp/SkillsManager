@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
@@ -110,5 +110,16 @@ describe("TargetsPage", () => {
     const detail = screen.getByLabelText("目标详情");
     expect(within(detail).getByRole("heading", { name: "Codex CLI" })).toBeInTheDocument();
     expect(within(detail).getByText("已检测")).toBeInTheDocument();
+  });
+
+  it("selects a target when clicking a non-interactive row cell", async () => {
+    await renderTargetsPage();
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByText("/Users/test/project/.codex/skills"));
+
+    expect(
+      within(screen.getByLabelText("目标详情")).getByRole("heading", { name: "Local project" })
+    ).toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { shouldIgnoreRowSelection } from "@/lib/row-selection";
 import { cn } from "@/lib/utils";
 import { RepositoryStatusPill } from "./repository-status-pill";
 import type { RepositoryViewModel } from "./repository-data";
@@ -83,11 +84,18 @@ export const RepositoryList = ({
           <div
             key={repository.id}
             className={cn(
-              "grid items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_34px_auto]",
+              "grid cursor-pointer items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_34px_auto]",
               gridColumnsClassName,
               repository.id === selectedRepositoryId &&
                 "bg-primary/5 shadow-[inset_3px_0_0_theme(colors.primary)]"
             )}
+            onClick={(event) => {
+              if (shouldIgnoreRowSelection(event)) {
+                return;
+              }
+
+              onSelectRepository(repository.id);
+            }}
           >
             <span className="grid place-items-center">
               <Checkbox

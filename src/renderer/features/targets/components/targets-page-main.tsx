@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, type SelectOption } from "@/components/ui/select";
+import { shouldIgnoreRowSelection } from "@/lib/row-selection";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -76,11 +77,18 @@ export const TargetsPageMain = () => {
             <div
               key={target.id}
               className={cn(
-                "grid items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 max-[820px]:grid-cols-[minmax(0,1fr)_auto]",
+                "grid cursor-pointer items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 last:border-b-0 max-[820px]:grid-cols-[minmax(0,1fr)_auto]",
                 tableGridColumnsClassName,
                 target.id === page.selectedTargetId &&
                   "bg-primary/5 shadow-[inset_3px_0_0_theme(colors.primary)]"
               )}
+              onClick={(event) => {
+                if (shouldIgnoreRowSelection(event)) {
+                  return;
+                }
+
+                page.setSelectedTargetId(target.id);
+              }}
             >
               <Button
                 type="button"

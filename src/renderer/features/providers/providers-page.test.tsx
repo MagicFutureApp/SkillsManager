@@ -86,6 +86,16 @@ describe("ProvidersPage", () => {
     expect(within(detail).getByText("Local filesystem")).toBeInTheDocument();
   });
 
+  it("selects a provider when clicking a non-interactive row cell", async () => {
+    await renderProvidersPage();
+
+    fireEvent.click(screen.getByText("Local filesystem"));
+
+    expect(
+      within(screen.getByLabelText("Provider 详情")).getByRole("heading", { name: "Local Git" })
+    ).toBeInTheDocument();
+  });
+
   it("connects and disconnects the selected provider through page actions", async () => {
     await renderProvidersPage();
 
