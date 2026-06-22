@@ -715,6 +715,7 @@ const mergeUpdatedRepositoryConfig = ({
 
   return {
     ...savedConfig,
+    enabled: input.enabled ?? savedConfig.enabled,
     note: input.note,
     patterns: normalizeDiscoveryEntries(input.patterns),
     providerName

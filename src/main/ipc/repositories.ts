@@ -339,6 +339,7 @@ const normalizeUpdateRepositoryInput = (input: UpdateRepositoryInput): UpdateRep
 
   return {
     branch: input.branch.trim(),
+    ...(typeof input.enabled === "boolean" ? { enabled: input.enabled } : {}),
     name,
     note: input.note.trim(),
     patterns: input.patterns.trim(),

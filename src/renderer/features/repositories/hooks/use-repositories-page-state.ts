@@ -251,10 +251,30 @@ export const useRepositoriesPageState = () => {
 
   const toggleRepositoryEnabled = (repositoryId: string) => {
     setSelectedRepositoryId(repositoryId);
-    updateRepository(repositoryId, (repository) => ({
-      ...repository,
-      enabled: !repository.enabled
+    const repository = repositories.find((item) => item.id === repositoryId);
+
+    if (!repository) {
+      return;
+    }
+
+    const nextEnabled = !repository.enabled;
+
+    updateRepository(repositoryId, (currentRepository) => ({
+      ...currentRepository,
+      enabled: nextEnabled
     }));
+
+    void persistRepositoryEnabled(repository, nextEnabled)
+      .then(loadRepositories)
+      .then((nextRepositories) => {
+        setRepositories(nextRepositories);
+      })
+      .catch(() => {
+        updateRepository(repositoryId, (currentRepository) => ({
+          ...currentRepository,
+          enabled: repository.enabled
+        }));
+      });
   };
 
   const toggleRepositoryChecked = (repositoryId: string, checked: boolean) => {
@@ -518,6 +538,25 @@ const loadRepositoryDeletePreview = async (
   }
 
   return window.skillsManager.getRepositoryDeletePreview(repositoryId);
+};
+
+const persistRepositoryEnabled = async (
+  repository: RepositoryViewModel,
+  enabled: boolean
+): Promise<void> => {
+  if (!window.skillsManager?.updateRepository) {
+    throw new Error("保存来源接口不可用。");
+  }
+
+  await window.skillsManager.updateRepository(repository.id, {
+    branch: repository.branch,
+    enabled,
+    name: repository.name,
+    note: repository.note,
+    patterns: repository.patterns.join(", "),
+    provider: repository.provider,
+    remoteUrl: repository.remoteUrl
+  });
 };
 
 const buildSyncingMessage = (repository: RepositoryViewModel): string => {

@@ -629,6 +629,53 @@ describe("RepositoriesPage", () => {
   });
 
   it("toggles source enabled state from the table", async () => {
+    const updateRepository = vi.fn().mockResolvedValue({
+      ...repositoryApiRecordsFixture[3],
+      configJson: JSON.stringify({
+        enabled: true,
+        lastScanLabel: "未执行",
+        note: "市场索引默认休眠，启用后进入同步队列。",
+        patterns: ["market-index.json"],
+        priority: 6,
+        providerName: "skills.sh",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 1 },
+        skillUnits: 0,
+        status: "review"
+      })
+    });
+    const updatedRepositories = repositoryApiRecordsFixture.map((repository) =>
+      repository.id === "market-index"
+        ? {
+            ...repository,
+            configJson: JSON.stringify({
+              enabled: true,
+              lastScanLabel: "未执行",
+              note: "市场索引默认休眠，启用后进入同步队列。",
+              patterns: ["market-index.json"],
+              priority: 6,
+              providerName: "skills.sh",
+              scan: { added: 0, changed: 0, removed: 0, warnings: 1 },
+              skillUnits: 0,
+              status: "review"
+            })
+          }
+        : repository
+    );
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({ repositories: updatedRepositories });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      platform: "win32",
+      updateRepository
+    };
     await renderRepositoriesPage();
 
     fireEvent.click(screen.getByRole("button", { name: "skills.sh market index" }));
@@ -636,7 +683,21 @@ describe("RepositoriesPage", () => {
     expect(switchControl).toHaveAttribute("aria-checked", "false");
 
     fireEvent.click(switchControl);
-    expect(switchControl).toHaveAttribute("aria-checked", "true");
+    await waitFor(() =>
+      expect(updateRepository).toHaveBeenCalledWith("market-index", {
+        branch: "index",
+        enabled: true,
+        name: "skills.sh market index",
+        note: "市场索引默认休眠，启用后进入同步队列。",
+        patterns: "market-index.json",
+        provider: "skills.sh",
+        remoteUrl: "https://skills.sh"
+      })
+    );
+    expect(listRepositories).toHaveBeenCalledTimes(2);
+    expect(
+      await screen.findByRole("switch", { name: "启用 skills.sh market index" })
+    ).toHaveAttribute("aria-checked", "true");
     expect(within(screen.getByLabelText("来源详情")).getByText("是")).toBeInTheDocument();
   });
 

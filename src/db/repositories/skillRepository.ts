@@ -22,6 +22,7 @@ export const createSkillRepository = (db: DbClient) => {
           id: skillUnits.id,
           metadataSnapshotJson: skillVersions.metadataSnapshotJson,
           name: skillUnits.name,
+          repositoryConfigJson: repositories.configJson,
           repositoryId: skillUnits.repositoryId,
           repositoryName: repositories.name,
           rootPath: skillUnits.rootPath,
@@ -34,7 +35,7 @@ export const createSkillRepository = (db: DbClient) => {
 
       const latestRows = new Map<string, (typeof rows)[number]>();
 
-      rows.forEach((row) => {
+      rows.filter(isSkillSourceEnabled).forEach((row) => {
         latestRows.set(row.id, row);
       });
 
@@ -58,6 +59,16 @@ export const createSkillRepository = (db: DbClient) => {
       });
     }
   };
+};
+
+const isSkillSourceEnabled = (row: { repositoryConfigJson: string }): boolean => {
+  try {
+    const parsed = JSON.parse(row.repositoryConfigJson) as { enabled?: unknown };
+
+    return parsed.enabled !== false;
+  } catch {
+    return true;
+  }
 };
 
 const parseMetadataSnapshot = (
