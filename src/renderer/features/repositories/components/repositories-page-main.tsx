@@ -45,11 +45,15 @@ export const RepositoriesPageMain = () => {
           searchPlaceholder: t("repositories.filters.searchPlaceholder"),
           sort: t("repositories.filters.sort"),
           sortName: t("repositories.filters.sortName"),
-          sortPriority: t("repositories.filters.sortPriority"),
           sortProvider: t("repositories.filters.sortProvider"),
           sortSkills: t("repositories.filters.sortSkills"),
           sortStatus: t("repositories.filters.sortStatus"),
-          status: t("repositories.filters.status")
+          status: t("repositories.filters.status"),
+          statusLabels: {
+            failed: t("repositories.status.failed"),
+            ready: t("repositories.status.ready"),
+            review: t("repositories.status.review")
+          }
         }}
         provider={page.providerFilter}
         query={page.query}
@@ -66,7 +70,6 @@ export const RepositoriesPageMain = () => {
           checkedIds={page.checkedIds}
           copy={{
             actions: t("repositories.table.actions"),
-            branch: t("repositories.table.branch"),
             empty: t("repositories.empty"),
             provider: t("repositories.table.provider"),
             repository: t("repositories.table.repository"),

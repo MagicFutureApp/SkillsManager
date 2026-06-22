@@ -20,11 +20,11 @@ type RepositoryFiltersProps = {
     searchPlaceholder: string;
     sort: string;
     sortName: string;
-    sortPriority: string;
     sortProvider: string;
     sortSkills: string;
     sortStatus: string;
     status: string;
+    statusLabels: Record<Exclude<RepositoryStatusFilter, "all">, string>;
   };
   provider: RepositoryProviderFilter;
   query: string;
@@ -39,7 +39,6 @@ type RepositoryFiltersProps = {
 const repositorySortOptions = (
   copy: RepositoryFiltersProps["copy"]
 ): SelectOption<RepositorySort>[] => [
-  { value: "priority", label: copy.sortPriority },
   { value: "name", label: copy.sortName },
   { value: "provider", label: copy.sortProvider },
   { value: "status", label: copy.sortStatus },
@@ -57,9 +56,9 @@ const repositoryProviderSelectOptions = (
 const repositoryStatusSelectOptions = (
   copy: RepositoryFiltersProps["copy"]
 ): SelectOption<RepositoryStatusFilter>[] =>
-  repositoryStatusOptions.map((option) => ({
-    value: option.value,
-    label: option.value === "all" ? copy.allStatuses : option.label
+  repositoryStatusOptions.map((status) => ({
+    value: status,
+    label: status === "all" ? copy.allStatuses : copy.statusLabels[status]
   }));
 
 export const RepositoryFilters = ({

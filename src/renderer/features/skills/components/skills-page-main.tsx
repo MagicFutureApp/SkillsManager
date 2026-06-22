@@ -6,13 +6,12 @@ import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import type { SkillRepositoryFilter, SkillSort, SkillStatusFilter } from "./skills-page-data";
-import { skillStatusOptions } from "./skills-page-data";
-import { Field, statusClassName, Toggle } from "./skills-page-controls";
+import type { SkillRepositoryFilter, SkillSort } from "./skills-page-data";
+import { Field, Toggle } from "./skills-page-controls";
 import { useSkillsPageContext } from "./skills-page-context";
 
 const tableGridColumnsClassName =
-  "grid-cols-[32px_minmax(0,1.7fr)_minmax(0,0.9fr)_minmax(0,0.65fr)_minmax(0,0.75fr)_minmax(0,0.55fr)_minmax(44px,0.45fr)_minmax(56px,0.5fr)]";
+  "grid-cols-[32px_minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.55fr)_minmax(44px,0.45fr)_minmax(56px,0.5fr)]";
 
 export const SkillsPageMain = () => {
   const { t } = useTranslation();
@@ -35,10 +34,6 @@ export const SkillsPageMain = () => {
       label: repository === "all" ? t("skills.filters.allRepositories") : repository
     })
   );
-  const statusOptions: SelectOption<SkillStatusFilter>[] = skillStatusOptions.map((status) => ({
-    value: status,
-    label: status === "all" ? t("skills.filters.allStatuses") : status
-  }));
 
   return (
     <>
@@ -65,7 +60,7 @@ export const SkillsPageMain = () => {
       </header>
 
       <section
-        className="grid grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))] items-end gap-3 rounded-xl border border-border bg-card p-4 max-[1180px]:grid-cols-2"
+        className="grid grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))] items-end gap-3 rounded-xl border border-border bg-card p-4 max-[1180px]:grid-cols-2"
         aria-label={t("skills.filters.ariaLabel")}
       >
         <Field label={t("skills.filters.search")}>
@@ -84,13 +79,6 @@ export const SkillsPageMain = () => {
             value={page.repositoryFilter}
             options={repositoryOptions}
             onValueChange={page.setRepositoryFilter}
-          />
-        </Field>
-        <Field label={t("skills.filters.status")}>
-          <Select
-            value={page.statusFilter}
-            options={statusOptions}
-            onValueChange={page.setStatusFilter}
           />
         </Field>
       </section>
@@ -113,8 +101,6 @@ export const SkillsPageMain = () => {
           </span>
           <span>{t("skills.table.skill")}</span>
           <span>{t("skills.table.repository")}</span>
-          <span>{t("skills.table.version")}</span>
-          <span>{t("skills.table.status")}</span>
           <span>{t("skills.table.targets")}</span>
           <span>{t("skills.table.enabled")}</span>
           <span>{t("skills.table.actions")}</span>
@@ -152,17 +138,6 @@ export const SkillsPageMain = () => {
                 </span>
               </Button>
               <span className="truncate text-sm">{skill.repository}</span>
-              <span className="truncate font-mono text-sm">{skill.version}</span>
-              <span>
-                <span
-                  className={cn(
-                    "inline-flex min-h-6 items-center rounded-full border px-2 text-xs",
-                    statusClassName[skill.status]
-                  )}
-                >
-                  {skill.status}
-                </span>
-              </span>
               <span className="font-mono text-sm">{skill.targets.length}</span>
               <Toggle enabled={skill.enabled} />
               <Button

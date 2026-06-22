@@ -3,7 +3,6 @@ import type { SkillApiRecord, SkillApiStatus } from "../../../../core/skills/ski
 export type SkillStatus = SkillApiStatus;
 export type SkillRepositoryFilter = string;
 export type SkillSort = "recommended" | "name" | "repository";
-export type SkillStatusFilter = SkillStatus | "all";
 
 export type Skill = {
   id: string;
@@ -24,7 +23,6 @@ export type SkillFilterInput = {
   repository: SkillRepositoryFilter;
   skills: Skill[];
   sort: SkillSort;
-  status: SkillStatusFilter;
 };
 
 export type TargetOption = {
@@ -56,28 +54,19 @@ export const adaptSkillRecord = (record: SkillApiRecord): Skill => {
   };
 };
 
-export const skillStatusOptions: SkillStatusFilter[] = ["all", "ready", "review", "installed"];
-
 export const getSkillRepositoryOptions = (skills: Skill[]): SkillRepositoryFilter[] => {
   const repositories = new Set(skills.map((skill) => skill.repository).filter(Boolean));
 
   return ["all", ...Array.from(repositories).sort((first, second) => first.localeCompare(second))];
 };
 
-export const filterSkills = ({
-  query,
-  repository,
-  skills,
-  sort,
-  status
-}: SkillFilterInput): Skill[] => {
+export const filterSkills = ({ query, repository, skills, sort }: SkillFilterInput): Skill[] => {
   const normalizedQuery = query.trim().toLowerCase();
   const visible = skills.filter((skill) => {
     const searchable = [
       skill.name,
       skill.skillId,
       skill.repository,
-      skill.version,
       skill.entry,
       skill.description,
       ...skill.tags
@@ -87,8 +76,7 @@ export const filterSkills = ({
 
     return (
       (!normalizedQuery || searchable.includes(normalizedQuery)) &&
-      (repository === "all" || skill.repository === repository) &&
-      (status === "all" || skill.status === status)
+      (repository === "all" || skill.repository === repository)
     );
   });
 

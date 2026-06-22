@@ -23,7 +23,6 @@ type RepositoryDetailProps = {
     provider: string;
     remoteUrl: string;
     scanAdded: string;
-    scanChanged: string;
     scanHeading: string;
     scanRemoved: string;
     scanWarnings: string;
@@ -46,8 +45,7 @@ export const RepositoryDetail = ({
   const scanRows = repository
     ? ([
         [copy.scanAdded, repository.scan.added],
-        [copy.scanRemoved, repository.scan.removed],
-        [copy.scanChanged, repository.scan.changed]
+        [copy.scanRemoved, repository.scan.removed]
       ] satisfies Array<[string, number]>)
     : [];
   const isLocalRepository = repository?.provider === "Local";

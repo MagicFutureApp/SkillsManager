@@ -44,7 +44,7 @@ export const useRepositoriesPageState = () => {
   const [selectedRepositoryId, setSelectedRepositoryId] = useState<string | null>(
     () => repositories[0]?.id ?? null
   );
-  const [sort, setSort] = useState<RepositorySort>("priority");
+  const [sort, setSort] = useState<RepositorySort>("name");
   const [statusFilter, setStatusFilter] = useState<RepositoryStatusFilter>("all");
 
   useEffect(() => {

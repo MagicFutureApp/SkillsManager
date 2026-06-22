@@ -14,7 +14,7 @@ import {
 } from "../../../../core/repositories/repository-utils";
 
 export type RepositoryProviderFilter = RepositoryProviderName | "all";
-export type RepositorySort = "priority" | "name" | "provider" | "status" | "skills";
+export type RepositorySort = "name" | "provider" | "status" | "skills";
 export type RepositoryStatusFilter = RepositoryScanStatus | "all";
 
 export type RepositoryViewModel = {
@@ -73,14 +73,11 @@ export const repositoryProviderOptions: Array<{
   { label: "skills.sh", value: "skills.sh" }
 ];
 
-export const repositoryStatusOptions: Array<{
-  label: RepositoryStatusFilter;
-  value: RepositoryStatusFilter;
-}> = [
-  { label: "all", value: "all" },
-  { label: "ready", value: "ready" },
-  { label: "review", value: "review" },
-  { label: "failed", value: "failed" }
+export const repositoryStatusOptions: RepositoryStatusFilter[] = [
+  "all",
+  "ready",
+  "review",
+  "failed"
 ];
 
 export const adaptRepositoryRecord = (record: RepositoryApiRecord): RepositoryViewModel => {
@@ -159,7 +156,7 @@ export const filterRepositories = ({
       return second.skillUnits - first.skillUnits || first.name.localeCompare(second.name);
     }
 
-    return first.priority - second.priority || first.name.localeCompare(second.name);
+    return first.name.localeCompare(second.name);
   });
 };
 

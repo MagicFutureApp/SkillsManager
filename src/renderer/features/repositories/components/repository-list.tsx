@@ -12,7 +12,6 @@ import React from "react";
 type RepositoryListProps = {
   copy: {
     actions: string;
-    branch: string;
     empty: string;
     provider: string;
     repository: string;
@@ -50,7 +49,7 @@ export const RepositoryList = ({
   onToggleEnabled
 }: RepositoryListProps) => {
   const gridColumnsClassName =
-    "grid-cols-[34px_minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_34px_minmax(52px,0.45fr)]";
+    "grid-cols-[34px_minmax(0,1.9fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_34px_minmax(52px,0.45fr)]";
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
@@ -71,7 +70,6 @@ export const RepositoryList = ({
         </span>
         <span>{copy.repository}</span>
         <span>{copy.provider}</span>
-        <span>{copy.branch}</span>
         <span>{copy.status}</span>
         <span>{copy.skills}</span>
         <span aria-hidden="true" />
@@ -112,7 +110,6 @@ export const RepositoryList = ({
               </span>
             </Button>
             <span className="text-sm max-[820px]:hidden">{repository.provider}</span>
-            <span className="font-mono text-sm max-[820px]:hidden">{repository.branch}</span>
             <span className="max-[820px]:hidden">
               <RepositoryStatusPill status={repository.status} />
             </span>

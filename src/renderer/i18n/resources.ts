@@ -209,7 +209,7 @@ export const resources = {
           search: "搜索",
           searchPlaceholder: "搜索名称、URL 或备注",
           sort: "排序",
-          sortName: "名称",
+          sortName: "来源",
           sortPriority: "优先",
           sortProvider: "类型",
           sortSkills: "技能",
@@ -227,13 +227,18 @@ export const resources = {
         table: {
           actions: "启用",
           branch: "分支",
-          provider: "来源",
+          provider: "类型",
           repository: "来源",
           selectAll: "选择全部可见来源",
           selectRepository: "选择 {{name}}",
           skills: "技能",
           status: "状态",
           toggleEnabled: "启用 {{name}}"
+        },
+        status: {
+          failed: "失败",
+          ready: "就绪",
+          review: "需复核"
         },
         detail: {
           ariaLabel: "来源详情",
@@ -250,10 +255,10 @@ export const resources = {
           patterns: "发现入口",
           provider: "来源类型",
           remoteUrl: "URL / 路径",
-          scanAdded: "新增 skill unit",
+          scanAdded: "新增技能",
           scanChanged: "元数据变更",
           scanHeading: "同步影响",
-          scanRemoved: "移除 skill unit",
+          scanRemoved: "移除技能",
           scanWarnings: "扫描警告"
         },
         deleteDialog: {
@@ -348,10 +353,10 @@ export const resources = {
           noValue: "无",
           repository: "仓库",
           remoteUrl: "URL / 路径",
-          scanAdded: "新增 skill unit",
+          scanAdded: "新增技能",
           scanChanged: "元数据变更",
           scanHeading: "Scan summary",
-          scanRemoved: "移除 skill unit",
+          scanRemoved: "移除技能",
           scanWarnings: "扫描警告",
           startCommit: "开始 commit",
           startedAt: "开始时间",
@@ -576,10 +581,10 @@ export const resources = {
           search: "Search",
           searchPlaceholder: "Search name, URL, or note",
           sort: "Sort",
-          sortName: "Name",
+          sortName: "Source",
           sortPriority: "Sync priority",
-          sortProvider: "Provider",
-          sortSkills: "Skill count",
+          sortProvider: "Type",
+          sortSkills: "Skills",
           sortStatus: "Scan status",
           status: "Status"
         },
@@ -594,13 +599,18 @@ export const resources = {
         table: {
           actions: "Enabled",
           branch: "Branch",
-          provider: "Provider",
+          provider: "Type",
           repository: "Source",
           selectAll: "Select all visible sources",
           selectRepository: "Select {{name}}",
           skills: "Skills",
           status: "Status",
           toggleEnabled: "Enable {{name}}"
+        },
+        status: {
+          failed: "Failed",
+          ready: "Ready",
+          review: "Needs review"
         },
         detail: {
           ariaLabel: "Source details",

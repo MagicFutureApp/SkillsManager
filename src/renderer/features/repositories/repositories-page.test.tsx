@@ -85,6 +85,14 @@ describe("RepositoriesPage", () => {
     expect(screen.getByLabelText("搜索")).toBeInTheDocument();
     expect(screen.getByLabelText("类型")).toBeInTheDocument();
     expect(screen.getByLabelText("状态")).toBeInTheDocument();
+    fireEvent.pointerDown(screen.getByLabelText("排序"), { pointerType: "mouse" });
+    fireEvent.mouseDown(screen.getByLabelText("排序"), { button: 0 });
+    expect(await screen.findByRole("option", { name: "来源" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "类型" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "状态" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "技能" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "优先" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("option", { name: "来源" }));
     expect(screen.queryByText("启用仓库")).not.toBeInTheDocument();
     expect(screen.queryByText("已索引技能")).not.toBeInTheDocument();
     expect(screen.queryByText("需要复核")).not.toBeInTheDocument();
@@ -95,15 +103,30 @@ describe("RepositoriesPage", () => {
       "aria-selected",
       "true"
     );
+    expect(within(screen.getByRole("main")).queryByText("分支")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("main")).queryByText("main")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("main")).getAllByText("就绪").length).toBeGreaterThan(0);
+    expect(within(screen.getByRole("main")).queryByText("ready")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Team skills repository" })).toBeInTheDocument();
     expect(
       within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" })
     ).toBeInTheDocument();
     expect(screen.getByText("同步影响")).toBeInTheDocument();
+    expect(within(screen.getByLabelText("来源详情")).getByText("新增技能")).toBeInTheDocument();
+    expect(within(screen.getByLabelText("来源详情")).getByText("移除技能")).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("来源详情")).queryByText("新增 skill unit")
+    ).not.toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("来源详情")).queryByText("移除 skill unit")
+    ).not.toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("来源详情")).queryByText("元数据变更")
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Team skills repository" }).closest("div")
     ).toHaveClass(
-      "grid-cols-[34px_minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_34px_minmax(52px,0.45fr)]"
+      "grid-cols-[34px_minmax(0,1.9fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_34px_minmax(52px,0.45fr)]"
     );
   });
 
@@ -116,7 +139,7 @@ describe("RepositoriesPage", () => {
       screen.queryByRole("button", { name: "Team skills repository" })
     ).not.toBeInTheDocument();
 
-    await selectOption("状态", "ready");
+    await selectOption("状态", "就绪");
     expect(screen.getByText("没有匹配的来源。调整搜索或筛选条件。")).toBeInTheDocument();
   });
 

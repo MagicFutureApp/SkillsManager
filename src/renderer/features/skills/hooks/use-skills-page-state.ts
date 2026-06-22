@@ -6,8 +6,7 @@ import {
   getSkillRepositoryOptions,
   type Skill,
   type SkillRepositoryFilter,
-  type SkillSort,
-  type SkillStatusFilter
+  type SkillSort
 } from "../components/skills-page-data";
 
 export const useSkillsPageState = () => {
@@ -17,7 +16,6 @@ export const useSkillsPageState = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [sort, setSort] = useState<SkillSort>("recommended");
-  const [statusFilter, setStatusFilter] = useState<SkillStatusFilter>("all");
 
   useEffect(() => {
     let isMounted = true;
@@ -41,10 +39,9 @@ export const useSkillsPageState = () => {
       query,
       repository: repositoryFilter,
       skills,
-      sort,
-      status: statusFilter
+      sort
     });
-  }, [query, repositoryFilter, skills, sort, statusFilter]);
+  }, [query, repositoryFilter, skills, sort]);
 
   const repositoryOptions = useMemo(() => getSkillRepositoryOptions(skills), [skills]);
 
@@ -123,7 +120,6 @@ export const useSkillsPageState = () => {
     selectedSkillId,
     skills,
     sort,
-    statusFilter,
     visibleAllChecked,
     visibleSkills,
     visibleSomeChecked,
@@ -132,7 +128,6 @@ export const useSkillsPageState = () => {
     setRepositoryFilter,
     setSelectedSkillId,
     setSort,
-    setStatusFilter,
     toggleSkillChecked
   };
 };

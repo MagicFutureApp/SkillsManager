@@ -43,7 +43,7 @@ export const SkillsPageSider = () => {
     <>
       <section className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-xl font-semibold">{selectedSkill.name}</h2>
-        <p className="mt-7 text-sm leading-6 text-muted-foreground">{selectedSkill.description}</p>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">{selectedSkill.description}</p>
         <Button className="mt-3" type="button" variant="outline">
           {t("skills.actions.editSkill")}
         </Button>

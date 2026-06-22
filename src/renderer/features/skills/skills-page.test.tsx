@@ -101,7 +101,7 @@ describe("SkillsPage", () => {
     await renderSkillsPage();
 
     expect(screen.getByLabelText("技能筛选")).toHaveClass(
-      "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]"
+      "grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]"
     );
     expect(screen.getByLabelText("选择全部可见技能").closest("div")).toHaveClass("bg-muted/40");
     expect(screen.queryByRole("button", { name: "新增" })).not.toBeInTheDocument();
@@ -135,8 +135,17 @@ describe("SkillsPage", () => {
     expect(skillButton).toBeInTheDocument();
     expect(screen.getAllByText("skills-review-bot").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Team skills repository").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("8f2c91a").length).toBeGreaterThan(0);
+    expect(within(screen.getByRole("main")).queryByText("版本")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("main")).queryByText("状态")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("main")).queryByText("8f2c91a")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("main")).queryByText("ready")).not.toBeInTheDocument();
+    expect(within(screen.getByLabelText("技能详情")).getByText("8f2c91a")).toBeInTheDocument();
     expect(within(screen.getByLabelText("技能详情")).getByText("Review Bot")).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("技能详情")).getByText(
+        "Reviews pull requests with concise, actionable feedback."
+      )
+    ).toHaveClass("mt-3");
     expect(screen.getByText("分发目标")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "新增分发目标" })).toBeInTheDocument();
     expect(screen.queryByText("同步目标")).not.toBeInTheDocument();
@@ -160,18 +169,19 @@ describe("SkillsPage", () => {
     fireEvent.change(searchField, { target: { value: "Team skills repository" } });
     expect(screen.getByRole("button", { name: "Review Bot" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Release Notes" })).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "21ab9d0" } });
+    expect(screen.getByText("暂无已索引技能。")).toBeInTheDocument();
   });
 
-  it("filters skills by repository and status", async () => {
+  it("filters skills by repository", async () => {
     await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
     await screen.findByRole("button", { name: "Review Bot" });
+    expect(screen.queryByLabelText("状态")).not.toBeInTheDocument();
 
     await selectOption("仓库", "Design lab prompts");
     expect(screen.getByRole("button", { name: "Design Helper" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Review Bot" })).not.toBeInTheDocument();
-
-    await selectOption("状态", "ready");
-    expect(screen.getByText("暂无已索引技能。")).toBeInTheDocument();
   });
 
   it("sorts skills by name and repository", async () => {
@@ -224,7 +234,7 @@ describe("SkillsPage", () => {
     expect(screen.getByLabelText("选择 Release Notes")).toBeChecked();
     expect(distributeButton).toHaveTextContent("分发 (3)");
 
-    await selectOption("状态", "ready");
+    fireEvent.change(screen.getByLabelText("搜索技能"), { target: { value: "Review Bot" } });
     fireEvent.click(screen.getByLabelText("选择全部可见技能"));
     expect(screen.getByLabelText("选择 Review Bot")).not.toBeChecked();
     expect(distributeButton).toHaveTextContent("分发 (2)");
