@@ -7,6 +7,7 @@ import { PageLayout } from "@/components/layout/page-layout";
 import { SkillsPage } from "./skills-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import { skillApiRecordsFixture } from "@/test/api-fixtures";
+import type { TargetsListResult } from "@/global";
 import type { SkillApiRecord } from "../../../core/skills/skill-api";
 
 const interactiveSkillRecordsFixture: SkillApiRecord[] = [
@@ -41,12 +42,48 @@ const interactiveSkillRecordsFixture: SkillApiRecord[] = [
   }
 ];
 
+const skillTargetsFixture: TargetsListResult = {
+  detectedTargets: [],
+  registeredTargets: [
+    {
+      createdAt: "2026-06-21T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "codex",
+      name: "Codex",
+      normalizedPath: "/Users/test/.codex/skills",
+      path: "/Users/test/.codex/skills",
+      selectedSkills: [],
+      skillCount: 0,
+      scope: "global",
+      type: "codex",
+      updatedAt: "2026-06-21T00:00:00.000Z"
+    },
+    {
+      createdAt: "2026-06-21T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "claude",
+      name: "Claude Code",
+      normalizedPath: "/Users/test/.claude/skills",
+      path: "/Users/test/.claude/skills",
+      selectedSkills: [],
+      skillCount: 0,
+      scope: "global",
+      type: "claude-code",
+      updatedAt: "2026-06-21T00:00:00.000Z"
+    }
+  ]
+};
+
 const renderSkillsPage = async ({
   locale = "zh-CN",
-  skills = []
+  skills = [],
+  targets = skillTargetsFixture
 }: {
   locale?: "zh-CN" | "en-US";
   skills?: typeof skillApiRecordsFixture;
+  targets?: TargetsListResult;
 } = {}) => {
   const i18n = await createI18nInstance(locale);
 
@@ -57,6 +94,7 @@ const renderSkillsPage = async ({
     listProviders: vi.fn().mockResolvedValue({ providers: [] }),
     listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
     listSkills: vi.fn().mockResolvedValue({ skills }),
+    listTargets: vi.fn().mockResolvedValue(targets),
     platform: "darwin"
   };
 
@@ -169,6 +207,91 @@ describe("SkillsPage", () => {
     expect(distributeButton).toBeDisabled();
     expect(distributeButton).toHaveAttribute("title", "请先添加分发目标");
     await waitFor(() => expect(window.skillsManager?.listSkills).toHaveBeenCalled());
+  });
+
+  it("shows global targets for every skill unchecked and keeps independent targets scoped", async () => {
+    const targets: TargetsListResult = {
+      detectedTargets: [],
+      registeredTargets: [
+        {
+          createdAt: "2026-06-21T00:00:00.000Z",
+          defaultInstallStrategy: "copy",
+          enabled: true,
+          id: "target-team",
+          name: "Team workspace",
+          normalizedPath: "/Users/test/team/.codex/skills",
+          path: "/Users/test/team/.codex/skills",
+          selectedSkills: [],
+          skillCount: 0,
+          scope: "global",
+          type: "custom-directory",
+          updatedAt: "2026-06-21T00:00:00.000Z"
+        },
+        {
+          createdAt: "2026-06-21T00:00:00.000Z",
+          defaultInstallStrategy: "copy",
+          enabled: true,
+          id: "target-design-only",
+          name: "Design scratch",
+          normalizedPath: "/Users/test/design/.codex/skills",
+          path: "/Users/test/design/.codex/skills",
+          selectedSkills: [
+            {
+              id: "design-lab__design-helper",
+              name: "Design Helper",
+              repository: "Design lab prompts"
+            }
+          ],
+          skillCount: 1,
+          scope: "independent",
+          type: "custom-directory",
+          updatedAt: "2026-06-21T00:00:00.000Z"
+        }
+      ]
+    };
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: [],
+        version: "8f2c91a"
+      },
+      {
+        description: "Creates starter prompts for design reviews.",
+        enabled: true,
+        entry: "skills/design-helper/SKILL.md",
+        id: "design-lab__design-helper",
+        name: "Design Helper",
+        repository: "Design lab prompts",
+        repositoryId: "design-lab",
+        skillId: "design-helper",
+        status: "review",
+        tags: ["design"],
+        targets: ["target-design-only"],
+        version: "21ab9d0"
+      }
+    ];
+
+    await renderSkillsPage({ skills, targets });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    expect(screen.getByText("0 / 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("选择 Team workspace")).not.toBeChecked();
+    expect(screen.queryByLabelText("选择 Design scratch")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Design Helper" }));
+
+    expect(screen.getByText("1 / 2")).toBeInTheDocument();
+    expect(screen.getByLabelText("选择 Team workspace")).not.toBeChecked();
+    expect(screen.getByLabelText("选择 Design scratch")).toBeChecked();
   });
 
   it("searches skills by name, repository, or description only", async () => {

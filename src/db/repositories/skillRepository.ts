@@ -2,7 +2,7 @@ import { asc, eq } from "drizzle-orm";
 
 import type { SkillApiRecord, SkillApiStatus } from "../../core/skills/skill-api";
 import type { createDbClient } from "../client";
-import { repositories, skillUnits, skillVersions } from "../schema";
+import { repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
 
@@ -56,6 +56,7 @@ export const createSkillRepository = (db: DbClient) => {
       rows.filter(isSkillSourceEnabled).forEach((row) => {
         latestRows.set(row.id, row);
       });
+      const targetsBySkillId = await getEnabledTargetsBySkillId(db);
 
       return Array.from(latestRows.values()).map((row) => {
         const metadata = parseMetadataSnapshot(row.metadataSnapshotJson);
@@ -71,12 +72,33 @@ export const createSkillRepository = (db: DbClient) => {
           skillId: metadata.skillKey || toFallbackSkillKey(row.rootPath),
           status: normalizeStatus(row.status),
           tags: metadata.tags,
-          targets: [],
+          targets: targetsBySkillId.get(row.id) ?? [],
           version: row.commitSha.slice(0, 7)
         };
       });
     }
   };
+};
+
+const getEnabledTargetsBySkillId = async (db: DbClient): Promise<Map<string, string[]>> => {
+  const rows = await db
+    .select({
+      skillId: skillTargetPreferences.skillUnitId,
+      targetId: skillTargetPreferences.agentTargetId
+    })
+    .from(skillTargetPreferences)
+    .where(eq(skillTargetPreferences.enabled, true))
+    .orderBy(asc(skillTargetPreferences.agentTargetId));
+  const targetsBySkillId = new Map<string, string[]>();
+
+  rows.forEach((row) => {
+    const targets = targetsBySkillId.get(row.skillId) ?? [];
+
+    targets.push(row.targetId);
+    targetsBySkillId.set(row.skillId, targets);
+  });
+
+  return targetsBySkillId;
 };
 
 const isSkillSourceEnabled = (row: { repositoryConfigJson: string }): boolean => {

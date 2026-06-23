@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { createDbClient } from "../client";
-import { providers, repositories, skillUnits, skillVersions } from "../schema";
+import {
+  agentTargets,
+  providers,
+  repositories,
+  skillTargetPreferences,
+  skillUnits,
+  skillVersions
+} from "../schema";
 import { createSkillRepository } from "./skillRepository";
 
 describe("createSkillRepository", () => {
@@ -53,6 +60,48 @@ describe("createSkillRepository", () => {
       }),
       skillUnitId: "skill-1"
     });
+    await db.insert(agentTargets).values([
+      {
+        createdAt,
+        defaultInstallStrategy: "copy",
+        enabled: true,
+        id: "target-codex",
+        name: "Codex",
+        normalizedPath: "/Users/test/.codex/skills",
+        path: "/Users/test/.codex/skills",
+        type: "codex",
+        updatedAt: createdAt
+      },
+      {
+        createdAt,
+        defaultInstallStrategy: "copy",
+        enabled: true,
+        id: "target-disabled",
+        name: "Disabled target",
+        normalizedPath: "/Users/test/.disabled/skills",
+        path: "/Users/test/.disabled/skills",
+        type: "custom-directory",
+        updatedAt: createdAt
+      }
+    ]);
+    await db.insert(skillTargetPreferences).values([
+      {
+        agentTargetId: "target-codex",
+        createdAt,
+        enabled: true,
+        id: "preference-codex",
+        skillUnitId: "skill-1",
+        updatedAt: createdAt
+      },
+      {
+        agentTargetId: "target-disabled",
+        createdAt,
+        enabled: false,
+        id: "preference-disabled",
+        skillUnitId: "skill-1",
+        updatedAt: createdAt
+      }
+    ]);
 
     await expect(createSkillRepository(db).list()).resolves.toEqual([
       {
@@ -66,7 +115,7 @@ describe("createSkillRepository", () => {
         skillId: "skills-review-bot",
         status: "ready",
         tags: ["review", "git"],
-        targets: [],
+        targets: ["target-codex"],
         version: "abcdef1"
       }
     ]);

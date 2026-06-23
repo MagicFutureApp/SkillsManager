@@ -1,6 +1,10 @@
 import { asc, count, eq } from "drizzle-orm";
 
-import type { RegisteredTargetRecord, TargetSkillSelection } from "../../core/targets/target-api";
+import type {
+  RegisteredTargetRecord,
+  TargetRegistrationScope,
+  TargetSkillSelection
+} from "../../core/targets/target-api";
 import type { createDbClient } from "../client";
 import { agentTargets, repositories, skillTargetPreferences, skillUnits } from "../schema";
 
@@ -54,10 +58,19 @@ export const createTargetRepository = (db: DbClient) => {
           path: target.path,
           selectedSkills,
           skillCount: selectedSkills.length,
+          scope: normalizeScope(target.scope),
           type: target.type,
           updatedAt: target.updatedAt.toISOString()
         };
       });
     }
   };
+};
+
+const normalizeScope = (scope: string): TargetRegistrationScope => {
+  if (scope === "independent") {
+    return scope;
+  }
+
+  return "global";
 };

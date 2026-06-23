@@ -1,4 +1,8 @@
 import type { SkillApiRecord, SkillApiStatus } from "../../../../core/skills/skill-api";
+import type {
+  RegisteredTargetRecord,
+  TargetRegistrationScope
+} from "../../../../core/targets/target-api";
 
 export type SkillStatus = SkillApiStatus;
 export type SkillRepositoryFilter = string;
@@ -31,14 +35,9 @@ export type TargetOption = {
   id: string;
   name: string;
   path: string;
+  scope: TargetRegistrationScope;
+  selectedSkillIds: string[];
 };
-
-export const targetOptions: TargetOption[] = [
-  { id: "codex", name: "Codex", path: "~/.codex/skills" },
-  { id: "claude", name: "Claude Code", path: "~/.claude/skills" },
-  { id: "gemini", name: "Gemini CLI", path: "~/.gemini/skills" },
-  { id: "custom", name: "skills.targets.customDirectory", path: "D:/Agents/shared-skills" }
-];
 
 export const adaptSkillRecord = (record: SkillApiRecord): Skill => {
   return {
@@ -53,6 +52,29 @@ export const adaptSkillRecord = (record: SkillApiRecord): Skill => {
     targets: record.targets,
     version: record.version
   };
+};
+
+export const adaptTargetOption = (record: RegisteredTargetRecord): TargetOption => {
+  return {
+    id: record.id,
+    name: record.name,
+    path: record.path,
+    scope: record.scope,
+    selectedSkillIds: record.selectedSkills.map((skill) => skill.id)
+  };
+};
+
+export const getTargetOptionsForSkill = (
+  targets: TargetOption[],
+  skill: Pick<Skill, "id"> | null
+): TargetOption[] => {
+  return targets.filter((target) => {
+    if (target.scope === "global") {
+      return true;
+    }
+
+    return skill ? target.selectedSkillIds.includes(skill.id) : false;
+  });
 };
 
 export const getSkillRepositoryOptions = (skills: Skill[]): SkillRepositoryFilter[] => {

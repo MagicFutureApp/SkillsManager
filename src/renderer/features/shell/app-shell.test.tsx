@@ -56,6 +56,7 @@ const targetsFixture: TargetsListResult = {
       path: "/Users/test/project/.codex/skills",
       selectedSkills: [],
       skillCount: 0,
+      scope: "global",
       type: "custom-directory",
       updatedAt: "2026-06-21T00:00:00.000Z"
     }

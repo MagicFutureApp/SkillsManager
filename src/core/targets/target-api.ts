@@ -6,6 +6,7 @@ export type AgentTargetType =
   | "custom-directory";
 
 export type TargetDetectionStatus = "detected" | "missing";
+export type TargetRegistrationScope = "global" | "independent";
 
 export type SystemTargetRecord = {
   defaultInstallStrategy: string;
@@ -35,6 +36,7 @@ export type RegisteredTargetRecord = {
   path: string;
   selectedSkills: TargetSkillSelection[];
   skillCount: number;
+  scope: TargetRegistrationScope;
   type: string;
   updatedAt: string;
 };

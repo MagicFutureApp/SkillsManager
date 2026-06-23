@@ -2,12 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   adaptSkillRecord,
+  adaptTargetOption,
   filterSkills,
   getSkillRepositoryOptions,
+  getTargetOptionsForSkill,
   getSelectedSkillsDistributionState,
   type Skill,
   type SkillRepositoryFilter,
-  type SkillSort
+  type SkillSort,
+  type TargetOption
 } from "../components/skills-page-data";
 
 export const useSkillsPageState = () => {
@@ -18,16 +21,18 @@ export const useSkillsPageState = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [sort, setSort] = useState<SkillSort>("name");
+  const [targetOptions, setTargetOptions] = useState<TargetOption[]>([]);
 
   useEffect(() => {
     let isMounted = true;
 
-    void loadSkills().then((nextSkills) => {
+    void loadSkillsPageData().then(({ skills: nextSkills, targetOptions: nextTargetOptions }) => {
       if (!isMounted) {
         return;
       }
 
       setSkills(nextSkills);
+      setTargetOptions(nextTargetOptions);
       setSelectedSkillId((currentSkillId) => currentSkillId ?? nextSkills[0]?.id ?? null);
     });
 
@@ -71,6 +76,9 @@ export const useSkillsPageState = () => {
   }, [repositoryFilter, repositoryOptions]);
 
   const selectedSkill = visibleSkills.find((skill) => skill.id === selectedSkillId) ?? null;
+  const selectedSkillTargetOptions = useMemo(() => {
+    return getTargetOptionsForSkill(targetOptions, selectedSkill);
+  }, [selectedSkill, targetOptions]);
   const visibleIds = visibleSkills.map((skill) => skill.id);
   const checkedSkills = skills.filter((skill) => checkedIds.has(skill.id));
   const visibleCheckedCount = visibleIds.filter((id) => checkedIds.has(id)).length;
@@ -128,6 +136,7 @@ export const useSkillsPageState = () => {
     repositoryOptions,
     selectedSkill,
     selectedSkillId,
+    selectedSkillTargetOptions,
     skills,
     sort,
     visibleAllChecked,
@@ -145,8 +154,19 @@ export const useSkillsPageState = () => {
 
 export type SkillsPageState = ReturnType<typeof useSkillsPageState>;
 
-const loadSkills = async (): Promise<Skill[]> => {
-  const result = await window.skillsManager?.listSkills?.();
+const loadSkillsPageData = async (): Promise<{
+  skills: Skill[];
+  targetOptions: TargetOption[];
+}> => {
+  const [skillsResult, targetsResult] = await Promise.all([
+    window.skillsManager?.listSkills?.(),
+    window.skillsManager?.listTargets?.()
+  ]);
 
-  return (result?.skills ?? []).map(adaptSkillRecord);
+  return {
+    skills: (skillsResult?.skills ?? []).map(adaptSkillRecord),
+    targetOptions: (targetsResult?.registeredTargets ?? [])
+      .filter((target) => target.enabled)
+      .map(adaptTargetOption)
+  };
 };

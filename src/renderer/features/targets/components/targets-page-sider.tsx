@@ -2,7 +2,7 @@ import { DetailRow } from "@/components/detail-row";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { TargetStatusBadge } from "./targets-page-main";
+import { TargetScopeBadge, TargetStatusBadge } from "./targets-page-main";
 import { useTargetsPageContext } from "./targets-page-context";
 
 export const TargetsPageSider = () => {
@@ -30,7 +30,10 @@ export const TargetsPageSider = () => {
               {selectedTarget.type}
             </p>
           </div>
-          <TargetStatusBadge status={selectedTarget.status} />
+          <div className="flex shrink-0 flex-wrap justify-end gap-2">
+            <TargetScopeBadge scope={selectedTarget.scope} />
+            <TargetStatusBadge status={selectedTarget.status} />
+          </div>
         </div>
       </section>
 

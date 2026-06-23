@@ -20,6 +20,7 @@ const ensureDbSchema = (sqlite: Database.Database): void => {
       normalized_path text NOT NULL,
       default_install_strategy text NOT NULL,
       enabled integer DEFAULT true NOT NULL,
+      scope text DEFAULT 'global' NOT NULL,
       created_at integer NOT NULL,
       updated_at integer NOT NULL
     );

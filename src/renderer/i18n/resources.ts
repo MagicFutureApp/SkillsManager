@@ -123,7 +123,12 @@ export const resources = {
           path: "路径",
           skillCount: "{{count}} 个技能",
           skills: "技能",
+          scope: "范围",
           target: "目标"
+        },
+        scope: {
+          global: "全局",
+          independent: "独立"
         },
         status: {
           detected: "已检测",
@@ -493,7 +498,12 @@ export const resources = {
           path: "Path",
           skillCount: "{{count}} skills",
           skills: "Skills",
+          scope: "Scope",
           target: "Target"
+        },
+        scope: {
+          global: "Global",
+          independent: "Independent"
         },
         status: {
           detected: "Detected",

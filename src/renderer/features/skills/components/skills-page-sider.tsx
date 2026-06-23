@@ -5,11 +5,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSkillsPageContext } from "./skills-page-context";
-import {
-  getDistributionTitleKey,
-  getSkillDistributionState,
-  targetOptions
-} from "./skills-page-data";
+import { getDistributionTitleKey, getSkillDistributionState } from "./skills-page-data";
 
 export const SkillsPageSider = () => {
   const { t } = useTranslation();
@@ -27,6 +23,7 @@ export const SkillsPageSider = () => {
   const distributionState = getSkillDistributionState(selectedSkill);
   const distributionReady = distributionState === "ready";
   const syncTitle = t(getDistributionTitleKey(distributionState, "single"));
+  const targetOptions = page.selectedSkillTargetOptions;
 
   return (
     <>

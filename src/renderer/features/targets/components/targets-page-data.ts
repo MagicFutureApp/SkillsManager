@@ -1,10 +1,12 @@
 import type {
   RegisteredTargetRecord,
   SystemTargetRecord,
+  TargetRegistrationScope,
   TargetSkillSelection
 } from "../../../../core/targets/target-api";
 
 export type TargetStatus = "detected" | "missing" | "registered" | "disabled";
+export type TargetScope = TargetRegistrationScope;
 export type TargetSource = "system" | "registered";
 export type TargetSort = "status" | "name" | "skills";
 
@@ -18,6 +20,7 @@ export type TargetViewModel = {
   path: string;
   selectedSkills: TargetSkillSelection[];
   skillCount: number;
+  scope: TargetScope;
   source: TargetSource;
   status: TargetStatus;
   type: string;
@@ -53,6 +56,7 @@ export const filterTargets = ({
       target.path,
       target.installPath ?? "",
       target.executablePath ?? "",
+      target.scope,
       ...target.selectedSkills.map((skill) => `${skill.name} ${skill.repository}`)
     ]
       .join(" ")
@@ -88,6 +92,7 @@ const adaptSystemTarget = (target: SystemTargetRecord): TargetViewModel => {
     path: target.path,
     selectedSkills: [],
     skillCount: 0,
+    scope: "global",
     source: "system",
     status: target.status,
     type: target.type
@@ -105,6 +110,7 @@ const adaptRegisteredTarget = (target: RegisteredTargetRecord): TargetViewModel 
     path: target.path,
     selectedSkills: target.selectedSkills,
     skillCount: target.skillCount,
+    scope: target.scope,
     source: "registered",
     status: target.enabled ? "registered" : "disabled",
     type: target.type

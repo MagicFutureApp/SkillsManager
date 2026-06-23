@@ -125,6 +125,7 @@ describe("createTargetRepository", () => {
         path: "/Users/test/.codex/skills",
         selectedSkills: [],
         skillCount: 0,
+        scope: "global",
         type: "codex",
         updatedAt: "2026-06-21T00:00:00.000Z"
       },
@@ -141,6 +142,7 @@ describe("createTargetRepository", () => {
           { id: "skill-1", name: "Review Bot", repository: "Project skills" }
         ],
         skillCount: 2,
+        scope: "global",
         type: "custom-directory",
         updatedAt: "2026-06-21T00:00:00.000Z"
       }

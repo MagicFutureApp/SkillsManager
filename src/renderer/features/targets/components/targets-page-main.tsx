@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import type { TargetSort, TargetStatus } from "./targets-page-data";
+import type { TargetScope, TargetSort, TargetStatus } from "./targets-page-data";
 import { useTargetsPageContext } from "./targets-page-context";
 
 export const TargetsPageMain = () => {
@@ -71,6 +71,7 @@ export const TargetsPageMain = () => {
           <DataTableRow>
             <DataTableHead className="w-[28%]">{t("targets.table.target")}</DataTableHead>
             <DataTableHead>{t("targets.table.path")}</DataTableHead>
+            <DataTableHead className="w-[96px]">{t("targets.table.scope")}</DataTableHead>
             <DataTableHead className="w-[120px]">{t("targets.table.skills")}</DataTableHead>
           </DataTableRow>
         </DataTableHeader>
@@ -108,17 +109,35 @@ export const TargetsPageMain = () => {
                 <DataTableCell className="truncate font-mono text-sm max-[820px]:hidden">
                   {target.path}
                 </DataTableCell>
+                <DataTableCell className="max-[820px]:hidden">
+                  <TargetScopeBadge scope={target.scope} />
+                </DataTableCell>
                 <DataTableCell className="text-sm">
                   {t("targets.table.skillCount", { count: target.skillCount })}
                 </DataTableCell>
               </DataTableRow>
             ))
           ) : (
-            <DataTableEmptyRow colSpan={3}>{t("targets.empty")}</DataTableEmptyRow>
+            <DataTableEmptyRow colSpan={4}>{t("targets.empty")}</DataTableEmptyRow>
           )}
         </DataTableBody>
       </DataTable>
     </>
+  );
+};
+
+export const TargetScopeBadge = ({ scope }: { scope: TargetScope }) => {
+  const { t } = useTranslation();
+
+  return (
+    <span
+      className={cn(
+        "inline-flex min-h-6 w-max items-center rounded-full border px-2 font-mono text-xs",
+        scopeClassName[scope]
+      )}
+    >
+      {t(`targets.scope.${scope}`)}
+    </span>
   );
 };
 
@@ -142,4 +161,9 @@ const statusClassName: Record<TargetStatus, string> = {
   disabled: "border-slate-200 bg-slate-50 text-slate-600",
   missing: "border-amber-200 bg-amber-50 text-amber-700",
   registered: "border-blue-200 bg-blue-50 text-blue-700"
+};
+
+const scopeClassName: Record<TargetScope, string> = {
+  global: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  independent: "border-amber-200 bg-amber-50 text-amber-700"
 };

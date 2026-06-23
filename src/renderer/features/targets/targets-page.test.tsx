@@ -46,6 +46,21 @@ const targetsFixture: TargetsListResult = {
         { id: "skill-2", name: "Release Notes", repository: "Project skills" }
       ],
       skillCount: 2,
+      scope: "global",
+      type: "custom-directory",
+      updatedAt: "2026-06-21T00:00:00.000Z"
+    },
+    {
+      createdAt: "2026-06-21T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "target-design-only",
+      name: "Design scratch",
+      normalizedPath: "/Users/test/project/.design/skills",
+      path: "/Users/test/project/.design/skills",
+      selectedSkills: [{ id: "skill-3", name: "Design Helper", repository: "Design lab" }],
+      skillCount: 1,
+      scope: "independent",
       type: "custom-directory",
       updatedAt: "2026-06-21T00:00:00.000Z"
     }
@@ -100,13 +115,21 @@ describe("TargetsPage", () => {
     expect(screen.getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
     expect(screen.getByText("2 个技能")).toBeInTheDocument();
     const targetTable = within(screen.getByRole("main")).getByRole("table");
-    const header = within(targetTable).getByRole("row", { name: "目标 路径 技能" });
+    const header = within(targetTable).getByRole("row", { name: "目标 路径 范围 技能" });
     expect(within(header).getByText("目标")).toBeInTheDocument();
     expect(within(header).getByText("路径")).toBeInTheDocument();
+    expect(within(header).getByText("范围")).toBeInTheDocument();
     expect(within(header).getByText("技能")).toBeInTheDocument();
     expect(within(header).queryByText("状态")).not.toBeInTheDocument();
     expect(within(header).queryByText("来源")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "状态" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("全局")[0]).toHaveClass(
+      "rounded-full",
+      "border",
+      "font-mono",
+      "text-xs"
+    );
+    expect(screen.getByText("独立")).toHaveClass("rounded-full", "border", "font-mono", "text-xs");
 
     const detail = screen.getByLabelText("目标详情");
     expect(within(detail).getByRole("heading", { name: "Codex CLI" })).toBeInTheDocument();
