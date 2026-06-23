@@ -120,8 +120,11 @@ describe("SkillsPage", () => {
     expect(within(pageHeader as HTMLElement).queryByText("Skills")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("技能摘要")).not.toBeInTheDocument();
     expect(screen.getByText("暂无已索引技能。")).toHaveClass("text-center");
-    expect(screen.getByRole("heading", { name: "选择一个技能" })).toBeInTheDocument();
-    expect(screen.getByText("从来源分发并扫描后，这里会显示技能详情。")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "请选择技能" })).toBeInTheDocument();
+    expect(screen.queryByText("从来源分发并扫描后，这里会显示技能详情。")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "分发当前技能（暂未实现）" })
+    ).not.toBeInTheDocument();
   });
 
   it("renders English UI copy when initialized with en-US", async () => {
@@ -133,6 +136,7 @@ describe("SkillsPage", () => {
     expect(screen.queryByRole("button", { name: "Add skill" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Distribute selected skills" })).toBeInTheDocument();
     expect(screen.getByLabelText("Skill filters")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Select a skill" })).toBeInTheDocument();
   });
 
   it("renders indexed skills returned by the Electron API", async () => {

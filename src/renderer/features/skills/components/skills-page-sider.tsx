@@ -16,26 +16,6 @@ export const SkillsPageSider = () => {
     return (
       <section className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-xl font-semibold">{t("skills.detail.emptyTitle")}</h2>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          {t("skills.detail.emptyDescription")}
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button type="button" variant="outline" disabled>
-            {t("skills.actions.editSkill")}
-          </Button>
-          <Button type="button" variant="outline" disabled>
-            {t("skills.actions.preview")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled
-            title={syncTitle}
-            aria-label={t("skills.actions.syncSelectedSkillUnavailable")}
-          >
-            {t("skills.actions.sync")}
-          </Button>
-        </div>
       </section>
     );
   }

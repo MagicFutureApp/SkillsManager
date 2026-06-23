@@ -78,8 +78,7 @@ export const resources = {
         },
         detail: {
           ariaLabel: "技能详情",
-          emptyDescription: "从来源分发并扫描后，这里会显示技能详情。",
-          emptyTitle: "选择一个技能",
+          emptyTitle: "请选择技能",
           syncTargets: "分发目标",
           syncTargetsDescription: "选择默认分发范围；安装前仍会先生成计划预览。",
           chooseTarget: "选择 {{name}}",
@@ -442,8 +441,7 @@ export const resources = {
         },
         detail: {
           ariaLabel: "Skill details",
-          emptyDescription: "Skill details appear here after sources are distributed and scanned.",
-          emptyTitle: "Choose a skill",
+          emptyTitle: "Select a skill",
           syncTargets: "Distribution targets",
           syncTargetsDescription:
             "Choose the default distribution scope. Installation still starts with a plan preview.",
