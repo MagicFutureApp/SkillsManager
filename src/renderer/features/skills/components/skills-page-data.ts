@@ -13,7 +13,6 @@ export type Skill = {
   entry: string;
   description: string;
   status: SkillStatus;
-  enabled: boolean;
   targets: string[];
   tags: string[];
 };
@@ -41,7 +40,6 @@ export const targetOptions: TargetOption[] = [
 export const adaptSkillRecord = (record: SkillApiRecord): Skill => {
   return {
     description: record.description,
-    enabled: record.enabled,
     entry: record.entry,
     id: record.id,
     name: record.name,

@@ -107,7 +107,9 @@ describe("SkillsPage", () => {
     expect(within(skillsTable).getByRole("columnheader", { name: "技能" })).toBeInTheDocument();
     expect(within(skillsTable).getByRole("columnheader", { name: "仓库" })).toBeInTheDocument();
     expect(within(skillsTable).getByRole("columnheader", { name: "目标" })).toBeInTheDocument();
-    expect(within(skillsTable).getByRole("columnheader", { name: "启用" })).toBeInTheDocument();
+    expect(
+      within(skillsTable).queryByRole("columnheader", { name: "启用" })
+    ).not.toBeInTheDocument();
     expect(within(skillsTable).getByRole("columnheader", { name: "操作" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "新增" })).not.toBeInTheDocument();
     const pageHeading = screen.getByRole("heading", { name: "技能分发" });
@@ -154,6 +156,14 @@ describe("SkillsPage", () => {
     expect(screen.getByText("分发目标")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "新增分发目标" })).toBeInTheDocument();
     expect(screen.queryByText("同步目标")).not.toBeInTheDocument();
+    const skillDetail = screen.getByLabelText("技能详情");
+    const editButton = within(skillDetail).getByRole("button", { name: "编辑" });
+    const distributeButton = within(skillDetail).getByRole("button", {
+      name: "分发当前技能（暂未实现）"
+    });
+
+    expect(editButton).toHaveClass("border-border", "bg-background");
+    expect(distributeButton).toHaveClass("border-border", "bg-background");
     await waitFor(() => expect(window.skillsManager?.listSkills).toHaveBeenCalled());
   });
 

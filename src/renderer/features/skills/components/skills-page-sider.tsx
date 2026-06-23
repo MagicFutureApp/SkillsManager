@@ -28,6 +28,7 @@ export const SkillsPageSider = () => {
           </Button>
           <Button
             type="button"
+            variant="outline"
             disabled
             title={syncTitle}
             aria-label={t("skills.actions.syncSelectedSkillUnavailable")}
@@ -114,6 +115,7 @@ export const SkillsPageSider = () => {
         </Button>
         <Button
           type="button"
+          variant="outline"
           disabled
           title={syncTitle}
           aria-label={t("skills.actions.syncSelectedSkillUnavailable")}

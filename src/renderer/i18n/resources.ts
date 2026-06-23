@@ -73,7 +73,6 @@ export const resources = {
           version: "版本",
           status: "状态",
           targets: "目标",
-          enabled: "启用",
           actions: "操作",
           selectSkill: "选择 {{name}}"
         },
@@ -438,7 +437,6 @@ export const resources = {
           version: "Version",
           status: "Status",
           targets: "Targets",
-          enabled: "Enabled",
           actions: "Actions",
           selectSkill: "Select {{name}}"
         },

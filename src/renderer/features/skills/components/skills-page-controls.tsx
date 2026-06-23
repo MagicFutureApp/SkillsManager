@@ -1,5 +1,4 @@
 import { Field as BaseField, FieldLabel } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
 import React from "react";
 
 import type { SkillStatus } from "./skills-page-data";
@@ -21,15 +20,5 @@ export const Field = ({
       <FieldLabel>{label}</FieldLabel>
       {children}
     </BaseField>
-  );
-};
-
-export const Toggle = ({ enabled }: { enabled: boolean }) => {
-  return (
-    <Switch
-      checked={enabled}
-      className="h-[22px] w-9"
-      thumbClassName="size-4 data-checked:translate-x-3.5"
-    />
   );
 };

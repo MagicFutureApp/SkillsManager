@@ -16,7 +16,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import type { SkillRepositoryFilter, SkillSort } from "./skills-page-data";
-import { Field, Toggle } from "./skills-page-controls";
+import { Field } from "./skills-page-controls";
 import { useSkillsPageContext } from "./skills-page-context";
 
 export const SkillsPageMain = () => {
@@ -105,7 +105,6 @@ export const SkillsPageMain = () => {
             <DataTableHead>{t("skills.table.skill")}</DataTableHead>
             <DataTableHead className="w-[18%]">{t("skills.table.repository")}</DataTableHead>
             <DataTableHead className="w-[10%]">{t("skills.table.targets")}</DataTableHead>
-            <DataTableHead className="w-[80px]">{t("skills.table.enabled")}</DataTableHead>
             <DataTableHead className="w-[92px]">{t("skills.table.actions")}</DataTableHead>
           </DataTableRow>
         </DataTableHeader>
@@ -156,9 +155,6 @@ export const SkillsPageMain = () => {
                   {skill.targets.length}
                 </DataTableCell>
                 <DataTableCell>
-                  <Toggle enabled={skill.enabled} />
-                </DataTableCell>
-                <DataTableCell>
                   <Button
                     type="button"
                     variant="outline"
@@ -173,7 +169,7 @@ export const SkillsPageMain = () => {
               </DataTableRow>
             ))
           ) : (
-            <DataTableEmptyRow colSpan={6}>{t("skills.empty")}</DataTableEmptyRow>
+            <DataTableEmptyRow colSpan={5}>{t("skills.empty")}</DataTableEmptyRow>
           )}
         </DataTableBody>
       </DataTable>
