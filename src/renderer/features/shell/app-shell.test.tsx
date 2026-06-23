@@ -6,7 +6,12 @@ import { I18nextProvider } from "react-i18next";
 import { useShellStore } from "@/stores/shell-store";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import type { AppHealth } from "@/global";
-import { providerApiRecordsFixture, repositoryApiRecordsFixture } from "@/test/api-fixtures";
+import type { SyncHistoryListResult, TargetsListResult } from "@/global";
+import {
+  providerApiRecordsFixture,
+  repositoryApiRecordsFixture,
+  skillApiRecordsFixture
+} from "@/test/api-fixtures";
 
 import { AppShell } from "./app-shell";
 
@@ -14,6 +19,86 @@ vi.mock("@tanstack/react-router", () => ({
   useLocation: () => ({ pathname: "/skills" }),
   useNavigate: () => vi.fn()
 }));
+
+const targetsFixture: TargetsListResult = {
+  detectedTargets: [
+    {
+      defaultInstallStrategy: "copy",
+      executablePath: "/usr/local/bin/codex",
+      id: "system-codex-cli",
+      installPath: "/usr/local/bin/codex",
+      name: "Codex CLI",
+      normalizedPath: "/Users/test/.codex/skills",
+      path: "/Users/test/.codex/skills",
+      status: "detected",
+      type: "codex-cli"
+    },
+    {
+      defaultInstallStrategy: "copy",
+      executablePath: null,
+      id: "system-claude-code",
+      installPath: null,
+      name: "Claude Code",
+      normalizedPath: "/Users/test/.claude/skills",
+      path: "/Users/test/.claude/skills",
+      status: "missing",
+      type: "claude-code"
+    }
+  ],
+  registeredTargets: [
+    {
+      createdAt: "2026-06-21T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "target-project",
+      name: "Local project",
+      normalizedPath: "/Users/test/project/.codex/skills",
+      path: "/Users/test/project/.codex/skills",
+      selectedSkills: [],
+      skillCount: 0,
+      type: "custom-directory",
+      updatedAt: "2026-06-21T00:00:00.000Z"
+    }
+  ]
+};
+
+const syncHistoryFixture: SyncHistoryListResult = {
+  syncRuns: [
+    {
+      endCommitSha: null,
+      errorMessage: "没有权限访问这个 Git 来源。",
+      finishedAt: "2026-06-20T02:01:00.000Z",
+      id: "sync-failed",
+      logPath: "/tmp/skills-manager-sync/repo-1.log",
+      repositoryId: "repo-1",
+      repositoryName: "Team skills",
+      repositoryRemoteUrl: "git@github.com:team/skills.git",
+      scan: { added: 0, changed: 0, removed: 0, warnings: 1 },
+      startCommitSha: "after-sha",
+      startedAt: "2026-06-20T02:00:00.000Z",
+      status: "failed",
+      summaryJson: JSON.stringify({
+        category: "auth",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 1 }
+      })
+    },
+    {
+      endCommitSha: "after-sha",
+      errorMessage: null,
+      finishedAt: "2026-06-20T01:01:00.000Z",
+      id: "sync-success",
+      logPath: null,
+      repositoryId: "repo-1",
+      repositoryName: "Team skills",
+      repositoryRemoteUrl: "git@github.com:team/skills.git",
+      scan: { added: 2, changed: 1, removed: 0, warnings: 0 },
+      startCommitSha: "before-sha",
+      startedAt: "2026-06-20T01:00:00.000Z",
+      status: "success",
+      summaryJson: JSON.stringify({ added: 2, changed: 1, removed: 0, warnings: 0 })
+    }
+  ]
+};
 
 const setViewportWidth = (width: number) => {
   Object.defineProperty(window, "innerWidth", {
@@ -52,6 +137,9 @@ describe("AppShell", () => {
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      listSkills: vi.fn().mockResolvedValue({ skills: skillApiRecordsFixture }),
+      listSyncHistory: vi.fn().mockResolvedValue(syncHistoryFixture),
+      listTargets: vi.fn().mockResolvedValue(targetsFixture),
       platform: "win32"
     };
     setMockPlatform("win32");
@@ -158,6 +246,68 @@ describe("AppShell", () => {
 
     await waitFor(() => {
       expect(getInfo).toHaveBeenCalled();
+    });
+  });
+
+  it("loads the sidebar skills badge count from the Electron skills API", async () => {
+    const skills = Array.from({ length: 37 }, (_, index) => ({
+      ...skillApiRecordsFixture[0],
+      id: `skill-${index}`,
+      name: `Skill ${index}`
+    }));
+    const listSkills = vi.fn().mockResolvedValue({ skills });
+    window.skillsManager = {
+      ...window.skillsManager,
+      listSkills
+    } as typeof window.skillsManager;
+
+    await renderAppShell(
+      <AppShell>
+        <div>Shell content</div>
+      </AppShell>
+    );
+
+    await waitFor(() => {
+      expect(listSkills).toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "技能" })).toHaveTextContent("37");
+    });
+  });
+
+  it("loads sidebar badge counts from the Electron list APIs", async () => {
+    const skills = Array.from({ length: 37 }, (_, index) => ({
+      ...skillApiRecordsFixture[0],
+      id: `skill-${index}`,
+      name: `Skill ${index}`
+    }));
+    const listRepositories = vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture });
+    const listSkills = vi.fn().mockResolvedValue({ skills });
+    const listSyncHistory = vi.fn().mockResolvedValue(syncHistoryFixture);
+    const listTargets = vi.fn().mockResolvedValue(targetsFixture);
+    window.skillsManager = {
+      ...window.skillsManager,
+      listRepositories,
+      listSkills,
+      listSyncHistory,
+      listTargets
+    } as typeof window.skillsManager;
+
+    await renderAppShell(
+      <AppShell>
+        <div>Shell content</div>
+      </AppShell>
+    );
+
+    await waitFor(() => {
+      expect(listRepositories).toHaveBeenCalled();
+      expect(listSkills).toHaveBeenCalled();
+      expect(listSyncHistory).toHaveBeenCalled();
+      expect(listTargets).toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "来源" })).toHaveTextContent(
+        String(repositoryApiRecordsFixture.length)
+      );
+      expect(screen.getByRole("button", { name: "技能" })).toHaveTextContent("37");
+      expect(screen.getByRole("button", { name: "目标" })).toHaveTextContent("3");
+      expect(screen.getByRole("button", { name: "同步历史" })).toHaveTextContent("2");
     });
   });
 

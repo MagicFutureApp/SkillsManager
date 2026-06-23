@@ -8,10 +8,12 @@ import React, { useEffect, useState } from "react";
 import skillportMark from "../../assets/skillport-mark.svg";
 import { AppSidebar } from "./app-sidebar";
 import { APP_META } from "../../../core/app-constants";
+import type { ShellNavigationBadgeCounts } from "./shell-navigation";
 
 type AppShellProps = React.PropsWithChildren;
 
 export const AppShell = ({ children }: AppShellProps) => {
+  const [badgeCounts, setBadgeCounts] = useState<ShellNavigationBadgeCounts>({});
   const [health, setHealth] = useState<AppHealth | null>(null);
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const location = useLocation();
@@ -47,6 +49,26 @@ export const AppShell = ({ children }: AppShellProps) => {
     void window.skillsManager?.getInfo().then(setAppInfo);
   }, []);
 
+  useEffect(() => {
+    const skillsManager = window.skillsManager;
+
+    void Promise.all([
+      skillsManager?.listRepositories?.(),
+      skillsManager?.listSkills?.(),
+      skillsManager?.listTargets?.(),
+      skillsManager?.listSyncHistory?.()
+    ]).then(([repositoriesResult, skillsResult, targetsResult, syncHistoryResult]) => {
+      setBadgeCounts({
+        repositories: repositoriesResult?.repositories.length ?? 0,
+        skills: skillsResult?.skills.length ?? 0,
+        targets:
+          (targetsResult?.detectedTargets.length ?? 0) +
+          (targetsResult?.registeredTargets.length ?? 0),
+        "sync-history": syncHistoryResult?.syncRuns.length ?? 0
+      });
+    });
+  }, []);
+
   return (
     <>
       <div
@@ -74,6 +96,7 @@ export const AppShell = ({ children }: AppShellProps) => {
         <AppSidebar
           activeRouteId={activeRouteId}
           appVersion={appInfo?.version}
+          badgeCounts={badgeCounts}
           isAutoCollapsed={isSidebarAutoCollapsed}
           isCollapsed={shouldCollapseSidebar}
           onNavigate={(routeId) => void navigate({ to: routePathById[routeId] })}

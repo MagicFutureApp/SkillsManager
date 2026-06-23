@@ -15,6 +15,13 @@ const renderSidebar = async (props: Partial<React.ComponentProps<typeof AppSideb
       <AppSidebar
         activeRouteId="skills"
         appVersion="0.1.0"
+        badgeCounts={{
+          repositories: 5,
+          skills: 37,
+          targets: 4,
+          settings: 8,
+          "sync-history": 4
+        }}
         isAutoCollapsed={false}
         isCollapsed={false}
         onNavigate={vi.fn()}
@@ -60,24 +67,34 @@ describe("AppSidebar", () => {
     expect(screen.queryByRole("button", { name: "展开侧边栏" })).not.toBeInTheDocument();
   });
 
-  it("uses shared tooltip components in collapsed navigation without badges", async () => {
+  it("uses shared tooltip components in collapsed navigation with non-zero badges", async () => {
     await renderSidebar({ isCollapsed: true });
 
     const sidebar = screen.getByRole("complementary", { name: "主导航" });
 
-    expect(sidebar.querySelectorAll('[data-slot="badge"]')).toHaveLength(0);
+    const badges = Array.from(sidebar.querySelectorAll('[data-slot="badge"]')).map((badge) =>
+      badge.textContent?.trim()
+    );
+
+    expect(badges).toEqual(["5", "37", "4", "8", "4"]);
     expect(screen.getByRole("button", { name: "技能" })).not.toHaveAttribute("title");
     expect(
       sidebar.querySelector('[data-slot="tooltip-trigger"][aria-label="Skillport"]')
     ).toBeTruthy();
   });
 
-  it("does not render sidebar navigation badges", async () => {
+  it("renders sidebar navigation badges only for non-zero counts", async () => {
     await renderSidebar();
 
     const sidebar = screen.getByRole("complementary", { name: "主导航" });
 
-    expect(sidebar.querySelectorAll('[data-slot="badge"]')).toHaveLength(0);
+    const badges = Array.from(sidebar.querySelectorAll('[data-slot="badge"]')).map((badge) =>
+      badge.textContent?.trim()
+    );
+
+    expect(badges).toEqual(["5", "37", "4", "8", "4"]);
+    expect(screen.getByRole("button", { name: "技能" })).toHaveTextContent("37");
+    expect(screen.getByRole("button", { name: "同步记录" })).not.toHaveTextContent("0");
   });
 
   it("renders localized navigation labels without group headings", async () => {

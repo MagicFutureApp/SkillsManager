@@ -2,16 +2,18 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import skillportMark from "../../assets/skillport-mark.svg";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AppRouteId } from "@/app/route-config";
 import { cn } from "@/lib/utils";
-import { shellNavigationGroups } from "./shell-navigation";
+import { shellNavigationGroups, type ShellNavigationBadgeCounts } from "./shell-navigation";
 import { APP_META } from "../../../core/app-constants";
 
 type AppSidebarProps = {
   activeRouteId: AppRouteId;
   appVersion?: string | null;
+  badgeCounts?: ShellNavigationBadgeCounts;
   isAutoCollapsed: boolean;
   isCollapsed: boolean;
   onNavigate: (routeId: AppRouteId) => void;
@@ -20,6 +22,7 @@ type AppSidebarProps = {
 export const AppSidebar = ({
   activeRouteId,
   appVersion,
+  badgeCounts = {},
   isAutoCollapsed,
   isCollapsed,
   onNavigate
@@ -82,6 +85,8 @@ export const AppSidebar = ({
                 const isActive = item.routeId === activeRouteId;
                 const Icon = item.icon;
                 const label = t(item.labelKey);
+                const badgeCount = badgeCounts[item.routeId] ?? 0;
+                const shouldShowBadge = badgeCount > 0;
 
                 const button = (
                   <Button
@@ -106,6 +111,18 @@ export const AppSidebar = ({
                         <span className="truncate">{label}</span>
                       </span>
                     )}
+                    {shouldShowBadge ? (
+                      <Badge
+                        variant="secondary"
+                        aria-hidden="true"
+                        className={cn(
+                          isCollapsed &&
+                            "absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px] leading-none"
+                        )}
+                      >
+                        {badgeCount}
+                      </Badge>
+                    ) : null}
                   </Button>
                 );
 
