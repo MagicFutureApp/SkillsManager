@@ -5,12 +5,16 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSkillsPageContext } from "./skills-page-context";
-import { targetOptions } from "./skills-page-data";
+import {
+  getDistributionTitleKey,
+  getSkillDistributionState,
+  targetOptions
+} from "./skills-page-data";
 
 export const SkillsPageSider = () => {
   const { t } = useTranslation();
-  const { selectedSkill } = useSkillsPageContext();
-  const syncTitle = t("skills.actions.syncUnavailable");
+  const page = useSkillsPageContext();
+  const { selectedSkill } = page;
 
   if (!selectedSkill) {
     return (
@@ -19,6 +23,10 @@ export const SkillsPageSider = () => {
       </section>
     );
   }
+
+  const distributionState = getSkillDistributionState(selectedSkill);
+  const distributionReady = distributionState === "ready";
+  const syncTitle = t(getDistributionTitleKey(distributionState, "single"));
 
   return (
     <>
@@ -96,9 +104,10 @@ export const SkillsPageSider = () => {
         <Button
           type="button"
           variant="outline"
-          disabled
+          disabled={!distributionReady}
           title={syncTitle}
-          aria-label={t("skills.actions.syncSelectedSkillUnavailable")}
+          aria-label={t("skills.actions.syncCurrentSkillAria")}
+          onClick={page.announceDistributionUnavailable}
         >
           {t("skills.actions.sync")}
         </Button>

@@ -24,6 +24,9 @@ export type SkillFilterInput = {
   sort: SkillSort;
 };
 
+export type SkillDistributionState = "no-selection" | "no-targets" | "ready";
+export type SkillDistributionScope = "selected" | "single";
+
 export type TargetOption = {
   id: string;
   name: string;
@@ -56,6 +59,45 @@ export const getSkillRepositoryOptions = (skills: Skill[]): SkillRepositoryFilte
   const repositories = new Set(skills.map((skill) => skill.repository).filter(Boolean));
 
   return ["all", ...Array.from(repositories).sort((first, second) => first.localeCompare(second))];
+};
+
+export const getSkillDistributionState = (
+  skill: Pick<Skill, "targets"> | null
+): SkillDistributionState => {
+  if (!skill) {
+    return "no-selection";
+  }
+
+  return skill.targets.length > 0 ? "ready" : "no-targets";
+};
+
+export const getSelectedSkillsDistributionState = (
+  selectedSkills: Pick<Skill, "targets">[]
+): SkillDistributionState => {
+  if (!selectedSkills.length) {
+    return "no-selection";
+  }
+
+  return selectedSkills.every((skill) => getSkillDistributionState(skill) === "ready")
+    ? "ready"
+    : "no-targets";
+};
+
+export const getDistributionTitleKey = (
+  state: SkillDistributionState,
+  scope: SkillDistributionScope
+) => {
+  if (state === "ready") {
+    return "skills.actions.syncUnavailable";
+  }
+
+  if (state === "no-selection") {
+    return "skills.actions.syncNoSelection";
+  }
+
+  return scope === "selected"
+    ? "skills.actions.syncSelectedNoTargets"
+    : "skills.actions.syncNoTargets";
 };
 
 export const filterSkills = ({ query, repository, skills, sort }: SkillFilterInput): Skill[] => {

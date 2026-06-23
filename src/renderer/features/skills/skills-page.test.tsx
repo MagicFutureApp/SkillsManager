@@ -162,12 +162,12 @@ describe("SkillsPage", () => {
     expect(screen.queryByText("同步目标")).not.toBeInTheDocument();
     const skillDetail = screen.getByLabelText("技能详情");
     const editButton = within(skillDetail).getByRole("button", { name: "编辑" });
-    const distributeButton = within(skillDetail).getByRole("button", {
-      name: "分发当前技能（暂未实现）"
-    });
+    const distributeButton = within(skillDetail).getByRole("button", { name: "分发当前技能" });
 
     expect(editButton).toHaveClass("border-border", "bg-background");
     expect(distributeButton).toHaveClass("border-border", "bg-background");
+    expect(distributeButton).toBeDisabled();
+    expect(distributeButton).toHaveAttribute("title", "请先添加分发目标");
     await waitFor(() => expect(window.skillsManager?.listSkills).toHaveBeenCalled());
   });
 
@@ -262,12 +262,13 @@ describe("SkillsPage", () => {
 
     const distributeButton = screen.getByRole("button", { name: "分发选中的技能" });
     expect(distributeButton).toBeDisabled();
-    expect(distributeButton).toHaveAttribute("title", "分发暂未实现");
+    expect(distributeButton).toHaveAttribute("title", "请先选择要分发的技能");
 
     fireEvent.click(screen.getByLabelText("选择 Review Bot"));
     expect(screen.getByLabelText("选择 Review Bot")).toBeChecked();
     expect(distributeButton).toHaveTextContent("分发 (1)");
     expect(distributeButton).toBeDisabled();
+    expect(distributeButton).toHaveAttribute("title", "选中的技能没有分发目标");
 
     fireEvent.click(screen.getByLabelText("选择全部可见技能"));
     expect(screen.getByLabelText("选择 Review Bot")).toBeChecked();
@@ -279,5 +280,51 @@ describe("SkillsPage", () => {
     fireEvent.click(screen.getByLabelText("选择全部可见技能"));
     expect(screen.getByLabelText("选择 Review Bot")).not.toBeChecked();
     expect(distributeButton).toHaveTextContent("分发 (2)");
+    expect(distributeButton).toBeEnabled();
+    expect(distributeButton).toHaveAttribute("title", "分发功能暂未实现");
+  });
+
+  it("implements distribution button states without executing distribution", async () => {
+    await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    const bulkDistributeButton = screen.getByRole("button", { name: "分发选中的技能" });
+    expect(bulkDistributeButton).toBeDisabled();
+    expect(bulkDistributeButton).toHaveAttribute("title", "请先选择要分发的技能");
+
+    const reviewRowDistributeButton = screen.getByRole("button", { name: "分发 Review Bot" });
+    expect(reviewRowDistributeButton).toBeDisabled();
+    expect(reviewRowDistributeButton).toHaveAttribute("title", "请先添加分发目标");
+
+    const detailDistributeButton = within(screen.getByLabelText("技能详情")).getByRole("button", {
+      name: "分发当前技能"
+    });
+    expect(detailDistributeButton).toBeDisabled();
+    expect(detailDistributeButton).toHaveAttribute("title", "请先添加分发目标");
+
+    fireEvent.click(screen.getByLabelText("选择 Review Bot"));
+    expect(bulkDistributeButton).toHaveTextContent("分发 (1)");
+    expect(bulkDistributeButton).toBeDisabled();
+    expect(bulkDistributeButton).toHaveAttribute("title", "选中的技能没有分发目标");
+
+    fireEvent.click(screen.getByLabelText("选择 Review Bot"));
+    fireEvent.click(screen.getByLabelText("选择 Design Helper"));
+    const designRowDistributeButton = screen.getByRole("button", { name: "分发 Design Helper" });
+    expect(bulkDistributeButton).toHaveTextContent("分发 (1)");
+    expect(bulkDistributeButton).toBeEnabled();
+    expect(bulkDistributeButton).toHaveAttribute("title", "分发功能暂未实现");
+    expect(designRowDistributeButton).toBeEnabled();
+    expect(designRowDistributeButton).toHaveAttribute("title", "分发功能暂未实现");
+
+    fireEvent.click(screen.getByRole("button", { name: "Design Helper" }));
+    const selectedDetailDistributeButton = within(screen.getByLabelText("技能详情")).getByRole(
+      "button",
+      { name: "分发当前技能" }
+    );
+    expect(selectedDetailDistributeButton).toBeEnabled();
+    expect(selectedDetailDistributeButton).toHaveAttribute("title", "分发功能暂未实现");
+
+    fireEvent.click(selectedDetailDistributeButton);
+    expect(screen.getByRole("status")).toHaveTextContent("分发功能暂未实现。");
   });
 });

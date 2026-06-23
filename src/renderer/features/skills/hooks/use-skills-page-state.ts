@@ -4,6 +4,7 @@ import {
   adaptSkillRecord,
   filterSkills,
   getSkillRepositoryOptions,
+  getSelectedSkillsDistributionState,
   type Skill,
   type SkillRepositoryFilter,
   type SkillSort
@@ -13,6 +14,7 @@ export const useSkillsPageState = () => {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [query, setQuery] = useState("");
   const [repositoryFilter, setRepositoryFilter] = useState<SkillRepositoryFilter>("all");
+  const [distributionNoticeVisible, setDistributionNoticeVisible] = useState(false);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [sort, setSort] = useState<SkillSort>("name");
@@ -70,11 +72,13 @@ export const useSkillsPageState = () => {
 
   const selectedSkill = visibleSkills.find((skill) => skill.id === selectedSkillId) ?? null;
   const visibleIds = visibleSkills.map((skill) => skill.id);
+  const checkedSkills = skills.filter((skill) => checkedIds.has(skill.id));
   const visibleCheckedCount = visibleIds.filter((id) => checkedIds.has(id)).length;
   const visibleAllChecked =
     visibleSkills.length > 0 && visibleCheckedCount === visibleSkills.length;
   const visibleSomeChecked = visibleCheckedCount > 0;
   const checkedCount = checkedIds.size;
+  const checkedDistributionState = getSelectedSkillsDistributionState(checkedSkills);
 
   const toggleSkillChecked = (skillId: string, checked: boolean) => {
     if (checked) {
@@ -110,9 +114,15 @@ export const useSkillsPageState = () => {
     });
   };
 
+  const announceDistributionUnavailable = () => {
+    setDistributionNoticeVisible(true);
+  };
+
   return {
+    checkedDistributionState,
     checkedCount,
     checkedIds,
+    distributionNoticeVisible,
     query,
     repositoryFilter,
     repositoryOptions,
@@ -123,6 +133,7 @@ export const useSkillsPageState = () => {
     visibleAllChecked,
     visibleSkills,
     visibleSomeChecked,
+    announceDistributionUnavailable,
     selectAllVisible,
     setQuery,
     setRepositoryFilter,
