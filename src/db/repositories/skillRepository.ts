@@ -13,6 +13,24 @@ type SkillMetadataSnapshot = {
 
 export const createSkillRepository = (db: DbClient) => {
   return {
+    async count(): Promise<number> {
+      const rows = await db
+        .select({
+          id: skillUnits.id,
+          repositoryConfigJson: repositories.configJson
+        })
+        .from(skillUnits)
+        .innerJoin(repositories, eq(repositories.id, skillUnits.repositoryId))
+        .innerJoin(skillVersions, eq(skillVersions.skillUnitId, skillUnits.id));
+      const skillIds = new Set<string>();
+
+      rows.filter(isSkillSourceEnabled).forEach((row) => {
+        skillIds.add(row.id);
+      });
+
+      return skillIds.size;
+    },
+
     async list(): Promise<SkillApiRecord[]> {
       const rows = await db
         .select({

@@ -95,4 +95,46 @@ describe("createSyncHistoryRepository", () => {
       }
     ]);
   });
+
+  it("counts sync history rows with repository details available", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-20T00:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: "{}",
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-1",
+      lastScannedCommitSha: "after-sha",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills",
+      providerId: "github",
+      remoteUrl: "git@github.com:team/skills.git",
+      updatedAt: createdAt
+    });
+    await db.insert(syncRuns).values(
+      Array.from({ length: 3 }, (_, index) => ({
+        endCommitSha: "after-sha",
+        errorMessage: null,
+        finishedAt: new Date(`2026-06-20T0${index + 1}:01:00.000Z`),
+        id: `sync-${index}`,
+        logPath: null,
+        repositoryId: "repo-1",
+        startCommitSha: "before-sha",
+        startedAt: new Date(`2026-06-20T0${index + 1}:00:00.000Z`),
+        status: "success",
+        summaryJson: "{}"
+      }))
+    );
+
+    await expect(createSyncHistoryRepository(db).count()).resolves.toBe(3);
+  });
 });

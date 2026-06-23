@@ -155,4 +155,111 @@ describe("createSkillRepository", () => {
 
     expect(skills.map((skill) => skill.id)).toEqual(["skill-enabled"]);
   });
+
+  it("counts only skills from enabled repositories and deduplicates versions", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-14T00:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values([
+      {
+        configJson: JSON.stringify({ enabled: true }),
+        createdAt,
+        defaultBranch: "main",
+        id: "repo-enabled",
+        lastScannedCommitSha: "abcdef123456",
+        localCachePath: "~/.skills-manager/cache/enabled",
+        name: "Enabled source",
+        providerId: "github",
+        remoteUrl: "git@github.com:team/enabled.git",
+        updatedAt: createdAt
+      },
+      {
+        configJson: JSON.stringify({ enabled: false }),
+        createdAt,
+        defaultBranch: "main",
+        id: "repo-disabled",
+        lastScannedCommitSha: "abcdef123456",
+        localCachePath: "~/.skills-manager/cache/disabled",
+        name: "Disabled source",
+        providerId: "github",
+        remoteUrl: "git@github.com:team/disabled.git",
+        updatedAt: createdAt
+      }
+    ]);
+    await db.insert(skillUnits).values([
+      {
+        createdAt,
+        discoveryMethod: "convention",
+        entryPath: "skills/one/SKILL.md",
+        id: "skill-one",
+        name: "One",
+        repositoryId: "repo-enabled",
+        rootPath: "skills/one",
+        status: "ready",
+        updatedAt: createdAt
+      },
+      {
+        createdAt,
+        discoveryMethod: "convention",
+        entryPath: "skills/two/SKILL.md",
+        id: "skill-two",
+        name: "Two",
+        repositoryId: "repo-enabled",
+        rootPath: "skills/two",
+        status: "ready",
+        updatedAt: createdAt
+      },
+      {
+        createdAt,
+        discoveryMethod: "convention",
+        entryPath: "skills/disabled/SKILL.md",
+        id: "skill-disabled",
+        name: "Disabled",
+        repositoryId: "repo-disabled",
+        rootPath: "skills/disabled",
+        status: "ready",
+        updatedAt: createdAt
+      }
+    ]);
+    await db.insert(skillVersions).values([
+      {
+        commitSha: "abcdef123456",
+        createdAt,
+        id: "version-one-old",
+        metadataSnapshotJson: JSON.stringify({ skillKey: "one", tags: [] }),
+        skillUnitId: "skill-one"
+      },
+      {
+        commitSha: "fedcba654321",
+        createdAt,
+        id: "version-one-new",
+        metadataSnapshotJson: JSON.stringify({ skillKey: "one", tags: [] }),
+        skillUnitId: "skill-one"
+      },
+      {
+        commitSha: "abcdef123456",
+        createdAt,
+        id: "version-two",
+        metadataSnapshotJson: JSON.stringify({ skillKey: "two", tags: [] }),
+        skillUnitId: "skill-two"
+      },
+      {
+        commitSha: "abcdef123456",
+        createdAt,
+        id: "version-disabled",
+        metadataSnapshotJson: JSON.stringify({ skillKey: "disabled", tags: [] }),
+        skillUnitId: "skill-disabled"
+      }
+    ]);
+
+    await expect(createSkillRepository(db).count()).resolves.toBe(2);
+  });
 });

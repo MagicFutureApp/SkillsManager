@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, count, eq } from "drizzle-orm";
 
 import type { RegisteredTargetRecord, TargetSkillSelection } from "../../core/targets/target-api";
 import type { createDbClient } from "../client";
@@ -8,6 +8,12 @@ type DbClient = ReturnType<typeof createDbClient>;
 
 export const createTargetRepository = (db: DbClient) => {
   return {
+    async count(): Promise<number> {
+      const rows = await db.select({ value: count() }).from(agentTargets);
+
+      return rows[0]?.value ?? 0;
+    },
+
     async list(): Promise<RegisteredTargetRecord[]> {
       const targetRows = await db.select().from(agentTargets).orderBy(asc(agentTargets.name));
       const preferenceRows = await db

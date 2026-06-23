@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 
 import type {
   SourceSyncRunRecord,
@@ -12,6 +12,15 @@ type DbClient = ReturnType<typeof createDbClient>;
 
 export const createSyncHistoryRepository = (db: DbClient) => {
   return {
+    async count(): Promise<number> {
+      const rows = await db
+        .select({ value: count() })
+        .from(syncRuns)
+        .innerJoin(repositories, eq(repositories.id, syncRuns.repositoryId));
+
+      return rows[0]?.value ?? 0;
+    },
+
     async list(): Promise<SourceSyncRunRecord[]> {
       const rows = await db
         .select({

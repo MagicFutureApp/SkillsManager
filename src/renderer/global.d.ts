@@ -1,5 +1,6 @@
 import type { AppHealth as MainAppHealth } from "../main/ipc/health";
 import type { AppInfo as MainAppInfo } from "../main/ipc/app-info";
+import type { NavigationBadgeCountsResult as MainNavigationBadgeCountsResult } from "../main/ipc/navigation-badges";
 import type { ProvidersListResult as MainProvidersListResult } from "../main/ipc/providers";
 import type {
   RepositoriesListResult as MainRepositoriesListResult,
@@ -26,6 +27,7 @@ import type { RuntimePlatform as RendererRuntimePlatform } from "./platform-font
 
 export type AppHealth = MainAppHealth;
 export type AppInfo = MainAppInfo;
+export type NavigationBadgeCountsResult = MainNavigationBadgeCountsResult;
 export type AppSettingsResult = MainAppSettingsResult;
 export type AppStoragePathsResult = MainAppStoragePathsResult;
 export type ResetLocalDatabaseResult = MainResetLocalDatabaseResult;
@@ -57,6 +59,7 @@ declare global {
       getHealth: () => Promise<AppHealth>;
       getInfo: () => Promise<AppInfo>;
       getLocale: () => Promise<SupportedLocale>;
+      getNavigationBadgeCounts?: () => Promise<NavigationBadgeCountsResult>;
       getAppStoragePaths?: () => Promise<AppStoragePathsResult>;
       getAppSettings?: () => Promise<AppSettingsResult>;
       getRepositoryDeletePreview?: (repositoryId: string) => Promise<RepositoryDeletePreview>;

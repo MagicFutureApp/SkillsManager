@@ -1,4 +1,4 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, count, eq, inArray } from "drizzle-orm";
 
 import type {
   CreateRepositoryInput,
@@ -205,6 +205,12 @@ export const createRepositoryRepository = (db: DbClient) => {
 
     async getDeletePreview(repositoryId: string): Promise<RepositoryDeletePreview> {
       return getDeletePreview(db, repositoryId);
+    },
+
+    async count(): Promise<number> {
+      const rows = await db.select({ value: count() }).from(repositories);
+
+      return rows[0]?.value ?? 0;
     },
 
     async markInterruptedSyncRuns(): Promise<number> {

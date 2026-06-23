@@ -93,6 +93,36 @@ describe("createRepositoryRepository", () => {
     await expect(createRepositoryRepository(db).list()).resolves.toEqual([]);
   });
 
+  it("counts repository rows independently of list pagination", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-08T00:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values(
+      Array.from({ length: 3 }, (_, index) => ({
+        configJson: "{}",
+        createdAt,
+        defaultBranch: "main",
+        id: `repo-${index}`,
+        lastScannedCommitSha: null,
+        localCachePath: `~/.skills-manager/cache/repo-${index}`,
+        name: `Repo ${index}`,
+        providerId: "github",
+        remoteUrl: `git@github.com:team/repo-${index}.git`,
+        updatedAt: createdAt
+      }))
+    );
+
+    await expect(createRepositoryRepository(db).count()).resolves.toBe(3);
+  });
+
   it("returns the latest sync run separately from repository scan status", async () => {
     const db = createDbClient(":memory:");
     const repositoryRepository = createRepositoryRepository(db);

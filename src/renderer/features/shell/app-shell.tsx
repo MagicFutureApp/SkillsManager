@@ -52,20 +52,8 @@ export const AppShell = ({ children }: AppShellProps) => {
   useEffect(() => {
     const skillsManager = window.skillsManager;
 
-    void Promise.all([
-      skillsManager?.listRepositories?.(),
-      skillsManager?.listSkills?.(),
-      skillsManager?.listTargets?.(),
-      skillsManager?.listSyncHistory?.()
-    ]).then(([repositoriesResult, skillsResult, targetsResult, syncHistoryResult]) => {
-      setBadgeCounts({
-        repositories: repositoriesResult?.repositories.length ?? 0,
-        skills: skillsResult?.skills.length ?? 0,
-        targets:
-          (targetsResult?.detectedTargets.length ?? 0) +
-          (targetsResult?.registeredTargets.length ?? 0),
-        "sync-history": syncHistoryResult?.syncRuns.length ?? 0
-      });
+    void skillsManager?.getNavigationBadgeCounts?.().then((result) => {
+      setBadgeCounts(result.counts);
     });
   }, []);
 

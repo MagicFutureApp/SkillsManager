@@ -146,4 +146,25 @@ describe("createTargetRepository", () => {
       }
     ]);
   });
+
+  it("counts registered targets independently of list pagination", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-21T00:00:00.000Z");
+
+    await db.insert(agentTargets).values(
+      Array.from({ length: 4 }, (_, index) => ({
+        createdAt,
+        defaultInstallStrategy: "copy",
+        enabled: index !== 3,
+        id: `target-${index}`,
+        name: `Target ${index}`,
+        normalizedPath: `/Users/test/.targets/${index}`,
+        path: `/Users/test/.targets/${index}`,
+        type: "custom-directory",
+        updatedAt: createdAt
+      }))
+    );
+
+    await expect(createTargetRepository(db).count()).resolves.toBe(4);
+  });
 });

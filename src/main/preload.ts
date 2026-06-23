@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 import type { SupportedLocale } from "../core/i18n/locale";
 import type { AppInfo } from "./ipc/app-info";
 import type { AppHealth } from "./ipc/health";
+import type { NavigationBadgeCountsResult } from "./ipc/navigation-badges";
 import type { ProvidersListResult } from "./ipc/providers";
 import type { RepositoriesListResult, RepositoriesSyncResult } from "./ipc/repositories";
 import type {
@@ -33,6 +34,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
   getHealth: () => ipcRenderer.invoke("app:getHealth") as Promise<AppHealth>,
   getInfo: () => ipcRenderer.invoke("app:getInfo") as Promise<AppInfo>,
   getLocale: () => ipcRenderer.invoke("app:getLocale") as Promise<SupportedLocale>,
+  getNavigationBadgeCounts: () =>
+    ipcRenderer.invoke("navigation:getBadgeCounts") as Promise<NavigationBadgeCountsResult>,
   getAppStoragePaths: () =>
     ipcRenderer.invoke("settings:getStoragePaths") as Promise<AppStoragePathsResult>,
   getAppSettings: () => ipcRenderer.invoke("settings:get") as Promise<AppSettingsResult>,

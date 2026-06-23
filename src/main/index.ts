@@ -4,6 +4,7 @@ import { createAppDbRuntime, type AppDbRuntime } from "./app-storage.js";
 import { registerAppInfoIpc } from "./ipc/app-info.js";
 import { registerHealthIpc } from "./ipc/health";
 import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
+import { registerNavigationBadgesIpc } from "./ipc/navigation-badges.js";
 import { registerProvidersIpc } from "./ipc/providers.js";
 import { registerRepositoriesIpc } from "./ipc/repositories.js";
 import { registerSettingsIpc } from "./ipc/settings.js";
@@ -108,6 +109,7 @@ void app
     registerAppInfoIpc();
     registerHealthIpc();
     registerLocaleIpc();
+    registerNavigationBadgesIpc(dbRuntime.getDb);
     registerProvidersIpc(dbRuntime.getDb);
     registerRepositoriesIpc(dbRuntime.getDb);
     registerSettingsIpc(dbRuntime);

@@ -249,17 +249,21 @@ describe("AppShell", () => {
     });
   });
 
-  it("loads the sidebar skills badge count from the Electron skills API", async () => {
-    const skills = Array.from({ length: 37 }, (_, index) => ({
-      ...skillApiRecordsFixture[0],
-      id: `skill-${index}`,
-      name: `Skill ${index}`
-    }));
-    const listSkills = vi.fn().mockResolvedValue({ skills });
+  it("loads sidebar badge counts from the Electron count API", async () => {
+    const getNavigationBadgeCounts = vi.fn().mockResolvedValue({
+      counts: {
+        repositories: 12,
+        skills: 37,
+        targets: 3,
+        "sync-history": 9
+      }
+    });
     window.skillsManager = {
       ...window.skillsManager,
-      listSkills
-    } as typeof window.skillsManager;
+      getNavigationBadgeCounts
+    } as typeof window.skillsManager & {
+      getNavigationBadgeCounts: typeof getNavigationBadgeCounts;
+    };
 
     await renderAppShell(
       <AppShell>
@@ -268,28 +272,39 @@ describe("AppShell", () => {
     );
 
     await waitFor(() => {
-      expect(listSkills).toHaveBeenCalled();
+      expect(getNavigationBadgeCounts).toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "来源" })).toHaveTextContent("12");
       expect(screen.getByRole("button", { name: "技能" })).toHaveTextContent("37");
+      expect(screen.getByRole("button", { name: "目标" })).toHaveTextContent("3");
+      expect(screen.getByRole("button", { name: "同步历史" })).toHaveTextContent("9");
     });
   });
 
-  it("loads sidebar badge counts from the Electron list APIs", async () => {
-    const skills = Array.from({ length: 37 }, (_, index) => ({
-      ...skillApiRecordsFixture[0],
-      id: `skill-${index}`,
-      name: `Skill ${index}`
-    }));
-    const listRepositories = vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture });
-    const listSkills = vi.fn().mockResolvedValue({ skills });
+  it("does not derive sidebar badge counts from paged list API results", async () => {
+    const getNavigationBadgeCounts = vi.fn().mockResolvedValue({
+      counts: {
+        repositories: 12,
+        skills: 37,
+        targets: 3,
+        "sync-history": 9
+      }
+    });
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValue({ repositories: repositoryApiRecordsFixture });
+    const listSkills = vi.fn().mockResolvedValue({ skills: skillApiRecordsFixture });
     const listSyncHistory = vi.fn().mockResolvedValue(syncHistoryFixture);
     const listTargets = vi.fn().mockResolvedValue(targetsFixture);
     window.skillsManager = {
       ...window.skillsManager,
+      getNavigationBadgeCounts,
       listRepositories,
       listSkills,
       listSyncHistory,
       listTargets
-    } as typeof window.skillsManager;
+    } as typeof window.skillsManager & {
+      getNavigationBadgeCounts: typeof getNavigationBadgeCounts;
+    };
 
     await renderAppShell(
       <AppShell>
@@ -298,16 +313,15 @@ describe("AppShell", () => {
     );
 
     await waitFor(() => {
-      expect(listRepositories).toHaveBeenCalled();
-      expect(listSkills).toHaveBeenCalled();
-      expect(listSyncHistory).toHaveBeenCalled();
-      expect(listTargets).toHaveBeenCalled();
-      expect(screen.getByRole("button", { name: "来源" })).toHaveTextContent(
-        String(repositoryApiRecordsFixture.length)
-      );
+      expect(getNavigationBadgeCounts).toHaveBeenCalled();
+      expect(listRepositories).not.toHaveBeenCalled();
+      expect(listSkills).not.toHaveBeenCalled();
+      expect(listSyncHistory).not.toHaveBeenCalled();
+      expect(listTargets).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "来源" })).toHaveTextContent("12");
       expect(screen.getByRole("button", { name: "技能" })).toHaveTextContent("37");
       expect(screen.getByRole("button", { name: "目标" })).toHaveTextContent("3");
-      expect(screen.getByRole("button", { name: "同步历史" })).toHaveTextContent("2");
+      expect(screen.getByRole("button", { name: "同步历史" })).toHaveTextContent("9");
     });
   });
 
