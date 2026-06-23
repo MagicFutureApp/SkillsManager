@@ -1,4 +1,13 @@
 import { Button } from "@/components/ui/button";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyRow,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRow
+} from "@/components/data-table";
 import { Input } from "@/components/ui/input";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
@@ -6,10 +15,8 @@ import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { useTargetsPageContext } from "./targets-page-context";
 import type { TargetSort, TargetStatus } from "./targets-page-data";
-
-const tableGridColumnsClassName = "grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)_minmax(72px,0.45fr)]";
+import { useTargetsPageContext } from "./targets-page-context";
 
 export const TargetsPageMain = () => {
   const { t } = useTranslation();
@@ -59,62 +66,58 @@ export const TargetsPageMain = () => {
         </label>
       </section>
 
-      <section className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
-        <div
-          aria-label={t("targets.table.headerAriaLabel")}
-          className={cn(
-            "grid items-center gap-3 border-b border-border bg-muted/40 px-4 py-3 text-xs font-semibold text-muted-foreground max-[820px]:hidden",
-            tableGridColumnsClassName
-          )}
-        >
-          <span>{t("targets.table.target")}</span>
-          <span>{t("targets.table.path")}</span>
-          <span>{t("targets.table.skills")}</span>
-        </div>
+      <DataTable containerClassName="mt-5">
+        <DataTableHeader className="max-[820px]:hidden">
+          <DataTableRow>
+            <DataTableHead className="w-[28%]">{t("targets.table.target")}</DataTableHead>
+            <DataTableHead>{t("targets.table.path")}</DataTableHead>
+            <DataTableHead className="w-[120px]">{t("targets.table.skills")}</DataTableHead>
+          </DataTableRow>
+        </DataTableHeader>
 
-        {page.visibleTargets.length ? (
-          page.visibleTargets.map((target) => (
-            <div
-              key={target.id}
-              className={cn(
-                "grid cursor-pointer items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 last:border-b-0 max-[820px]:grid-cols-[minmax(0,1fr)_auto]",
-                tableGridColumnsClassName,
-                target.id === page.selectedTargetId &&
-                  "bg-primary/5 shadow-[inset_3px_0_0_theme(colors.primary)]"
-              )}
-              onClick={(event) => {
-                if (shouldIgnoreRowSelection(event)) {
-                  return;
-                }
+        <DataTableBody>
+          {page.visibleTargets.length ? (
+            page.visibleTargets.map((target) => (
+              <DataTableRow
+                key={target.id}
+                className="cursor-pointer"
+                selected={target.id === page.selectedTargetId}
+                onClick={(event) => {
+                  if (shouldIgnoreRowSelection(event)) {
+                    return;
+                  }
 
-                page.setSelectedTargetId(target.id);
-              }}
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                className="grid h-auto min-w-0 justify-start gap-1 px-0 py-0 text-left font-normal hover:bg-transparent focus-visible:ring-3 focus-visible:ring-ring/50"
-                aria-label={target.name}
-                aria-selected={target.id === page.selectedTargetId}
-                onClick={() => page.setSelectedTargetId(target.id)}
+                  page.setSelectedTargetId(target.id);
+                }}
               >
-                <strong className="block truncate text-sm">{target.name}</strong>
-                <span className="block truncate font-mono text-xs text-muted-foreground">
-                  {target.type}
-                </span>
-              </Button>
-              <span className="truncate font-mono text-sm">{target.path}</span>
-              <span className="text-sm">
-                {t("targets.table.skillCount", { count: target.skillCount })}
-              </span>
-            </div>
-          ))
-        ) : (
-          <div className="px-4 py-9 text-center text-sm text-muted-foreground">
-            {t("targets.empty")}
-          </div>
-        )}
-      </section>
+                <DataTableCell className="min-w-0">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="grid h-auto min-w-0 justify-start gap-1 px-0 py-0 text-left font-normal hover:bg-transparent focus-visible:ring-3 focus-visible:ring-ring/50"
+                    aria-label={target.name}
+                    aria-selected={target.id === page.selectedTargetId}
+                    onClick={() => page.setSelectedTargetId(target.id)}
+                  >
+                    <strong className="block truncate text-sm">{target.name}</strong>
+                    <span className="block truncate font-mono text-xs text-muted-foreground">
+                      {target.type}
+                    </span>
+                  </Button>
+                </DataTableCell>
+                <DataTableCell className="truncate font-mono text-sm max-[820px]:hidden">
+                  {target.path}
+                </DataTableCell>
+                <DataTableCell className="text-sm">
+                  {t("targets.table.skillCount", { count: target.skillCount })}
+                </DataTableCell>
+              </DataTableRow>
+            ))
+          ) : (
+            <DataTableEmptyRow colSpan={3}>{t("targets.empty")}</DataTableEmptyRow>
+          )}
+        </DataTableBody>
+      </DataTable>
     </>
   );
 };

@@ -1,18 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyRow,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRow
+} from "@/components/data-table";
 import { Input } from "@/components/ui/input";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
-import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
 import type { SkillRepositoryFilter, SkillSort } from "./skills-page-data";
 import { Field, Toggle } from "./skills-page-controls";
 import { useSkillsPageContext } from "./skills-page-context";
-
-const tableGridColumnsClassName =
-  "grid-cols-[32px_minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.55fr)_minmax(44px,0.45fr)_minmax(56px,0.5fr)]";
 
 export const SkillsPageMain = () => {
   const { t } = useTranslation();
@@ -84,88 +89,95 @@ export const SkillsPageMain = () => {
         </Field>
       </section>
 
-      <section className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
-        <div
-          className={cn(
-            "grid items-center gap-3 border-b border-border bg-muted/40 px-4 py-3 text-xs font-semibold text-muted-foreground max-[820px]:hidden",
-            tableGridColumnsClassName
-          )}
-        >
-          <span className="grid place-items-center">
-            <Checkbox
-              checked={page.visibleAllChecked}
-              indeterminate={page.visibleSomeChecked && !page.visibleAllChecked}
-              aria-label={t("skills.table.selectAll")}
-              disabled={!hasVisibleSkills}
-              onCheckedChange={page.selectAllVisible}
-            />
-          </span>
-          <span>{t("skills.table.skill")}</span>
-          <span>{t("skills.table.repository")}</span>
-          <span>{t("skills.table.targets")}</span>
-          <span>{t("skills.table.enabled")}</span>
-          <span>{t("skills.table.actions")}</span>
-        </div>
-
-        {hasVisibleSkills ? (
-          visibleSkills.map((skill) => (
-            <div
-              key={skill.id}
-              className={cn(
-                "grid cursor-pointer items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_auto]",
-                tableGridColumnsClassName,
-                skill.id === selectedSkill?.id &&
-                  "bg-primary/5 shadow-[inset_3px_0_0_theme(colors.primary)]"
-              )}
-              onClick={(event) => {
-                if (shouldIgnoreRowSelection(event)) {
-                  return;
-                }
-
-                page.setSelectedSkillId(skill.id);
-              }}
-            >
+      <DataTable containerClassName="mt-5">
+        <DataTableHeader className="max-[820px]:hidden">
+          <DataTableRow>
+            <DataTableHead className="w-[40px]">
               <span className="grid place-items-center">
                 <Checkbox
-                  checked={page.checkedIds.has(skill.id)}
-                  aria-label={t("skills.table.selectSkill", { name: skill.name })}
-                  onCheckedChange={(checked) => page.toggleSkillChecked(skill.id, checked)}
+                  checked={page.visibleAllChecked}
+                  indeterminate={page.visibleSomeChecked && !page.visibleAllChecked}
+                  aria-label={t("skills.table.selectAll")}
+                  disabled={!hasVisibleSkills}
+                  onCheckedChange={page.selectAllVisible}
                 />
               </span>
-              <Button
-                type="button"
-                variant="ghost"
-                className="grid h-auto min-w-0 justify-start gap-1 px-0 py-0 text-left font-normal hover:bg-transparent focus-visible:ring-3 focus-visible:ring-ring/50"
-                aria-label={skill.name}
-                aria-selected={skill.id === selectedSkill?.id}
-                onClick={() => page.setSelectedSkillId(skill.id)}
+            </DataTableHead>
+            <DataTableHead>{t("skills.table.skill")}</DataTableHead>
+            <DataTableHead className="w-[18%]">{t("skills.table.repository")}</DataTableHead>
+            <DataTableHead className="w-[10%]">{t("skills.table.targets")}</DataTableHead>
+            <DataTableHead className="w-[80px]">{t("skills.table.enabled")}</DataTableHead>
+            <DataTableHead className="w-[92px]">{t("skills.table.actions")}</DataTableHead>
+          </DataTableRow>
+        </DataTableHeader>
+
+        <DataTableBody>
+          {hasVisibleSkills ? (
+            visibleSkills.map((skill) => (
+              <DataTableRow
+                key={skill.id}
+                className="cursor-pointer"
+                selected={skill.id === selectedSkill?.id}
+                onClick={(event) => {
+                  if (shouldIgnoreRowSelection(event)) {
+                    return;
+                  }
+
+                  page.setSelectedSkillId(skill.id);
+                }}
               >
-                <strong className="block truncate text-sm">{skill.name}</strong>
-                <span className="block truncate font-mono text-xs text-muted-foreground">
-                  {skill.skillId}
-                </span>
-              </Button>
-              <span className="truncate text-sm">{skill.repository}</span>
-              <span className="font-mono text-sm">{skill.targets.length}</span>
-              <Toggle enabled={skill.enabled} />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled
-                title={syncTitle}
-                aria-label={t("skills.actions.syncSkillUnavailable", { name: skill.name })}
-              >
-                {t("skills.actions.sync")}
-              </Button>
-            </div>
-          ))
-        ) : (
-          <div className="px-4 py-9 text-center text-sm text-muted-foreground">
-            {t("skills.empty")}
-          </div>
-        )}
-      </section>
+                <DataTableCell className="w-[40px]">
+                  <span className="grid place-items-center">
+                    <Checkbox
+                      checked={page.checkedIds.has(skill.id)}
+                      aria-label={t("skills.table.selectSkill", { name: skill.name })}
+                      onCheckedChange={(checked) => page.toggleSkillChecked(skill.id, checked)}
+                    />
+                  </span>
+                </DataTableCell>
+                <DataTableCell className="min-w-0">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="grid h-auto min-w-0 justify-start gap-1 px-0 py-0 text-left font-normal hover:bg-transparent focus-visible:ring-3 focus-visible:ring-ring/50"
+                    aria-label={skill.name}
+                    aria-selected={skill.id === selectedSkill?.id}
+                    onClick={() => page.setSelectedSkillId(skill.id)}
+                  >
+                    <strong className="block truncate text-sm">{skill.name}</strong>
+                    <span className="block truncate font-mono text-xs text-muted-foreground">
+                      {skill.skillId}
+                    </span>
+                  </Button>
+                </DataTableCell>
+                <DataTableCell className="truncate text-sm max-[820px]:hidden">
+                  {skill.repository}
+                </DataTableCell>
+                <DataTableCell className="font-mono text-sm max-[820px]:hidden">
+                  {skill.targets.length}
+                </DataTableCell>
+                <DataTableCell>
+                  <Toggle enabled={skill.enabled} />
+                </DataTableCell>
+                <DataTableCell>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    title={syncTitle}
+                    aria-label={t("skills.actions.syncSkillUnavailable", { name: skill.name })}
+                  >
+                    {t("skills.actions.sync")}
+                  </Button>
+                </DataTableCell>
+              </DataTableRow>
+            ))
+          ) : (
+            <DataTableEmptyRow colSpan={6}>{t("skills.empty")}</DataTableEmptyRow>
+          )}
+        </DataTableBody>
+      </DataTable>
     </>
   );
 };

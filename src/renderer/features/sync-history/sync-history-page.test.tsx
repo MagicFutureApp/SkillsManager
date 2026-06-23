@@ -66,6 +66,16 @@ const renderSyncHistoryPage = async () => {
   return result;
 };
 
+const getContainingTableRow = (element: HTMLElement): HTMLTableRowElement => {
+  const row = element.closest("tr");
+
+  if (!(row instanceof HTMLTableRowElement)) {
+    throw new Error("Expected element to be inside a table row.");
+  }
+
+  return row;
+};
+
 describe("SyncHistoryPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
@@ -89,8 +99,17 @@ describe("SyncHistoryPage", () => {
     expect(container.querySelector("main")).toHaveClass("min-w-0", "p-7");
     expect(container.firstElementChild).toHaveClass("grid-cols-[minmax(620px,1fr)_360px]");
 
-    const failedRow = screen.getByRole("button", { name: "Team skills 失败" });
-    expect(failedRow.className).toContain("minmax(176px,0.95fr)");
+    const syncTable = within(screen.getByRole("main")).getByRole("table");
+    expect(within(syncTable).getByRole("columnheader", { name: "仓库" })).toBeInTheDocument();
+    expect(within(syncTable).getByRole("columnheader", { name: "开始时间" })).toBeInTheDocument();
+    expect(within(syncTable).getByRole("columnheader", { name: "状态" })).toBeInTheDocument();
+    expect(
+      within(syncTable).getByRole("columnheader", { name: "Scan summary" })
+    ).toBeInTheDocument();
+    expect(within(syncTable).getByRole("columnheader", { name: "日志" })).toBeInTheDocument();
+
+    const failedRowButton = screen.getByRole("button", { name: "Team skills 失败" });
+    const failedRow = getContainingTableRow(failedRowButton);
     expect(within(failedRow).getByText("2026/06/20 10:00")).toBeInTheDocument();
     expect(within(failedRow).getByText("新增 0 / 更新 0 / 移除 0 / 警告 1")).toBeInTheDocument();
 

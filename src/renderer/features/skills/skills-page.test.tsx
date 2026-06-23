@@ -103,7 +103,12 @@ describe("SkillsPage", () => {
     expect(screen.getByLabelText("技能筛选")).toHaveClass(
       "grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]"
     );
-    expect(screen.getByLabelText("选择全部可见技能").closest("div")).toHaveClass("bg-muted/40");
+    const skillsTable = within(screen.getByRole("main")).getByRole("table");
+    expect(within(skillsTable).getByRole("columnheader", { name: "技能" })).toBeInTheDocument();
+    expect(within(skillsTable).getByRole("columnheader", { name: "仓库" })).toBeInTheDocument();
+    expect(within(skillsTable).getByRole("columnheader", { name: "目标" })).toBeInTheDocument();
+    expect(within(skillsTable).getByRole("columnheader", { name: "启用" })).toBeInTheDocument();
+    expect(within(skillsTable).getByRole("columnheader", { name: "操作" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "新增" })).not.toBeInTheDocument();
     const pageHeading = screen.getByRole("heading", { name: "技能分发" });
     const pageHeader = pageHeading.closest("header");

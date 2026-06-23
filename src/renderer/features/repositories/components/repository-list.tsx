@@ -2,6 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyRow,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRow
+} from "@/components/data-table";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
 import { cn } from "@/lib/utils";
 import { RepositoryStatusPill } from "./repository-status-pill";
@@ -49,93 +58,99 @@ export const RepositoryList = ({
   onToggleChecked,
   onToggleEnabled
 }: RepositoryListProps) => {
-  const gridColumnsClassName =
-    "grid-cols-[34px_minmax(0,1.9fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_34px_minmax(52px,0.45fr)]";
-
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <div
-        className={cn(
-          "grid items-center gap-3 border-b border-border bg-muted/40 px-4 py-3 text-xs font-semibold text-muted-foreground max-[820px]:hidden",
-          gridColumnsClassName
-        )}
-      >
-        <span className="grid place-items-center">
-          <Checkbox
-            checked={visibleAllChecked}
-            indeterminate={visibleSomeChecked && !visibleAllChecked}
-            disabled={!repositories.length}
-            aria-label={copy.selectAll}
-            onCheckedChange={onSelectAllVisible}
-          />
-        </span>
-        <span>{copy.repository}</span>
-        <span>{copy.provider}</span>
-        <span>{copy.status}</span>
-        <span>{copy.skills}</span>
-        <span aria-hidden="true" />
-        <span>{copy.actions}</span>
-      </div>
-
-      {repositories.length === 0 ? (
-        <div className="px-4 py-9 text-center text-sm text-muted-foreground">{copy.empty}</div>
-      ) : (
-        repositories.map((repository) => (
-          <div
-            key={repository.id}
-            className={cn(
-              "grid cursor-pointer items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-muted/30 last:border-b-0 max-[820px]:grid-cols-[34px_minmax(0,1fr)_34px_auto]",
-              gridColumnsClassName,
-              repository.id === selectedRepositoryId &&
-                "bg-primary/5 shadow-[inset_3px_0_0_theme(colors.primary)]"
-            )}
-            onClick={(event) => {
-              if (shouldIgnoreRowSelection(event)) {
-                return;
-              }
-
-              onSelectRepository(repository.id);
-            }}
-          >
+    <DataTable>
+      <DataTableHeader className="max-[820px]:hidden">
+        <DataTableRow>
+          <DataTableHead className="w-[42px]">
             <span className="grid place-items-center">
               <Checkbox
-                checked={checkedIds.has(repository.id)}
-                aria-label={copy.selectRepository(repository.name)}
-                onCheckedChange={(checked) => onToggleChecked(repository.id, checked)}
+                checked={visibleAllChecked}
+                indeterminate={visibleSomeChecked && !visibleAllChecked}
+                disabled={!repositories.length}
+                aria-label={copy.selectAll}
+                onCheckedChange={onSelectAllVisible}
               />
             </span>
-            <Button
-              type="button"
-              variant="ghost"
-              className="grid h-auto min-w-0 justify-start gap-1 px-0 py-0 text-left font-normal hover:bg-transparent focus-visible:ring-3 focus-visible:ring-ring/50"
-              aria-label={repository.name}
-              aria-selected={repository.id === selectedRepositoryId}
-              onClick={() => onSelectRepository(repository.id)}
+          </DataTableHead>
+          <DataTableHead>{copy.repository}</DataTableHead>
+          <DataTableHead className="w-[15%]">{copy.provider}</DataTableHead>
+          <DataTableHead className="w-[14%]">{copy.status}</DataTableHead>
+          <DataTableHead className="w-[10%]">{copy.skills}</DataTableHead>
+          <DataTableHead className="w-[42px]" aria-label="sync" />
+          <DataTableHead className="w-[72px]">{copy.actions}</DataTableHead>
+        </DataTableRow>
+      </DataTableHeader>
+
+      <DataTableBody>
+        {repositories.length === 0 ? (
+          <DataTableEmptyRow colSpan={7}>{copy.empty}</DataTableEmptyRow>
+        ) : (
+          repositories.map((repository) => (
+            <DataTableRow
+              key={repository.id}
+              className="cursor-pointer"
+              selected={repository.id === selectedRepositoryId}
+              onClick={(event) => {
+                if (shouldIgnoreRowSelection(event)) {
+                  return;
+                }
+
+                onSelectRepository(repository.id);
+              }}
             >
-              <span className="truncate text-sm font-semibold">{repository.name}</span>
-              <span className="truncate font-mono text-xs text-muted-foreground">
-                {repository.remoteUrl}
-              </span>
-            </Button>
-            <span className="text-sm max-[820px]:hidden">{repository.provider}</span>
-            <span className="max-[820px]:hidden">
-              <RepositoryStatusPill status={repository.status} />
-            </span>
-            <span className="font-mono text-sm max-[820px]:hidden">{repository.skillUnits}</span>
-            <RepositorySyncIndicator
-              repository={repository}
-              state={repositorySyncStates[repository.id]}
-              onSyncRepository={onSyncRepository}
-            />
-            <Switch
-              checked={repository.enabled}
-              aria-label={copy.toggleEnabled(repository.name)}
-              onCheckedChange={() => onToggleEnabled(repository.id)}
-            />
-          </div>
-        ))
-      )}
-    </section>
+              <DataTableCell className="w-[42px]">
+                <span className="grid place-items-center">
+                  <Checkbox
+                    checked={checkedIds.has(repository.id)}
+                    aria-label={copy.selectRepository(repository.name)}
+                    onCheckedChange={(checked) => onToggleChecked(repository.id, checked)}
+                  />
+                </span>
+              </DataTableCell>
+              <DataTableCell className="min-w-0">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="grid h-auto min-w-0 justify-start gap-1 px-0 py-0 text-left font-normal hover:bg-transparent focus-visible:ring-3 focus-visible:ring-ring/50"
+                  aria-label={repository.name}
+                  aria-selected={repository.id === selectedRepositoryId}
+                  onClick={() => onSelectRepository(repository.id)}
+                >
+                  <span className="truncate text-sm font-semibold">{repository.name}</span>
+                  <span className="truncate font-mono text-xs text-muted-foreground">
+                    {repository.remoteUrl}
+                  </span>
+                </Button>
+              </DataTableCell>
+              <DataTableCell className="text-sm max-[820px]:hidden">
+                {repository.provider}
+              </DataTableCell>
+              <DataTableCell className="max-[820px]:hidden">
+                <RepositoryStatusPill status={repository.status} />
+              </DataTableCell>
+              <DataTableCell className="font-mono text-sm max-[820px]:hidden">
+                {repository.skillUnits}
+              </DataTableCell>
+              <DataTableCell className="w-[42px]">
+                <RepositorySyncIndicator
+                  repository={repository}
+                  state={repositorySyncStates[repository.id]}
+                  onSyncRepository={onSyncRepository}
+                />
+              </DataTableCell>
+              <DataTableCell className="w-[72px]">
+                <Switch
+                  checked={repository.enabled}
+                  aria-label={copy.toggleEnabled(repository.name)}
+                  onCheckedChange={() => onToggleEnabled(repository.id)}
+                />
+              </DataTableCell>
+            </DataTableRow>
+          ))
+        )}
+      </DataTableBody>
+    </DataTable>
   );
 };
 

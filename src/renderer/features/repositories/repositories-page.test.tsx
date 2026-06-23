@@ -103,6 +103,12 @@ describe("RepositoriesPage", () => {
       "aria-selected",
       "true"
     );
+    const sourceTable = within(screen.getByRole("main")).getByRole("table");
+    expect(within(sourceTable).getByRole("columnheader", { name: "来源" })).toBeInTheDocument();
+    expect(within(sourceTable).getByRole("columnheader", { name: "类型" })).toBeInTheDocument();
+    expect(within(sourceTable).getByRole("columnheader", { name: "状态" })).toBeInTheDocument();
+    expect(within(sourceTable).getByRole("columnheader", { name: "技能" })).toBeInTheDocument();
+    expect(within(sourceTable).getByRole("columnheader", { name: "启用" })).toBeInTheDocument();
     expect(within(screen.getByRole("main")).queryByText("分支")).not.toBeInTheDocument();
     expect(within(screen.getByRole("main")).queryByText("main")).not.toBeInTheDocument();
     expect(within(screen.getByRole("main")).getAllByText("就绪").length).toBeGreaterThan(0);
@@ -123,11 +129,6 @@ describe("RepositoriesPage", () => {
     expect(
       within(screen.getByLabelText("来源详情")).queryByText("元数据变更")
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Team skills repository" }).closest("div")
-    ).toHaveClass(
-      "grid-cols-[34px_minmax(0,1.9fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,0.65fr)_34px_minmax(52px,0.45fr)]"
-    );
   });
 
   it("filters sources by provider and status", async () => {

@@ -57,6 +57,13 @@ describe("ProvidersPage", () => {
     expect(within(pageHeader as HTMLElement).queryByText("Provider")).not.toBeInTheDocument();
     expect(screen.getByLabelText("筛选 Provider")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "GitHub" })).toHaveAttribute("aria-selected", "true");
+    const providerTable = within(screen.getByRole("main")).getByRole("table");
+    expect(
+      within(providerTable).getByRole("columnheader", { name: "Provider" })
+    ).toBeInTheDocument();
+    expect(within(providerTable).getByRole("columnheader", { name: "认证" })).toBeInTheDocument();
+    expect(within(providerTable).getByRole("columnheader", { name: "状态" })).toBeInTheDocument();
+    expect(within(providerTable).getByRole("columnheader", { name: "连接" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "GitHub" })).toBeInTheDocument();
     expect(screen.getByText("默认发现规则")).toBeInTheDocument();
     expect(

@@ -99,7 +99,8 @@ describe("TargetsPage", () => {
     expect(screen.getByRole("button", { name: "Local project" })).toBeInTheDocument();
     expect(screen.getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
     expect(screen.getByText("2 个技能")).toBeInTheDocument();
-    const header = screen.getByLabelText("目标列表表头");
+    const targetTable = within(screen.getByRole("main")).getByRole("table");
+    const header = within(targetTable).getByRole("row", { name: "目标 路径 技能" });
     expect(within(header).getByText("目标")).toBeInTheDocument();
     expect(within(header).getByText("路径")).toBeInTheDocument();
     expect(within(header).getByText("技能")).toBeInTheDocument();
