@@ -41,14 +41,17 @@ function Select<Value extends string>({
       <SelectPrimitive.Trigger
         data-slot="select-trigger"
         className={cn(
-          "flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-input bg-background px-3 text-left text-sm font-normal text-foreground outline-none transition-colors focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-placeholder:text-muted-foreground",
+          "flex h-10 w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-lg border border-input bg-background px-3 text-left text-sm font-normal text-foreground outline-none transition-colors focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-placeholder:text-muted-foreground",
           className
         )}
       >
-        <SelectPrimitive.Value placeholder={placeholder}>
+        <SelectPrimitive.Value
+          placeholder={placeholder}
+          className="min-w-0 flex-1 truncate whitespace-nowrap"
+        >
           {selectedOption?.label}
         </SelectPrimitive.Value>
-        <SelectPrimitive.Icon className="text-muted-foreground">
+        <SelectPrimitive.Icon className="shrink-0 text-muted-foreground">
           <ChevronDown aria-hidden="true" className="size-4" />
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>

@@ -50,9 +50,8 @@ export const resources = {
         filters: {
           ariaLabel: "技能筛选",
           search: "搜索技能",
-          searchPlaceholder: "搜索名称、ID、仓库、标签或入口路径",
+          searchPlaceholder: "搜索名称、仓库或描述",
           sort: "排序",
-          sortRecommended: "推荐",
           sortName: "名称",
           sortRepository: "仓库",
           repository: "仓库",
@@ -416,9 +415,8 @@ export const resources = {
         filters: {
           ariaLabel: "Skill filters",
           search: "Search skills",
-          searchPlaceholder: "Search name, ID, repository, tags, or entry path",
+          searchPlaceholder: "Search name, repository, or description",
           sort: "Sort",
-          sortRecommended: "Recommended first",
           sortName: "Name",
           sortRepository: "Repository",
           repository: "Repository",

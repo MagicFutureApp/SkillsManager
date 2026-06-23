@@ -15,7 +15,7 @@ export const useSkillsPageState = () => {
   const [repositoryFilter, setRepositoryFilter] = useState<SkillRepositoryFilter>("all");
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
-  const [sort, setSort] = useState<SkillSort>("recommended");
+  const [sort, setSort] = useState<SkillSort>("name");
 
   useEffect(() => {
     let isMounted = true;

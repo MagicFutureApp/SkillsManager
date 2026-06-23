@@ -157,25 +157,33 @@ describe("SkillsPage", () => {
     await waitFor(() => expect(window.skillsManager?.listSkills).toHaveBeenCalled());
   });
 
-  it("searches skills by name, ID, repository, tags, description, or entry path", async () => {
+  it("searches skills by name, repository, or description only", async () => {
     await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
     await screen.findByRole("button", { name: "Review Bot" });
 
     const searchField = screen.getByLabelText("搜索技能");
 
-    fireEvent.change(searchField, { target: { value: "critique" } });
+    expect(searchField).toHaveAttribute("placeholder", "搜索名称、仓库或描述");
+
+    fireEvent.change(searchField, { target: { value: "starter prompts" } });
     expect(screen.getByRole("button", { name: "Design Helper" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Review Bot" })).not.toBeInTheDocument();
-
-    fireEvent.change(searchField, { target: { value: "release-notes/SKILL.md" } });
-    expect(screen.getByRole("button", { name: "Release Notes" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Design Helper" })).not.toBeInTheDocument();
 
     fireEvent.change(searchField, { target: { value: "Team skills repository" } });
     expect(screen.getByRole("button", { name: "Review Bot" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Release Notes" })).not.toBeInTheDocument();
 
-    fireEvent.change(searchField, { target: { value: "21ab9d0" } });
+    fireEvent.change(searchField, { target: { value: "Release Notes" } });
+    expect(screen.getByRole("button", { name: "Release Notes" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Design Helper" })).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "design-helper" } });
+    expect(screen.getByText("暂无已索引技能。")).toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "writing" } });
+    expect(screen.getByText("暂无已索引技能。")).toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "release-notes/SKILL.md" } });
     expect(screen.getByText("暂无已索引技能。")).toBeInTheDocument();
   });
 
@@ -204,8 +212,6 @@ describe("SkillsPage", () => {
     await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
     await screen.findByRole("button", { name: "Review Bot" });
 
-    await selectOption("排序", "名称");
-
     let rows = screen.getAllByRole("button", {
       name: (name, element) =>
         element.tagName.toLowerCase() === "button" &&
@@ -217,7 +223,12 @@ describe("SkillsPage", () => {
       "Review Bot"
     ]);
 
-    await selectOption("排序", "仓库");
+    fireEvent.pointerDown(screen.getByLabelText("排序"), { pointerType: "mouse" });
+    fireEvent.mouseDown(screen.getByLabelText("排序"), { button: 0 });
+    expect(screen.queryByRole("option", { name: "推荐" })).not.toBeInTheDocument();
+    const repositorySortOption = await screen.findByRole("option", { name: "仓库" });
+    fireEvent.pointerDown(repositorySortOption, { pointerType: "mouse" });
+    fireEvent.click(repositorySortOption);
 
     rows = screen.getAllByRole("button", {
       name: (name, element) =>

@@ -30,7 +30,6 @@ export const SkillsPageMain = () => {
       ? t("skills.actions.syncSelected", { count: page.checkedCount })
       : t("skills.actions.sync");
   const sortOptions: SelectOption<SkillSort>[] = [
-    { value: "recommended", label: t("skills.filters.sortRecommended") },
     { value: "name", label: t("skills.filters.sortName") },
     { value: "repository", label: t("skills.filters.sortRepository") }
   ];

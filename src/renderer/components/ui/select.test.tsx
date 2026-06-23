@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
 
@@ -56,5 +56,28 @@ describe("Select", () => {
     expect(selectedIndicator).toHaveClass("opacity-100");
     expect(selectedIndicator).not.toHaveClass("opacity-0");
     expect(unselectedIndicator).toHaveClass("opacity-0");
+  });
+
+  it("keeps a long selected value on one truncated line", () => {
+    const longRepositoryName =
+      "github.com/very-long-organization-name/very-long-repository-name-with-many-segments";
+
+    render(
+      <Field>
+        <FieldLabel>Repository</FieldLabel>
+        <Select
+          className="max-w-40"
+          value="long-repository"
+          options={[{ value: "long-repository", label: longRepositoryName }]}
+          onValueChange={vi.fn()}
+        />
+      </Field>
+    );
+
+    const trigger = screen.getByLabelText("Repository");
+    const selectedValue = within(trigger).getByText(longRepositoryName);
+
+    expect(trigger).toHaveClass("min-w-0", "overflow-hidden");
+    expect(selectedValue).toHaveClass("min-w-0", "flex-1", "truncate", "whitespace-nowrap");
   });
 });

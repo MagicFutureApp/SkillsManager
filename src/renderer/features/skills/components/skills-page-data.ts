@@ -2,7 +2,7 @@ import type { SkillApiRecord, SkillApiStatus } from "../../../../core/skills/ski
 
 export type SkillStatus = SkillApiStatus;
 export type SkillRepositoryFilter = string;
-export type SkillSort = "recommended" | "name" | "repository";
+export type SkillSort = "name" | "repository";
 
 export type Skill = {
   id: string;
@@ -63,16 +63,7 @@ export const getSkillRepositoryOptions = (skills: Skill[]): SkillRepositoryFilte
 export const filterSkills = ({ query, repository, skills, sort }: SkillFilterInput): Skill[] => {
   const normalizedQuery = query.trim().toLowerCase();
   const visible = skills.filter((skill) => {
-    const searchable = [
-      skill.name,
-      skill.skillId,
-      skill.repository,
-      skill.entry,
-      skill.description,
-      ...skill.tags
-    ]
-      .join(" ")
-      .toLowerCase();
+    const searchable = [skill.name, skill.repository, skill.description].join(" ").toLowerCase();
 
     return (
       (!normalizedQuery || searchable.includes(normalizedQuery)) &&
@@ -91,20 +82,6 @@ export const filterSkills = ({ query, repository, skills, sort }: SkillFilterInp
       );
     }
 
-    return compareRecommendedSkills(first, second);
+    return first.name.localeCompare(second.name);
   });
-};
-
-const compareRecommendedSkills = (first: Skill, second: Skill): number => {
-  return (
-    statusPriority[first.status] - statusPriority[second.status] ||
-    Number(second.enabled) - Number(first.enabled) ||
-    first.name.localeCompare(second.name)
-  );
-};
-
-const statusPriority: Record<SkillStatus, number> = {
-  ready: 0,
-  review: 1,
-  installed: 2
 };
