@@ -55,6 +55,7 @@ const targetsFixture: TargetsListResult = {
       normalizedPath: "/Users/test/project/.codex/skills",
       path: "/Users/test/project/.codex/skills",
       selectedSkills: [],
+      skillPreferences: [],
       skillCount: 0,
       scope: "global",
       type: "custom-directory",

@@ -10,7 +10,11 @@ import type {
   AppStoragePathsResult,
   ResetLocalDatabaseResult
 } from "./ipc/settings";
-import type { SkillsListResult } from "./ipc/skills";
+import type {
+  SkillsListResult,
+  UpdateSkillTargetPreferenceInput,
+  UpdateSkillTargetPreferenceResult
+} from "./ipc/skills";
 import type { SyncHistoryListResult } from "../core/repositories/sync-history-api";
 import type { TargetsListResult } from "./ipc/targets";
 import type { RepositorySourceInspection } from "../core/repositories/source-inspection";
@@ -53,6 +57,11 @@ contextBridge.exposeInMainWorld("skillsManager", {
   listRepositories: () =>
     ipcRenderer.invoke("repositories:list") as Promise<RepositoriesListResult>,
   listSkills: () => ipcRenderer.invoke("skills:list") as Promise<SkillsListResult>,
+  setSkillTargetPreference: (input: UpdateSkillTargetPreferenceInput) =>
+    ipcRenderer.invoke(
+      "skills:setTargetPreference",
+      input
+    ) as Promise<UpdateSkillTargetPreferenceResult>,
   listSyncHistory: () => ipcRenderer.invoke("syncHistory:list") as Promise<SyncHistoryListResult>,
   listTargets: () => ipcRenderer.invoke("targets:list") as Promise<TargetsListResult>,
   openExternalUrl: (url: string) =>

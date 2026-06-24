@@ -3,6 +3,7 @@ import { asc, count, eq } from "drizzle-orm";
 import type {
   RegisteredTargetRecord,
   TargetRegistrationScope,
+  TargetSkillPreference,
   TargetSkillSelection
 } from "../../core/targets/target-api";
 import type { createDbClient } from "../client";
@@ -22,6 +23,7 @@ export const createTargetRepository = (db: DbClient) => {
       const targetRows = await db.select().from(agentTargets).orderBy(asc(agentTargets.name));
       const preferenceRows = await db
         .select({
+          enabled: skillTargetPreferences.enabled,
           repositoryName: repositories.name,
           skillId: skillUnits.id,
           skillName: skillUnits.name,
@@ -30,23 +32,37 @@ export const createTargetRepository = (db: DbClient) => {
         .from(skillTargetPreferences)
         .innerJoin(skillUnits, eq(skillUnits.id, skillTargetPreferences.skillUnitId))
         .innerJoin(repositories, eq(repositories.id, skillUnits.repositoryId))
-        .where(eq(skillTargetPreferences.enabled, true))
         .orderBy(asc(skillUnits.name));
       const selectionsByTargetId = new Map<string, TargetSkillSelection[]>();
+      const preferencesByTargetId = new Map<string, TargetSkillPreference[]>();
 
       preferenceRows.forEach((row) => {
-        const selections = selectionsByTargetId.get(row.targetId) ?? [];
-
-        selections.push({
+        const preference = {
+          enabled: row.enabled,
           id: row.skillId,
           name: row.skillName,
           repository: row.repositoryName
-        });
-        selectionsByTargetId.set(row.targetId, selections);
+        };
+        const preferences = preferencesByTargetId.get(row.targetId) ?? [];
+
+        preferences.push(preference);
+        preferencesByTargetId.set(row.targetId, preferences);
+
+        if (row.enabled) {
+          const selections = selectionsByTargetId.get(row.targetId) ?? [];
+
+          selections.push({
+            id: row.skillId,
+            name: row.skillName,
+            repository: row.repositoryName
+          });
+          selectionsByTargetId.set(row.targetId, selections);
+        }
       });
 
       return targetRows.map((target) => {
         const selectedSkills = selectionsByTargetId.get(target.id) ?? [];
+        const skillPreferences = preferencesByTargetId.get(target.id) ?? [];
 
         return {
           createdAt: target.createdAt.toISOString(),
@@ -57,6 +73,7 @@ export const createTargetRepository = (db: DbClient) => {
           normalizedPath: target.normalizedPath,
           path: target.path,
           selectedSkills,
+          skillPreferences,
           skillCount: selectedSkills.length,
           scope: normalizeScope(target.scope),
           type: target.type,

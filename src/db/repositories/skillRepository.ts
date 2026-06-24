@@ -1,6 +1,11 @@
 import { asc, eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 
-import type { SkillApiRecord, SkillApiStatus } from "../../core/skills/skill-api";
+import type {
+  SkillApiRecord,
+  SkillApiStatus,
+  UpdateSkillTargetPreferenceInput
+} from "../../core/skills/skill-api";
 import type { createDbClient } from "../client";
 import { repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";
 
@@ -76,6 +81,28 @@ export const createSkillRepository = (db: DbClient) => {
           version: row.commitSha.slice(0, 7)
         };
       });
+    },
+
+    async setTargetPreference(input: UpdateSkillTargetPreferenceInput): Promise<void> {
+      const now = new Date();
+
+      await db
+        .insert(skillTargetPreferences)
+        .values({
+          agentTargetId: input.agentTargetId,
+          createdAt: now,
+          enabled: input.enabled,
+          id: randomUUID(),
+          skillUnitId: input.skillUnitId,
+          updatedAt: now
+        })
+        .onConflictDoUpdate({
+          target: [skillTargetPreferences.skillUnitId, skillTargetPreferences.agentTargetId],
+          set: {
+            enabled: input.enabled,
+            updatedAt: now
+          }
+        });
     }
   };
 };

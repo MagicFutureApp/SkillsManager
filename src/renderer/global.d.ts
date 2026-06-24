@@ -11,7 +11,11 @@ import type {
   AppStoragePathsResult as MainAppStoragePathsResult,
   ResetLocalDatabaseResult as MainResetLocalDatabaseResult
 } from "../main/ipc/settings";
-import type { SkillsListResult as MainSkillsListResult } from "../main/ipc/skills";
+import type {
+  SkillsListResult as MainSkillsListResult,
+  UpdateSkillTargetPreferenceInput as MainUpdateSkillTargetPreferenceInput,
+  UpdateSkillTargetPreferenceResult as MainUpdateSkillTargetPreferenceResult
+} from "../main/ipc/skills";
 import type { TargetsListResult as MainTargetsListResult } from "../main/ipc/targets";
 import type { SyncHistoryListResult as CoreSyncHistoryListResult } from "../core/repositories/sync-history-api";
 import type {
@@ -35,6 +39,8 @@ export type ProvidersListResult = MainProvidersListResult;
 export type RepositoriesListResult = MainRepositoriesListResult;
 export type RepositoriesSyncResult = MainRepositoriesSyncResult;
 export type SkillsListResult = MainSkillsListResult;
+export type UpdateSkillTargetPreferenceInput = MainUpdateSkillTargetPreferenceInput;
+export type UpdateSkillTargetPreferenceResult = MainUpdateSkillTargetPreferenceResult;
 export type TargetsListResult = MainTargetsListResult;
 export type SyncHistoryListResult = CoreSyncHistoryListResult;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
@@ -67,6 +73,9 @@ declare global {
       listProviders: () => Promise<ProvidersListResult>;
       listRepositories: () => Promise<RepositoriesListResult>;
       listSkills?: () => Promise<SkillsListResult>;
+      setSkillTargetPreference?: (
+        input: UpdateSkillTargetPreferenceInput
+      ) => Promise<UpdateSkillTargetPreferenceResult>;
       listSyncHistory?: () => Promise<SyncHistoryListResult>;
       listTargets?: () => Promise<TargetsListResult>;
       openExternalUrl?: (url: string) => Promise<void>;

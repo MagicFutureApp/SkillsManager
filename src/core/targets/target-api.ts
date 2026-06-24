@@ -26,6 +26,10 @@ export type TargetSkillSelection = {
   repository: string;
 };
 
+export type TargetSkillPreference = TargetSkillSelection & {
+  enabled: boolean;
+};
+
 export type RegisteredTargetRecord = {
   createdAt: string;
   defaultInstallStrategy: string;
@@ -35,6 +39,7 @@ export type RegisteredTargetRecord = {
   normalizedPath: string;
   path: string;
   selectedSkills: TargetSkillSelection[];
+  skillPreferences: TargetSkillPreference[];
   skillCount: number;
   scope: TargetRegistrationScope;
   type: string;

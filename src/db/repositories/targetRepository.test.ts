@@ -124,6 +124,14 @@ describe("createTargetRepository", () => {
         normalizedPath: "/Users/test/.codex/skills",
         path: "/Users/test/.codex/skills",
         selectedSkills: [],
+        skillPreferences: [
+          {
+            enabled: false,
+            id: "skill-2",
+            name: "Release Notes",
+            repository: "Project skills"
+          }
+        ],
         skillCount: 0,
         scope: "global",
         type: "codex",
@@ -140,6 +148,20 @@ describe("createTargetRepository", () => {
         selectedSkills: [
           { id: "skill-2", name: "Release Notes", repository: "Project skills" },
           { id: "skill-1", name: "Review Bot", repository: "Project skills" }
+        ],
+        skillPreferences: [
+          {
+            enabled: true,
+            id: "skill-2",
+            name: "Release Notes",
+            repository: "Project skills"
+          },
+          {
+            enabled: true,
+            id: "skill-1",
+            name: "Review Bot",
+            repository: "Project skills"
+          }
         ],
         skillCount: 2,
         scope: "global",

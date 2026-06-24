@@ -75,10 +75,12 @@ export const SkillsPageSider = () => {
                 </span>
                 <Checkbox
                   checked={checked}
-                  readOnly
                   aria-label={t("skills.detail.chooseTarget", {
                     name: target.name.startsWith("skills.") ? t(target.name) : target.name
                   })}
+                  onCheckedChange={(nextChecked) => {
+                    page.toggleSkillTargetPreference(selectedSkill.id, target.id, nextChecked);
+                  }}
                 />
               </label>
             );

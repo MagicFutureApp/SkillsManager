@@ -1,5 +1,15 @@
 export type SkillApiStatus = "ready" | "review" | "installed";
 
+export type UpdateSkillTargetPreferenceInput = {
+  agentTargetId: string;
+  enabled: boolean;
+  skillUnitId: string;
+};
+
+export type UpdateSkillTargetPreferenceResult = {
+  success: true;
+};
+
 export type SkillApiRecord = {
   description: string;
   enabled: boolean;

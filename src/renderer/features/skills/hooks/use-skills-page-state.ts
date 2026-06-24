@@ -126,6 +126,43 @@ export const useSkillsPageState = () => {
     setDistributionNoticeVisible(true);
   };
 
+  const toggleSkillTargetPreference = (skillId: string, targetId: string, enabled: boolean) => {
+    setSkills((currentSkills) => {
+      return currentSkills.map((skill) => {
+        if (skill.id !== skillId) {
+          return skill;
+        }
+
+        const nextTargets = enabled
+          ? Array.from(new Set([...skill.targets, targetId]))
+          : skill.targets.filter((id) => id !== targetId);
+
+        return {
+          ...skill,
+          targets: nextTargets
+        };
+      });
+    });
+    setTargetOptions((currentTargets) => {
+      return currentTargets.map((target) => {
+        if (target.id !== targetId || target.skillPreferenceIds.includes(skillId)) {
+          return target;
+        }
+
+        return {
+          ...target,
+          skillPreferenceIds: [...target.skillPreferenceIds, skillId]
+        };
+      });
+    });
+
+    void window.skillsManager?.setSkillTargetPreference?.({
+      agentTargetId: targetId,
+      enabled,
+      skillUnitId: skillId
+    });
+  };
+
   return {
     checkedDistributionState,
     checkedCount,
@@ -148,7 +185,8 @@ export const useSkillsPageState = () => {
     setRepositoryFilter,
     setSelectedSkillId,
     setSort,
-    toggleSkillChecked
+    toggleSkillChecked,
+    toggleSkillTargetPreference
   };
 };
 

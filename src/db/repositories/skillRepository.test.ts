@@ -121,6 +121,86 @@ describe("createSkillRepository", () => {
     ]);
   });
 
+  it("records target preference changes and restores the last enabled state", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-14T00:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: "{}",
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-1",
+      lastScannedCommitSha: "abcdef123456",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills",
+      providerId: "github",
+      remoteUrl: "git@github.com:team/skills.git",
+      updatedAt: createdAt
+    });
+    await db.insert(skillUnits).values({
+      createdAt,
+      discoveryMethod: "convention",
+      entryPath: "skills/review-bot/SKILL.md",
+      id: "skill-1",
+      name: "Review Bot",
+      repositoryId: "repo-1",
+      rootPath: "skills/review-bot",
+      status: "ready",
+      updatedAt: createdAt
+    });
+    await db.insert(skillVersions).values({
+      commitSha: "abcdef123456",
+      createdAt,
+      id: "version-1",
+      metadataSnapshotJson: JSON.stringify({ skillKey: "skills-review-bot", tags: [] }),
+      skillUnitId: "skill-1"
+    });
+    await db.insert(agentTargets).values({
+      createdAt,
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "target-codex",
+      name: "Codex",
+      normalizedPath: "/Users/test/.codex/skills",
+      path: "/Users/test/.codex/skills",
+      scope: "global",
+      type: "codex",
+      updatedAt: createdAt
+    });
+
+    const repository = createSkillRepository(db);
+
+    await repository.setTargetPreference({
+      agentTargetId: "target-codex",
+      enabled: true,
+      skillUnitId: "skill-1"
+    });
+    await expect(repository.list()).resolves.toMatchObject([{ targets: ["target-codex"] }]);
+
+    await repository.setTargetPreference({
+      agentTargetId: "target-codex",
+      enabled: false,
+      skillUnitId: "skill-1"
+    });
+    await expect(repository.list()).resolves.toMatchObject([{ targets: [] }]);
+
+    const preferences = await db.select().from(skillTargetPreferences);
+    expect(preferences).toHaveLength(1);
+    expect(preferences[0]).toMatchObject({
+      agentTargetId: "target-codex",
+      enabled: false,
+      skillUnitId: "skill-1"
+    });
+  });
+
   it("hides skills from disabled repositories", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-14T00:00:00.000Z");

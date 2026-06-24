@@ -45,6 +45,10 @@ const targetsFixture: TargetsListResult = {
         { id: "skill-1", name: "Review Bot", repository: "Project skills" },
         { id: "skill-2", name: "Release Notes", repository: "Project skills" }
       ],
+      skillPreferences: [
+        { enabled: true, id: "skill-1", name: "Review Bot", repository: "Project skills" },
+        { enabled: true, id: "skill-2", name: "Release Notes", repository: "Project skills" }
+      ],
       skillCount: 2,
       scope: "global",
       type: "custom-directory",
@@ -59,6 +63,9 @@ const targetsFixture: TargetsListResult = {
       normalizedPath: "/Users/test/project/.design/skills",
       path: "/Users/test/project/.design/skills",
       selectedSkills: [{ id: "skill-3", name: "Design Helper", repository: "Design lab" }],
+      skillPreferences: [
+        { enabled: true, id: "skill-3", name: "Design Helper", repository: "Design lab" }
+      ],
       skillCount: 1,
       scope: "independent",
       type: "custom-directory",

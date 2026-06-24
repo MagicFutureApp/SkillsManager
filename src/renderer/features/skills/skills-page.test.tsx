@@ -54,6 +54,7 @@ const skillTargetsFixture: TargetsListResult = {
       normalizedPath: "/Users/test/.codex/skills",
       path: "/Users/test/.codex/skills",
       selectedSkills: [],
+      skillPreferences: [],
       skillCount: 0,
       scope: "global",
       type: "codex",
@@ -68,6 +69,7 @@ const skillTargetsFixture: TargetsListResult = {
       normalizedPath: "/Users/test/.claude/skills",
       path: "/Users/test/.claude/skills",
       selectedSkills: [],
+      skillPreferences: [],
       skillCount: 0,
       scope: "global",
       type: "claude-code",
@@ -86,6 +88,7 @@ const renderSkillsPage = async ({
   targets?: TargetsListResult;
 } = {}) => {
   const i18n = await createI18nInstance(locale);
+  const setSkillTargetPreference = vi.fn().mockResolvedValue({ success: true });
 
   window.skillsManager = {
     getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
@@ -95,14 +98,18 @@ const renderSkillsPage = async ({
     listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
     listSkills: vi.fn().mockResolvedValue({ skills }),
     listTargets: vi.fn().mockResolvedValue(targets),
+    setSkillTargetPreference,
     platform: "darwin"
   };
 
-  return render(
-    <I18nextProvider i18n={i18n}>
-      <SkillsPage />
-    </I18nextProvider>
-  );
+  return {
+    ...render(
+      <I18nextProvider i18n={i18n}>
+        <SkillsPage />
+      </I18nextProvider>
+    ),
+    setSkillTargetPreference
+  };
 };
 
 const selectOption = async (label: string, optionName: string) => {
@@ -222,6 +229,7 @@ describe("SkillsPage", () => {
           normalizedPath: "/Users/test/team/.codex/skills",
           path: "/Users/test/team/.codex/skills",
           selectedSkills: [],
+          skillPreferences: [],
           skillCount: 0,
           scope: "global",
           type: "custom-directory",
@@ -237,6 +245,14 @@ describe("SkillsPage", () => {
           path: "/Users/test/design/.codex/skills",
           selectedSkills: [
             {
+              id: "design-lab__design-helper",
+              name: "Design Helper",
+              repository: "Design lab prompts"
+            }
+          ],
+          skillPreferences: [
+            {
+              enabled: true,
               id: "design-lab__design-helper",
               name: "Design Helper",
               repository: "Design lab prompts"
@@ -292,6 +308,73 @@ describe("SkillsPage", () => {
     expect(screen.getByText("1 / 2")).toBeInTheDocument();
     expect(screen.getByLabelText("选择 Team workspace")).not.toBeChecked();
     expect(screen.getByLabelText("选择 Design scratch")).toBeChecked();
+  });
+
+  it("records target checkbox changes and keeps the last checked state locally", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: [],
+        version: "8f2c91a"
+      }
+    ];
+    const targets: TargetsListResult = {
+      detectedTargets: [],
+      registeredTargets: [
+        {
+          createdAt: "2026-06-21T00:00:00.000Z",
+          defaultInstallStrategy: "copy",
+          enabled: true,
+          id: "target-team",
+          name: "Team workspace",
+          normalizedPath: "/Users/test/team/.codex/skills",
+          path: "/Users/test/team/.codex/skills",
+          selectedSkills: [],
+          skillPreferences: [],
+          skillCount: 0,
+          scope: "global",
+          type: "custom-directory",
+          updatedAt: "2026-06-21T00:00:00.000Z"
+        }
+      ]
+    };
+    const { setSkillTargetPreference } = await renderSkillsPage({ skills, targets });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    const targetCheckbox = screen.getByLabelText("选择 Team workspace");
+
+    expect(targetCheckbox).not.toBeChecked();
+
+    fireEvent.click(targetCheckbox);
+
+    expect(targetCheckbox).toBeChecked();
+    await waitFor(() =>
+      expect(setSkillTargetPreference).toHaveBeenLastCalledWith({
+        agentTargetId: "target-team",
+        enabled: true,
+        skillUnitId: "team-skills__skills-review-bot"
+      })
+    );
+
+    fireEvent.click(targetCheckbox);
+
+    expect(targetCheckbox).not.toBeChecked();
+    await waitFor(() =>
+      expect(setSkillTargetPreference).toHaveBeenLastCalledWith({
+        agentTargetId: "target-team",
+        enabled: false,
+        skillUnitId: "team-skills__skills-review-bot"
+      })
+    );
   });
 
   it("searches skills by name, repository, or description only", async () => {

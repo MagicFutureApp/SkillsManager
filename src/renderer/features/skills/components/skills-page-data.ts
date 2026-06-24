@@ -36,7 +36,7 @@ export type TargetOption = {
   name: string;
   path: string;
   scope: TargetRegistrationScope;
-  selectedSkillIds: string[];
+  skillPreferenceIds: string[];
 };
 
 export const adaptSkillRecord = (record: SkillApiRecord): Skill => {
@@ -60,7 +60,7 @@ export const adaptTargetOption = (record: RegisteredTargetRecord): TargetOption 
     name: record.name,
     path: record.path,
     scope: record.scope,
-    selectedSkillIds: record.selectedSkills.map((skill) => skill.id)
+    skillPreferenceIds: record.skillPreferences.map((skill) => skill.id)
   };
 };
 
@@ -73,7 +73,7 @@ export const getTargetOptionsForSkill = (
       return true;
     }
 
-    return skill ? target.selectedSkillIds.includes(skill.id) : false;
+    return skill ? target.skillPreferenceIds.includes(skill.id) : false;
   });
 };
 
