@@ -21,37 +21,38 @@ describe("scanSystemTargets", () => {
 
     expect(targets).toMatchObject([
       {
-        executablePath: null,
-        installPath: "/Users/test/.codex",
         name: "Codex",
         path: "/Users/test/.codex/skills",
         status: "detected",
         type: "codex"
       },
       {
-        executablePath: "/usr/local/bin/codex",
-        installPath: "/usr/local/bin/codex",
         name: "Codex CLI",
         path: "/Users/test/.codex/skills",
         status: "detected",
         type: "codex-cli"
       },
       {
-        executablePath: "/opt/homebrew/bin/claude",
-        installPath: "/Users/test/.claude",
         name: "Claude Code",
         path: "/Users/test/.claude/skills",
         status: "detected",
         type: "claude-code"
       },
       {
-        executablePath: null,
-        installPath: null,
         name: "Gemini CLI",
         path: "/Users/test/.gemini/skills",
         status: "missing",
         type: "gemini-cli"
       }
+    ]);
+    expect(Object.keys(targets[0] ?? {}).sort()).toEqual([
+      "defaultInstallStrategy",
+      "id",
+      "name",
+      "normalizedPath",
+      "path",
+      "status",
+      "type"
     ]);
   });
 });

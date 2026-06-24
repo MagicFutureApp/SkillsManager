@@ -11,9 +11,7 @@ export type RegisteredTargetStatus = TargetDetectionStatus | "registered" | "dis
 
 export type SystemTargetRecord = {
   defaultInstallStrategy: string;
-  executablePath: string | null;
   id: string;
-  installPath: string | null;
   name: string;
   normalizedPath: string;
   path: string;

@@ -21,9 +21,7 @@ describe("createTargetRepository", () => {
       [
         {
           defaultInstallStrategy: "copy",
-          executablePath: "/usr/local/bin/codex",
           id: "system-codex-cli",
-          installPath: "/usr/local/bin/codex",
           name: "Codex CLI",
           normalizedPath: "/Users/test/.codex/skills",
           path: "/Users/test/.codex/skills",
@@ -32,9 +30,7 @@ describe("createTargetRepository", () => {
         },
         {
           defaultInstallStrategy: "copy",
-          executablePath: null,
           id: "system-claude-code",
-          installPath: null,
           name: "Claude Code",
           normalizedPath: "/Users/test/.claude/skills",
           path: "/Users/test/.claude/skills",
@@ -49,9 +45,7 @@ describe("createTargetRepository", () => {
       [
         {
           defaultInstallStrategy: "copy",
-          executablePath: "/opt/homebrew/bin/codex",
           id: "system-codex-cli-renamed",
-          installPath: "/opt/homebrew/bin/codex",
           name: "Codex CLI",
           normalizedPath: "/Users/test/.codex/skills",
           path: "/Users/test/.codex/skills",

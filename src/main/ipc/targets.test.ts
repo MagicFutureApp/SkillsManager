@@ -49,9 +49,7 @@ describe("target IPC handlers", () => {
     const scannedTargets: SystemTargetRecord[] = [
       {
         defaultInstallStrategy: "copy",
-        executablePath: "/usr/local/bin/codex",
         id: "system-codex-cli",
-        installPath: "/usr/local/bin/codex",
         name: "Codex CLI",
         normalizedPath: "/Users/test/.codex/skills",
         path: "/Users/test/.codex/skills",

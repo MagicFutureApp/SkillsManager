@@ -10,7 +10,6 @@ type TargetDefinition = {
   command?: string;
   directory: (homeDir: string) => string;
   id: string;
-  installPath: (homeDir: string, executablePath: string | null) => string | null;
   name: string;
   path: (homeDir: string) => string;
   type: AgentTargetType;
@@ -34,19 +33,16 @@ export const scanSystemTargets = async ({
   return Promise.all(
     targetDefinitions.map(async (definition) => {
       const targetPath = definition.path(homeDir);
-      const executablePath = definition.command
+      const detectedCommandPath = definition.command
         ? await findExecutablePath(definition.command, pathEntries, exists, platform)
         : null;
       const directoryExists = await exists(definition.directory(homeDir));
       const targetPathExists = await exists(targetPath);
-      const detected = Boolean(executablePath) || directoryExists || targetPathExists;
-      const installPath = detected ? definition.installPath(homeDir, executablePath) : null;
+      const detected = Boolean(detectedCommandPath) || directoryExists || targetPathExists;
 
       return {
         defaultInstallStrategy: "copy",
-        executablePath,
         id: definition.id,
-        installPath,
         name: definition.name,
         normalizedPath: normalizeTargetPath(targetPath),
         path: targetPath,
@@ -65,7 +61,6 @@ const targetDefinitions: TargetDefinition[] = [
   {
     directory: (homeDir) => path.join(homeDir, ".codex"),
     id: "system-codex",
-    installPath: (homeDir) => path.join(homeDir, ".codex"),
     name: "Codex",
     path: (homeDir) => path.join(homeDir, ".codex", "skills"),
     type: "codex"
@@ -74,7 +69,6 @@ const targetDefinitions: TargetDefinition[] = [
     command: "codex",
     directory: (homeDir) => path.join(homeDir, ".codex"),
     id: "system-codex-cli",
-    installPath: (_homeDir, executablePath) => executablePath,
     name: "Codex CLI",
     path: (homeDir) => path.join(homeDir, ".codex", "skills"),
     type: "codex-cli"
@@ -83,7 +77,6 @@ const targetDefinitions: TargetDefinition[] = [
     command: "claude",
     directory: (homeDir) => path.join(homeDir, ".claude"),
     id: "system-claude-code",
-    installPath: (homeDir) => path.join(homeDir, ".claude"),
     name: "Claude Code",
     path: (homeDir) => path.join(homeDir, ".claude", "skills"),
     type: "claude-code"
@@ -92,7 +85,6 @@ const targetDefinitions: TargetDefinition[] = [
     command: "gemini",
     directory: (homeDir) => path.join(homeDir, ".gemini"),
     id: "system-gemini-cli",
-    installPath: (homeDir) => path.join(homeDir, ".gemini"),
     name: "Gemini CLI",
     path: (homeDir) => path.join(homeDir, ".gemini", "skills"),
     type: "gemini-cli"
