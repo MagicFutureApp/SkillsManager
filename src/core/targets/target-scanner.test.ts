@@ -27,12 +27,6 @@ describe("scanSystemTargets", () => {
         type: "codex"
       },
       {
-        name: "Codex CLI",
-        path: "/Users/test/.codex/skills",
-        status: "detected",
-        type: "codex-cli"
-      },
-      {
         name: "Claude Code",
         path: "/Users/test/.claude/skills",
         status: "detected",

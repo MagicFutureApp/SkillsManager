@@ -21,12 +21,12 @@ describe("createTargetRepository", () => {
       [
         {
           defaultInstallStrategy: "copy",
-          id: "system-codex-cli",
-          name: "Codex CLI",
+          id: "system-codex",
+          name: "Codex",
           normalizedPath: "/Users/test/.codex/skills",
           path: "/Users/test/.codex/skills",
           status: "detected",
-          type: "codex-cli"
+          type: "codex"
         },
         {
           defaultInstallStrategy: "copy",
@@ -45,12 +45,12 @@ describe("createTargetRepository", () => {
       [
         {
           defaultInstallStrategy: "copy",
-          id: "system-codex-cli-renamed",
-          name: "Codex CLI",
+          id: "system-codex-renamed",
+          name: "Codex",
           normalizedPath: "/Users/test/.codex/skills",
           path: "/Users/test/.codex/skills",
           status: "detected",
-          type: "codex-cli"
+          type: "codex"
         }
       ],
       secondScanAt
@@ -68,8 +68,8 @@ describe("createTargetRepository", () => {
       {
         createdAt: "2026-06-23T00:00:00.000Z",
         enabled: true,
-        id: "system-codex-cli",
-        name: "Codex CLI",
+        id: "system-codex",
+        name: "Codex",
         status: "detected",
         updatedAt: "2026-06-23T01:00:00.000Z"
       }

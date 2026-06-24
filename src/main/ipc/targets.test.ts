@@ -49,12 +49,12 @@ describe("target IPC handlers", () => {
     const scannedTargets: SystemTargetRecord[] = [
       {
         defaultInstallStrategy: "copy",
-        id: "system-codex-cli",
-        name: "Codex CLI",
+        id: "system-codex",
+        name: "Codex",
         normalizedPath: "/Users/test/.codex/skills",
         path: "/Users/test/.codex/skills",
         status: "detected",
-        type: "codex-cli"
+        type: "codex"
       }
     ];
     const scanSystemTargets = vi.fn().mockResolvedValue(scannedTargets);
@@ -71,8 +71,8 @@ describe("target IPC handlers", () => {
           createdAt: "2026-06-23T01:00:00.000Z",
           defaultInstallStrategy: "copy",
           enabled: true,
-          id: "system-codex-cli",
-          name: "Codex CLI",
+          id: "system-codex",
+          name: "Codex",
           normalizedPath: "/Users/test/.codex/skills",
           path: "/Users/test/.codex/skills",
           scope: "global",
@@ -80,7 +80,7 @@ describe("target IPC handlers", () => {
           skillCount: 0,
           skillPreferences: [],
           status: "detected",
-          type: "codex-cli",
+          type: "codex",
           updatedAt: "2026-06-23T01:00:00.000Z"
         }
       ]

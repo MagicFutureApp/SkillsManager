@@ -1,9 +1,4 @@
-export type AgentTargetType =
-  | "codex"
-  | "codex-cli"
-  | "claude-code"
-  | "gemini-cli"
-  | "custom-directory";
+export type AgentTargetType = "codex" | "claude-code" | "gemini-cli" | "custom-directory";
 
 export type TargetDetectionStatus = "detected" | "missing";
 export type TargetRegistrationScope = "global" | "independent";

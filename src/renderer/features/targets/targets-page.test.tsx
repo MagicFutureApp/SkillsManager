@@ -58,8 +58,8 @@ const rescannedTargetsFixture: TargetsListResult = {
       createdAt: "2026-06-23T00:00:00.000Z",
       defaultInstallStrategy: "copy",
       enabled: true,
-      id: "system-codex-cli",
-      name: "Codex CLI",
+      id: "system-codex",
+      name: "Codex",
       normalizedPath: "/Users/test/.codex/skills",
       path: "/Users/test/.codex/skills",
       selectedSkills: [],
@@ -67,7 +67,7 @@ const rescannedTargetsFixture: TargetsListResult = {
       skillCount: 0,
       scope: "global",
       status: "detected",
-      type: "codex-cli",
+      type: "codex",
       updatedAt: "2026-06-23T00:00:00.000Z"
     }
   ]
@@ -116,7 +116,7 @@ describe("TargetsPage", () => {
     expect(screen.queryByRole("button", { name: /同步/ })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("目标摘要")).not.toBeInTheDocument();
 
-    expect(screen.queryByRole("button", { name: "Codex CLI" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Codex" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Claude Code" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Local project" })).toBeInTheDocument();
     const targetTable = within(screen.getByRole("main")).getByRole("table");
@@ -155,11 +155,11 @@ describe("TargetsPage", () => {
 
     await waitFor(() => {
       expect(window.skillsManager?.rescanTargets).toHaveBeenCalledOnce();
-      expect(screen.getByRole("button", { name: "Codex CLI" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Codex" })).toBeInTheDocument();
     });
     expect(screen.queryByRole("button", { name: "Local project" })).not.toBeInTheDocument();
     const detail = screen.getByLabelText("目标详情");
-    expect(within(detail).getByRole("heading", { name: "Codex CLI" })).toBeInTheDocument();
+    expect(within(detail).getByRole("heading", { name: "Codex" })).toBeInTheDocument();
     expect(within(detail).getByText("已检测")).toBeInTheDocument();
   });
 

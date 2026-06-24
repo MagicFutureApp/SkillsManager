@@ -59,19 +59,12 @@ export const normalizeTargetPath = (targetPath: string): string => {
 
 const targetDefinitions: TargetDefinition[] = [
   {
+    command: "codex",
     directory: (homeDir) => path.join(homeDir, ".codex"),
     id: "system-codex",
     name: "Codex",
     path: (homeDir) => path.join(homeDir, ".codex", "skills"),
     type: "codex"
-  },
-  {
-    command: "codex",
-    directory: (homeDir) => path.join(homeDir, ".codex"),
-    id: "system-codex-cli",
-    name: "Codex CLI",
-    path: (homeDir) => path.join(homeDir, ".codex", "skills"),
-    type: "codex-cli"
   },
   {
     command: "claude",
