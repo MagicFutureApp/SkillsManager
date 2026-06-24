@@ -14,8 +14,11 @@ type TargetsResultLike = {
   scanIssues?: TargetIssue[];
 };
 
+const minimumRescanLoadingMs = 2000;
+
 export const useTargetsPageState = () => {
   const [query, setQuery] = useState("");
+  const [isRefreshingTargets, setIsRefreshingTargets] = useState(false);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [scanIssues, setScanIssues] = useState<TargetIssue[]>([]);
   const [sort, setSort] = useState<TargetSort>("name");
@@ -37,12 +40,26 @@ export const useTargetsPageState = () => {
   };
 
   const refreshTargets = async () => {
-    const rescanResult = await window.skillsManager?.rescanTargets?.();
-    const result: TargetsResultLike | undefined =
-      rescanResult ?? (await window.skillsManager?.listTargets?.());
+    if (isRefreshingTargets) {
+      return;
+    }
 
-    applyTargetsResult(result);
-    setScanIssues(rescanResult?.scanIssues ?? []);
+    setIsRefreshingTargets(true);
+    const loadingStartedAt = Date.now();
+    let nextScanIssues: TargetIssue[] = [];
+
+    try {
+      const rescanResult = await window.skillsManager?.rescanTargets?.();
+      const result: TargetsResultLike | undefined =
+        rescanResult ?? (await window.skillsManager?.listTargets?.());
+
+      applyTargetsResult(result);
+      nextScanIssues = rescanResult?.scanIssues ?? [];
+    } finally {
+      await waitForMinimumElapsedTime(loadingStartedAt, minimumRescanLoadingMs);
+      setIsRefreshingTargets(false);
+      setScanIssues(nextScanIssues);
+    }
   };
 
   useEffect(() => {
@@ -83,6 +100,7 @@ export const useTargetsPageState = () => {
   const selectedTarget = visibleTargets.find((target) => target.id === selectedTargetId) ?? null;
 
   return {
+    isRefreshingTargets,
     query,
     scanIssues,
     selectedTarget,
@@ -99,3 +117,13 @@ export const useTargetsPageState = () => {
 };
 
 export type TargetsPageState = ReturnType<typeof useTargetsPageState>;
+
+const waitForMinimumElapsedTime = async (startedAt: number, minimumMs: number): Promise<void> => {
+  const remainingMs = minimumMs - (Date.now() - startedAt);
+
+  if (remainingMs <= 0) {
+    return;
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, remainingMs));
+};

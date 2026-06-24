@@ -37,7 +37,12 @@ export const TargetsPageMain = () => {
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="outline" onClick={page.refreshTargets}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={page.isRefreshingTargets}
+              onClick={page.refreshTargets}
+            >
               {t("targets.actions.rescan")}
             </Button>
             <Button type="button" disabled title={t("targets.actions.addTargetUnavailable")}>

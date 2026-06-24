@@ -146,6 +146,10 @@ export const resources = {
           description: "请检查这些目标路径或应用安装状态。扫描结果已经写入本地数据库。",
           title: "目标扫描发现异常"
         },
+        scanLoading: {
+          description: "正在检查本机 agent 目录和已登记目标。",
+          title: "正在扫描目标"
+        },
         detail: {
           ariaLabel: "目标详情",
           emptyDescription: "选择左侧目标后查看检测状态和已选择的技能。",
@@ -526,6 +530,10 @@ export const resources = {
           description:
             "Check these target paths or application installation state. The scan result has been saved to the local database.",
           title: "Target scan found issues"
+        },
+        scanLoading: {
+          description: "Checking local agent directories and registered targets.",
+          title: "Scanning targets"
         },
         detail: {
           ariaLabel: "Target details",

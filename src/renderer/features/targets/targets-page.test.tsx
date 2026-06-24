@@ -155,6 +155,12 @@ const renderTargetsPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
   );
 };
 
+const advanceLoadingDuration = async (durationMs: number) => {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(durationMs);
+  });
+};
+
 describe("TargetsPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
@@ -211,19 +217,134 @@ describe("TargetsPage", () => {
   it("rescans targets through the backend and renders the database-backed result", async () => {
     await renderTargetsPage();
     await screen.findByRole("button", { name: "Local project" });
+    vi.useFakeTimers();
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
-    });
+    try {
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+      });
 
-    await waitFor(() => {
+      await advanceLoadingDuration(2000);
+
       expect(window.skillsManager?.rescanTargets).toHaveBeenCalledOnce();
       expect(screen.getByRole("button", { name: "Codex" })).toBeInTheDocument();
-    });
-    expect(screen.queryByRole("button", { name: "Local project" })).not.toBeInTheDocument();
-    const detail = screen.getByLabelText("目标详情");
-    expect(within(detail).getByRole("heading", { name: "Codex" })).toBeInTheDocument();
-    expect(within(detail).getByText("已检测")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Local project" })).not.toBeInTheDocument();
+      const detail = screen.getByLabelText("目标详情");
+      expect(within(detail).getByRole("heading", { name: "Codex" })).toBeInTheDocument();
+      expect(within(detail).getByText("已检测")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("shows a loading dialog while target rescan is running", async () => {
+    await renderTargetsPage();
+    await screen.findByRole("button", { name: "Local project" });
+    vi.useFakeTimers();
+    let resolveRescan: (result: TargetsRescanResult) => void = () => {};
+    vi.mocked(window.skillsManager?.rescanTargets!).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRescan = resolve;
+      })
+    );
+
+    try {
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+      });
+
+      const loadingDialog = screen.getByRole("dialog", { name: "正在扫描目标" });
+      expect(
+        within(loadingDialog).getByRole("status", { name: "正在扫描目标" })
+      ).toBeInTheDocument();
+      expect(screen.getByText("重新扫描").closest("button")).toBeDisabled();
+
+      await act(async () => {
+        resolveRescan(rescannedTargetsFixture);
+      });
+
+      expect(screen.getByRole("dialog", { name: "正在扫描目标" })).toBeInTheDocument();
+
+      await advanceLoadingDuration(2000);
+
+      expect(screen.queryByRole("dialog", { name: "正在扫描目标" })).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps the loading dialog visible for at least two seconds", async () => {
+    await renderTargetsPage();
+    await screen.findByRole("button", { name: "Local project" });
+    vi.useFakeTimers();
+    let resolveRescan: (result: TargetsRescanResult) => void = () => {};
+    vi.mocked(window.skillsManager?.rescanTargets!).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRescan = resolve;
+      })
+    );
+
+    try {
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+      });
+
+      expect(screen.getByRole("dialog", { name: "正在扫描目标" })).toBeInTheDocument();
+
+      await act(async () => {
+        resolveRescan(rescannedTargetsFixture);
+      });
+
+      expect(screen.getByRole("dialog", { name: "正在扫描目标" })).toBeInTheDocument();
+
+      await advanceLoadingDuration(1999);
+
+      expect(screen.getByRole("dialog", { name: "正在扫描目标" })).toBeInTheDocument();
+
+      await advanceLoadingDuration(1);
+
+      expect(screen.queryByRole("dialog", { name: "正在扫描目标" })).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("shows scan issues only after the loading dialog closes", async () => {
+    await renderTargetsPage();
+    await screen.findByRole("button", { name: "Local project" });
+    vi.useFakeTimers();
+    let resolveRescan: (result: TargetsRescanResult) => void = () => {};
+    vi.mocked(window.skillsManager?.rescanTargets!).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRescan = resolve;
+      })
+    );
+
+    try {
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+      });
+
+      expect(screen.getByRole("dialog", { name: "正在扫描目标" })).toBeInTheDocument();
+
+      await act(async () => {
+        resolveRescan(rescannedTargetsWithIssuesFixture);
+      });
+
+      await advanceLoadingDuration(1999);
+
+      expect(screen.getByRole("dialog", { name: "正在扫描目标" })).toBeInTheDocument();
+      expect(
+        screen.queryByRole("alertdialog", { name: "目标扫描发现异常" })
+      ).not.toBeInTheDocument();
+
+      await advanceLoadingDuration(1);
+
+      expect(screen.queryByRole("dialog", { name: "正在扫描目标" })).not.toBeInTheDocument();
+      expect(screen.getByRole("alertdialog", { name: "目标扫描发现异常" })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("shows a dialog when rescan finds missing or non-writable targets", async () => {
@@ -232,18 +353,27 @@ describe("TargetsPage", () => {
       rescannedTargetsWithIssuesFixture
     );
     await screen.findByRole("button", { name: "Local project" });
+    vi.useFakeTimers();
 
-    fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+    try {
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+      });
 
-    const dialog = await screen.findByRole("alertdialog", { name: "目标扫描发现异常" });
+      await advanceLoadingDuration(2000);
 
-    expect(within(dialog).getByText("Local project")).toBeInTheDocument();
-    expect(within(dialog).getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
-    expect(within(dialog).getByText("不可写")).toBeInTheDocument();
-    expect(within(dialog).getByText("Gemini CLI")).toBeInTheDocument();
-    expect(within(dialog).getByText("/Users/test/.gemini/skills")).toBeInTheDocument();
-    expect(within(dialog).getByText("应用未安装")).toBeInTheDocument();
-    expect(screen.getAllByText("不可写").length).toBeGreaterThan(0);
+      const dialog = screen.getByRole("alertdialog", { name: "目标扫描发现异常" });
+
+      expect(within(dialog).getByText("Local project")).toBeInTheDocument();
+      expect(within(dialog).getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
+      expect(within(dialog).getByText("不可写")).toBeInTheDocument();
+      expect(within(dialog).getByText("Gemini CLI")).toBeInTheDocument();
+      expect(within(dialog).getByText("/Users/test/.gemini/skills")).toBeInTheDocument();
+      expect(within(dialog).getByText("应用未安装")).toBeInTheDocument();
+      expect(screen.getAllByText("不可写").length).toBeGreaterThan(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("selects a target when clicking a non-interactive row cell", async () => {
