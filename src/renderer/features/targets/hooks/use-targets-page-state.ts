@@ -24,13 +24,17 @@ export const useTargetsPageState = () => {
   const [sort, setSort] = useState<TargetSort>("name");
   const [targets, setTargets] = useState<TargetViewModel[]>([]);
 
-  const applyTargetsResult = (result?: TargetsResultLike) => {
+  const applyTargetsResult = (result?: TargetsResultLike, preferredTargetId?: string | null) => {
     const nextTargets = adaptTargets({
       registeredTargets: result?.registeredTargets ?? []
     });
 
     setTargets(nextTargets);
     setSelectedTargetId((currentTargetId) => {
+      if (preferredTargetId && nextTargets.some((target) => target.id === preferredTargetId)) {
+        return preferredTargetId;
+      }
+
       if (currentTargetId && nextTargets.some((target) => target.id === currentTargetId)) {
         return currentTargetId;
       }
@@ -60,6 +64,19 @@ export const useTargetsPageState = () => {
       setIsRefreshingTargets(false);
       setScanIssues(nextScanIssues);
     }
+  };
+
+  const addTarget = async () => {
+    const selectedPath = await window.skillsManager?.selectTargetDirectory?.();
+
+    if (!selectedPath) {
+      return;
+    }
+
+    const result = await window.skillsManager?.addCustomDirectoryTarget?.(selectedPath);
+    const addedTarget = result?.registeredTargets.find((target) => target.path === selectedPath);
+
+    applyTargetsResult(result, addedTarget?.id);
   };
 
   useEffect(() => {
@@ -108,6 +125,7 @@ export const useTargetsPageState = () => {
     sort,
     targets,
     visibleTargets,
+    addTarget,
     refreshTargets,
     setScanIssues,
     setQuery,

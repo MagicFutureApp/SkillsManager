@@ -64,6 +64,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ) as Promise<UpdateSkillTargetPreferenceResult>,
   listSyncHistory: () => ipcRenderer.invoke("syncHistory:list") as Promise<SyncHistoryListResult>,
   listTargets: () => ipcRenderer.invoke("targets:list") as Promise<TargetsListResult>,
+  addCustomDirectoryTarget: (targetPath: string) =>
+    ipcRenderer.invoke("targets:addCustomDirectory", targetPath) as Promise<TargetsListResult>,
   rescanTargets: () => ipcRenderer.invoke("targets:rescan") as Promise<TargetsRescanResult>,
   openExternalUrl: (url: string) =>
     ipcRenderer.invoke("settings:openExternalUrl", url) as Promise<void>,
@@ -75,6 +77,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ipcRenderer.invoke("settings:saveGitHubToken", token) as Promise<AppSettingsResult>,
   selectLocalRepositoryPath: () =>
     ipcRenderer.invoke("repositories:selectLocalPath") as Promise<string | null>,
+  selectTargetDirectory: () =>
+    ipcRenderer.invoke("targets:selectDirectory") as Promise<string | null>,
   syncRepositories: (repositoryIds: string[]) =>
     ipcRenderer.invoke("repositories:sync", repositoryIds) as Promise<RepositoriesSyncResult>,
   platform: process.platform

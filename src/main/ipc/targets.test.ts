@@ -3,9 +3,61 @@ import { describe, expect, it, vi } from "vitest";
 import type { SystemTargetRecord, TargetScanRecord } from "../../core/targets/target-api";
 import { createDbClient } from "../../db/client";
 import { agentTargets } from "../../db/schema";
-import { getTargets, rescanTargets } from "./targets";
+import {
+  addCustomDirectoryTarget,
+  getTargets,
+  rescanTargets,
+  selectTargetDirectory
+} from "./targets";
 
 describe("target IPC handlers", () => {
+  it("returns the selected target directory path", async () => {
+    const showOpenDialog = vi.fn().mockResolvedValue({
+      canceled: false,
+      filePaths: ["/Users/test/review-skills"]
+    });
+
+    await expect(selectTargetDirectory({ showOpenDialog })).resolves.toBe(
+      "/Users/test/review-skills"
+    );
+    expect(showOpenDialog).toHaveBeenCalledWith({
+      properties: ["openDirectory"]
+    });
+  });
+
+  it("returns null when target directory selection is canceled", async () => {
+    const showOpenDialog = vi.fn().mockResolvedValue({
+      canceled: true,
+      filePaths: []
+    });
+
+    await expect(selectTargetDirectory({ showOpenDialog })).resolves.toBeNull();
+  });
+
+  it("adds a selected custom directory target as global and returns refreshed targets", async () => {
+    const db = createDbClient(":memory:");
+
+    await expect(
+      addCustomDirectoryTarget(db, "/Users/test/review-skills", {
+        now: () => new Date("2026-06-24T00:00:00.000Z")
+      })
+    ).resolves.toMatchObject({
+      registeredTargets: [
+        {
+          defaultInstallStrategy: "copy",
+          enabled: true,
+          id: "target-custom-users-test-review-skills-16b7af9b49af",
+          name: "review-skills",
+          normalizedPath: "/Users/test/review-skills",
+          path: "/Users/test/review-skills",
+          scope: "global",
+          status: "registered",
+          type: "custom-directory"
+        }
+      ]
+    });
+  });
+
   it("lists targets from the database without mixing in system scan results", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-23T00:00:00.000Z");

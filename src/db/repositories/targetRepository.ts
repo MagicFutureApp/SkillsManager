@@ -15,6 +15,13 @@ import { agentTargets, repositories, skillTargetPreferences, skillUnits } from "
 
 type DbClient = ReturnType<typeof createDbClient>;
 
+type RegisterCustomDirectoryTargetInput = {
+  id: string;
+  name: string;
+  normalizedPath: string;
+  path: string;
+};
+
 export const createTargetRepository = (db: DbClient) => {
   return {
     async count(): Promise<number> {
@@ -102,6 +109,39 @@ export const createTargetRepository = (db: DbClient) => {
         path: target.path,
         type: target.type
       }));
+    },
+
+    async registerCustomDirectoryTarget(
+      target: RegisterCustomDirectoryTargetInput,
+      registeredAt = new Date()
+    ): Promise<void> {
+      await db
+        .insert(agentTargets)
+        .values({
+          createdAt: registeredAt,
+          defaultInstallStrategy: "copy",
+          enabled: true,
+          id: target.id,
+          name: target.name,
+          normalizedPath: target.normalizedPath,
+          path: target.path,
+          scope: "global",
+          type: "custom-directory",
+          updatedAt: registeredAt
+        })
+        .onConflictDoUpdate({
+          target: [agentTargets.type, agentTargets.normalizedPath],
+          set: {
+            defaultInstallStrategy: "copy",
+            enabled: true,
+            name: target.name,
+            normalizedPath: target.normalizedPath,
+            path: target.path,
+            scope: "global",
+            type: "custom-directory",
+            updatedAt: registeredAt
+          }
+        });
     },
 
     async saveScannedTargets(

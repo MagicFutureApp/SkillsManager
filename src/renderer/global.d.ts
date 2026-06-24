@@ -82,12 +82,14 @@ declare global {
       ) => Promise<UpdateSkillTargetPreferenceResult>;
       listSyncHistory?: () => Promise<SyncHistoryListResult>;
       listTargets?: () => Promise<TargetsListResult>;
+      addCustomDirectoryTarget?: (targetPath: string) => Promise<TargetsListResult>;
       rescanTargets?: () => Promise<TargetsRescanResult>;
       openExternalUrl?: (url: string) => Promise<void>;
       openRepositoryLocation?: (location: string) => Promise<void>;
       resetLocalDatabase?: () => Promise<ResetLocalDatabaseResult>;
       saveGitHubToken?: (token: string) => Promise<AppSettingsResult>;
       selectLocalRepositoryPath?: () => Promise<string | null>;
+      selectTargetDirectory?: () => Promise<string | null>;
       syncRepositories?: (repositoryIds: string[]) => Promise<RepositoriesSyncResult>;
       platform: RuntimePlatform;
     };

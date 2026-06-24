@@ -11,6 +11,39 @@ import {
 import { createTargetRepository } from "./targetRepository";
 
 describe("createTargetRepository", () => {
+  it("registers a selected custom directory target as global", async () => {
+    const db = createDbClient(":memory:");
+    const repository = createTargetRepository(db);
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+
+    await repository.registerCustomDirectoryTarget(
+      {
+        id: "target-custom-review-skills",
+        name: "review-skills",
+        normalizedPath: "/Users/test/review-skills",
+        path: "/Users/test/review-skills"
+      },
+      createdAt
+    );
+
+    await expect(repository.list()).resolves.toMatchObject([
+      {
+        createdAt: "2026-06-24T00:00:00.000Z",
+        defaultInstallStrategy: "copy",
+        enabled: true,
+        id: "target-custom-review-skills",
+        name: "review-skills",
+        normalizedPath: "/Users/test/review-skills",
+        path: "/Users/test/review-skills",
+        scanMessage: null,
+        scope: "global",
+        status: "registered",
+        type: "custom-directory",
+        updatedAt: "2026-06-24T00:00:00.000Z"
+      }
+    ]);
+  });
+
   it("saves scanned system targets into database records and updates them by type and path", async () => {
     const db = createDbClient(":memory:");
     const repository = createTargetRepository(db);

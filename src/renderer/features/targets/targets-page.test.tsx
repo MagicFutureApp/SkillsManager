@@ -134,6 +134,29 @@ const rescannedTargetsWithIssuesFixture: TargetsRescanResult = {
   ]
 };
 
+const targetsWithNewCustomDirectoryFixture: TargetsListResult = {
+  registeredTargets: [
+    ...targetsFixture.registeredTargets,
+    {
+      createdAt: "2026-06-24T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "target-custom-users-test-review-skills-16b7af9b49af",
+      name: "review-skills",
+      normalizedPath: "/Users/test/review-skills",
+      path: "/Users/test/review-skills",
+      scanMessage: null,
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "global",
+      status: "registered",
+      type: "custom-directory",
+      updatedAt: "2026-06-24T00:00:00.000Z"
+    }
+  ]
+};
+
 const renderTargetsPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
   const i18n = await createI18nInstance(locale);
 
@@ -144,6 +167,8 @@ const renderTargetsPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
     listProviders: vi.fn().mockResolvedValue({ providers: [] }),
     listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
     listTargets: vi.fn().mockResolvedValue(targetsFixture),
+    addCustomDirectoryTarget: vi.fn().mockResolvedValue(targetsWithNewCustomDirectoryFixture),
+    selectTargetDirectory: vi.fn().mockResolvedValue("/Users/test/review-skills"),
     rescanTargets: vi.fn().mockResolvedValue(rescannedTargetsFixture),
     platform: "darwin"
   };
@@ -212,6 +237,40 @@ describe("TargetsPage", () => {
     expect(within(detail).queryByText("技能目录")).not.toBeInTheDocument();
     expect(within(detail).queryByText("安装目录")).not.toBeInTheDocument();
     expect(within(detail).queryByText("CLI 路径")).not.toBeInTheDocument();
+  });
+
+  it("opens a directory picker and saves the selected path as a global target", async () => {
+    await renderTargetsPage();
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByRole("button", { name: "新增目标" }));
+
+    expect(window.skillsManager?.selectTargetDirectory).toHaveBeenCalledOnce();
+    await waitFor(() => {
+      expect(window.skillsManager?.addCustomDirectoryTarget).toHaveBeenCalledWith(
+        "/Users/test/review-skills"
+      );
+      expect(screen.getByRole("button", { name: "review-skills" })).toBeInTheDocument();
+    });
+    expect(screen.getByText("/Users/test/review-skills")).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("目标详情")).getByRole("heading", { name: "review-skills" })
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("全局").length).toBeGreaterThan(0);
+  });
+
+  it("does not save a target when directory selection is canceled", async () => {
+    await renderTargetsPage();
+    vi.mocked(window.skillsManager?.selectTargetDirectory!).mockResolvedValueOnce(null);
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByRole("button", { name: "新增目标" }));
+
+    expect(window.skillsManager?.selectTargetDirectory).toHaveBeenCalledOnce();
+    await waitFor(() => {
+      expect(window.skillsManager?.addCustomDirectoryTarget).not.toHaveBeenCalled();
+    });
+    expect(screen.queryByRole("button", { name: "review-skills" })).not.toBeInTheDocument();
   });
 
   it("rescans targets through the backend and renders the database-backed result", async () => {

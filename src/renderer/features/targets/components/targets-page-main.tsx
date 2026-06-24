@@ -45,7 +45,21 @@ export const TargetsPageMain = () => {
             >
               {t("targets.actions.rescan")}
             </Button>
-            <Button type="button" disabled title={t("targets.actions.addTargetUnavailable")}>
+            <Button
+              type="button"
+              disabled={
+                page.isRefreshingTargets ||
+                !window.skillsManager?.selectTargetDirectory ||
+                !window.skillsManager?.addCustomDirectoryTarget
+              }
+              title={
+                window.skillsManager?.selectTargetDirectory &&
+                window.skillsManager?.addCustomDirectoryTarget
+                  ? undefined
+                  : t("targets.actions.addTargetUnavailable")
+              }
+              onClick={page.addTarget}
+            >
               {t("targets.actions.addTarget")}
             </Button>
           </div>

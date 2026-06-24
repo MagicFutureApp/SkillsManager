@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { dialog, ipcMain } from "electron";
 
 import type {
   RegisteredTargetRecord,
@@ -8,6 +8,11 @@ import type {
   TargetScanRecord
 } from "../../core/targets/target-api.js";
 import { scanRegisteredTargets, scanSystemTargets } from "../../core/targets/target-scanner.js";
+import {
+  buildCustomDirectoryTargetId,
+  deriveCustomDirectoryTargetName
+} from "../../core/targets/target-utils.js";
+import { normalizeTargetPath } from "../../core/targets/target-scanner.js";
 import { createTargetRepository } from "../../db/repositories/targetRepository.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
 
@@ -24,6 +29,12 @@ type TargetsRescanOperations = {
   scanRegisteredTargets: typeof scanRegisteredTargets;
   scanSystemTargets: typeof scanSystemTargets;
 };
+type TargetDirectorySelectionOperations = {
+  showOpenDialog: typeof dialog.showOpenDialog;
+};
+type AddCustomDirectoryTargetOperations = {
+  now: () => Date;
+};
 
 export const getTargets = async (db: DbClient): Promise<TargetsListResult> => {
   const targetRepository = createTargetRepository(db);
@@ -31,6 +42,45 @@ export const getTargets = async (db: DbClient): Promise<TargetsListResult> => {
   return {
     registeredTargets: await targetRepository.list()
   };
+};
+
+export const selectTargetDirectory = async (
+  operations: TargetDirectorySelectionOperations = {
+    showOpenDialog: dialog.showOpenDialog
+  }
+): Promise<string | null> => {
+  const result = await operations.showOpenDialog({
+    properties: ["openDirectory"]
+  });
+
+  if (result.canceled) {
+    return null;
+  }
+
+  return result.filePaths[0] ?? null;
+};
+
+export const addCustomDirectoryTarget = async (
+  db: DbClient,
+  targetPath: string,
+  operations: AddCustomDirectoryTargetOperations = {
+    now: () => new Date()
+  }
+): Promise<TargetsListResult> => {
+  const normalizedPath = normalizeTargetPath(targetPath);
+  const targetRepository = createTargetRepository(db);
+
+  await targetRepository.registerCustomDirectoryTarget(
+    {
+      id: buildCustomDirectoryTargetId(normalizedPath),
+      name: deriveCustomDirectoryTargetName(targetPath),
+      normalizedPath,
+      path: targetPath
+    },
+    operations.now()
+  );
+
+  return getTargets(db);
 };
 
 export const rescanTargets = async (
@@ -72,6 +122,15 @@ export const registerTargetsIpc = (db: DbProvider): void => {
   ipcMain.handle("targets:rescan", (): Promise<TargetsRescanResult> => {
     return rescanTargets(resolveDb(db));
   });
+  ipcMain.handle("targets:selectDirectory", (): Promise<string | null> => {
+    return selectTargetDirectory();
+  });
+  ipcMain.handle(
+    "targets:addCustomDirectory",
+    (_event, targetPath: string): Promise<TargetsListResult> => {
+      return addCustomDirectoryTarget(resolveDb(db), targetPath);
+    }
+  );
 };
 
 const createTargetIdentityKey = (target: TargetScanCandidate): string => {
