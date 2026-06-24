@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { SystemTargetRecord } from "../../core/targets/target-api";
+import type { SystemTargetRecord, TargetScanRecord } from "../../core/targets/target-api";
 import { createDbClient } from "../../db/client";
 import { agentTargets } from "../../db/schema";
 import { getTargets, rescanTargets } from "./targets";
@@ -32,6 +32,7 @@ describe("target IPC handlers", () => {
           name: "Local project",
           normalizedPath: "/Users/test/project/.codex/skills",
           path: "/Users/test/project/.codex/skills",
+          scanMessage: null,
           scope: "global",
           selectedSkills: [],
           skillCount: 0,
@@ -49,6 +50,7 @@ describe("target IPC handlers", () => {
     const scannedTargets: SystemTargetRecord[] = [
       {
         defaultInstallStrategy: "copy",
+        detectionMessage: "Target directory exists and is writable.",
         id: "system-codex",
         name: "Codex",
         normalizedPath: "/Users/test/.codex/skills",
@@ -58,9 +60,11 @@ describe("target IPC handlers", () => {
       }
     ];
     const scanSystemTargets = vi.fn().mockResolvedValue(scannedTargets);
+    const scanRegisteredTargets = vi.fn().mockResolvedValue([]);
 
     const result = await rescanTargets(db, {
       now: () => new Date("2026-06-23T01:00:00.000Z"),
+      scanRegisteredTargets,
       scanSystemTargets
     });
 
@@ -75,6 +79,7 @@ describe("target IPC handlers", () => {
           name: "Codex",
           normalizedPath: "/Users/test/.codex/skills",
           path: "/Users/test/.codex/skills",
+          scanMessage: "Target directory exists and is writable.",
           scope: "global",
           selectedSkills: [],
           skillCount: 0,
@@ -82,6 +87,102 @@ describe("target IPC handlers", () => {
           status: "detected",
           type: "codex",
           updatedAt: "2026-06-23T01:00:00.000Z"
+        }
+      ],
+      scanIssues: []
+    });
+  });
+
+  it("rescans database targets after system targets and reports persisted issues", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-22T00:00:00.000Z");
+
+    await db.insert(agentTargets).values([
+      {
+        createdAt,
+        defaultInstallStrategy: "copy",
+        enabled: true,
+        id: "target-project",
+        name: "Local project",
+        normalizedPath: "/Users/test/project/.codex/skills",
+        path: "/Users/test/project/.codex/skills",
+        type: "custom-directory",
+        updatedAt: createdAt
+      },
+      {
+        createdAt,
+        defaultInstallStrategy: "copy",
+        enabled: true,
+        id: "target-codex-duplicate",
+        name: "Duplicate Codex",
+        normalizedPath: "/Users/test/.codex/skills",
+        path: "/Users/test/.codex/skills",
+        type: "codex",
+        updatedAt: createdAt
+      }
+    ]);
+
+    const scannedTargets: SystemTargetRecord[] = [
+      {
+        defaultInstallStrategy: "copy",
+        detectionMessage: "Target directory exists and is writable.",
+        id: "system-codex",
+        name: "Codex",
+        normalizedPath: "/Users/test/.codex/skills",
+        path: "/Users/test/.codex/skills",
+        status: "detected",
+        type: "codex"
+      }
+    ];
+    const rescannedRegisteredTarget: TargetScanRecord = {
+      defaultInstallStrategy: "copy",
+      detectionMessage: "Target directory exists but is not writable.",
+      id: "target-project",
+      name: "Local project",
+      normalizedPath: "/Users/test/project/.codex/skills",
+      path: "/Users/test/project/.codex/skills",
+      status: "not-writable",
+      type: "custom-directory"
+    };
+    const scanSystemTargets = vi.fn().mockResolvedValue(scannedTargets);
+    const scanRegisteredTargets = vi.fn().mockResolvedValue([rescannedRegisteredTarget]);
+
+    const result = await rescanTargets(db, {
+      now: () => new Date("2026-06-23T01:00:00.000Z"),
+      scanRegisteredTargets,
+      scanSystemTargets
+    });
+
+    expect(scanRegisteredTargets).toHaveBeenCalledWith([
+      expect.objectContaining({
+        id: "target-project",
+        normalizedPath: "/Users/test/project/.codex/skills",
+        path: "/Users/test/project/.codex/skills",
+        type: "custom-directory"
+      })
+    ]);
+    expect(result.scanIssues).toEqual([
+      {
+        id: "target-project",
+        message: "Target directory exists but is not writable.",
+        name: "Local project",
+        path: "/Users/test/project/.codex/skills",
+        status: "not-writable",
+        type: "custom-directory"
+      }
+    ]);
+    await expect(getTargets(db)).resolves.toMatchObject({
+      registeredTargets: [
+        {
+          id: "target-codex-duplicate",
+          scanMessage: "Target directory exists and is writable.",
+          status: "detected"
+        },
+        {
+          enabled: false,
+          id: "target-project",
+          scanMessage: "Target directory exists but is not writable.",
+          status: "not-writable"
         }
       ]
     });

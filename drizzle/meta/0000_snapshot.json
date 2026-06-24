@@ -56,6 +56,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "scan_message": {
+          "name": "scan_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "enabled": {
           "name": "enabled",
           "type": "integer",

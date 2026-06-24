@@ -6,6 +6,7 @@ CREATE TABLE `agent_targets` (
 	`normalized_path` text NOT NULL,
 	`default_install_strategy` text NOT NULL,
 	`detection_status` text,
+	`scan_message` text,
 	`enabled` integer DEFAULT true NOT NULL,
 	`scope` text DEFAULT 'global' NOT NULL,
 	`created_at` integer NOT NULL,

@@ -2,12 +2,14 @@ import type {
   RegisteredTargetStatus,
   RegisteredTargetRecord,
   TargetRegistrationScope,
+  TargetScanIssue,
   TargetSkillSelection
 } from "../../../../core/targets/target-api";
 
 export type TargetStatus = RegisteredTargetStatus;
 export type TargetScope = TargetRegistrationScope;
 export type TargetSort = "status" | "name" | "skills";
+export type TargetIssue = TargetScanIssue;
 
 export type TargetViewModel = {
   defaultInstallStrategy: string;
@@ -15,6 +17,7 @@ export type TargetViewModel = {
   name: string;
   normalizedPath: string;
   path: string;
+  scanMessage: string | null;
   selectedSkills: TargetSkillSelection[];
   skillCount: number;
   scope: TargetScope;
@@ -77,6 +80,7 @@ const adaptRegisteredTarget = (target: RegisteredTargetRecord): TargetViewModel 
     name: target.name,
     normalizedPath: target.normalizedPath,
     path: target.path,
+    scanMessage: target.scanMessage,
     selectedSkills: target.selectedSkills,
     skillCount: target.skillCount,
     scope: target.scope,
@@ -88,6 +92,11 @@ const adaptRegisteredTarget = (target: RegisteredTargetRecord): TargetViewModel 
 const statusPriority: Record<TargetStatus, number> = {
   detected: 0,
   registered: 1,
-  missing: 2,
-  disabled: 3
+  "path-missing": 2,
+  "not-writable": 3,
+  "not-directory": 4,
+  "scan-error": 5,
+  "app-missing": 6,
+  missing: 7,
+  disabled: 8
 };

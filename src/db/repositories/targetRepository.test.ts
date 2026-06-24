@@ -21,6 +21,7 @@ describe("createTargetRepository", () => {
       [
         {
           defaultInstallStrategy: "copy",
+          detectionMessage: "Target directory exists and is writable.",
           id: "system-codex",
           name: "Codex",
           normalizedPath: "/Users/test/.codex/skills",
@@ -30,6 +31,7 @@ describe("createTargetRepository", () => {
         },
         {
           defaultInstallStrategy: "copy",
+          detectionMessage: "Legacy missing target.",
           id: "system-claude-code",
           name: "Claude Code",
           normalizedPath: "/Users/test/.claude/skills",
@@ -45,6 +47,7 @@ describe("createTargetRepository", () => {
       [
         {
           defaultInstallStrategy: "copy",
+          detectionMessage: "Target directory exists and is writable.",
           id: "system-codex-renamed",
           name: "Codex",
           normalizedPath: "/Users/test/.codex/skills",
@@ -62,6 +65,7 @@ describe("createTargetRepository", () => {
         enabled: false,
         id: "system-claude-code",
         name: "Claude Code",
+        scanMessage: "Legacy missing target.",
         status: "missing",
         updatedAt: "2026-06-23T00:00:00.000Z"
       },
@@ -70,6 +74,7 @@ describe("createTargetRepository", () => {
         enabled: true,
         id: "system-codex",
         name: "Codex",
+        scanMessage: "Target directory exists and is writable.",
         status: "detected",
         updatedAt: "2026-06-23T01:00:00.000Z"
       }
@@ -189,6 +194,7 @@ describe("createTargetRepository", () => {
         name: "Codex",
         normalizedPath: "/Users/test/.codex/skills",
         path: "/Users/test/.codex/skills",
+        scanMessage: null,
         selectedSkills: [],
         skillPreferences: [
           {
@@ -212,6 +218,7 @@ describe("createTargetRepository", () => {
         name: "Local project",
         normalizedPath: "/Users/test/project/.codex/skills",
         path: "/Users/test/project/.codex/skills",
+        scanMessage: null,
         selectedSkills: [
           { id: "skill-2", name: "Release Notes", repository: "Project skills" },
           { id: "skill-1", name: "Review Bot", repository: "Project skills" }
@@ -258,5 +265,49 @@ describe("createTargetRepository", () => {
     );
 
     await expect(createTargetRepository(db).count()).resolves.toBe(4);
+  });
+
+  it("preserves existing target scope when scan results update a registered target", async () => {
+    const db = createDbClient(":memory:");
+    const repository = createTargetRepository(db);
+    const createdAt = new Date("2026-06-21T00:00:00.000Z");
+
+    await db.insert(agentTargets).values({
+      createdAt,
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "target-design-only",
+      name: "Design scratch",
+      normalizedPath: "/Users/test/design/.codex/skills",
+      path: "/Users/test/design/.codex/skills",
+      scope: "independent",
+      type: "custom-directory",
+      updatedAt: createdAt
+    });
+
+    await repository.saveScannedTargets(
+      [
+        {
+          defaultInstallStrategy: "copy",
+          detectionMessage: "Target directory exists and is writable.",
+          id: "target-design-only",
+          name: "Design scratch",
+          normalizedPath: "/Users/test/design/.codex/skills",
+          path: "/Users/test/design/.codex/skills",
+          status: "detected",
+          type: "custom-directory"
+        }
+      ],
+      new Date("2026-06-23T00:00:00.000Z")
+    );
+
+    await expect(repository.list()).resolves.toMatchObject([
+      {
+        id: "target-design-only",
+        scanMessage: "Target directory exists and is writable.",
+        scope: "independent",
+        status: "detected"
+      }
+    ]);
   });
 });

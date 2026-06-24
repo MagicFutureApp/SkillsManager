@@ -157,9 +157,14 @@ export const TargetStatusBadge = ({ status }: { status: TargetStatus }) => {
 };
 
 const statusClassName: Record<TargetStatus, string> = {
+  "app-missing": "border-rose-200 bg-rose-50 text-rose-700",
   detected: "border-emerald-200 bg-emerald-50 text-emerald-700",
   disabled: "border-slate-200 bg-slate-50 text-slate-600",
   missing: "border-amber-200 bg-amber-50 text-amber-700",
+  "not-directory": "border-rose-200 bg-rose-50 text-rose-700",
+  "not-writable": "border-amber-200 bg-amber-50 text-amber-700",
+  "path-missing": "border-amber-200 bg-amber-50 text-amber-700",
+  "scan-error": "border-rose-200 bg-rose-50 text-rose-700",
   registered: "border-blue-200 bg-blue-50 text-blue-700"
 };
 

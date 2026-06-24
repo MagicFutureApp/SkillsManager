@@ -5,6 +5,8 @@ import type {
   RegisteredTargetStatus,
   SystemTargetRecord,
   TargetRegistrationScope,
+  TargetScanCandidate,
+  TargetScanRecord,
   TargetSkillPreference,
   TargetSkillSelection
 } from "../../core/targets/target-api";
@@ -74,6 +76,7 @@ export const createTargetRepository = (db: DbClient) => {
           name: target.name,
           normalizedPath: target.normalizedPath,
           path: target.path,
+          scanMessage: target.scanMessage,
           selectedSkills,
           skillPreferences,
           skillCount: selectedSkills.length,
@@ -88,7 +91,23 @@ export const createTargetRepository = (db: DbClient) => {
       });
     },
 
-    async saveScannedTargets(targets: SystemTargetRecord[], scannedAt = new Date()): Promise<void> {
+    async listScanCandidates(): Promise<TargetScanCandidate[]> {
+      const targetRows = await db.select().from(agentTargets).orderBy(asc(agentTargets.name));
+
+      return targetRows.map((target) => ({
+        defaultInstallStrategy: target.defaultInstallStrategy,
+        id: target.id,
+        name: target.name,
+        normalizedPath: target.normalizedPath,
+        path: target.path,
+        type: target.type
+      }));
+    },
+
+    async saveScannedTargets(
+      targets: (SystemTargetRecord | TargetScanRecord)[],
+      scannedAt = new Date()
+    ): Promise<void> {
       for (const target of targets) {
         await db
           .insert(agentTargets)
@@ -101,6 +120,7 @@ export const createTargetRepository = (db: DbClient) => {
             name: target.name,
             normalizedPath: target.normalizedPath,
             path: target.path,
+            scanMessage: target.detectionMessage,
             scope: "global",
             type: target.type,
             updatedAt: scannedAt
@@ -114,7 +134,7 @@ export const createTargetRepository = (db: DbClient) => {
               name: target.name,
               normalizedPath: target.normalizedPath,
               path: target.path,
-              scope: "global",
+              scanMessage: target.detectionMessage,
               type: target.type,
               updatedAt: scannedAt
             }
@@ -139,8 +159,15 @@ const normalizeStatus = ({
   detectionStatus: string | null;
   enabled: boolean;
 }): RegisteredTargetStatus => {
-  if (detectionStatus === "missing") {
-    return "missing";
+  if (
+    detectionStatus === "app-missing" ||
+    detectionStatus === "path-missing" ||
+    detectionStatus === "not-writable" ||
+    detectionStatus === "not-directory" ||
+    detectionStatus === "scan-error" ||
+    detectionStatus === "missing"
+  ) {
+    return detectionStatus;
   }
 
   if (!enabled) {

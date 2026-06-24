@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   adaptTargets,
   filterTargets,
+  type TargetIssue,
   type TargetSort,
   type TargetViewModel
 } from "../components/targets-page-data";
@@ -10,11 +11,13 @@ import type { RegisteredTargetRecord } from "../../../../core/targets/target-api
 
 type TargetsResultLike = {
   registeredTargets?: RegisteredTargetRecord[];
+  scanIssues?: TargetIssue[];
 };
 
 export const useTargetsPageState = () => {
   const [query, setQuery] = useState("");
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
+  const [scanIssues, setScanIssues] = useState<TargetIssue[]>([]);
   const [sort, setSort] = useState<TargetSort>("name");
   const [targets, setTargets] = useState<TargetViewModel[]>([]);
 
@@ -34,11 +37,12 @@ export const useTargetsPageState = () => {
   };
 
   const refreshTargets = async () => {
-    const result =
-      (await window.skillsManager?.rescanTargets?.()) ??
-      (await window.skillsManager?.listTargets?.());
+    const rescanResult = await window.skillsManager?.rescanTargets?.();
+    const result: TargetsResultLike | undefined =
+      rescanResult ?? (await window.skillsManager?.listTargets?.());
 
     applyTargetsResult(result);
+    setScanIssues(rescanResult?.scanIssues ?? []);
   };
 
   useEffect(() => {
@@ -80,12 +84,14 @@ export const useTargetsPageState = () => {
 
   return {
     query,
+    scanIssues,
     selectedTarget,
     selectedTargetId,
     sort,
     targets,
     visibleTargets,
     refreshTargets,
+    setScanIssues,
     setQuery,
     setSelectedTargetId,
     setSort

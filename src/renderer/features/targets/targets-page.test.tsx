@@ -1,11 +1,11 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
 
 import { createI18nInstance } from "@/i18n/react-i18n";
 import { TargetsPage } from "./targets-page";
-import type { TargetsListResult } from "@/global";
+import type { TargetsListResult, TargetsRescanResult } from "@/global";
 
 const targetsFixture: TargetsListResult = {
   registeredTargets: [
@@ -17,6 +17,7 @@ const targetsFixture: TargetsListResult = {
       name: "Local project",
       normalizedPath: "/Users/test/project/.codex/skills",
       path: "/Users/test/project/.codex/skills",
+      scanMessage: null,
       selectedSkills: [
         { id: "skill-1", name: "Review Bot", repository: "Project skills" },
         { id: "skill-2", name: "Release Notes", repository: "Project skills" }
@@ -39,6 +40,7 @@ const targetsFixture: TargetsListResult = {
       name: "Design scratch",
       normalizedPath: "/Users/test/project/.design/skills",
       path: "/Users/test/project/.design/skills",
+      scanMessage: null,
       selectedSkills: [{ id: "skill-3", name: "Design Helper", repository: "Design lab" }],
       skillPreferences: [
         { enabled: true, id: "skill-3", name: "Design Helper", repository: "Design lab" }
@@ -52,7 +54,7 @@ const targetsFixture: TargetsListResult = {
   ]
 };
 
-const rescannedTargetsFixture: TargetsListResult = {
+const rescannedTargetsFixture: TargetsRescanResult = {
   registeredTargets: [
     {
       createdAt: "2026-06-23T00:00:00.000Z",
@@ -62,6 +64,7 @@ const rescannedTargetsFixture: TargetsListResult = {
       name: "Codex",
       normalizedPath: "/Users/test/.codex/skills",
       path: "/Users/test/.codex/skills",
+      scanMessage: "Target directory exists and is writable.",
       selectedSkills: [],
       skillPreferences: [],
       skillCount: 0,
@@ -69,6 +72,64 @@ const rescannedTargetsFixture: TargetsListResult = {
       status: "detected",
       type: "codex",
       updatedAt: "2026-06-23T00:00:00.000Z"
+    }
+  ],
+  scanIssues: []
+};
+
+const rescannedTargetsWithIssuesFixture: TargetsRescanResult = {
+  registeredTargets: [
+    {
+      createdAt: "2026-06-23T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: false,
+      id: "target-project",
+      name: "Local project",
+      normalizedPath: "/Users/test/project/.codex/skills",
+      path: "/Users/test/project/.codex/skills",
+      scanMessage: "Target directory exists but is not writable.",
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "global",
+      status: "not-writable",
+      type: "custom-directory",
+      updatedAt: "2026-06-23T00:00:00.000Z"
+    },
+    {
+      createdAt: "2026-06-23T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: false,
+      id: "system-gemini-cli",
+      name: "Gemini CLI",
+      normalizedPath: "/Users/test/.gemini/skills",
+      path: "/Users/test/.gemini/skills",
+      scanMessage: "Application is not installed.",
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "global",
+      status: "app-missing",
+      type: "gemini-cli",
+      updatedAt: "2026-06-23T00:00:00.000Z"
+    }
+  ],
+  scanIssues: [
+    {
+      id: "target-project",
+      message: "Target directory exists but is not writable.",
+      name: "Local project",
+      path: "/Users/test/project/.codex/skills",
+      status: "not-writable",
+      type: "custom-directory"
+    },
+    {
+      id: "system-gemini-cli",
+      message: "Application is not installed.",
+      name: "Gemini CLI",
+      path: "/Users/test/.gemini/skills",
+      status: "app-missing",
+      type: "gemini-cli"
     }
   ]
 };
@@ -151,7 +212,9 @@ describe("TargetsPage", () => {
     await renderTargetsPage();
     await screen.findByRole("button", { name: "Local project" });
 
-    fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+    });
 
     await waitFor(() => {
       expect(window.skillsManager?.rescanTargets).toHaveBeenCalledOnce();
@@ -161,6 +224,26 @@ describe("TargetsPage", () => {
     const detail = screen.getByLabelText("目标详情");
     expect(within(detail).getByRole("heading", { name: "Codex" })).toBeInTheDocument();
     expect(within(detail).getByText("已检测")).toBeInTheDocument();
+  });
+
+  it("shows a dialog when rescan finds missing or non-writable targets", async () => {
+    await renderTargetsPage();
+    vi.mocked(window.skillsManager?.rescanTargets!).mockResolvedValueOnce(
+      rescannedTargetsWithIssuesFixture
+    );
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+
+    const dialog = await screen.findByRole("alertdialog", { name: "目标扫描发现异常" });
+
+    expect(within(dialog).getByText("Local project")).toBeInTheDocument();
+    expect(within(dialog).getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
+    expect(within(dialog).getByText("不可写")).toBeInTheDocument();
+    expect(within(dialog).getByText("Gemini CLI")).toBeInTheDocument();
+    expect(within(dialog).getByText("/Users/test/.gemini/skills")).toBeInTheDocument();
+    expect(within(dialog).getByText("应用未安装")).toBeInTheDocument();
+    expect(screen.getAllByText("不可写").length).toBeGreaterThan(0);
   });
 
   it("selects a target when clicking a non-interactive row cell", async () => {

@@ -1,17 +1,48 @@
 export type AgentTargetType = "codex" | "claude-code" | "gemini-cli" | "custom-directory";
 
-export type TargetDetectionStatus = "detected" | "missing";
+export type TargetDetectionStatus =
+  | "detected"
+  | "app-missing"
+  | "path-missing"
+  | "not-writable"
+  | "not-directory"
+  | "scan-error"
+  | "missing";
 export type TargetRegistrationScope = "global" | "independent";
 export type RegisteredTargetStatus = TargetDetectionStatus | "registered" | "disabled";
 
 export type SystemTargetRecord = {
   defaultInstallStrategy: string;
+  detectionMessage: string;
   id: string;
   name: string;
   normalizedPath: string;
   path: string;
   status: TargetDetectionStatus;
   type: AgentTargetType;
+};
+
+export type TargetScanCandidate = {
+  defaultInstallStrategy: string;
+  id: string;
+  name: string;
+  normalizedPath: string;
+  path: string;
+  type: string;
+};
+
+export type TargetScanRecord = TargetScanCandidate & {
+  detectionMessage: string;
+  status: TargetDetectionStatus;
+};
+
+export type TargetScanIssue = {
+  id: string;
+  message: string;
+  name: string;
+  path: string;
+  status: Exclude<TargetDetectionStatus, "detected">;
+  type: string;
 };
 
 export type TargetSkillSelection = {
@@ -32,6 +63,7 @@ export type RegisteredTargetRecord = {
   name: string;
   normalizedPath: string;
   path: string;
+  scanMessage: string | null;
   selectedSkills: TargetSkillSelection[];
   skillPreferences: TargetSkillPreference[];
   skillCount: number;

@@ -131,16 +131,27 @@ export const resources = {
           independent: "独立"
         },
         status: {
+          "app-missing": "应用未安装",
           detected: "已检测",
           disabled: "已停用",
           missing: "未发现",
+          "not-directory": "不是目录",
+          "not-writable": "不可写",
+          "path-missing": "路径不存在",
+          "scan-error": "扫描失败",
           registered: "已登记"
+        },
+        scanIssues: {
+          confirm: "知道了",
+          description: "请检查这些目标路径或应用安装状态。扫描结果已经写入本地数据库。",
+          title: "目标扫描发现异常"
         },
         detail: {
           ariaLabel: "目标详情",
           emptyDescription: "选择左侧目标后查看检测状态和已选择的技能。",
           emptyTitle: "选择一个目标",
           noSelectedSkills: "没有 Skills 页面选择到这个目标。",
+          scanResult: "扫描结果",
           selectedSkills: "已选择技能"
         }
       },
@@ -500,16 +511,28 @@ export const resources = {
           independent: "Independent"
         },
         status: {
+          "app-missing": "App missing",
           detected: "Detected",
           disabled: "Disabled",
           missing: "Missing",
+          "not-directory": "Not a directory",
+          "not-writable": "Not writable",
+          "path-missing": "Path missing",
+          "scan-error": "Scan failed",
           registered: "Registered"
+        },
+        scanIssues: {
+          confirm: "OK",
+          description:
+            "Check these target paths or application installation state. The scan result has been saved to the local database.",
+          title: "Target scan found issues"
         },
         detail: {
           ariaLabel: "Target details",
           emptyDescription: "Choose a target to inspect detection status and selected skills.",
           emptyTitle: "Choose a target",
           noSelectedSkills: "No skills select this target from the Skills page.",
+          scanResult: "Scan result",
           selectedSkills: "Selected skills"
         }
       },

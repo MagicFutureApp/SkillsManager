@@ -36,6 +36,15 @@ export const TargetsPageSider = () => {
         </div>
       </section>
 
+      {selectedTarget.scanMessage ? (
+        <section className="rounded-xl border border-border bg-card p-4">
+          <h3 className="font-semibold">{t("targets.detail.scanResult")}</h3>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            {selectedTarget.scanMessage}
+          </p>
+        </section>
+      ) : null}
+
       <section className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-center justify-between gap-3">
           <h3 className="font-semibold">{t("targets.detail.selectedSkills")}</h3>

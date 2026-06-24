@@ -30,6 +30,7 @@ const targetsFixture: TargetsListResult = {
       name: "Local project",
       normalizedPath: "/Users/test/project/.codex/skills",
       path: "/Users/test/project/.codex/skills",
+      scanMessage: null,
       selectedSkills: [],
       skillPreferences: [],
       skillCount: 0,
