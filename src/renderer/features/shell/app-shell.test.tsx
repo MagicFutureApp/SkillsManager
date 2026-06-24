@@ -21,30 +21,6 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 const targetsFixture: TargetsListResult = {
-  detectedTargets: [
-    {
-      defaultInstallStrategy: "copy",
-      executablePath: "/usr/local/bin/codex",
-      id: "system-codex-cli",
-      installPath: "/usr/local/bin/codex",
-      name: "Codex CLI",
-      normalizedPath: "/Users/test/.codex/skills",
-      path: "/Users/test/.codex/skills",
-      status: "detected",
-      type: "codex-cli"
-    },
-    {
-      defaultInstallStrategy: "copy",
-      executablePath: null,
-      id: "system-claude-code",
-      installPath: null,
-      name: "Claude Code",
-      normalizedPath: "/Users/test/.claude/skills",
-      path: "/Users/test/.claude/skills",
-      status: "missing",
-      type: "claude-code"
-    }
-  ],
   registeredTargets: [
     {
       createdAt: "2026-06-21T00:00:00.000Z",
@@ -58,6 +34,7 @@ const targetsFixture: TargetsListResult = {
       skillPreferences: [],
       skillCount: 0,
       scope: "global",
+      status: "registered",
       type: "custom-directory",
       updatedAt: "2026-06-21T00:00:00.000Z"
     }

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { createDbClient } from "../../db/client";
 import {
@@ -9,37 +9,12 @@ import {
   skillVersions,
   syncRuns
 } from "../../db/schema";
-import type { SystemTargetRecord } from "../../core/targets/target-api";
 import { getNavigationBadgeCounts } from "./navigation-badges";
 
 describe("navigation badge IPC handlers", () => {
   it("returns aggregate badge counts without loading paged list results", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-22T00:00:00.000Z");
-    const detectedTargets: SystemTargetRecord[] = [
-      {
-        defaultInstallStrategy: "copy",
-        executablePath: "/usr/local/bin/codex",
-        id: "system-codex-cli",
-        installPath: "/usr/local/bin/codex",
-        name: "Codex CLI",
-        normalizedPath: "/Users/test/.codex/skills",
-        path: "/Users/test/.codex/skills",
-        status: "detected",
-        type: "codex-cli"
-      },
-      {
-        defaultInstallStrategy: "copy",
-        executablePath: null,
-        id: "system-claude-code",
-        installPath: null,
-        name: "Claude Code",
-        normalizedPath: "/Users/test/.claude/skills",
-        path: "/Users/test/.claude/skills",
-        status: "missing",
-        type: "claude-code"
-      }
-    ];
 
     await db.insert(providers).values({
       configJson: "{}",
@@ -178,15 +153,11 @@ describe("navigation badge IPC handlers", () => {
       }
     ]);
 
-    await expect(
-      getNavigationBadgeCounts(db, {
-        scanSystemTargets: vi.fn().mockResolvedValue(detectedTargets)
-      })
-    ).resolves.toEqual({
+    await expect(getNavigationBadgeCounts(db)).resolves.toEqual({
       counts: {
         repositories: 2,
         skills: 2,
-        targets: 3,
+        targets: 1,
         "sync-history": 2
       }
     });

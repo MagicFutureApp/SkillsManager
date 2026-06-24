@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
@@ -8,30 +8,6 @@ import { TargetsPage } from "./targets-page";
 import type { TargetsListResult } from "@/global";
 
 const targetsFixture: TargetsListResult = {
-  detectedTargets: [
-    {
-      defaultInstallStrategy: "copy",
-      executablePath: "/usr/local/bin/codex",
-      id: "system-codex-cli",
-      installPath: "/usr/local/bin/codex",
-      name: "Codex CLI",
-      normalizedPath: "/Users/test/.codex/skills",
-      path: "/Users/test/.codex/skills",
-      status: "detected",
-      type: "codex-cli"
-    },
-    {
-      defaultInstallStrategy: "copy",
-      executablePath: null,
-      id: "system-claude-code",
-      installPath: null,
-      name: "Claude Code",
-      normalizedPath: "/Users/test/.claude/skills",
-      path: "/Users/test/.claude/skills",
-      status: "missing",
-      type: "claude-code"
-    }
-  ],
   registeredTargets: [
     {
       createdAt: "2026-06-21T00:00:00.000Z",
@@ -51,6 +27,7 @@ const targetsFixture: TargetsListResult = {
       ],
       skillCount: 2,
       scope: "global",
+      status: "registered",
       type: "custom-directory",
       updatedAt: "2026-06-21T00:00:00.000Z"
     },
@@ -68,8 +45,30 @@ const targetsFixture: TargetsListResult = {
       ],
       skillCount: 1,
       scope: "independent",
+      status: "registered",
       type: "custom-directory",
       updatedAt: "2026-06-21T00:00:00.000Z"
+    }
+  ]
+};
+
+const rescannedTargetsFixture: TargetsListResult = {
+  registeredTargets: [
+    {
+      createdAt: "2026-06-23T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "system-codex-cli",
+      name: "Codex CLI",
+      normalizedPath: "/Users/test/.codex/skills",
+      path: "/Users/test/.codex/skills",
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "global",
+      status: "detected",
+      type: "codex-cli",
+      updatedAt: "2026-06-23T00:00:00.000Z"
     }
   ]
 };
@@ -84,6 +83,7 @@ const renderTargetsPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
     listProviders: vi.fn().mockResolvedValue({ providers: [] }),
     listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
     listTargets: vi.fn().mockResolvedValue(targetsFixture),
+    rescanTargets: vi.fn().mockResolvedValue(rescannedTargetsFixture),
     platform: "darwin"
   };
 
@@ -99,7 +99,7 @@ describe("TargetsPage", () => {
     window.skillsManager = undefined;
   });
 
-  it("renders detected app targets and selected local project targets without sync actions", async () => {
+  it("renders database targets without mixing in system scan data on initial load", async () => {
     await renderTargetsPage();
 
     const pageHeading = await screen.findByRole("heading", { name: "目标管理" });
@@ -116,12 +116,12 @@ describe("TargetsPage", () => {
     expect(screen.queryByRole("button", { name: /同步/ })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("目标摘要")).not.toBeInTheDocument();
 
-    expect(screen.getByRole("button", { name: "Codex CLI" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Claude Code" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Codex CLI" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Claude Code" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Local project" })).toBeInTheDocument();
-    expect(screen.getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
-    expect(screen.getByText("2 个技能")).toBeInTheDocument();
     const targetTable = within(screen.getByRole("main")).getByRole("table");
+    expect(within(targetTable).getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
+    expect(within(targetTable).getByText("2 个技能")).toBeInTheDocument();
     const header = within(targetTable).getByRole("row", { name: "目标 路径 范围 技能" });
     expect(within(header).getByText("目标")).toBeInTheDocument();
     expect(within(header).getByText("路径")).toBeInTheDocument();
@@ -139,6 +139,26 @@ describe("TargetsPage", () => {
     expect(screen.getByText("独立")).toHaveClass("rounded-full", "border", "font-mono", "text-xs");
 
     const detail = screen.getByLabelText("目标详情");
+    expect(within(detail).getByRole("heading", { name: "Local project" })).toBeInTheDocument();
+    expect(within(detail).getByText("已登记")).toBeInTheDocument();
+    expect(within(detail).queryByRole("heading", { name: "路径" })).not.toBeInTheDocument();
+    expect(within(detail).queryByText("技能目录")).not.toBeInTheDocument();
+    expect(within(detail).queryByText("安装目录")).not.toBeInTheDocument();
+    expect(within(detail).queryByText("CLI 路径")).not.toBeInTheDocument();
+  });
+
+  it("rescans targets through the backend and renders the database-backed result", async () => {
+    await renderTargetsPage();
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByRole("button", { name: "重新扫描" }));
+
+    await waitFor(() => {
+      expect(window.skillsManager?.rescanTargets).toHaveBeenCalledOnce();
+      expect(screen.getByRole("button", { name: "Codex CLI" })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: "Local project" })).not.toBeInTheDocument();
+    const detail = screen.getByLabelText("目标详情");
     expect(within(detail).getByRole("heading", { name: "Codex CLI" })).toBeInTheDocument();
     expect(within(detail).getByText("已检测")).toBeInTheDocument();
   });
@@ -146,8 +166,9 @@ describe("TargetsPage", () => {
   it("selects a target when clicking a non-interactive row cell", async () => {
     await renderTargetsPage();
     await screen.findByRole("button", { name: "Local project" });
+    const targetTable = within(screen.getByRole("main")).getByRole("table");
 
-    fireEvent.click(screen.getByText("/Users/test/project/.codex/skills"));
+    fireEvent.click(within(targetTable).getByText("/Users/test/project/.codex/skills"));
 
     expect(
       within(screen.getByLabelText("目标详情")).getByRole("heading", { name: "Local project" })

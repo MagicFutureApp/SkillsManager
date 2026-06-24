@@ -6,6 +6,11 @@ import {
   type TargetSort,
   type TargetViewModel
 } from "../components/targets-page-data";
+import type { RegisteredTargetRecord } from "../../../../core/targets/target-api";
+
+type TargetsResultLike = {
+  registeredTargets?: RegisteredTargetRecord[];
+};
 
 export const useTargetsPageState = () => {
   const [query, setQuery] = useState("");
@@ -13,15 +18,27 @@ export const useTargetsPageState = () => {
   const [sort, setSort] = useState<TargetSort>("name");
   const [targets, setTargets] = useState<TargetViewModel[]>([]);
 
-  const loadTargets = async () => {
-    const result = await window.skillsManager?.listTargets?.();
+  const applyTargetsResult = (result?: TargetsResultLike) => {
     const nextTargets = adaptTargets({
-      detectedTargets: result?.detectedTargets ?? [],
       registeredTargets: result?.registeredTargets ?? []
     });
 
     setTargets(nextTargets);
-    setSelectedTargetId((currentTargetId) => currentTargetId ?? nextTargets[0]?.id ?? null);
+    setSelectedTargetId((currentTargetId) => {
+      if (currentTargetId && nextTargets.some((target) => target.id === currentTargetId)) {
+        return currentTargetId;
+      }
+
+      return nextTargets[0]?.id ?? null;
+    });
+  };
+
+  const refreshTargets = async () => {
+    const result =
+      (await window.skillsManager?.rescanTargets?.()) ??
+      (await window.skillsManager?.listTargets?.());
+
+    applyTargetsResult(result);
   };
 
   useEffect(() => {
@@ -32,13 +49,7 @@ export const useTargetsPageState = () => {
         return;
       }
 
-      const nextTargets = adaptTargets({
-        detectedTargets: result?.detectedTargets ?? [],
-        registeredTargets: result?.registeredTargets ?? []
-      });
-
-      setTargets(nextTargets);
-      setSelectedTargetId((currentTargetId) => currentTargetId ?? nextTargets[0]?.id ?? null);
+      applyTargetsResult(result);
     });
 
     return () => {
@@ -74,7 +85,7 @@ export const useTargetsPageState = () => {
     sort,
     targets,
     visibleTargets,
-    refreshTargets: loadTargets,
+    refreshTargets,
     setQuery,
     setSelectedTargetId,
     setSort

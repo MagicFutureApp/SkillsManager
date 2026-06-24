@@ -1,4 +1,3 @@
-import { DetailRow } from "@/components/detail-row";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -34,28 +33,6 @@ export const TargetsPageSider = () => {
             <TargetScopeBadge scope={selectedTarget.scope} />
             <TargetStatusBadge status={selectedTarget.status} />
           </div>
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-border bg-card p-4">
-        <h3 className="font-semibold">{t("targets.detail.paths")}</h3>
-        <div className="mt-3 grid gap-2">
-          <DetailRow label={t("targets.detail.skillPath")} mono value={selectedTarget.path} />
-          <DetailRow
-            label={t("targets.detail.installPath")}
-            mono
-            value={selectedTarget.installPath ?? t("targets.detail.noValue")}
-          />
-          <DetailRow
-            label={t("targets.detail.executablePath")}
-            mono
-            value={selectedTarget.executablePath ?? t("targets.detail.noValue")}
-          />
-          <DetailRow
-            label={t("targets.detail.normalizedPath")}
-            mono
-            value={selectedTarget.normalizedPath}
-          />
         </div>
       </section>
 

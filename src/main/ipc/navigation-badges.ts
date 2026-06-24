@@ -4,7 +4,6 @@ import { createRepositoryRepository } from "../../db/repositories/repositoryRepo
 import { createSkillRepository } from "../../db/repositories/skillRepository.js";
 import { createSyncHistoryRepository } from "../../db/repositories/syncHistoryRepository.js";
 import { createTargetRepository } from "../../db/repositories/targetRepository.js";
-import { scanSystemTargets } from "../../core/targets/target-scanner.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
 
 export type NavigationBadgeCounts = {
@@ -18,33 +17,26 @@ export type NavigationBadgeCountsResult = {
   counts: NavigationBadgeCounts;
 };
 
-type NavigationBadgeOperations = {
-  scanSystemTargets: typeof scanSystemTargets;
-};
-
 export const getNavigationBadgeCounts = async (
-  db: DbClient,
-  operations: NavigationBadgeOperations = { scanSystemTargets }
+  db: DbClient
 ): Promise<NavigationBadgeCountsResult> => {
   const repositoryRepository = createRepositoryRepository(db);
   const skillRepository = createSkillRepository(db);
   const syncHistoryRepository = createSyncHistoryRepository(db);
   const targetRepository = createTargetRepository(db);
-  const [repositoryCount, skillCount, registeredTargetCount, syncHistoryCount, detectedTargets] =
-    await Promise.all([
-      repositoryRepository.count(),
-      skillRepository.count(),
-      targetRepository.count(),
-      syncHistoryRepository.count(),
-      operations.scanSystemTargets()
-    ]);
+  const [repositoryCount, skillCount, targetCount, syncHistoryCount] = await Promise.all([
+    repositoryRepository.count(),
+    skillRepository.count(),
+    targetRepository.count(),
+    syncHistoryRepository.count()
+  ]);
 
   return {
     counts: {
       repositories: repositoryCount,
       skills: skillCount,
       "sync-history": syncHistoryCount,
-      targets: registeredTargetCount + detectedTargets.length
+      targets: targetCount
     }
   };
 };

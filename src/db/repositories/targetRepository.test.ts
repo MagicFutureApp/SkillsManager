@@ -11,6 +11,78 @@ import {
 import { createTargetRepository } from "./targetRepository";
 
 describe("createTargetRepository", () => {
+  it("saves scanned system targets into database records and updates them by type and path", async () => {
+    const db = createDbClient(":memory:");
+    const repository = createTargetRepository(db);
+    const firstScanAt = new Date("2026-06-23T00:00:00.000Z");
+    const secondScanAt = new Date("2026-06-23T01:00:00.000Z");
+
+    await repository.saveScannedTargets(
+      [
+        {
+          defaultInstallStrategy: "copy",
+          executablePath: "/usr/local/bin/codex",
+          id: "system-codex-cli",
+          installPath: "/usr/local/bin/codex",
+          name: "Codex CLI",
+          normalizedPath: "/Users/test/.codex/skills",
+          path: "/Users/test/.codex/skills",
+          status: "detected",
+          type: "codex-cli"
+        },
+        {
+          defaultInstallStrategy: "copy",
+          executablePath: null,
+          id: "system-claude-code",
+          installPath: null,
+          name: "Claude Code",
+          normalizedPath: "/Users/test/.claude/skills",
+          path: "/Users/test/.claude/skills",
+          status: "missing",
+          type: "claude-code"
+        }
+      ],
+      firstScanAt
+    );
+
+    await repository.saveScannedTargets(
+      [
+        {
+          defaultInstallStrategy: "copy",
+          executablePath: "/opt/homebrew/bin/codex",
+          id: "system-codex-cli-renamed",
+          installPath: "/opt/homebrew/bin/codex",
+          name: "Codex CLI",
+          normalizedPath: "/Users/test/.codex/skills",
+          path: "/Users/test/.codex/skills",
+          status: "detected",
+          type: "codex-cli"
+        }
+      ],
+      secondScanAt
+    );
+
+    await expect(repository.list()).resolves.toMatchObject([
+      {
+        createdAt: "2026-06-23T00:00:00.000Z",
+        enabled: false,
+        id: "system-claude-code",
+        name: "Claude Code",
+        status: "missing",
+        updatedAt: "2026-06-23T00:00:00.000Z"
+      },
+      {
+        createdAt: "2026-06-23T00:00:00.000Z",
+        enabled: true,
+        id: "system-codex-cli",
+        name: "Codex CLI",
+        status: "detected",
+        updatedAt: "2026-06-23T01:00:00.000Z"
+      }
+    ]);
+    await expect(repository.count()).resolves.toBe(2);
+  });
+
   it("lists registered targets with enabled skill preference counts", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-21T00:00:00.000Z");
@@ -134,6 +206,7 @@ describe("createTargetRepository", () => {
         ],
         skillCount: 0,
         scope: "global",
+        status: "registered",
         type: "codex",
         updatedAt: "2026-06-21T00:00:00.000Z"
       },
@@ -165,6 +238,7 @@ describe("createTargetRepository", () => {
         ],
         skillCount: 2,
         scope: "global",
+        status: "registered",
         type: "custom-directory",
         updatedAt: "2026-06-21T00:00:00.000Z"
       }

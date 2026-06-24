@@ -43,7 +43,6 @@ const interactiveSkillRecordsFixture: SkillApiRecord[] = [
 ];
 
 const skillTargetsFixture: TargetsListResult = {
-  detectedTargets: [],
   registeredTargets: [
     {
       createdAt: "2026-06-21T00:00:00.000Z",
@@ -57,6 +56,7 @@ const skillTargetsFixture: TargetsListResult = {
       skillPreferences: [],
       skillCount: 0,
       scope: "global",
+      status: "registered",
       type: "codex",
       updatedAt: "2026-06-21T00:00:00.000Z"
     },
@@ -72,6 +72,7 @@ const skillTargetsFixture: TargetsListResult = {
       skillPreferences: [],
       skillCount: 0,
       scope: "global",
+      status: "registered",
       type: "claude-code",
       updatedAt: "2026-06-21T00:00:00.000Z"
     }
@@ -218,7 +219,6 @@ describe("SkillsPage", () => {
 
   it("shows global targets for every skill unchecked and keeps independent targets scoped", async () => {
     const targets: TargetsListResult = {
-      detectedTargets: [],
       registeredTargets: [
         {
           createdAt: "2026-06-21T00:00:00.000Z",
@@ -232,6 +232,7 @@ describe("SkillsPage", () => {
           skillPreferences: [],
           skillCount: 0,
           scope: "global",
+          status: "registered",
           type: "custom-directory",
           updatedAt: "2026-06-21T00:00:00.000Z"
         },
@@ -260,6 +261,7 @@ describe("SkillsPage", () => {
           ],
           skillCount: 1,
           scope: "independent",
+          status: "registered",
           type: "custom-directory",
           updatedAt: "2026-06-21T00:00:00.000Z"
         }
@@ -328,7 +330,6 @@ describe("SkillsPage", () => {
       }
     ];
     const targets: TargetsListResult = {
-      detectedTargets: [],
       registeredTargets: [
         {
           createdAt: "2026-06-21T00:00:00.000Z",
@@ -342,6 +343,7 @@ describe("SkillsPage", () => {
           skillPreferences: [],
           skillCount: 0,
           scope: "global",
+          status: "registered",
           type: "custom-directory",
           updatedAt: "2026-06-21T00:00:00.000Z"
         }

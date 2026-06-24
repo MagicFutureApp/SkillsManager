@@ -138,16 +138,10 @@ export const resources = {
         },
         detail: {
           ariaLabel: "目标详情",
-          emptyDescription: "选择左侧目标后查看检测状态、安装路径和已选择的技能。",
+          emptyDescription: "选择左侧目标后查看检测状态和已选择的技能。",
           emptyTitle: "选择一个目标",
-          executablePath: "CLI 路径",
-          installPath: "安装目录",
           noSelectedSkills: "没有 Skills 页面选择到这个目标。",
-          normalizedPath: "规范化路径",
-          noValue: "无",
-          paths: "路径",
-          selectedSkills: "已选择技能",
-          skillPath: "技能目录"
+          selectedSkills: "已选择技能"
         }
       },
       providers: {
@@ -513,17 +507,10 @@ export const resources = {
         },
         detail: {
           ariaLabel: "Target details",
-          emptyDescription:
-            "Choose a target to inspect detection status, paths, and selected skills.",
+          emptyDescription: "Choose a target to inspect detection status and selected skills.",
           emptyTitle: "Choose a target",
-          executablePath: "CLI path",
-          installPath: "Install path",
           noSelectedSkills: "No skills select this target from the Skills page.",
-          normalizedPath: "Normalized path",
-          noValue: "None",
-          paths: "Paths",
-          selectedSkills: "Selected skills",
-          skillPath: "Skill directory"
+          selectedSkills: "Selected skills"
         }
       },
       providers: {

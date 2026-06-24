@@ -16,7 +16,7 @@ import type {
   UpdateSkillTargetPreferenceResult
 } from "./ipc/skills";
 import type { SyncHistoryListResult } from "../core/repositories/sync-history-api";
-import type { TargetsListResult } from "./ipc/targets";
+import type { TargetsListResult, TargetsRescanResult } from "./ipc/targets";
 import type { RepositorySourceInspection } from "../core/repositories/source-inspection";
 import type {
   CreateRepositoryInput,
@@ -64,6 +64,7 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ) as Promise<UpdateSkillTargetPreferenceResult>,
   listSyncHistory: () => ipcRenderer.invoke("syncHistory:list") as Promise<SyncHistoryListResult>,
   listTargets: () => ipcRenderer.invoke("targets:list") as Promise<TargetsListResult>,
+  rescanTargets: () => ipcRenderer.invoke("targets:rescan") as Promise<TargetsRescanResult>,
   openExternalUrl: (url: string) =>
     ipcRenderer.invoke("settings:openExternalUrl", url) as Promise<void>,
   openRepositoryLocation: (location: string) =>

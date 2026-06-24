@@ -2,6 +2,8 @@ import { asc, count, eq } from "drizzle-orm";
 
 import type {
   RegisteredTargetRecord,
+  RegisteredTargetStatus,
+  SystemTargetRecord,
   TargetRegistrationScope,
   TargetSkillPreference,
   TargetSkillSelection
@@ -76,10 +78,48 @@ export const createTargetRepository = (db: DbClient) => {
           skillPreferences,
           skillCount: selectedSkills.length,
           scope: normalizeScope(target.scope),
+          status: normalizeStatus({
+            detectionStatus: target.detectionStatus,
+            enabled: target.enabled
+          }),
           type: target.type,
           updatedAt: target.updatedAt.toISOString()
         };
       });
+    },
+
+    async saveScannedTargets(targets: SystemTargetRecord[], scannedAt = new Date()): Promise<void> {
+      for (const target of targets) {
+        await db
+          .insert(agentTargets)
+          .values({
+            createdAt: scannedAt,
+            defaultInstallStrategy: target.defaultInstallStrategy,
+            detectionStatus: target.status,
+            enabled: target.status === "detected",
+            id: target.id,
+            name: target.name,
+            normalizedPath: target.normalizedPath,
+            path: target.path,
+            scope: "global",
+            type: target.type,
+            updatedAt: scannedAt
+          })
+          .onConflictDoUpdate({
+            target: [agentTargets.type, agentTargets.normalizedPath],
+            set: {
+              defaultInstallStrategy: target.defaultInstallStrategy,
+              detectionStatus: target.status,
+              enabled: target.status === "detected",
+              name: target.name,
+              normalizedPath: target.normalizedPath,
+              path: target.path,
+              scope: "global",
+              type: target.type,
+              updatedAt: scannedAt
+            }
+          });
+      }
     }
   };
 };
@@ -90,4 +130,26 @@ const normalizeScope = (scope: string): TargetRegistrationScope => {
   }
 
   return "global";
+};
+
+const normalizeStatus = ({
+  detectionStatus,
+  enabled
+}: {
+  detectionStatus: string | null;
+  enabled: boolean;
+}): RegisteredTargetStatus => {
+  if (detectionStatus === "missing") {
+    return "missing";
+  }
+
+  if (!enabled) {
+    return "disabled";
+  }
+
+  if (detectionStatus === "detected") {
+    return "detected";
+  }
+
+  return "registered";
 };

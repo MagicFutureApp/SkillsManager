@@ -53,6 +53,7 @@ export const agentTargets = sqliteTable(
     path: text("path").notNull(),
     normalizedPath: text("normalized_path").notNull(),
     defaultInstallStrategy: text("default_install_strategy").notNull(),
+    detectionStatus: text("detection_status"),
     enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
     scope: text("scope").notNull().default("global"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),

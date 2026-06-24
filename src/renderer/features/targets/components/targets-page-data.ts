@@ -1,42 +1,33 @@
 import type {
+  RegisteredTargetStatus,
   RegisteredTargetRecord,
-  SystemTargetRecord,
   TargetRegistrationScope,
   TargetSkillSelection
 } from "../../../../core/targets/target-api";
 
-export type TargetStatus = "detected" | "missing" | "registered" | "disabled";
+export type TargetStatus = RegisteredTargetStatus;
 export type TargetScope = TargetRegistrationScope;
-export type TargetSource = "system" | "registered";
 export type TargetSort = "status" | "name" | "skills";
 
 export type TargetViewModel = {
   defaultInstallStrategy: string;
-  executablePath: string | null;
   id: string;
-  installPath: string | null;
   name: string;
   normalizedPath: string;
   path: string;
   selectedSkills: TargetSkillSelection[];
   skillCount: number;
   scope: TargetScope;
-  source: TargetSource;
   status: TargetStatus;
   type: string;
 };
 
 export const adaptTargets = ({
-  detectedTargets,
   registeredTargets
 }: {
-  detectedTargets: SystemTargetRecord[];
   registeredTargets: RegisteredTargetRecord[];
 }): TargetViewModel[] => {
-  return [
-    ...detectedTargets.map(adaptSystemTarget),
-    ...registeredTargets.map(adaptRegisteredTarget)
-  ];
+  return registeredTargets.map(adaptRegisteredTarget);
 };
 
 export const filterTargets = ({
@@ -54,8 +45,6 @@ export const filterTargets = ({
       target.name,
       target.type,
       target.path,
-      target.installPath ?? "",
-      target.executablePath ?? "",
       target.scope,
       ...target.selectedSkills.map((skill) => `${skill.name} ${skill.repository}`)
     ]
@@ -81,38 +70,17 @@ export const filterTargets = ({
   });
 };
 
-const adaptSystemTarget = (target: SystemTargetRecord): TargetViewModel => {
-  return {
-    defaultInstallStrategy: target.defaultInstallStrategy,
-    executablePath: target.executablePath,
-    id: target.id,
-    installPath: target.installPath,
-    name: target.name,
-    normalizedPath: target.normalizedPath,
-    path: target.path,
-    selectedSkills: [],
-    skillCount: 0,
-    scope: "global",
-    source: "system",
-    status: target.status,
-    type: target.type
-  };
-};
-
 const adaptRegisteredTarget = (target: RegisteredTargetRecord): TargetViewModel => {
   return {
     defaultInstallStrategy: target.defaultInstallStrategy,
-    executablePath: null,
     id: target.id,
-    installPath: target.path,
     name: target.name,
     normalizedPath: target.normalizedPath,
     path: target.path,
     selectedSkills: target.selectedSkills,
     skillCount: target.skillCount,
     scope: target.scope,
-    source: "registered",
-    status: target.enabled ? "registered" : "disabled",
+    status: target.status,
     type: target.type
   };
 };

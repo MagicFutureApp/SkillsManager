@@ -7,6 +7,7 @@ export type AgentTargetType =
 
 export type TargetDetectionStatus = "detected" | "missing";
 export type TargetRegistrationScope = "global" | "independent";
+export type RegisteredTargetStatus = TargetDetectionStatus | "registered" | "disabled";
 
 export type SystemTargetRecord = {
   defaultInstallStrategy: string;
@@ -42,6 +43,7 @@ export type RegisteredTargetRecord = {
   skillPreferences: TargetSkillPreference[];
   skillCount: number;
   scope: TargetRegistrationScope;
+  status: RegisteredTargetStatus;
   type: string;
   updatedAt: string;
 };
