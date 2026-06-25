@@ -309,6 +309,13 @@ export const registerRepositoriesIpc = (db: DbProvider): void => {
       return syncRepositories(resolveDb(db), repositoryIds);
     }
   );
+
+  ipcMain.handle(
+    "repositories:resolveCachePath",
+    (_event, cachePath: string): Promise<string> => {
+      return Promise.resolve(expandHomePath(cachePath));
+    }
+  );
 };
 
 const normalizeCreateRepositoryInput = (input: CreateRepositoryInput): CreateRepositoryInput => {

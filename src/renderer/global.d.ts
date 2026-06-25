@@ -87,6 +87,7 @@ declare global {
       openExternalUrl?: (url: string) => Promise<void>;
       openRepositoryLocation?: (location: string) => Promise<void>;
       resetLocalDatabase?: () => Promise<ResetLocalDatabaseResult>;
+      resolveRepositoryCachePath?: (cachePath: string) => Promise<string>;
       saveGitHubToken?: (token: string) => Promise<AppSettingsResult>;
       selectLocalRepositoryPath?: () => Promise<string | null>;
       selectTargetDirectory?: () => Promise<string | null>;

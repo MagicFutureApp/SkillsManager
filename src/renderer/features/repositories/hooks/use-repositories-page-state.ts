@@ -426,12 +426,16 @@ export const useRepositoriesPageState = () => {
     }
   };
 
-  const copyCachePath = () => {
+  const copyCachePath = async () => {
     if (!selectedRepository) {
       return;
     }
 
-    void navigator.clipboard?.writeText(selectedRepository.cachePath);
+    const absolutePath = await (
+      window.skillsManager?.resolveRepositoryCachePath?.(selectedRepository.cachePath)
+    );
+
+    void navigator.clipboard?.writeText(absolutePath ?? selectedRepository.cachePath);
   };
 
   const openRepositoryLocation = (location: string) => {

@@ -73,6 +73,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ipcRenderer.invoke("repositories:openLocation", location) as Promise<void>,
   resetLocalDatabase: () =>
     ipcRenderer.invoke("settings:resetLocalDatabase") as Promise<ResetLocalDatabaseResult>,
+  resolveRepositoryCachePath: (cachePath: string) =>
+    ipcRenderer.invoke("repositories:resolveCachePath", cachePath) as Promise<string>,
   saveGitHubToken: (token: string) =>
     ipcRenderer.invoke("settings:saveGitHubToken", token) as Promise<AppSettingsResult>,
   selectLocalRepositoryPath: () =>
