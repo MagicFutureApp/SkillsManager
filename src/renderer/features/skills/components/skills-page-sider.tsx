@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +15,7 @@ export const SkillsPageSider = () => {
 
   if (!selectedSkill) {
     return (
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section className="min-w-0 rounded-xl border border-border bg-card p-4">
         <h2 className="text-xl font-semibold">{t("skills.detail.emptyTitle")}</h2>
       </section>
     );
@@ -27,12 +28,9 @@ export const SkillsPageSider = () => {
 
   return (
     <>
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section className="min-w-0 rounded-xl border border-border bg-card p-4">
         <h2 className="text-xl font-semibold">{selectedSkill.name}</h2>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">{selectedSkill.description}</p>
-        <Button className="mt-3" type="button" variant="outline">
-          {t("skills.actions.editSkill")}
-        </Button>
+        <SkillDescription description={selectedSkill.description} />
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
@@ -130,5 +128,63 @@ export const SkillsPageSider = () => {
         </div>
       </section>
     </>
+  );
+};
+
+const SkillDescription = ({ description }: { description: string }) => {
+  const descriptionRef = React.useRef<HTMLParagraphElement | null>(null);
+  const [isOverflowing, setIsOverflowing] = React.useState(false);
+
+  React.useLayoutEffect(() => {
+    const measureDescription = () => {
+      const element = descriptionRef.current;
+
+      if (!element) {
+        setIsOverflowing(false);
+        return;
+      }
+
+      setIsOverflowing(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    measureDescription();
+
+    if (typeof ResizeObserver === "undefined" || !descriptionRef.current) {
+      window.addEventListener("resize", measureDescription);
+      return () => window.removeEventListener("resize", measureDescription);
+    }
+
+    const observer = new ResizeObserver(measureDescription);
+
+    observer.observe(descriptionRef.current);
+
+    return () => observer.disconnect();
+  }, [description]);
+
+  const descriptionElement = (
+    <p
+      ref={descriptionRef}
+      tabIndex={isOverflowing ? 0 : undefined}
+      className="mt-3 line-clamp-5 max-w-full break-all text-sm leading-6 text-muted-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      {description}
+    </p>
+  );
+
+  if (!isOverflowing) {
+    return descriptionElement;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger render={descriptionElement} />
+      <TooltipContent
+        side="left"
+        align="center"
+        className="max-w-sm whitespace-normal break-all leading-5"
+      >
+        {description}
+      </TooltipContent>
+    </Tooltip>
   );
 };

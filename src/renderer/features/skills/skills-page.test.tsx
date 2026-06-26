@@ -10,6 +10,24 @@ import { skillApiRecordsFixture } from "@/test/api-fixtures";
 import type { TargetsListResult } from "@/global";
 import type { SkillApiRecord } from "../../../core/skills/skill-api";
 
+const mockDescriptionOverflow = (overflowingText: string) => {
+  const clientHeightSpy = vi
+    .spyOn(HTMLElement.prototype, "clientHeight", "get")
+    .mockImplementation(function clientHeight(this: HTMLElement) {
+      return this.textContent === overflowingText ? 120 : 96;
+    });
+  const scrollHeightSpy = vi
+    .spyOn(HTMLElement.prototype, "scrollHeight", "get")
+    .mockImplementation(function scrollHeight(this: HTMLElement) {
+      return this.textContent === overflowingText ? 180 : 96;
+    });
+
+  return () => {
+    clientHeightSpy.mockRestore();
+    scrollHeightSpy.mockRestore();
+  };
+};
+
 const interactiveSkillRecordsFixture: SkillApiRecord[] = [
   ...skillApiRecordsFixture,
   {
@@ -209,14 +227,94 @@ describe("SkillsPage", () => {
     expect(screen.getByRole("button", { name: "新增分发目标" })).toBeInTheDocument();
     expect(screen.queryByText("同步目标")).not.toBeInTheDocument();
     const skillDetail = screen.getByLabelText("技能详情");
-    const editButton = within(skillDetail).getByRole("button", { name: "编辑" });
     const distributeButton = within(skillDetail).getByRole("button", { name: "分发当前技能" });
 
-    expect(editButton).toHaveClass("border-border", "bg-background");
+    expect(within(skillDetail).queryByRole("button", { name: "编辑" })).not.toBeInTheDocument();
     expect(distributeButton).toHaveClass("border-border", "bg-background");
     expect(distributeButton).toBeDisabled();
     expect(distributeButton).toHaveAttribute("title", "请先添加分发目标");
     await waitFor(() => expect(window.skillsManager?.listSkills).toHaveBeenCalled());
+  });
+
+  it("line-clamps long selected skill descriptions and exposes the full text through a tooltip", async () => {
+    const longDescription =
+      Array.from(
+        { length: 8 },
+        (_, index) => `Line ${index + 1} keeps the selected skill detail readable.`
+      ).join(" ") + " This extra detail should stay available in the hover tooltip.";
+    const restoreDescriptionOverflowMock = mockDescriptionOverflow(longDescription);
+    const skills: SkillApiRecord[] = [
+      {
+        description: longDescription,
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: [],
+        version: "8f2c91a"
+      }
+    ];
+
+    try {
+      await renderSkillsPage({ skills });
+      await screen.findByRole("button", { name: "Review Bot" });
+
+      const skillDetail = screen.getByLabelText("技能详情");
+      const descriptionTrigger = await within(skillDetail).findByText(longDescription);
+
+      expect(descriptionTrigger).toHaveAttribute("data-slot", "tooltip-trigger");
+      expect(descriptionTrigger).not.toHaveAttribute("title");
+      expect(descriptionTrigger).toHaveClass("line-clamp-5", "max-w-full", "break-all");
+      expect(descriptionTrigger).toHaveTextContent(longDescription);
+
+      fireEvent.focus(descriptionTrigger);
+
+      await screen.findByText(longDescription, {
+        selector: '[data-slot="tooltip-content"]'
+      });
+    } finally {
+      restoreDescriptionOverflowMock();
+    }
+  });
+
+  it("renders short selected skill descriptions without a tooltip", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Short descriptions stay as plain detail text.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: [],
+        version: "8f2c91a"
+      }
+    ];
+
+    await renderSkillsPage({ skills });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    const skillDetail = screen.getByLabelText("技能详情");
+    const description = within(skillDetail).getByText(
+      "Short descriptions stay as plain detail text."
+    );
+
+    expect(description).not.toHaveAttribute("data-slot", "tooltip-trigger");
+    expect(description).toHaveClass("line-clamp-5");
+    expect(
+      within(skillDetail).queryByText("Short descriptions stay as plain detail text.", {
+        selector: '[data-slot="tooltip-content"]'
+      })
+    ).not.toBeInTheDocument();
   });
 
   it("shows global targets for every skill unchecked and keeps independent targets scoped", async () => {
