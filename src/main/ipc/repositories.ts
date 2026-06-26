@@ -3,6 +3,7 @@ import { cp, mkdir, rm, stat, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
+import { minimatch } from "minimatch";
 import { createRepositoryRepository } from "../../db/repositories/repositoryRepository.js";
 import {
   deriveSkillPatterns,
@@ -50,7 +51,21 @@ type RepositorySyncOperations = {
   copyLocalSource: (sourcePath: string, cachePath: string) => Promise<void>;
   ensureGitRepository: (remoteUrl: string, cachePath: string, branch: string) => Promise<void>;
   logDirectory?: string;
+  materializeSourceCache?: (
+    input: SourceCacheMaterializationInput
+  ) => Promise<SourceCacheMaterializationResult>;
   resolveCommitSha: (cachePath: string) => Promise<string>;
+};
+
+type SourceCacheMaterializationInput = {
+  cachePath: string;
+  discoveryEntries: string[];
+  sourceFolderName: string;
+  sourcePath: string;
+};
+
+type SourceCacheMaterializationResult = {
+  scanDiscoveryEntries: string[];
 };
 
 const syncingRepositoryIds = new Set<string>();
@@ -197,6 +212,14 @@ export const syncRepositories = async (
     let syncRunId: string | null = null;
     const cachePath = expandHomePath(repository.localCachePath);
     const remoteUrl = expandHomePath(repository.remoteUrl);
+    const discoveryEntries = getRepositoryDiscoveryEntries(repository.configJson);
+    const hasSourceCacheMaterializer = Boolean(operations.materializeSourceCache);
+    const sourcePath = isLocalPath(repository.remoteUrl)
+      ? remoteUrl
+      : hasSourceCacheMaterializer
+        ? buildRepositorySourceWorktreePath(cachePath)
+        : cachePath;
+    let scanDiscoveryEntries = discoveryEntries;
 
     try {
       syncRunId = await repositoryRepository.startSyncRun({
@@ -205,21 +228,40 @@ export const syncRepositories = async (
       });
 
       if (isLocalPath(repository.remoteUrl)) {
-        await operations.copyLocalSource(remoteUrl, cachePath);
+        if (operations.materializeSourceCache) {
+          const materializedCache = await operations.materializeSourceCache({
+            cachePath,
+            discoveryEntries,
+            sourceFolderName: deriveSourceFolderName(repository.remoteUrl, remoteUrl),
+            sourcePath
+          });
+
+          scanDiscoveryEntries = materializedCache.scanDiscoveryEntries;
+        } else {
+          await operations.copyLocalSource(remoteUrl, cachePath);
+        }
       } else {
-        await operations.ensureGitRepository(repository.remoteUrl, cachePath, repository.branch);
+        await operations.ensureGitRepository(repository.remoteUrl, sourcePath, repository.branch);
+
+        if (operations.materializeSourceCache) {
+          const materializedCache = await operations.materializeSourceCache({
+            cachePath,
+            discoveryEntries,
+            sourceFolderName: deriveSourceFolderName(repository.remoteUrl, sourcePath),
+            sourcePath
+          });
+
+          scanDiscoveryEntries = materializedCache.scanDiscoveryEntries;
+        }
       }
 
-      const discoveredSkills = await scanSkillDirectory(
-        cachePath,
-        getRepositoryDiscoveryEntries(repository.configJson)
-      );
+      const discoveredSkills = await scanSkillDirectory(cachePath, scanDiscoveryEntries);
 
       if (!discoveredSkills.length) {
         throw new EmptySkillSourceError(cachePath);
       }
 
-      const commitSha = await operations.resolveCommitSha(cachePath);
+      const commitSha = await operations.resolveCommitSha(sourcePath);
 
       results.push(
         await repositoryRepository.recordSyncResult({
@@ -310,12 +352,9 @@ export const registerRepositoriesIpc = (db: DbProvider): void => {
     }
   );
 
-  ipcMain.handle(
-    "repositories:resolveCachePath",
-    (_event, cachePath: string): Promise<string> => {
-      return Promise.resolve(expandHomePath(cachePath));
-    }
-  );
+  ipcMain.handle("repositories:resolveCachePath", (_event, cachePath: string): Promise<string> => {
+    return Promise.resolve(expandHomePath(cachePath));
+  });
 };
 
 const normalizeCreateRepositoryInput = (input: CreateRepositoryInput): CreateRepositoryInput => {
@@ -396,6 +435,8 @@ const defaultSyncOperations: RepositorySyncOperations = {
     await runGit(["clone", "--branch", branch, "--single-branch", remoteUrl, cachePath]);
   },
 
+  materializeSourceCache: materializeSourceCacheFromDiscoveryEntries,
+
   async resolveCommitSha(cachePath) {
     if (await pathExists(path.join(cachePath, ".git"))) {
       return runGit(["-C", cachePath, "rev-parse", "HEAD"]);
@@ -403,6 +444,158 @@ const defaultSyncOperations: RepositorySyncOperations = {
 
     return "local";
   }
+};
+
+async function materializeSourceCacheFromDiscoveryEntries({
+  cachePath,
+  discoveryEntries,
+  sourceFolderName,
+  sourcePath
+}: SourceCacheMaterializationInput): Promise<SourceCacheMaterializationResult> {
+  const normalizedDiscoveryEntries = normalizeSkillDiscoveryEntries(discoveryEntries);
+
+  await rm(cachePath, { force: true, recursive: true });
+  await mkdir(cachePath, { recursive: true });
+
+  if (!normalizedDiscoveryEntries.length) {
+    await cp(sourcePath, cachePath, {
+      dereference: false,
+      filter: shouldCopySourceCachePath,
+      force: true,
+      recursive: true
+    });
+
+    return { scanDiscoveryEntries: [] };
+  }
+
+  const sourceSkills = await scanSkillDirectory(sourcePath, normalizedDiscoveryEntries);
+  const scanDiscoveryEntries: string[] = [];
+  const copiedDestinationPaths = new Set<string>();
+
+  for (const skill of sourceSkills) {
+    const discoveryEntry = matchingDiscoveryEntry(skill.entryPath, normalizedDiscoveryEntries);
+    const destinationRootPath = getMaterializedSkillRootPath({
+      discoveryEntry,
+      rootPath: skill.rootPath,
+      sourceFolderName
+    });
+
+    if (copiedDestinationPaths.has(destinationRootPath)) {
+      continue;
+    }
+
+    copiedDestinationPaths.add(destinationRootPath);
+    scanDiscoveryEntries.push(`${destinationRootPath}/SKILL.md`);
+    await cp(
+      toAbsoluteSourceRootPath(sourcePath, skill.rootPath),
+      path.join(cachePath, ...destinationRootPath.split("/")),
+      {
+        dereference: false,
+        filter: shouldCopySourceCachePath,
+        force: true,
+        recursive: true
+      }
+    );
+  }
+
+  return {
+    scanDiscoveryEntries: scanDiscoveryEntries.sort()
+  };
+}
+
+const normalizeSkillDiscoveryEntries = (entries: string[]): string[] => {
+  return entries
+    .map((entry) => toPosixPath(entry).trim().replace(/^\.\//, ""))
+    .filter((entry) => entry.endsWith("SKILL.md"));
+};
+
+const matchingDiscoveryEntry = (entryPath: string, discoveryEntries: string[]): string => {
+  return discoveryEntries.find((entry) => minimatch(entryPath, entry, { dot: true })) ?? entryPath;
+};
+
+const getMaterializedSkillRootPath = ({
+  discoveryEntry,
+  rootPath,
+  sourceFolderName
+}: {
+  discoveryEntry: string;
+  rootPath: string;
+  sourceFolderName: string;
+}): string => {
+  if (rootPath === ".") {
+    return sanitizePathSegment(sourceFolderName) || "repository";
+  }
+
+  const discoverySegments = discoveryEntry.split("/");
+  const firstWildcardIndex = discoverySegments.findIndex((segment) => segment.includes("*"));
+
+  if (firstWildcardIndex === -1) {
+    return normalizeRelativeSkillRootPath(rootPath);
+  }
+
+  const prefixSegments = discoverySegments.slice(0, firstWildcardIndex);
+  const rootSegments = rootPath.split("/");
+  const materializedSegments = rootSegments.slice(prefixSegments.length);
+
+  return normalizeRelativeSkillRootPath(materializedSegments.join("/"));
+};
+
+const normalizeRelativeSkillRootPath = (value: string): string => {
+  return value.split("/").map(sanitizePathSegment).filter(Boolean).join("/") || "skill";
+};
+
+const sanitizePathSegment = (value: string): string => {
+  return value
+    .replace(/[\\/]+/g, "-")
+    .replace(/^\.+$/g, "")
+    .trim();
+};
+
+const toAbsoluteSourceRootPath = (sourcePath: string, rootPath: string): string => {
+  if (rootPath === ".") {
+    return sourcePath;
+  }
+
+  return path.join(sourcePath, ...rootPath.split("/"));
+};
+
+const shouldCopySourceCachePath = (source: string): boolean => {
+  return !source.split(path.sep).includes(".git");
+};
+
+const toPosixPath = (value: string): string => {
+  return value.split(path.sep).join("/");
+};
+
+const buildRepositorySourceWorktreePath = (cachePath: string): string => {
+  return path.join(path.dirname(cachePath), ".source-repositories", path.basename(cachePath));
+};
+
+const deriveSourceFolderName = (remoteUrl: string, fallbackPath: string): string => {
+  const trimmedRemoteUrl = remoteUrl
+    .trim()
+    .replace(/[\\/]+$/, "")
+    .replace(/\.git$/i, "");
+
+  try {
+    const parsedUrl = new URL(trimmedRemoteUrl);
+    const repositoryName = parsedUrl.pathname.replace(/^\/+/, "").split("/").filter(Boolean).pop();
+
+    if (repositoryName) {
+      return repositoryName.replace(/\.git$/i, "");
+    }
+  } catch {
+    // Fall through to local path and scp-like Git URL handling.
+  }
+
+  const scpLikeMatch = /^(?:[^@\s]+@)?[^:\s]+:(?<path>.+)$/.exec(trimmedRemoteUrl);
+  const scpLikeRepositoryName = scpLikeMatch?.groups?.path?.split("/").filter(Boolean).pop();
+
+  if (scpLikeRepositoryName) {
+    return scpLikeRepositoryName.replace(/\.git$/i, "");
+  }
+
+  return path.basename(path.resolve(fallbackPath)) || "repository";
 };
 
 const expandHomePath = (value: string): string => {

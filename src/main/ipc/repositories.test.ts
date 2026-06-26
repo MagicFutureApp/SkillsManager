@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { mkdtemp } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -208,6 +208,261 @@ describe("repository IPC handlers", () => {
         name: "Review Bot"
       }
     ]);
+  });
+
+  it("copies only wildcard-level skill folders into the source cache during local sync", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+    const sourcePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-wildcard-source-"));
+    const cacheParentPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-wildcard-cache-"));
+    const cachePath = path.join(cacheParentPath, "conardli-garden-skills");
+
+    await mkdir(path.join(sourcePath, "skills", "news-reader", "assets"), { recursive: true });
+    await mkdir(path.join(sourcePath, "skills", "writing-helper"), { recursive: true });
+    await mkdir(path.join(sourcePath, "docs", "ignored"), { recursive: true });
+    await writeFile(
+      path.join(sourcePath, "skills", "news-reader", "SKILL.md"),
+      "# News Reader\n\nReads news.\n",
+      "utf8"
+    );
+    await writeFile(
+      path.join(sourcePath, "skills", "news-reader", "assets", "prompt.md"),
+      "Asset copied with the skill root.\n",
+      "utf8"
+    );
+    await writeFile(
+      path.join(sourcePath, "skills", "writing-helper", "SKILL.md"),
+      "# Writing Helper\n\nWrites drafts.\n",
+      "utf8"
+    );
+    await writeFile(
+      path.join(sourcePath, "docs", "ignored", "SKILL.md"),
+      "# Ignored\n\nOutside the configured discovery entry.\n",
+      "utf8"
+    );
+    await writeFile(path.join(sourcePath, "README.md"), "# Source readme\n", "utf8");
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "local-git",
+      name: "Local Git",
+      type: "local_git",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({
+        patterns: ["skills/*/SKILL.md"]
+      }),
+      createdAt,
+      defaultBranch: "",
+      id: "repo-wildcard-cache",
+      lastScannedCommitSha: null,
+      localCachePath: cachePath,
+      name: "ConardLi/garden-skills",
+      providerId: "local-git",
+      remoteUrl: sourcePath,
+      updatedAt: createdAt
+    });
+
+    const result = await syncRepositories(db, ["repo-wildcard-cache"]);
+
+    expect(result).toMatchObject({
+      results: [
+        {
+          repositoryId: "repo-wildcard-cache",
+          skillUnits: 2,
+          status: "ready"
+        }
+      ]
+    });
+
+    await expect(
+      readFile(path.join(cachePath, "news-reader", "SKILL.md"), "utf8")
+    ).resolves.toContain("News Reader");
+    await expect(
+      readFile(path.join(cachePath, "news-reader", "assets", "prompt.md"), "utf8")
+    ).resolves.toContain("Asset copied with the skill root.");
+    await expect(
+      readFile(path.join(cachePath, "writing-helper", "SKILL.md"), "utf8")
+    ).resolves.toContain("Writing Helper");
+    await expect(pathExists(path.join(cachePath, "skills"))).resolves.toBe(false);
+    await expect(pathExists(path.join(cachePath, "docs"))).resolves.toBe(false);
+    await expect(pathExists(path.join(cachePath, "README.md"))).resolves.toBe(false);
+    await expect(db.select().from(skillUnits).orderBy(skillUnits.entryPath)).resolves.toMatchObject(
+      [
+        {
+          entryPath: "news-reader/SKILL.md",
+          name: "News Reader",
+          rootPath: "news-reader"
+        },
+        {
+          entryPath: "writing-helper/SKILL.md",
+          name: "Writing Helper",
+          rootPath: "writing-helper"
+        }
+      ]
+    );
+  });
+
+  it("copies a root SKILL.md source as one repository folder inside the source cache", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+    const workspacePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-root-workspace-"));
+    const sourcePath = path.join(workspacePath, "the-news");
+    const cachePath = path.join(workspacePath, "sfkislev-the-news");
+
+    await mkdir(path.join(sourcePath, "examples", "ignored"), { recursive: true });
+    await writeFile(path.join(sourcePath, "SKILL.md"), "# The News\n\nSummarizes news.\n", "utf8");
+    await writeFile(path.join(sourcePath, "README.md"), "# The News readme\n", "utf8");
+    await writeFile(
+      path.join(sourcePath, "examples", "ignored", "SKILL.md"),
+      "# Ignored\n\nNot part of the configured root entry.\n",
+      "utf8"
+    );
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "local-git",
+      name: "Local Git",
+      type: "local_git",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({
+        patterns: ["SKILL.md"]
+      }),
+      createdAt,
+      defaultBranch: "",
+      id: "repo-root-cache",
+      lastScannedCommitSha: null,
+      localCachePath: cachePath,
+      name: "sfkislev/the-news",
+      providerId: "local-git",
+      remoteUrl: sourcePath,
+      updatedAt: createdAt
+    });
+
+    const result = await syncRepositories(db, ["repo-root-cache"]);
+
+    expect(result).toMatchObject({
+      results: [
+        {
+          repositoryId: "repo-root-cache",
+          skillUnits: 1,
+          status: "ready"
+        }
+      ]
+    });
+
+    await expect(readFile(path.join(cachePath, "the-news", "SKILL.md"), "utf8")).resolves.toContain(
+      "The News"
+    );
+    await expect(
+      readFile(path.join(cachePath, "the-news", "README.md"), "utf8")
+    ).resolves.toContain("The News readme");
+    await expect(pathExists(path.join(cachePath, "SKILL.md"))).resolves.toBe(false);
+    await expect(db.select().from(skillUnits)).resolves.toMatchObject([
+      {
+        entryPath: "the-news/SKILL.md",
+        name: "The News",
+        rootPath: "the-news"
+      }
+    ]);
+  });
+
+  it("keeps git worktree state outside the materialized source cache during remote sync", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+    const cacheParentPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-remote-cache-"));
+    const cachePath = path.join(cacheParentPath, "conardli-garden-skills");
+    let materializedSourcePath = "";
+    const ensureGitRepository = vi.fn(async (_remoteUrl: string, sourcePath: string) => {
+      await mkdir(path.join(sourcePath, ".git"), { recursive: true });
+      await mkdir(path.join(sourcePath, "skills", "browser"), { recursive: true });
+      await writeFile(
+        path.join(sourcePath, "skills", "browser", "SKILL.md"),
+        "# Browser\n\nControls browser tasks.\n",
+        "utf8"
+      );
+    });
+    const materializeSourceCache = vi.fn(
+      async ({
+        cachePath,
+        sourcePath
+      }: {
+        cachePath: string;
+        discoveryEntries: string[];
+        sourceFolderName: string;
+        sourcePath: string;
+      }) => {
+        materializedSourcePath = sourcePath;
+        await mkdir(path.join(cachePath, "browser"), { recursive: true });
+        await writeFile(
+          path.join(cachePath, "browser", "SKILL.md"),
+          await readFile(path.join(sourcePath, "skills", "browser", "SKILL.md"), "utf8"),
+          "utf8"
+        );
+
+        return { scanDiscoveryEntries: ["browser/SKILL.md"] };
+      }
+    );
+    const resolveCommitSha = vi.fn().mockResolvedValue("abcdef123456");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({
+        patterns: ["skills/*/SKILL.md"]
+      }),
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-remote-cache",
+      lastScannedCommitSha: null,
+      localCachePath: cachePath,
+      name: "ConardLi/garden-skills",
+      providerId: "github",
+      remoteUrl: "https://github.com/ConardLi/garden-skills",
+      updatedAt: createdAt
+    });
+
+    const result = await syncRepositories(db, ["repo-remote-cache"], {
+      copyLocalSource: vi.fn(),
+      ensureGitRepository,
+      materializeSourceCache,
+      resolveCommitSha
+    });
+
+    expect(result).toMatchObject({
+      results: [
+        {
+          commitSha: "abcdef123456",
+          repositoryId: "repo-remote-cache",
+          skillUnits: 1,
+          status: "ready"
+        }
+      ]
+    });
+    expect(ensureGitRepository).toHaveBeenCalledWith(
+      "https://github.com/ConardLi/garden-skills",
+      path.join(cacheParentPath, ".source-repositories", "conardli-garden-skills"),
+      "main"
+    );
+    expect(materializedSourcePath).toBe(
+      path.join(cacheParentPath, ".source-repositories", "conardli-garden-skills")
+    );
+    expect(resolveCommitSha).toHaveBeenCalledWith(
+      path.join(cacheParentPath, ".source-repositories", "conardli-garden-skills")
+    );
+    await expect(readFile(path.join(cachePath, "browser", "SKILL.md"), "utf8")).resolves.toContain(
+      "Browser"
+    );
+    await expect(pathExists(path.join(cachePath, ".git"))).resolves.toBe(false);
   });
 
   it("persists a running sync run before file work and updates it after success", async () => {
@@ -470,3 +725,12 @@ describe("repository IPC handlers", () => {
     });
   });
 });
+
+const pathExists = async (filePath: string): Promise<boolean> => {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+};
