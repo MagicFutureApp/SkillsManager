@@ -17,6 +17,7 @@ import type {
   UpdateSkillTargetPreferenceResult as MainUpdateSkillTargetPreferenceResult
 } from "../main/ipc/skills";
 import type {
+  AddSkillDirectoryTargetInput as MainAddSkillDirectoryTargetInput,
   TargetsListResult as MainTargetsListResult,
   TargetsRescanResult as MainTargetsRescanResult
 } from "../main/ipc/targets";
@@ -44,6 +45,7 @@ export type RepositoriesSyncResult = MainRepositoriesSyncResult;
 export type SkillsListResult = MainSkillsListResult;
 export type UpdateSkillTargetPreferenceInput = MainUpdateSkillTargetPreferenceInput;
 export type UpdateSkillTargetPreferenceResult = MainUpdateSkillTargetPreferenceResult;
+export type AddSkillDirectoryTargetInput = MainAddSkillDirectoryTargetInput;
 export type TargetsListResult = MainTargetsListResult;
 export type TargetsRescanResult = MainTargetsRescanResult;
 export type SyncHistoryListResult = CoreSyncHistoryListResult;
@@ -83,6 +85,7 @@ declare global {
       listSyncHistory?: () => Promise<SyncHistoryListResult>;
       listTargets?: () => Promise<TargetsListResult>;
       addCustomDirectoryTarget?: (targetPath: string) => Promise<TargetsListResult>;
+      addSkillDirectoryTarget?: (input: AddSkillDirectoryTargetInput) => Promise<TargetsListResult>;
       rescanTargets?: () => Promise<TargetsRescanResult>;
       openExternalUrl?: (url: string) => Promise<void>;
       openRepositoryLocation?: (location: string) => Promise<void>;

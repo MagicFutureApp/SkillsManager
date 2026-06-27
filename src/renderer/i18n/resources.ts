@@ -49,6 +49,7 @@ export const resources = {
           syncUnavailableStatus: "分发功能暂未实现。",
           editSkill: "编辑",
           addSyncTarget: "新增分发目标",
+          addSyncTargetUnavailable: "新增分发目标暂不可用",
           preview: "预览"
         },
         filters: {
@@ -430,6 +431,7 @@ export const resources = {
           syncUnavailableStatus: "Distribution is not implemented yet.",
           editSkill: "Edit skill",
           addSyncTarget: "Add distribution target",
+          addSyncTargetUnavailable: "Adding distribution targets is unavailable",
           preview: "Preview"
         },
         filters: {

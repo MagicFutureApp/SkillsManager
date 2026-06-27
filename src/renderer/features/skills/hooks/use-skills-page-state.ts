@@ -163,6 +163,49 @@ export const useSkillsPageState = () => {
     });
   };
 
+  const addSyncTargetForSelectedSkill = async () => {
+    if (!selectedSkill) {
+      return;
+    }
+
+    const selectedPath = await window.skillsManager?.selectTargetDirectory?.();
+
+    if (!selectedPath) {
+      return;
+    }
+
+    const result = await window.skillsManager?.addSkillDirectoryTarget?.({
+      skillUnitId: selectedSkill.id,
+      targetPath: selectedPath
+    });
+    const nextTargets = (result?.registeredTargets ?? [])
+      .filter((target) => target.enabled)
+      .map(adaptTargetOption);
+    const nextSelectedSkillTargets = nextTargets
+      .filter((target) => {
+        if (target.scope === "global") {
+          return selectedSkill.targets.includes(target.id);
+        }
+
+        return target.selectedSkillIds.includes(selectedSkill.id);
+      })
+      .map((target) => target.id);
+
+    setTargetOptions(nextTargets);
+    setSkills((currentSkills) => {
+      return currentSkills.map((skill) => {
+        if (skill.id !== selectedSkill.id) {
+          return skill;
+        }
+
+        return {
+          ...skill,
+          targets: nextSelectedSkillTargets
+        };
+      });
+    });
+  };
+
   return {
     checkedDistributionState,
     checkedCount,
@@ -185,6 +228,7 @@ export const useSkillsPageState = () => {
     setRepositoryFilter,
     setSelectedSkillId,
     setSort,
+    addSyncTargetForSelectedSkill,
     toggleSkillChecked,
     toggleSkillTargetPreference
   };

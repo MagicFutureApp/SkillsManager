@@ -24,6 +24,11 @@ export type TargetsRescanResult = TargetsListResult & {
   scanIssues: TargetScanIssue[];
 };
 
+export type AddSkillDirectoryTargetInput = {
+  skillUnitId: string;
+  targetPath: string;
+};
+
 type TargetsRescanOperations = {
   now: () => Date;
   scanRegisteredTargets: typeof scanRegisteredTargets;
@@ -83,6 +88,37 @@ export const addCustomDirectoryTarget = async (
   return getTargets(db);
 };
 
+export const addSkillDirectoryTarget = async (
+  db: DbClient,
+  input: AddSkillDirectoryTargetInput,
+  operations: AddCustomDirectoryTargetOperations = {
+    now: () => new Date()
+  }
+): Promise<TargetsListResult> => {
+  const skillUnitId = input.skillUnitId.trim();
+  const targetPath = input.targetPath.trim();
+
+  if (!skillUnitId || !targetPath) {
+    throw new Error("Skill and target directory are required.");
+  }
+
+  const normalizedPath = normalizeTargetPath(targetPath);
+  const targetRepository = createTargetRepository(db);
+
+  await targetRepository.registerIndependentDirectoryTargetForSkill(
+    {
+      id: buildCustomDirectoryTargetId(normalizedPath),
+      name: deriveCustomDirectoryTargetName(targetPath),
+      normalizedPath,
+      path: targetPath
+    },
+    skillUnitId,
+    operations.now()
+  );
+
+  return getTargets(db);
+};
+
 export const rescanTargets = async (
   db: DbClient,
   operations: TargetsRescanOperations = {
@@ -129,6 +165,12 @@ export const registerTargetsIpc = (db: DbProvider): void => {
     "targets:addCustomDirectory",
     (_event, targetPath: string): Promise<TargetsListResult> => {
       return addCustomDirectoryTarget(resolveDb(db), targetPath);
+    }
+  );
+  ipcMain.handle(
+    "targets:addSkillDirectory",
+    (_event, input: AddSkillDirectoryTargetInput): Promise<TargetsListResult> => {
+      return addSkillDirectoryTarget(resolveDb(db), input);
     }
   );
 };

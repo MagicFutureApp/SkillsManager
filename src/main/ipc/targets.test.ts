@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { SystemTargetRecord, TargetScanRecord } from "../../core/targets/target-api";
 import { createDbClient } from "../../db/client";
-import { agentTargets } from "../../db/schema";
+import { agentTargets, repositories, skillTargetPreferences, skillUnits } from "../../db/schema";
 import {
+  addSkillDirectoryTarget,
   addCustomDirectoryTarget,
   getTargets,
   rescanTargets,
@@ -56,6 +57,76 @@ describe("target IPC handlers", () => {
         }
       ]
     });
+  });
+
+  it("adds a selected directory target as independent and enables it for one skill", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+
+    await db.insert(repositories).values({
+      configJson: "{}",
+      createdAt,
+      id: "team-skills",
+      localCachePath: "/tmp/team-skills",
+      name: "Team skills repository",
+      providerId: "local",
+      remoteUrl: "/tmp/team-skills",
+      updatedAt: createdAt
+    });
+    await db.insert(skillUnits).values({
+      createdAt,
+      description: "Reviews pull requests.",
+      discoveryMethod: "manifest",
+      entryPath: "skills/review-bot/SKILL.md",
+      id: "team-skills__skills-review-bot",
+      name: "Review Bot",
+      repositoryId: "team-skills",
+      rootPath: "skills/review-bot",
+      status: "ready",
+      updatedAt: createdAt
+    });
+
+    await expect(
+      addSkillDirectoryTarget(
+        db,
+        {
+          skillUnitId: "team-skills__skills-review-bot",
+          targetPath: "/Users/test/review-skills"
+        },
+        {
+          now: () => createdAt
+        }
+      )
+    ).resolves.toMatchObject({
+      registeredTargets: [
+        {
+          enabled: true,
+          id: "target-custom-users-test-review-skills-16b7af9b49af",
+          name: "review-skills",
+          normalizedPath: "/Users/test/review-skills",
+          path: "/Users/test/review-skills",
+          scope: "independent",
+          selectedSkills: [
+            {
+              id: "team-skills__skills-review-bot",
+              name: "Review Bot",
+              repository: "Team skills repository"
+            }
+          ],
+          skillCount: 1,
+          status: "registered",
+          type: "custom-directory"
+        }
+      ]
+    });
+
+    await expect(db.select().from(skillTargetPreferences)).resolves.toMatchObject([
+      {
+        agentTargetId: "target-custom-users-test-review-skills-16b7af9b49af",
+        enabled: true,
+        skillUnitId: "team-skills__skills-review-bot"
+      }
+    ]);
   });
 
   it("lists targets from the database without mixing in system scan results", async () => {

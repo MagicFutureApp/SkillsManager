@@ -110,6 +110,8 @@ const renderSkillsPage = async ({
 } = {}) => {
   const i18n = await createI18nInstance(locale);
   const setSkillTargetPreference = vi.fn().mockResolvedValue({ success: true });
+  const addSkillDirectoryTarget = vi.fn().mockResolvedValue(targets);
+  const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/review-skills");
 
   window.skillsManager = {
     getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
@@ -119,6 +121,8 @@ const renderSkillsPage = async ({
     listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
     listSkills: vi.fn().mockResolvedValue({ skills }),
     listTargets: vi.fn().mockResolvedValue(targets),
+    addSkillDirectoryTarget,
+    selectTargetDirectory,
     setSkillTargetPreference,
     platform: "darwin"
   };
@@ -129,6 +133,8 @@ const renderSkillsPage = async ({
         <SkillsPage />
       </I18nextProvider>
     ),
+    addSkillDirectoryTarget,
+    selectTargetDirectory,
     setSkillTargetPreference
   };
 };
@@ -476,6 +482,116 @@ describe("SkillsPage", () => {
     await waitFor(() =>
       expect(setSkillTargetPreference).toHaveBeenLastCalledWith({
         agentTargetId: "target-team",
+        enabled: false,
+        skillUnitId: "team-skills__skills-review-bot"
+      })
+    );
+  });
+
+  it("adds a selected directory as an independent checked target for the current skill", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: [],
+        version: "8f2c91a"
+      }
+    ];
+    const addedTargets: TargetsListResult = {
+      registeredTargets: [
+        {
+          createdAt: "2026-06-23T00:00:00.000Z",
+          defaultInstallStrategy: "copy",
+          enabled: true,
+          id: "target-disabled-review-scratch",
+          name: "review-disabled",
+          normalizedPath: "/Users/test/review-disabled",
+          path: "/Users/test/review-disabled",
+          scanMessage: null,
+          selectedSkills: [],
+          skillPreferences: [
+            {
+              enabled: false,
+              id: "team-skills__skills-review-bot",
+              name: "Review Bot",
+              repository: "Team skills repository"
+            }
+          ],
+          skillCount: 0,
+          scope: "independent",
+          status: "registered",
+          type: "custom-directory",
+          updatedAt: "2026-06-23T00:00:00.000Z"
+        },
+        {
+          createdAt: "2026-06-24T00:00:00.000Z",
+          defaultInstallStrategy: "copy",
+          enabled: true,
+          id: "target-custom-users-test-review-skills-16b7af9b49af",
+          name: "review-skills",
+          normalizedPath: "/Users/test/review-skills",
+          path: "/Users/test/review-skills",
+          scanMessage: null,
+          selectedSkills: [
+            {
+              id: "team-skills__skills-review-bot",
+              name: "Review Bot",
+              repository: "Team skills repository"
+            }
+          ],
+          skillPreferences: [
+            {
+              enabled: true,
+              id: "team-skills__skills-review-bot",
+              name: "Review Bot",
+              repository: "Team skills repository"
+            }
+          ],
+          skillCount: 1,
+          scope: "independent",
+          status: "registered",
+          type: "custom-directory",
+          updatedAt: "2026-06-24T00:00:00.000Z"
+        }
+      ]
+    };
+    const { addSkillDirectoryTarget, selectTargetDirectory, setSkillTargetPreference } =
+      await renderSkillsPage({ skills, targets: { registeredTargets: [] } });
+
+    addSkillDirectoryTarget.mockResolvedValueOnce(addedTargets);
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    fireEvent.click(screen.getByRole("button", { name: "新增分发目标" }));
+
+    expect(selectTargetDirectory).toHaveBeenCalledOnce();
+    await waitFor(() =>
+      expect(addSkillDirectoryTarget).toHaveBeenCalledWith({
+        skillUnitId: "team-skills__skills-review-bot",
+        targetPath: "/Users/test/review-skills"
+      })
+    );
+
+    const addedTargetCheckbox = await screen.findByLabelText("选择 review-skills");
+
+    expect(addedTargetCheckbox).toBeChecked();
+    expect(screen.getByLabelText("选择 review-disabled")).not.toBeChecked();
+    expect(screen.getByText("/Users/test/review-skills")).toBeInTheDocument();
+    expect(screen.getByText("1 / 2")).toBeInTheDocument();
+
+    fireEvent.click(addedTargetCheckbox);
+
+    expect(addedTargetCheckbox).not.toBeChecked();
+    await waitFor(() =>
+      expect(setSkillTargetPreference).toHaveBeenLastCalledWith({
+        agentTargetId: "target-custom-users-test-review-skills-16b7af9b49af",
         enabled: false,
         skillUnitId: "team-skills__skills-review-bot"
       })

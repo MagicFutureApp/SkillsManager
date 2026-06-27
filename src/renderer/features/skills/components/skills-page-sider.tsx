@@ -25,6 +25,9 @@ export const SkillsPageSider = () => {
   const distributionReady = distributionState === "ready";
   const syncTitle = t(getDistributionTitleKey(distributionState, "single"));
   const targetOptions = page.selectedSkillTargetOptions;
+  const canAddSyncTarget =
+    Boolean(window.skillsManager?.selectTargetDirectory) &&
+    Boolean(window.skillsManager?.addSkillDirectoryTarget);
 
   return (
     <>
@@ -45,7 +48,14 @@ export const SkillsPageSider = () => {
             <span className="font-mono text-xs text-muted-foreground">
               {selectedSkill.targets.length} / {targetOptions.length}
             </span>
-            <Button type="button" variant="outline" size="sm">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!canAddSyncTarget}
+              title={canAddSyncTarget ? undefined : t("skills.actions.addSyncTargetUnavailable")}
+              onClick={page.addSyncTargetForSelectedSkill}
+            >
               {t("skills.actions.addSyncTarget")}
             </Button>
           </div>

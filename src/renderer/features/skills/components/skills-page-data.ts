@@ -36,6 +36,7 @@ export type TargetOption = {
   name: string;
   path: string;
   scope: TargetRegistrationScope;
+  selectedSkillIds: string[];
   skillPreferenceIds: string[];
 };
 
@@ -60,6 +61,7 @@ export const adaptTargetOption = (record: RegisteredTargetRecord): TargetOption 
     name: record.name,
     path: record.path,
     scope: record.scope,
+    selectedSkillIds: record.selectedSkills.map((skill) => skill.id),
     skillPreferenceIds: record.skillPreferences.map((skill) => skill.id)
   };
 };

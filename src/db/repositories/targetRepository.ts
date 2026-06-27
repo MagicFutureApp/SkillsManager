@@ -1,4 +1,5 @@
 import { asc, count, eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 
 import type {
   RegisteredTargetRecord,
@@ -21,6 +22,7 @@ type RegisterCustomDirectoryTargetInput = {
   normalizedPath: string;
   path: string;
 };
+type AgentTargetInsert = typeof agentTargets.$inferInsert;
 
 export const createTargetRepository = (db: DbClient) => {
   return {
@@ -115,33 +117,42 @@ export const createTargetRepository = (db: DbClient) => {
       target: RegisterCustomDirectoryTargetInput,
       registeredAt = new Date()
     ): Promise<void> {
-      await db
-        .insert(agentTargets)
-        .values({
-          createdAt: registeredAt,
-          defaultInstallStrategy: "copy",
-          enabled: true,
-          id: target.id,
-          name: target.name,
-          normalizedPath: target.normalizedPath,
-          path: target.path,
-          scope: "global",
-          type: "custom-directory",
-          updatedAt: registeredAt
-        })
-        .onConflictDoUpdate({
-          target: [agentTargets.type, agentTargets.normalizedPath],
-          set: {
-            defaultInstallStrategy: "copy",
+      await upsertCustomDirectoryTarget(db, target, "global", registeredAt);
+    },
+
+    async registerIndependentDirectoryTarget(
+      target: RegisterCustomDirectoryTargetInput,
+      registeredAt = new Date()
+    ): Promise<void> {
+      await upsertCustomDirectoryTarget(db, target, "independent", registeredAt);
+    },
+
+    async registerIndependentDirectoryTargetForSkill(
+      target: RegisterCustomDirectoryTargetInput,
+      skillUnitId: string,
+      registeredAt = new Date()
+    ): Promise<void> {
+      db.transaction((tx) => {
+        upsertCustomDirectoryTargetInTransaction(tx, target, "independent", registeredAt);
+
+        tx.insert(skillTargetPreferences)
+          .values({
+            agentTargetId: target.id,
+            createdAt: registeredAt,
             enabled: true,
-            name: target.name,
-            normalizedPath: target.normalizedPath,
-            path: target.path,
-            scope: "global",
-            type: "custom-directory",
+            id: randomUUID(),
+            skillUnitId,
             updatedAt: registeredAt
-          }
-        });
+          })
+          .onConflictDoUpdate({
+            target: [skillTargetPreferences.skillUnitId, skillTargetPreferences.agentTargetId],
+            set: {
+              enabled: true,
+              updatedAt: registeredAt
+            }
+          })
+          .run();
+      });
     },
 
     async saveScannedTargets(
@@ -181,6 +192,72 @@ export const createTargetRepository = (db: DbClient) => {
           });
       }
     }
+  };
+};
+
+const upsertCustomDirectoryTarget = async (
+  db: DbClient,
+  target: RegisterCustomDirectoryTargetInput,
+  scope: TargetRegistrationScope,
+  registeredAt: Date
+): Promise<void> => {
+  await db
+    .insert(agentTargets)
+    .values(buildCustomDirectoryTargetValues(target, scope, registeredAt))
+    .onConflictDoUpdate({
+      target: [agentTargets.type, agentTargets.normalizedPath],
+      set: buildCustomDirectoryTargetConflictSet(target, scope, registeredAt)
+    });
+};
+
+const upsertCustomDirectoryTargetInTransaction = (
+  tx: Parameters<DbClient["transaction"]>[0] extends (tx: infer Tx) => unknown ? Tx : never,
+  target: RegisterCustomDirectoryTargetInput,
+  scope: TargetRegistrationScope,
+  registeredAt: Date
+): void => {
+  tx.insert(agentTargets)
+    .values(buildCustomDirectoryTargetValues(target, scope, registeredAt))
+    .onConflictDoUpdate({
+      target: [agentTargets.type, agentTargets.normalizedPath],
+      set: buildCustomDirectoryTargetConflictSet(target, scope, registeredAt)
+    })
+    .run();
+};
+
+const buildCustomDirectoryTargetValues = (
+  target: RegisterCustomDirectoryTargetInput,
+  scope: TargetRegistrationScope,
+  registeredAt: Date
+): AgentTargetInsert => {
+  return {
+    createdAt: registeredAt,
+    defaultInstallStrategy: "copy",
+    enabled: true,
+    id: target.id,
+    name: target.name,
+    normalizedPath: target.normalizedPath,
+    path: target.path,
+    scope,
+    type: "custom-directory",
+    updatedAt: registeredAt
+  };
+};
+
+const buildCustomDirectoryTargetConflictSet = (
+  target: RegisterCustomDirectoryTargetInput,
+  scope: TargetRegistrationScope,
+  registeredAt: Date
+): Partial<AgentTargetInsert> => {
+  return {
+    defaultInstallStrategy: "copy",
+    enabled: true,
+    name: target.name,
+    normalizedPath: target.normalizedPath,
+    path: target.path,
+    scope,
+    type: "custom-directory",
+    updatedAt: registeredAt
   };
 };
 
