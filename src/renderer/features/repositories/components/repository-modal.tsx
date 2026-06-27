@@ -238,6 +238,7 @@ export const RepositoryModal = ({
                     <Button
                       type="button"
                       variant="outline"
+                      className="h-10"
                       disabled={isSaving || !window.skillsManager?.selectLocalRepositoryPath}
                       onClick={() => void browseLocalPath()}
                     >

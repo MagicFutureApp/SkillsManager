@@ -787,10 +787,13 @@ describe("RepositoriesPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "新增" }));
     const dialog = screen.getByRole("dialog", { name: "新增来源" });
     const remoteUrlField = within(dialog).getByLabelText("URL / 本机路径");
+    const browseButton = within(dialog).getByRole("button", { name: "浏览" });
     const nameField = within(dialog).getByLabelText("名称");
     const providerField = within(dialog).getByLabelText("来源类型");
     const branchField = within(dialog).getByLabelText("分支");
     const patternsField = within(dialog).getByLabelText("发现入口");
+    expect(remoteUrlField).toHaveClass("h-10");
+    expect(browseButton).toHaveClass("h-10");
     expect(remoteUrlField.compareDocumentPosition(nameField)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING
     );
