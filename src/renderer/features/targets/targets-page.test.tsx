@@ -290,7 +290,11 @@ describe("TargetsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "删除 Local project" }));
 
     const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
-    expect(within(dialog).getByText("Local project")).toBeInTheDocument();
+    expect(within(dialog).getByText("Local project")).toHaveAttribute("title", "Local project");
+    expect(within(dialog).getByText("/Users/test/project/.codex/skills")).toHaveAttribute(
+      "title",
+      "/Users/test/project/.codex/skills"
+    );
     expect(
       within(dialog).getByText("目标目录里的 Skills 文件不会被删除。如有需要，请删除后手动清理。")
     ).toBeInTheDocument();
@@ -351,11 +355,30 @@ describe("TargetsPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "新增" }));
 
-    expect(window.skillsManager?.selectTargetDirectory).toHaveBeenCalledOnce();
+    const dialog = screen.getByRole("dialog", { name: "新增目标" });
+
+    expect(window.skillsManager?.selectTargetDirectory).not.toHaveBeenCalled();
+    expect(within(dialog).getByLabelText("本机路径")).toHaveAttribute("readonly");
+
+    fireEvent.click(within(dialog).getByLabelText("本机路径"));
+
+    expect(window.skillsManager?.selectTargetDirectory).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "浏览" }));
+
     await waitFor(() => {
-      expect(window.skillsManager?.addCustomDirectoryTarget).toHaveBeenCalledWith(
-        "/Users/test/review-skills"
-      );
+      expect(window.skillsManager?.selectTargetDirectory).toHaveBeenCalledOnce();
+      expect(within(dialog).getByLabelText("本机路径")).toHaveValue("/Users/test/review-skills");
+      expect(within(dialog).getByLabelText("名称")).toHaveValue("review-skills");
+    });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "保存" }));
+
+    await waitFor(() => {
+      expect(window.skillsManager?.addCustomDirectoryTarget).toHaveBeenCalledWith({
+        name: "review-skills",
+        targetPath: "/Users/test/review-skills"
+      });
       expect(screen.getByRole("button", { name: "review-skills" })).toBeInTheDocument();
     });
     expect(screen.getByText("/Users/test/review-skills")).toBeInTheDocument();
@@ -371,11 +394,19 @@ describe("TargetsPage", () => {
     await screen.findByRole("button", { name: "Local project" });
 
     fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    const dialog = screen.getByRole("dialog", { name: "新增目标" });
 
-    expect(window.skillsManager?.selectTargetDirectory).toHaveBeenCalledOnce();
+    fireEvent.click(within(dialog).getByRole("button", { name: "浏览" }));
+
+    await waitFor(() => {
+      expect(window.skillsManager?.selectTargetDirectory).toHaveBeenCalledOnce();
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "保存" }));
+
     await waitFor(() => {
       expect(window.skillsManager?.addCustomDirectoryTarget).not.toHaveBeenCalled();
     });
+    expect(within(dialog).getByText("请填写名称和本机路径。")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "review-skills" })).not.toBeInTheDocument();
   });
 

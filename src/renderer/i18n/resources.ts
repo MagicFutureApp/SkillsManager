@@ -161,6 +161,18 @@ export const resources = {
           description: "正在检查本机 agent 目录和已登记目标。",
           title: "正在扫描目标"
         },
+        modal: {
+          browse: "浏览",
+          cancel: "取消",
+          close: "关闭",
+          description: "选择本机目录并命名为一个全局分发目标。",
+          name: "名称",
+          path: "本机路径",
+          requiredError: "请填写名称和本机路径。",
+          save: "保存",
+          saveError: "保存目标失败。",
+          title: "新增目标"
+        },
         deleteDialog: {
           batchSummary: "将删除 {{count}} 个目标。",
           cancel: "取消",
@@ -563,6 +575,18 @@ export const resources = {
         scanLoading: {
           description: "Checking local agent directories and registered targets.",
           title: "Scanning targets"
+        },
+        modal: {
+          browse: "Browse",
+          cancel: "Cancel",
+          close: "Close",
+          description: "Choose a local directory and name it as a global distribution target.",
+          name: "Name",
+          path: "Local path",
+          requiredError: "Name and local path are required.",
+          save: "Save",
+          saveError: "Failed to save target.",
+          title: "Add target"
         },
         deleteDialog: {
           batchSummary: "{{count}} targets will be deleted.",

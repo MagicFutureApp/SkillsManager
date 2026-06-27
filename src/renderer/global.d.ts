@@ -21,6 +21,7 @@ import type {
   UpdateSkillTargetPreferenceResult as MainUpdateSkillTargetPreferenceResult
 } from "../main/ipc/skills";
 import type {
+  AddCustomDirectoryTargetInput as MainAddCustomDirectoryTargetInput,
   AddSkillDirectoryTargetInput as MainAddSkillDirectoryTargetInput,
   DeleteTargetsInput as MainDeleteTargetsInput,
   TargetsListResult as MainTargetsListResult,
@@ -53,6 +54,7 @@ export type SkillsListResult = MainSkillsListResult;
 export type UpdateSkillTargetPreferenceInput = MainUpdateSkillTargetPreferenceInput;
 export type UpdateSkillTargetPreferenceResult = MainUpdateSkillTargetPreferenceResult;
 export type AddSkillDirectoryTargetInput = MainAddSkillDirectoryTargetInput;
+export type AddCustomDirectoryTargetInput = MainAddCustomDirectoryTargetInput;
 export type DeleteTargetsInput = MainDeleteTargetsInput;
 export type TargetsListResult = MainTargetsListResult;
 export type TargetsRescanResult = MainTargetsRescanResult;
@@ -95,7 +97,9 @@ declare global {
       ) => Promise<UpdateSkillTargetPreferenceResult>;
       listSyncHistory?: () => Promise<SyncHistoryListResult>;
       listTargets?: () => Promise<TargetsListResult>;
-      addCustomDirectoryTarget?: (targetPath: string) => Promise<TargetsListResult>;
+      addCustomDirectoryTarget?: (
+        input: AddCustomDirectoryTargetInput
+      ) => Promise<TargetsListResult>;
       addSkillDirectoryTarget?: (input: AddSkillDirectoryTargetInput) => Promise<TargetsListResult>;
       deleteTargets?: (input: DeleteTargetsInput) => Promise<TargetsListResult>;
       rescanTargets?: () => Promise<TargetsRescanResult>;

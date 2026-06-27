@@ -18,6 +18,12 @@ const minimumRescanLoadingMs = 2000;
 
 export const useTargetsPageState = () => {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
+  const [addTargetError, setAddTargetError] = useState("");
+  const [addTargetName, setAddTargetName] = useState("");
+  const [addTargetPath, setAddTargetPath] = useState("");
+  const [isAddTargetDialogOpen, setIsAddTargetDialogOpen] = useState(false);
+  const [isSavingTarget, setIsSavingTarget] = useState(false);
+  const [isTargetNameDirty, setIsTargetNameDirty] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeletingTargets, setIsDeletingTargets] = useState(false);
@@ -88,17 +94,80 @@ export const useTargetsPageState = () => {
     }
   };
 
-  const addTarget = async () => {
+  const openAddTargetDialog = () => {
+    setAddTargetError("");
+    setAddTargetName("");
+    setAddTargetPath("");
+    setIsTargetNameDirty(false);
+    setIsAddTargetDialogOpen(true);
+  };
+
+  const closeAddTargetDialog = () => {
+    if (isSavingTarget) {
+      return;
+    }
+
+    setAddTargetError("");
+    setIsAddTargetDialogOpen(false);
+  };
+
+  const setPendingTargetName = (name: string) => {
+    setIsTargetNameDirty(true);
+    setAddTargetName(name);
+  };
+
+  const selectTargetPath = async () => {
     const selectedPath = await window.skillsManager?.selectTargetDirectory?.();
 
     if (!selectedPath) {
       return;
     }
 
-    const result = await window.skillsManager?.addCustomDirectoryTarget?.(selectedPath);
-    const addedTarget = result?.registeredTargets.find((target) => target.path === selectedPath);
+    setAddTargetPath(selectedPath);
+    setAddTargetError("");
+    setAddTargetName((currentName) => {
+      if (isTargetNameDirty && currentName.trim()) {
+        return currentName;
+      }
 
-    applyTargetsResult(result, addedTarget?.id);
+      return deriveTargetNameFromPath(selectedPath);
+    });
+  };
+
+  const saveAddTarget = async () => {
+    const name = addTargetName.trim();
+    const targetPath = addTargetPath.trim();
+
+    if (!name || !targetPath) {
+      setAddTargetError("required");
+      return;
+    }
+
+    if (!window.skillsManager?.addCustomDirectoryTarget) {
+      setAddTargetError("unavailable");
+      return;
+    }
+
+    setAddTargetError("");
+    setIsSavingTarget(true);
+
+    try {
+      const result = await window.skillsManager.addCustomDirectoryTarget({
+        name,
+        targetPath
+      });
+      const addedTarget = result?.registeredTargets.find((target) => target.path === targetPath);
+
+      applyTargetsResult(result, addedTarget?.id);
+      setIsAddTargetDialogOpen(false);
+      setAddTargetName("");
+      setAddTargetPath("");
+      setIsTargetNameDirty(false);
+    } catch (error) {
+      setAddTargetError(error instanceof Error ? error.message : "failed");
+    } finally {
+      setIsSavingTarget(false);
+    }
   };
 
   const toggleTargetChecked = (targetId: string, checked: boolean) => {
@@ -257,12 +326,17 @@ export const useTargetsPageState = () => {
     .filter((target): target is TargetViewModel => Boolean(target));
 
   return {
+    addTargetError,
+    addTargetName,
+    addTargetPath,
     checkedCount,
     checkedIds,
     deleteError,
     isDeleteDialogOpen,
     isDeletingTargets,
+    isAddTargetDialogOpen,
     isRefreshingTargets,
+    isSavingTarget,
     pendingDeleteTargets,
     query,
     scanIssues,
@@ -273,14 +347,18 @@ export const useTargetsPageState = () => {
     visibleAllChecked,
     visibleTargets,
     visibleSomeChecked,
-    addTarget,
+    closeAddTargetDialog,
     closeDeleteDialog,
     confirmDeleteTargets,
+    openAddTargetDialog,
     openCheckedDeleteDialog,
     openDeleteDialog,
     refreshTargets,
+    saveAddTarget,
     selectAllVisibleDeletable,
+    selectTargetPath,
     setScanIssues,
+    setPendingTargetName,
     setQuery,
     setSelectedTargetId,
     setSort,
@@ -302,4 +380,11 @@ const waitForMinimumElapsedTime = async (startedAt: number, minimumMs: number): 
 
 const normalizeTargetIds = (targetIds: string[]): string[] => {
   return Array.from(new Set(targetIds.map((targetId) => targetId.trim()).filter(Boolean)));
+};
+
+const deriveTargetNameFromPath = (targetPath: string): string => {
+  const normalizedPath = targetPath.trim().replace(/[\\/]+$/g, "");
+  const segments = normalizedPath.split(/[\\/]+/).filter(Boolean);
+
+  return segments.at(-1) ?? targetPath.trim();
 };

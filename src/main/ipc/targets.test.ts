@@ -60,6 +60,35 @@ describe("target IPC handlers", () => {
     });
   });
 
+  it("adds a custom directory target with the submitted display name", async () => {
+    const db = createDbClient(":memory:");
+
+    await expect(
+      addCustomDirectoryTarget(
+        db,
+        {
+          name: "Review Skills Workspace",
+          targetPath: "/Users/test/review-skills"
+        },
+        {
+          now: () => new Date("2026-06-24T00:00:00.000Z")
+        }
+      )
+    ).resolves.toMatchObject({
+      registeredTargets: [
+        {
+          id: "target-custom-users-test-review-skills-16b7af9b49af",
+          name: "Review Skills Workspace",
+          normalizedPath: "/Users/test/review-skills",
+          path: "/Users/test/review-skills",
+          scope: "global",
+          status: "registered",
+          type: "custom-directory"
+        }
+      ]
+    });
+  });
+
   it("adds a selected directory target as independent and enables it for one skill", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-24T00:00:00.000Z");

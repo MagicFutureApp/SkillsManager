@@ -18,6 +18,7 @@ import type {
 } from "./ipc/skills";
 import type { SyncHistoryListResult } from "../core/repositories/sync-history-api";
 import type {
+  AddCustomDirectoryTargetInput,
   AddSkillDirectoryTargetInput,
   DeleteTargetsInput,
   TargetsListResult,
@@ -72,8 +73,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ) as Promise<UpdateSkillTargetPreferenceResult>,
   listSyncHistory: () => ipcRenderer.invoke("syncHistory:list") as Promise<SyncHistoryListResult>,
   listTargets: () => ipcRenderer.invoke("targets:list") as Promise<TargetsListResult>,
-  addCustomDirectoryTarget: (targetPath: string) =>
-    ipcRenderer.invoke("targets:addCustomDirectory", targetPath) as Promise<TargetsListResult>,
+  addCustomDirectoryTarget: (input: AddCustomDirectoryTargetInput) =>
+    ipcRenderer.invoke("targets:addCustomDirectory", input) as Promise<TargetsListResult>,
   addSkillDirectoryTarget: (input: AddSkillDirectoryTargetInput) =>
     ipcRenderer.invoke("targets:addSkillDirectory", input) as Promise<TargetsListResult>,
   deleteTargets: (input: DeleteTargetsInput) =>

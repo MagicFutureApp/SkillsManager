@@ -52,7 +52,7 @@ export const TargetsPageMain = () => {
                   ? undefined
                   : t("targets.actions.addTargetUnavailable")
               }
-              onClick={page.addTarget}
+              onClick={page.openAddTargetDialog}
             >
               {t("targets.actions.addTarget")}
             </Button>

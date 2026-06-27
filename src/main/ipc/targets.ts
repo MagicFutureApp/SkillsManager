@@ -29,6 +29,13 @@ export type AddSkillDirectoryTargetInput = {
   targetPath: string;
 };
 
+export type AddCustomDirectoryTargetInput =
+  | string
+  | {
+      name: string;
+      targetPath: string;
+    };
+
 export type DeleteTargetsInput = {
   targetIds: string[];
 };
@@ -71,18 +78,19 @@ export const selectTargetDirectory = async (
 
 export const addCustomDirectoryTarget = async (
   db: DbClient,
-  targetPath: string,
+  input: AddCustomDirectoryTargetInput,
   operations: AddCustomDirectoryTargetOperations = {
     now: () => new Date()
   }
 ): Promise<TargetsListResult> => {
+  const { name, targetPath } = normalizeCustomDirectoryTargetInput(input);
   const normalizedPath = normalizeTargetPath(targetPath);
   const targetRepository = createTargetRepository(db);
 
   await targetRepository.registerCustomDirectoryTarget(
     {
       id: buildCustomDirectoryTargetId(normalizedPath),
-      name: deriveCustomDirectoryTargetName(targetPath),
+      name,
       normalizedPath,
       path: targetPath
     },
@@ -184,8 +192,8 @@ export const registerTargetsIpc = (db: DbProvider): void => {
   });
   ipcMain.handle(
     "targets:addCustomDirectory",
-    (_event, targetPath: string): Promise<TargetsListResult> => {
-      return addCustomDirectoryTarget(resolveDb(db), targetPath);
+    (_event, input: AddCustomDirectoryTargetInput): Promise<TargetsListResult> => {
+      return addCustomDirectoryTarget(resolveDb(db), input);
     }
   );
   ipcMain.handle(
@@ -204,6 +212,25 @@ export const registerTargetsIpc = (db: DbProvider): void => {
 
 const normalizeTargetIds = (targetIds: string[]): string[] => {
   return Array.from(new Set(targetIds.map((targetId) => targetId.trim()).filter(Boolean)));
+};
+
+const normalizeCustomDirectoryTargetInput = (
+  input: AddCustomDirectoryTargetInput
+): { name: string; targetPath: string } => {
+  const targetPath = typeof input === "string" ? input.trim() : input.targetPath.trim();
+  const name =
+    typeof input === "string"
+      ? deriveCustomDirectoryTargetName(targetPath)
+      : input.name.trim() || deriveCustomDirectoryTargetName(targetPath);
+
+  if (!targetPath || !name) {
+    throw new Error("Target name and directory are required.");
+  }
+
+  return {
+    name,
+    targetPath
+  };
 };
 
 const createTargetIdentityKey = (target: TargetScanCandidate): string => {

@@ -33,13 +33,15 @@ export const TargetsDeleteDialog = () => {
         </AlertDialogHeader>
 
         <div className="grid gap-3">
-          <p className="text-sm font-medium">
-            {page.pendingDeleteTargets.length === 1
-              ? page.pendingDeleteTargets[0]?.name
-              : t("targets.deleteDialog.batchSummary", {
-                  count: page.pendingDeleteTargets.length
-                })}
-          </p>
+          {page.pendingDeleteTargets.length === 1 ? (
+            <TargetDeleteDialogItem target={page.pendingDeleteTargets[0]} />
+          ) : (
+            <p className="text-sm font-medium">
+              {t("targets.deleteDialog.batchSummary", {
+                count: page.pendingDeleteTargets.length
+              })}
+            </p>
+          )}
 
           {page.pendingDeleteTargets.length > 1 ? (
             <ul className="max-h-44 overflow-auto rounded-lg border border-border">
@@ -48,10 +50,7 @@ export const TargetsDeleteDialog = () => {
                   key={target.id}
                   className="border-b border-border px-3 py-2 text-sm last:border-b-0"
                 >
-                  <span className="block truncate font-medium">{target.name}</span>
-                  <span className="mt-1 block truncate font-mono text-xs text-muted-foreground">
-                    {target.path}
-                  </span>
+                  <TargetDeleteDialogItem target={target} />
                 </li>
               ))}
             </ul>
@@ -74,5 +73,28 @@ export const TargetsDeleteDialog = () => {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  );
+};
+
+type TargetDeleteDialogItemProps = {
+  target: {
+    name: string;
+    path: string;
+  };
+};
+
+const TargetDeleteDialogItem = ({ target }: TargetDeleteDialogItemProps) => {
+  return (
+    <div className="min-w-0 text-sm">
+      <span className="block truncate font-medium" title={target.name}>
+        {target.name}
+      </span>
+      <span
+        className="mt-1 block truncate font-mono text-xs text-muted-foreground"
+        title={target.path}
+      >
+        {target.path}
+      </span>
+    </div>
   );
 };
