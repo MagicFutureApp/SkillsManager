@@ -54,6 +54,29 @@ const targetsFixture: TargetsListResult = {
   ]
 };
 
+const targetsWithSystemFixture: TargetsListResult = {
+  registeredTargets: [
+    {
+      createdAt: "2026-06-23T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "system-codex",
+      name: "Codex",
+      normalizedPath: "/Users/test/.codex/skills",
+      path: "/Users/test/.codex/skills",
+      scanMessage: "Target directory exists and is writable.",
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "global",
+      status: "detected",
+      type: "codex",
+      updatedAt: "2026-06-23T00:00:00.000Z"
+    },
+    ...targetsFixture.registeredTargets
+  ]
+};
+
 const rescannedTargetsFixture: TargetsRescanResult = {
   registeredTargets: [
     {
@@ -157,7 +180,17 @@ const targetsWithNewCustomDirectoryFixture: TargetsListResult = {
   ]
 };
 
-const renderTargetsPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
+const renderTargetsPage = async ({
+  deletedTargets = {
+    registeredTargets: [targetsFixture.registeredTargets[1]]
+  },
+  locale = "zh-CN",
+  targets = targetsFixture
+}: {
+  deletedTargets?: TargetsListResult;
+  locale?: "zh-CN" | "en-US";
+  targets?: TargetsListResult;
+} = {}) => {
   const i18n = await createI18nInstance(locale);
 
   window.skillsManager = {
@@ -166,8 +199,9 @@ const renderTargetsPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
     getLocale: vi.fn().mockResolvedValue(locale),
     listProviders: vi.fn().mockResolvedValue({ providers: [] }),
     listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
-    listTargets: vi.fn().mockResolvedValue(targetsFixture),
+    listTargets: vi.fn().mockResolvedValue(targets),
     addCustomDirectoryTarget: vi.fn().mockResolvedValue(targetsWithNewCustomDirectoryFixture),
+    deleteTargets: vi.fn().mockResolvedValue(deletedTargets),
     selectTargetDirectory: vi.fn().mockResolvedValue("/Users/test/review-skills"),
     rescanTargets: vi.fn().mockResolvedValue(rescannedTargetsFixture),
     platform: "darwin"
@@ -214,11 +248,14 @@ describe("TargetsPage", () => {
     const targetTable = within(screen.getByRole("main")).getByRole("table");
     expect(within(targetTable).getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
     expect(within(targetTable).getByText("2 个技能")).toBeInTheDocument();
-    const header = within(targetTable).getByRole("row", { name: "目标 路径 范围 技能" });
+    const header = within(targetTable).getByRole("row", {
+      name: "选择全部可删除目标 目标 路径 范围 技能 操作"
+    });
     expect(within(header).getByText("目标")).toBeInTheDocument();
     expect(within(header).getByText("路径")).toBeInTheDocument();
     expect(within(header).getByText("范围")).toBeInTheDocument();
     expect(within(header).getByText("技能")).toBeInTheDocument();
+    expect(within(header).getByText("操作")).toBeInTheDocument();
     expect(within(header).queryByText("状态")).not.toBeInTheDocument();
     expect(within(header).queryByText("来源")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "状态" })).not.toBeInTheDocument();
@@ -237,6 +274,68 @@ describe("TargetsPage", () => {
     expect(within(detail).queryByText("技能目录")).not.toBeInTheDocument();
     expect(within(detail).queryByText("安装目录")).not.toBeInTheDocument();
     expect(within(detail).queryByText("CLI 路径")).not.toBeInTheDocument();
+  });
+
+  it("opens a confirmation dialog before deleting a single target", async () => {
+    await renderTargetsPage();
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByRole("button", { name: "删除 Local project" }));
+
+    const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
+    expect(within(dialog).getByText("Local project")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("目标目录里的 Skills 文件不会被删除。如有需要，请删除后手动清理。")
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "确认删除" }));
+
+    await waitFor(() => {
+      expect(window.skillsManager?.deleteTargets).toHaveBeenCalledWith({
+        targetIds: ["target-project"]
+      });
+    });
+    expect(screen.queryByRole("button", { name: "Local project" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Design scratch" })).toBeInTheDocument();
+  });
+
+  it("deletes selected targets in a batch after confirmation", async () => {
+    await renderTargetsPage({ deletedTargets: { registeredTargets: [] } });
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByLabelText("选择 Local project"));
+    fireEvent.click(screen.getByLabelText("选择 Design scratch"));
+
+    expect(screen.getByRole("button", { name: "删除选中 (2)" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "删除选中 (2)" }));
+
+    const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
+    expect(within(dialog).getByText("将删除 2 个目标。")).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "确认删除" }));
+
+    await waitFor(() => {
+      expect(window.skillsManager?.deleteTargets).toHaveBeenCalledWith({
+        targetIds: ["target-project", "target-design-only"]
+      });
+    });
+    expect(screen.getByText("没有匹配的目标。调整搜索条件。")).toBeInTheDocument();
+  });
+
+  it("keeps built-in system targets unavailable for delete selection", async () => {
+    await renderTargetsPage({ targets: targetsWithSystemFixture });
+
+    await screen.findByRole("button", { name: "Codex" });
+
+    expect(screen.getByLabelText("选择 Codex")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("button", { name: "删除 Codex" })).toBeDisabled();
+
+    fireEvent.click(screen.getByLabelText("选择全部可删除目标"));
+
+    expect(screen.getByLabelText("选择 Codex")).not.toBeChecked();
+    expect(screen.getByLabelText("选择 Local project")).toBeChecked();
+    expect(screen.getByLabelText("选择 Design scratch")).toBeChecked();
   });
 
   it("opens a directory picker and saves the selected path as a global target", async () => {

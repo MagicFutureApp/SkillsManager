@@ -6,6 +6,7 @@ import { agentTargets, repositories, skillTargetPreferences, skillUnits } from "
 import {
   addSkillDirectoryTarget,
   addCustomDirectoryTarget,
+  deleteTargets,
   getTargets,
   rescanTargets,
   selectTargetDirectory
@@ -127,6 +128,66 @@ describe("target IPC handlers", () => {
         skillUnitId: "team-skills__skills-review-bot"
       }
     ]);
+  });
+
+  it("deletes selected custom directory targets and returns refreshed targets", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+
+    await db.insert(agentTargets).values([
+      {
+        createdAt,
+        defaultInstallStrategy: "copy",
+        enabled: true,
+        id: "target-project",
+        name: "Project target",
+        normalizedPath: "/Users/test/project/.codex/skills",
+        path: "/Users/test/project/.codex/skills",
+        type: "custom-directory",
+        updatedAt: createdAt
+      },
+      {
+        createdAt,
+        defaultInstallStrategy: "copy",
+        enabled: true,
+        id: "target-keep",
+        name: "Keep target",
+        normalizedPath: "/Users/test/keep/.codex/skills",
+        path: "/Users/test/keep/.codex/skills",
+        type: "custom-directory",
+        updatedAt: createdAt
+      }
+    ]);
+
+    await expect(deleteTargets(db, { targetIds: [" target-project ", ""] })).resolves.toEqual({
+      registeredTargets: [
+        {
+          createdAt: "2026-06-24T00:00:00.000Z",
+          defaultInstallStrategy: "copy",
+          enabled: true,
+          id: "target-keep",
+          name: "Keep target",
+          normalizedPath: "/Users/test/keep/.codex/skills",
+          path: "/Users/test/keep/.codex/skills",
+          scanMessage: null,
+          scope: "global",
+          selectedSkills: [],
+          skillCount: 0,
+          skillPreferences: [],
+          status: "registered",
+          type: "custom-directory",
+          updatedAt: "2026-06-24T00:00:00.000Z"
+        }
+      ]
+    });
+  });
+
+  it("rejects target deletion when no target ids are provided", async () => {
+    const db = createDbClient(":memory:");
+
+    await expect(deleteTargets(db, { targetIds: [" "] })).rejects.toThrow(
+      "At least one target is required."
+    );
   });
 
   it("lists targets from the database without mixing in system scan results", async () => {

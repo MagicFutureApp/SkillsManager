@@ -29,6 +29,10 @@ export type AddSkillDirectoryTargetInput = {
   targetPath: string;
 };
 
+export type DeleteTargetsInput = {
+  targetIds: string[];
+};
+
 type TargetsRescanOperations = {
   now: () => Date;
   scanRegisteredTargets: typeof scanRegisteredTargets;
@@ -119,6 +123,23 @@ export const addSkillDirectoryTarget = async (
   return getTargets(db);
 };
 
+export const deleteTargets = async (
+  db: DbClient,
+  input: DeleteTargetsInput
+): Promise<TargetsListResult> => {
+  const targetIds = normalizeTargetIds(input.targetIds);
+
+  if (!targetIds.length) {
+    throw new Error("At least one target is required.");
+  }
+
+  const targetRepository = createTargetRepository(db);
+
+  await targetRepository.deleteTargets(targetIds);
+
+  return getTargets(db);
+};
+
 export const rescanTargets = async (
   db: DbClient,
   operations: TargetsRescanOperations = {
@@ -173,6 +194,16 @@ export const registerTargetsIpc = (db: DbProvider): void => {
       return addSkillDirectoryTarget(resolveDb(db), input);
     }
   );
+  ipcMain.handle(
+    "targets:delete",
+    (_event, input: DeleteTargetsInput): Promise<TargetsListResult> => {
+      return deleteTargets(resolveDb(db), input);
+    }
+  );
+};
+
+const normalizeTargetIds = (targetIds: string[]): string[] => {
+  return Array.from(new Set(targetIds.map((targetId) => targetId.trim()).filter(Boolean)));
 };
 
 const createTargetIdentityKey = (target: TargetScanCandidate): string => {

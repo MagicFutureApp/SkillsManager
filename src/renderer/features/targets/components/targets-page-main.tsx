@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DataTable,
   DataTableBody,
@@ -12,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
 import { cn } from "@/lib/utils";
+import { Trash2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -37,6 +39,15 @@ export const TargetsPageMain = () => {
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={page.checkedCount === 0 || page.isDeletingTargets}
+              onClick={page.openCheckedDeleteDialog}
+            >
+              <Trash2 aria-hidden="true" />
+              {t("targets.actions.deleteSelected", { count: page.checkedCount })}
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -88,10 +99,22 @@ export const TargetsPageMain = () => {
       <DataTable containerClassName="mt-5">
         <DataTableHeader className="max-[820px]:hidden">
           <DataTableRow>
+            <DataTableHead className="w-[42px]">
+              <span className="grid place-items-center">
+                <Checkbox
+                  checked={page.visibleAllChecked}
+                  indeterminate={page.visibleSomeChecked && !page.visibleAllChecked}
+                  disabled={!page.visibleTargets.some((target) => target.deletable)}
+                  aria-label={t("targets.table.selectAll")}
+                  onCheckedChange={page.selectAllVisibleDeletable}
+                />
+              </span>
+            </DataTableHead>
             <DataTableHead className="w-[28%]">{t("targets.table.target")}</DataTableHead>
             <DataTableHead>{t("targets.table.path")}</DataTableHead>
             <DataTableHead className="w-[96px]">{t("targets.table.scope")}</DataTableHead>
             <DataTableHead className="w-[120px]">{t("targets.table.skills")}</DataTableHead>
+            <DataTableHead className="w-[72px]">{t("targets.table.actions")}</DataTableHead>
           </DataTableRow>
         </DataTableHeader>
 
@@ -110,6 +133,16 @@ export const TargetsPageMain = () => {
                   page.setSelectedTargetId(target.id);
                 }}
               >
+                <DataTableCell className="w-[42px]">
+                  <span className="grid place-items-center">
+                    <Checkbox
+                      checked={page.checkedIds.has(target.id)}
+                      disabled={!target.deletable}
+                      aria-label={t("targets.table.selectTarget", { name: target.name })}
+                      onCheckedChange={(checked) => page.toggleTargetChecked(target.id, checked)}
+                    />
+                  </span>
+                </DataTableCell>
                 <DataTableCell className="min-w-0">
                   <Button
                     type="button"
@@ -134,10 +167,22 @@ export const TargetsPageMain = () => {
                 <DataTableCell className="text-sm">
                   {t("targets.table.skillCount", { count: target.skillCount })}
                 </DataTableCell>
+                <DataTableCell className="w-[72px]">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={!target.deletable || page.isDeletingTargets}
+                    aria-label={t("targets.actions.deleteTarget", { name: target.name })}
+                    onClick={() => page.openDeleteDialog([target.id])}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </DataTableCell>
               </DataTableRow>
             ))
           ) : (
-            <DataTableEmptyRow colSpan={4}>{t("targets.empty")}</DataTableEmptyRow>
+            <DataTableEmptyRow colSpan={6}>{t("targets.empty")}</DataTableEmptyRow>
           )}
         </DataTableBody>
       </DataTable>

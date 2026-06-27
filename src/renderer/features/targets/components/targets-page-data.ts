@@ -1,3 +1,4 @@
+import { isBuiltInTargetType } from "../../../../core/targets/target-api";
 import type {
   RegisteredTargetStatus,
   RegisteredTargetRecord,
@@ -12,6 +13,7 @@ export type TargetSort = "status" | "name" | "skills";
 export type TargetIssue = TargetScanIssue;
 
 export type TargetViewModel = {
+  deletable: boolean;
   defaultInstallStrategy: string;
   id: string;
   name: string;
@@ -75,6 +77,7 @@ export const filterTargets = ({
 
 const adaptRegisteredTarget = (target: RegisteredTargetRecord): TargetViewModel => {
   return {
+    deletable: !isBuiltInTargetType(target.type),
     defaultInstallStrategy: target.defaultInstallStrategy,
     id: target.id,
     name: target.name,

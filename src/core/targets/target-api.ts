@@ -72,3 +72,9 @@ export type RegisteredTargetRecord = {
   type: string;
   updatedAt: string;
 };
+
+export const isBuiltInTargetType = (
+  type: string
+): type is Exclude<AgentTargetType, "custom-directory"> => {
+  return type === "codex" || type === "claude-code" || type === "gemini-cli";
+};

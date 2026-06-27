@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { TargetsPageProvider } from "./components/targets-page-context";
+import { TargetsDeleteDialog } from "./components/targets-delete-dialog";
 import { TargetsPageMain } from "./components/targets-page-main";
 import { TargetsPageSider } from "./components/targets-page-sider";
 import { TargetsScanLoadingDialog } from "./components/targets-scan-loading-dialog";
@@ -20,6 +21,7 @@ export const TargetsPage = () => {
         Sider={TargetsPageSider}
         siderLabel={t("targets.detail.ariaLabel")}
       />
+      <TargetsDeleteDialog />
       <TargetsScanLoadingDialog />
       <TargetsScanIssuesDialog />
     </TargetsPageProvider>

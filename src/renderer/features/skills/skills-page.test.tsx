@@ -457,6 +457,66 @@ describe("SkillsPage", () => {
     expect(screen.getByLabelText("选择 Design scratch")).toBeChecked();
   });
 
+  it("does not show deleted targets in the selected skill distribution targets", async () => {
+    const targets: TargetsListResult = {
+      registeredTargets: [
+        {
+          createdAt: "2026-06-21T00:00:00.000Z",
+          defaultInstallStrategy: "copy",
+          enabled: true,
+          id: "target-kept",
+          name: "Kept workspace",
+          normalizedPath: "/Users/test/kept/.codex/skills",
+          path: "/Users/test/kept/.codex/skills",
+          scanMessage: null,
+          selectedSkills: [
+            {
+              id: "team-skills__skills-review-bot",
+              name: "Review Bot",
+              repository: "Team skills repository"
+            }
+          ],
+          skillPreferences: [
+            {
+              enabled: true,
+              id: "team-skills__skills-review-bot",
+              name: "Review Bot",
+              repository: "Team skills repository"
+            }
+          ],
+          skillCount: 1,
+          scope: "global",
+          status: "registered",
+          type: "custom-directory",
+          updatedAt: "2026-06-21T00:00:00.000Z"
+        }
+      ]
+    };
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: ["target-kept", "target-deleted"],
+        version: "8f2c91a"
+      }
+    ];
+
+    await renderSkillsPage({ skills, targets });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    expect(screen.getByLabelText("选择 Kept workspace")).toBeChecked();
+    expect(screen.queryByLabelText("选择 Deleted workspace")).not.toBeInTheDocument();
+    expect(screen.queryByText("/Users/test/deleted/.codex/skills")).not.toBeInTheDocument();
+  });
+
   it("records target checkbox changes and keeps the last checked state locally", async () => {
     const skills: SkillApiRecord[] = [
       {

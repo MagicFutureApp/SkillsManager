@@ -114,6 +114,8 @@ export const resources = {
         actions: {
           addTarget: "新增目标",
           addTargetUnavailable: "新增目标暂未实现",
+          deleteSelected: "删除选中 ({{count}})",
+          deleteTarget: "删除 {{name}}",
           rescan: "重新扫描"
         },
         filters: {
@@ -125,8 +127,11 @@ export const resources = {
           sortSkills: "技能数"
         },
         table: {
+          actions: "操作",
           headerAriaLabel: "目标列表表头",
           path: "路径",
+          selectAll: "选择全部可删除目标",
+          selectTarget: "选择 {{name}}",
           skillCount: "{{count}} 个技能",
           skills: "技能",
           scope: "范围",
@@ -155,6 +160,13 @@ export const resources = {
         scanLoading: {
           description: "正在检查本机 agent 目录和已登记目标。",
           title: "正在扫描目标"
+        },
+        deleteDialog: {
+          batchSummary: "将删除 {{count}} 个目标。",
+          cancel: "取消",
+          confirm: "确认删除",
+          description: "目标目录里的 Skills 文件不会被删除。如有需要，请删除后手动清理。",
+          title: "删除目标"
         },
         detail: {
           ariaLabel: "目标详情",
@@ -504,6 +516,8 @@ export const resources = {
         actions: {
           addTarget: "Add target",
           addTargetUnavailable: "Adding targets is not implemented yet",
+          deleteSelected: "Delete selected ({{count}})",
+          deleteTarget: "Delete {{name}}",
           rescan: "Rescan"
         },
         filters: {
@@ -515,8 +529,11 @@ export const resources = {
           sortSkills: "Skill count"
         },
         table: {
+          actions: "Actions",
           headerAriaLabel: "Target list header",
           path: "Path",
+          selectAll: "Select all deletable targets",
+          selectTarget: "Select {{name}}",
           skillCount: "{{count}} skills",
           skills: "Skills",
           scope: "Scope",
@@ -546,6 +563,14 @@ export const resources = {
         scanLoading: {
           description: "Checking local agent directories and registered targets.",
           title: "Scanning targets"
+        },
+        deleteDialog: {
+          batchSummary: "{{count}} targets will be deleted.",
+          cancel: "Cancel",
+          confirm: "Delete",
+          description:
+            "Skills files in the target folders will not be deleted. Remove them manually after deletion if needed.",
+          title: "Delete target"
         },
         detail: {
           ariaLabel: "Target details",

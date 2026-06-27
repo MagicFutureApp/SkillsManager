@@ -1,6 +1,7 @@
-import { asc, count, eq } from "drizzle-orm";
+import { asc, count, eq, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
+import { isBuiltInTargetType } from "../../core/targets/target-api";
 import type {
   RegisteredTargetRecord,
   RegisteredTargetStatus,
@@ -113,6 +114,39 @@ export const createTargetRepository = (db: DbClient) => {
       }));
     },
 
+    async deleteTargets(targetIds: string[]): Promise<void> {
+      const normalizedTargetIds = normalizeTargetIds(targetIds);
+
+      if (!normalizedTargetIds.length) {
+        return;
+      }
+
+      const targetRows = await db
+        .select({
+          id: agentTargets.id,
+          type: agentTargets.type
+        })
+        .from(agentTargets)
+        .where(inArray(agentTargets.id, normalizedTargetIds));
+
+      if (targetRows.some((target) => isBuiltInTargetType(target.type))) {
+        throw new Error("System built-in targets cannot be deleted.");
+      }
+
+      const deletableTargetIds = targetRows.map((target) => target.id);
+
+      if (!deletableTargetIds.length) {
+        return;
+      }
+
+      db.transaction((tx) => {
+        tx.delete(skillTargetPreferences)
+          .where(inArray(skillTargetPreferences.agentTargetId, deletableTargetIds))
+          .run();
+        tx.delete(agentTargets).where(inArray(agentTargets.id, deletableTargetIds)).run();
+      });
+    },
+
     async registerCustomDirectoryTarget(
       target: RegisterCustomDirectoryTargetInput,
       registeredAt = new Date()
@@ -193,6 +227,10 @@ export const createTargetRepository = (db: DbClient) => {
       }
     }
   };
+};
+
+const normalizeTargetIds = (targetIds: string[]): string[] => {
+  return Array.from(new Set(targetIds.map((targetId) => targetId.trim()).filter(Boolean)));
 };
 
 const upsertCustomDirectoryTarget = async (
