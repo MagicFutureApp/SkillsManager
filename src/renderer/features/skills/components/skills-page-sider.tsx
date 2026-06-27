@@ -1,5 +1,15 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogClose,
+  DialogDescription,
+  DialogPopup,
+  DialogPortal,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import React from "react";
@@ -7,6 +17,7 @@ import { useTranslation } from "react-i18next";
 
 import { useSkillsPageContext } from "./skills-page-context";
 import { getDistributionTitleKey, getSkillDistributionState } from "./skills-page-data";
+import type { SkillsPageState } from "../hooks/use-skills-page-state";
 
 export const SkillsPageSider = () => {
   const { t } = useTranslation();
@@ -25,15 +36,42 @@ export const SkillsPageSider = () => {
   const distributionReady = distributionState === "ready";
   const syncTitle = t(getDistributionTitleKey(distributionState, "single"));
   const targetOptions = page.selectedSkillTargetOptions;
+  const planItems =
+    page.distributionPreview?.items.filter((item) => item.skillUnitId === selectedSkill.id) ?? [];
   const canAddSyncTarget =
     Boolean(window.skillsManager?.selectTargetDirectory) &&
     Boolean(window.skillsManager?.addSkillDirectoryTarget);
+  const canPreviewDistribution = Boolean(window.skillsManager?.previewDistributionPlan);
 
   return (
     <>
       <section className="min-w-0 rounded-xl border border-border bg-card p-4">
         <h2 className="text-xl font-semibold">{selectedSkill.name}</h2>
         <SkillDescription description={selectedSkill.description} />
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={
+              !distributionReady || !canPreviewDistribution || page.isDistributionPreviewLoading
+            }
+            title={
+              canPreviewDistribution ? syncTitle : t("skills.actions.previewUnavailableStatus")
+            }
+            onClick={page.previewSelectedSkillDistribution}
+          >
+            {t("skills.actions.preview")}
+          </Button>
+          <Button
+            type="button"
+            disabled={!distributionReady}
+            title={syncTitle}
+            aria-label={t("skills.actions.syncCurrentSkillAria")}
+            onClick={page.announceDistributionUnavailable}
+          >
+            {t("skills.actions.sync")}
+          </Button>
+        </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
@@ -96,29 +134,16 @@ export const SkillsPageSider = () => {
         </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-4">
-        <h3 className="font-semibold">{t("skills.detail.planPreview")}</h3>
-        <p className="mt-7 text-sm leading-6 text-muted-foreground">
-          {t("skills.detail.planPreviewDescription")}
-        </p>
-        <p className="mt-14 text-sm text-muted-foreground">{t("skills.detail.planPreviewEmpty")}</p>
-      </section>
-
-      <div className="grid grid-cols-2 gap-2">
-        <Button type="button" variant="outline">
-          {t("skills.actions.preview")}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!distributionReady}
-          title={syncTitle}
-          aria-label={t("skills.actions.syncCurrentSkillAria")}
-          onClick={page.announceDistributionUnavailable}
-        >
-          {t("skills.actions.sync")}
-        </Button>
-      </div>
+      <DistributionPreviewDialog
+        copy={{
+          close: t("skills.actions.close"),
+          description: t("skills.detail.planPreviewDescription"),
+          title: t("skills.detail.planPreview")
+        }}
+        items={planItems}
+        onClose={page.closeDistributionPreviewDialog}
+        open={page.distributionPreviewDialogOpen && planItems.length > 0}
+      />
 
       <section className="rounded-xl border border-border bg-card p-4">
         <h3 className="font-semibold">{t("skills.detail.details")}</h3>
@@ -139,6 +164,72 @@ export const SkillsPageSider = () => {
       </section>
     </>
   );
+};
+
+const DistributionPreviewDialog = ({
+  copy,
+  items,
+  onClose,
+  open
+}: {
+  copy: {
+    close: string;
+    description: string;
+    title: string;
+  };
+  items: NonNullable<SkillsPageState["distributionPreview"]>["items"];
+  onClose: () => void;
+  open: boolean;
+}) => {
+  return (
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <DialogPortal>
+        <DialogBackdrop />
+        <DialogPopup>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <DialogTitle>{copy.title}</DialogTitle>
+              <DialogDescription>{copy.description}</DialogDescription>
+            </div>
+            <DialogClose render={<Button type="button" variant="outline" size="sm" />}>
+              {copy.close}
+            </DialogClose>
+          </div>
+
+          <div className="grid gap-2">
+            {items.map((item) => (
+              <div key={item.id} className="rounded-lg border border-border bg-background p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <strong className="min-w-0 truncate text-sm">{item.targetName}</strong>
+                  <Badge variant={getPlanActionBadgeVariant(item.action)}>{item.action}</Badge>
+                </div>
+                <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
+                  {item.targetPath}
+                </p>
+                {item.reason ? (
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.reason}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </DialogPopup>
+      </DialogPortal>
+    </Dialog>
+  );
+};
+
+const getPlanActionBadgeVariant = (
+  action: "install" | "update" | "skip" | "conflict"
+): React.ComponentProps<typeof Badge>["variant"] => {
+  if (action === "conflict") {
+    return "destructive";
+  }
+
+  if (action === "skip") {
+    return "outline";
+  }
+
+  return "secondary";
 };
 
 const SkillDescription = ({ description }: { description: string }) => {

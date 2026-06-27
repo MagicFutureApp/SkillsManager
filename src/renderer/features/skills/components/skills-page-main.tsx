@@ -60,7 +60,6 @@ export const SkillsPageMain = () => {
           <div className="flex flex-wrap justify-end gap-2">
             <Button
               type="button"
-              variant="outline"
               disabled={!selectedDistributionReady}
               title={selectedSyncTitle}
               aria-label={t("skills.actions.syncSelectedAria")}
@@ -72,7 +71,7 @@ export const SkillsPageMain = () => {
         </div>
         {page.distributionNoticeVisible ? (
           <p role="status" className="mt-2 text-sm text-muted-foreground">
-            {t("skills.actions.syncUnavailableStatus")}
+            {page.distributionNoticeKey ? t(page.distributionNoticeKey) : null}
           </p>
         ) : null}
       </header>
@@ -187,7 +186,6 @@ const SkillTableRow = ({ skill }: { skill: Skill }) => {
       <DataTableCell>
         <Button
           type="button"
-          variant="outline"
           size="sm"
           disabled={!distributionReady}
           title={distributionTitle}

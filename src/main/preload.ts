@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { SupportedLocale } from "../core/i18n/locale";
 import type { AppInfo } from "./ipc/app-info";
+import type { DistributionPreviewInput, DistributionPreviewResult } from "./ipc/distribution";
 import type { AppHealth } from "./ipc/health";
 import type { NavigationBadgeCountsResult } from "./ipc/navigation-badges";
 import type { ProvidersListResult } from "./ipc/providers";
@@ -58,6 +59,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
       remoteUrl
     ) as Promise<RepositorySourceInspection>,
   listProviders: () => ipcRenderer.invoke("providers:list") as Promise<ProvidersListResult>,
+  previewDistributionPlan: (input: DistributionPreviewInput) =>
+    ipcRenderer.invoke("distribution:preview", input) as Promise<DistributionPreviewResult>,
   listRepositories: () =>
     ipcRenderer.invoke("repositories:list") as Promise<RepositoriesListResult>,
   listSkills: () => ipcRenderer.invoke("skills:list") as Promise<SkillsListResult>,

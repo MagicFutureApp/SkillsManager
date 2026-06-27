@@ -2,6 +2,8 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { minimatch } from "minimatch";
 
+import { toSkillKey } from "./skill-utils";
+
 export type DiscoveredSkill = {
   description: string;
   discoveryMethod: "convention";
@@ -163,18 +165,6 @@ const titleize = (value: string): string => {
   }
 
   return words.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`).join(" ");
-};
-
-const toSkillKey = (rootPath: string): string => {
-  if (rootPath === ".") {
-    return "skill";
-  }
-
-  return rootPath
-    .replace(/^\.+\//, "")
-    .replace(/[^a-zA-Z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .toLowerCase();
 };
 
 const toPosixPath = (value: string): string => {

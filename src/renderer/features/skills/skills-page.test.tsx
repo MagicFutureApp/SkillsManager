@@ -8,6 +8,7 @@ import { SkillsPage } from "./skills-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import { skillApiRecordsFixture } from "@/test/api-fixtures";
 import type { TargetsListResult } from "@/global";
+import type { DistributionPreviewPlan } from "../../../core/distribution/distribution-api";
 import type { SkillApiRecord } from "../../../core/skills/skill-api";
 
 const mockDescriptionOverflow = (overflowingText: string) => {
@@ -99,11 +100,43 @@ const skillTargetsFixture: TargetsListResult = {
   ]
 };
 
+const distributionPreviewFixture: DistributionPreviewPlan = {
+  createdAt: "2026-06-27T00:00:00.000Z",
+  id: "plan-preview-1",
+  items: [
+    {
+      action: "install",
+      agentTargetId: "codex",
+      commitSha: "8f2c91abcdef",
+      id: "plan-item-1",
+      installStrategy: "copy",
+      reason: "Skill is not installed on this target.",
+      skillName: "Review Bot",
+      skillUnitId: "team-skills__skills-review-bot",
+      sourcePath: "/Users/test/.skills-manager/cache/team-skills/skills/review-bot",
+      status: "pending",
+      targetName: "Codex",
+      targetPath: "/Users/test/.codex/skills/skills-review-bot"
+    }
+  ],
+  operationType: "install",
+  status: "ready",
+  summary: {
+    actionCounts: { conflict: 0, install: 1, skip: 0, update: 0 },
+    itemCount: 1,
+    skillCount: 1,
+    targetCount: 1
+  },
+  triggerSource: "skill_detail"
+};
+
 const renderSkillsPage = async ({
+  distributionPreview = distributionPreviewFixture,
   locale = "zh-CN",
   skills = [],
   targets = skillTargetsFixture
 }: {
+  distributionPreview?: DistributionPreviewPlan;
   locale?: "zh-CN" | "en-US";
   skills?: typeof skillApiRecordsFixture;
   targets?: TargetsListResult;
@@ -111,6 +144,7 @@ const renderSkillsPage = async ({
   const i18n = await createI18nInstance(locale);
   const setSkillTargetPreference = vi.fn().mockResolvedValue({ success: true });
   const addSkillDirectoryTarget = vi.fn().mockResolvedValue(targets);
+  const previewDistributionPlan = vi.fn().mockResolvedValue(distributionPreview);
   const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/review-skills");
 
   window.skillsManager = {
@@ -122,6 +156,7 @@ const renderSkillsPage = async ({
     listSkills: vi.fn().mockResolvedValue({ skills }),
     listTargets: vi.fn().mockResolvedValue(targets),
     addSkillDirectoryTarget,
+    previewDistributionPlan,
     selectTargetDirectory,
     setSkillTargetPreference,
     platform: "darwin"
@@ -134,6 +169,7 @@ const renderSkillsPage = async ({
       </I18nextProvider>
     ),
     addSkillDirectoryTarget,
+    previewDistributionPlan,
     selectTargetDirectory,
     setSkillTargetPreference
   };
@@ -236,7 +272,8 @@ describe("SkillsPage", () => {
     const distributeButton = within(skillDetail).getByRole("button", { name: "分发当前技能" });
 
     expect(within(skillDetail).queryByRole("button", { name: "编辑" })).not.toBeInTheDocument();
-    expect(distributeButton).toHaveClass("border-border", "bg-background");
+    expect(distributeButton).toHaveClass("bg-primary", "text-primary-foreground");
+    expect(distributeButton).not.toHaveClass("border-border", "bg-background");
     expect(distributeButton).toBeDisabled();
     expect(distributeButton).toHaveAttribute("title", "请先添加分发目标");
     await waitFor(() => expect(window.skillsManager?.listSkills).toHaveBeenCalled());
@@ -688,6 +725,8 @@ describe("SkillsPage", () => {
     await screen.findByRole("button", { name: "Review Bot" });
 
     const distributeButton = screen.getByRole("button", { name: "分发选中的技能" });
+    expect(distributeButton).toHaveClass("bg-primary", "text-primary-foreground");
+    expect(distributeButton).not.toHaveClass("border-border", "bg-background");
     expect(distributeButton).toBeDisabled();
     expect(distributeButton).toHaveAttribute("title", "请先选择要分发的技能");
 
@@ -720,6 +759,8 @@ describe("SkillsPage", () => {
     expect(bulkDistributeButton).toHaveAttribute("title", "请先选择要分发的技能");
 
     const reviewRowDistributeButton = screen.getByRole("button", { name: "分发 Review Bot" });
+    expect(reviewRowDistributeButton).toHaveClass("bg-primary", "text-primary-foreground");
+    expect(reviewRowDistributeButton).not.toHaveClass("border-border", "bg-background");
     expect(reviewRowDistributeButton).toBeDisabled();
     expect(reviewRowDistributeButton).toHaveAttribute("title", "请先添加分发目标");
 
@@ -740,6 +781,7 @@ describe("SkillsPage", () => {
     expect(bulkDistributeButton).toHaveTextContent("分发 (1)");
     expect(bulkDistributeButton).toBeEnabled();
     expect(bulkDistributeButton).toHaveAttribute("title", "分发功能暂未实现");
+    expect(designRowDistributeButton).toHaveClass("bg-primary", "text-primary-foreground");
     expect(designRowDistributeButton).toBeEnabled();
     expect(designRowDistributeButton).toHaveAttribute("title", "分发功能暂未实现");
 
@@ -753,5 +795,66 @@ describe("SkillsPage", () => {
 
     fireEvent.click(selectedDetailDistributeButton);
     expect(screen.getByRole("status")).toHaveTextContent("分发功能暂未实现。");
+  });
+
+  it("previews the selected skill distribution plan in a dialog", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: ["codex"],
+        version: "8f2c91a"
+      }
+    ];
+    const { previewDistributionPlan } = await renderSkillsPage({ skills });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    const skillDetail = screen.getByLabelText("技能详情");
+    const summarySection = within(skillDetail)
+      .getByRole("heading", { name: "Review Bot" })
+      .closest("section") as HTMLElement;
+
+    expect(
+      within(skillDetail).queryByRole("heading", { name: "计划预览" })
+    ).not.toBeInTheDocument();
+    expect(within(summarySection).getByRole("button", { name: "预览" })).toBeInTheDocument();
+    expect(
+      within(summarySection).getByRole("button", { name: "分发当前技能" })
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(summarySection).getByRole("button", { name: "预览" }));
+
+    await waitFor(() =>
+      expect(previewDistributionPlan).toHaveBeenCalledWith({
+        skillUnitIds: ["team-skills__skills-review-bot"],
+        triggerSource: "skill_detail"
+      })
+    );
+    const planDialog = await screen.findByRole("dialog", { name: "计划预览" });
+
+    expect(within(planDialog).getByText("Codex")).toBeInTheDocument();
+    expect(within(planDialog).getByText("install")).toBeInTheDocument();
+    expect(
+      within(planDialog).getByText("/Users/test/.codex/skills/skills-review-bot")
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(planDialog).getByRole("button", { name: "关闭" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "计划预览" })).not.toBeInTheDocument()
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("计划预览已生成。");
+    expect(
+      within(skillDetail).queryByRole("heading", { name: "计划预览" })
+    ).not.toBeInTheDocument();
+    expect(within(skillDetail).queryByText("已生成 1 条 dry-run 条目。")).not.toBeInTheDocument();
   });
 });

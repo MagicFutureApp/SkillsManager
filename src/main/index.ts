@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, Tray } from "electron";
 import path from "node:path";
 import { createAppDbRuntime, type AppDbRuntime } from "./app-storage.js";
 import { registerAppInfoIpc } from "./ipc/app-info.js";
+import { registerDistributionIpc } from "./ipc/distribution.js";
 import { registerHealthIpc } from "./ipc/health";
 import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
 import { registerNavigationBadgesIpc } from "./ipc/navigation-badges.js";
@@ -107,6 +108,7 @@ void app
     }
 
     registerAppInfoIpc();
+    registerDistributionIpc(dbRuntime.getDb);
     registerHealthIpc();
     registerLocaleIpc();
     registerNavigationBadgesIpc(dbRuntime.getDb);

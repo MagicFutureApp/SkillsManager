@@ -6,15 +6,11 @@ import type {
   SkillApiStatus,
   UpdateSkillTargetPreferenceInput
 } from "../../core/skills/skill-api";
+import { parseSkillMetadataSnapshot, toSkillKey } from "../../core/skills/skill-utils";
 import type { createDbClient } from "../client";
 import { repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
-
-type SkillMetadataSnapshot = {
-  skillKey?: unknown;
-  tags?: unknown;
-};
 
 export const createSkillRepository = (db: DbClient) => {
   return {
@@ -64,7 +60,7 @@ export const createSkillRepository = (db: DbClient) => {
       const targetsBySkillId = await getEnabledTargetsBySkillId(db);
 
       return Array.from(latestRows.values()).map((row) => {
-        const metadata = parseMetadataSnapshot(row.metadataSnapshotJson);
+        const metadata = parseSkillMetadataSnapshot(row.metadataSnapshotJson);
 
         return {
           description: row.description,
@@ -74,7 +70,7 @@ export const createSkillRepository = (db: DbClient) => {
           name: row.name,
           repository: row.repositoryName,
           repositoryId: row.repositoryId,
-          skillId: metadata.skillKey || toFallbackSkillKey(row.rootPath),
+          skillId: metadata.skillKey || toSkillKey(row.rootPath),
           status: normalizeStatus(row.status),
           tags: metadata.tags,
           targets: targetsBySkillId.get(row.id) ?? [],
@@ -138,35 +134,10 @@ const isSkillSourceEnabled = (row: { repositoryConfigJson: string }): boolean =>
   }
 };
 
-const parseMetadataSnapshot = (
-  metadataSnapshotJson: string
-): { skillKey: string; tags: string[] } => {
-  try {
-    const parsed = JSON.parse(metadataSnapshotJson) as SkillMetadataSnapshot;
-
-    return {
-      skillKey: typeof parsed.skillKey === "string" ? parsed.skillKey : "",
-      tags: Array.isArray(parsed.tags)
-        ? parsed.tags.filter((tag): tag is string => typeof tag === "string")
-        : []
-    };
-  } catch {
-    return { skillKey: "", tags: [] };
-  }
-};
-
 const normalizeStatus = (value: string): SkillApiStatus => {
   if (value === "installed" || value === "review") {
     return value;
   }
 
   return "ready";
-};
-
-const toFallbackSkillKey = (rootPath: string): string => {
-  return rootPath
-    .replace(/^\.+\//, "")
-    .replace(/[^a-zA-Z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .toLowerCase();
 };

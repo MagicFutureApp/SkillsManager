@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import type { DistributionPreviewResult } from "@/global";
 import {
   adaptSkillRecord,
   adaptTargetOption,
@@ -15,9 +16,14 @@ import {
 
 export const useSkillsPageState = () => {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
+  const [distributionNoticeKey, setDistributionNoticeKey] = useState<string | null>(null);
+  const [distributionPreview, setDistributionPreview] = useState<DistributionPreviewResult | null>(
+    null
+  );
+  const [distributionPreviewDialogOpen, setDistributionPreviewDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [repositoryFilter, setRepositoryFilter] = useState<SkillRepositoryFilter>("all");
-  const [distributionNoticeVisible, setDistributionNoticeVisible] = useState(false);
+  const [isDistributionPreviewLoading, setIsDistributionPreviewLoading] = useState(false);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [sort, setSort] = useState<SkillSort>("name");
@@ -123,7 +129,41 @@ export const useSkillsPageState = () => {
   };
 
   const announceDistributionUnavailable = () => {
-    setDistributionNoticeVisible(true);
+    setDistributionNoticeKey("skills.actions.syncUnavailableStatus");
+  };
+
+  const previewSelectedSkillDistribution = async () => {
+    if (!selectedSkill || selectedSkill.targets.length === 0) {
+      return;
+    }
+
+    const previewDistributionPlan = window.skillsManager?.previewDistributionPlan;
+
+    if (!previewDistributionPlan) {
+      setDistributionNoticeKey("skills.actions.previewUnavailableStatus");
+      return;
+    }
+
+    setIsDistributionPreviewLoading(true);
+
+    try {
+      const preview = await previewDistributionPlan({
+        skillUnitIds: [selectedSkill.id],
+        triggerSource: "skill_detail"
+      });
+
+      setDistributionPreview(preview);
+      setDistributionPreviewDialogOpen(true);
+      setDistributionNoticeKey("skills.actions.previewGeneratedStatus");
+    } catch {
+      setDistributionNoticeKey("skills.actions.previewFailedStatus");
+    } finally {
+      setIsDistributionPreviewLoading(false);
+    }
+  };
+
+  const closeDistributionPreviewDialog = () => {
+    setDistributionPreviewDialogOpen(false);
   };
 
   const toggleSkillTargetPreference = (skillId: string, targetId: string, enabled: boolean) => {
@@ -210,7 +250,11 @@ export const useSkillsPageState = () => {
     checkedDistributionState,
     checkedCount,
     checkedIds,
-    distributionNoticeVisible,
+    distributionNoticeKey,
+    distributionNoticeVisible: Boolean(distributionNoticeKey),
+    distributionPreview,
+    distributionPreviewDialogOpen,
+    isDistributionPreviewLoading,
     query,
     repositoryFilter,
     repositoryOptions,
@@ -223,6 +267,8 @@ export const useSkillsPageState = () => {
     visibleSkills,
     visibleSomeChecked,
     announceDistributionUnavailable,
+    closeDistributionPreviewDialog,
+    previewSelectedSkillDistribution,
     selectAllVisible,
     setQuery,
     setRepositoryFilter,
