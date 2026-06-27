@@ -38,7 +38,7 @@ export const resources = {
         empty: "暂无已索引技能。",
         actions: {
           sync: "分发",
-          syncSelected: "分发 ({{count}})",
+          syncSelected: "分发",
           syncSelectedAria: "分发选中的技能",
           syncCurrentSkillAria: "分发当前技能",
           syncSkillAria: "分发 {{name}}",
@@ -112,9 +112,9 @@ export const resources = {
         description: "扫描本机 agent 目录，并汇总 Skills 页面已选择的本地目标。",
         empty: "没有匹配的目标。调整搜索条件。",
         actions: {
-          addTarget: "新增目标",
+          addTarget: "新增",
           addTargetUnavailable: "新增目标暂未实现",
-          deleteSelected: "删除选中 ({{count}})",
+          deleteSelected: "删除",
           deleteTarget: "删除 {{name}}",
           rescan: "重新扫描"
         },
@@ -437,7 +437,7 @@ export const resources = {
         empty: "No indexed skills yet.",
         actions: {
           sync: "Distribute",
-          syncSelected: "Distribute ({{count}})",
+          syncSelected: "Distribute",
           syncSelectedAria: "Distribute selected skills",
           syncCurrentSkillAria: "Distribute current skill",
           syncSkillAria: "Distribute {{name}}",
@@ -514,9 +514,9 @@ export const resources = {
           "Scan local agent directories and summarize local targets selected from the Skills page.",
         empty: "No matching targets. Adjust the search.",
         actions: {
-          addTarget: "Add target",
+          addTarget: "Add",
           addTargetUnavailable: "Adding targets is not implemented yet",
-          deleteSelected: "Delete selected ({{count}})",
+          deleteSelected: "Delete",
           deleteTarget: "Delete {{name}}",
           rescan: "Rescan"
         },

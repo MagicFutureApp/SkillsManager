@@ -96,6 +96,10 @@ describe("RepositoriesPage", () => {
     expect(screen.queryByText("启用仓库")).not.toBeInTheDocument();
     expect(screen.queryByText("已索引技能")).not.toBeInTheDocument();
     expect(screen.queryByText("需要复核")).not.toBeInTheDocument();
+    const headerButtons = within(pageHeader as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.textContent);
+    expect(headerButtons).toEqual(["新增", "同步"]);
     expect(screen.getByRole("button", { name: "同步" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "新增" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "强制重新扫描" })).not.toBeInTheDocument();
@@ -117,6 +121,10 @@ describe("RepositoriesPage", () => {
     expect(
       within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" })
     ).toBeInTheDocument();
+    const deleteButton = within(screen.getByLabelText("来源详情")).getByRole("button", {
+      name: "删除"
+    });
+    expect(deleteButton.querySelector("svg")).toBeNull();
     expect(screen.getByText("同步影响")).toBeInTheDocument();
     expect(within(screen.getByLabelText("来源详情")).getByText("新增技能")).toBeInTheDocument();
     expect(within(screen.getByLabelText("来源详情")).getByText("移除技能")).toBeInTheDocument();

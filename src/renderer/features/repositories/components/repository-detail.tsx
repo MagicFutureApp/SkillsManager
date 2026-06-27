@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { DetailRow } from "@/components/detail-row";
 import type { RepositoryViewModel } from "./repository-data";
-import { Trash2 } from "lucide-react";
 import React from "react";
 
 type RepositoryDetailProps = {
@@ -68,7 +67,6 @@ export const RepositoryDetail = ({
             {copy.copyCache}
           </Button>
           <Button type="button" variant="destructive" disabled={!repository} onClick={onDelete}>
-            <Trash2 aria-hidden="true" />
             {copy.delete}
           </Button>
         </div>

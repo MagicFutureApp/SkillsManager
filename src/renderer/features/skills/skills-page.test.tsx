@@ -792,7 +792,8 @@ describe("SkillsPage", () => {
 
     fireEvent.click(screen.getByLabelText("选择 Review Bot"));
     expect(screen.getByLabelText("选择 Review Bot")).toBeChecked();
-    expect(distributeButton).toHaveTextContent("分发 (1)");
+    expect(distributeButton).toHaveTextContent("分发");
+    expect(distributeButton).not.toHaveTextContent(/\(\d+\)/);
     expect(distributeButton).toBeDisabled();
     expect(distributeButton).toHaveAttribute("title", "选中的技能没有分发目标");
 
@@ -800,12 +801,14 @@ describe("SkillsPage", () => {
     expect(screen.getByLabelText("选择 Review Bot")).toBeChecked();
     expect(screen.getByLabelText("选择 Design Helper")).toBeChecked();
     expect(screen.getByLabelText("选择 Release Notes")).toBeChecked();
-    expect(distributeButton).toHaveTextContent("分发 (3)");
+    expect(distributeButton).toHaveTextContent("分发");
+    expect(distributeButton).not.toHaveTextContent(/\(\d+\)/);
 
     fireEvent.change(screen.getByLabelText("搜索技能"), { target: { value: "Review Bot" } });
     fireEvent.click(screen.getByLabelText("选择全部可见技能"));
     expect(screen.getByLabelText("选择 Review Bot")).not.toBeChecked();
-    expect(distributeButton).toHaveTextContent("分发 (2)");
+    expect(distributeButton).toHaveTextContent("分发");
+    expect(distributeButton).not.toHaveTextContent(/\(\d+\)/);
     expect(distributeButton).toBeEnabled();
     expect(distributeButton).toHaveAttribute("title", "分发功能暂未实现");
   });
@@ -831,14 +834,16 @@ describe("SkillsPage", () => {
     expect(detailDistributeButton).toHaveAttribute("title", "请先添加分发目标");
 
     fireEvent.click(screen.getByLabelText("选择 Review Bot"));
-    expect(bulkDistributeButton).toHaveTextContent("分发 (1)");
+    expect(bulkDistributeButton).toHaveTextContent("分发");
+    expect(bulkDistributeButton).not.toHaveTextContent(/\(\d+\)/);
     expect(bulkDistributeButton).toBeDisabled();
     expect(bulkDistributeButton).toHaveAttribute("title", "选中的技能没有分发目标");
 
     fireEvent.click(screen.getByLabelText("选择 Review Bot"));
     fireEvent.click(screen.getByLabelText("选择 Design Helper"));
     const designRowDistributeButton = screen.getByRole("button", { name: "分发 Design Helper" });
-    expect(bulkDistributeButton).toHaveTextContent("分发 (1)");
+    expect(bulkDistributeButton).toHaveTextContent("分发");
+    expect(bulkDistributeButton).not.toHaveTextContent(/\(\d+\)/);
     expect(bulkDistributeButton).toBeEnabled();
     expect(bulkDistributeButton).toHaveAttribute("title", "分发功能暂未实现");
     expect(designRowDistributeButton).toHaveClass("bg-primary", "text-primary-foreground");

@@ -41,23 +41,6 @@ export const TargetsPageMain = () => {
           <div className="flex flex-wrap justify-end gap-2">
             <Button
               type="button"
-              variant="destructive"
-              disabled={page.checkedCount === 0 || page.isDeletingTargets}
-              onClick={page.openCheckedDeleteDialog}
-            >
-              <Trash2 aria-hidden="true" />
-              {t("targets.actions.deleteSelected", { count: page.checkedCount })}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={page.isRefreshingTargets}
-              onClick={page.refreshTargets}
-            >
-              {t("targets.actions.rescan")}
-            </Button>
-            <Button
-              type="button"
               disabled={
                 page.isRefreshingTargets ||
                 !window.skillsManager?.selectTargetDirectory ||
@@ -72,6 +55,22 @@ export const TargetsPageMain = () => {
               onClick={page.addTarget}
             >
               {t("targets.actions.addTarget")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={page.isRefreshingTargets}
+              onClick={page.refreshTargets}
+            >
+              {t("targets.actions.rescan")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={page.checkedCount === 0 || page.isDeletingTargets}
+              onClick={page.openCheckedDeleteDialog}
+            >
+              {t("targets.actions.deleteSelected")}
             </Button>
           </div>
         </div>
@@ -135,12 +134,13 @@ export const TargetsPageMain = () => {
               >
                 <DataTableCell className="w-[42px]">
                   <span className="grid place-items-center">
-                    <Checkbox
-                      checked={page.checkedIds.has(target.id)}
-                      disabled={!target.deletable}
-                      aria-label={t("targets.table.selectTarget", { name: target.name })}
-                      onCheckedChange={(checked) => page.toggleTargetChecked(target.id, checked)}
-                    />
+                    {target.deletable ? (
+                      <Checkbox
+                        checked={page.checkedIds.has(target.id)}
+                        aria-label={t("targets.table.selectTarget", { name: target.name })}
+                        onCheckedChange={(checked) => page.toggleTargetChecked(target.id, checked)}
+                      />
+                    ) : null}
                   </span>
                 </DataTableCell>
                 <DataTableCell className="min-w-0">
@@ -168,16 +168,18 @@ export const TargetsPageMain = () => {
                   {t("targets.table.skillCount", { count: target.skillCount })}
                 </DataTableCell>
                 <DataTableCell className="w-[72px]">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={!target.deletable || page.isDeletingTargets}
-                    aria-label={t("targets.actions.deleteTarget", { name: target.name })}
-                    onClick={() => page.openDeleteDialog([target.id])}
-                  >
-                    <Trash2 aria-hidden="true" />
-                  </Button>
+                  {target.deletable ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={page.isDeletingTargets}
+                      aria-label={t("targets.actions.deleteTarget", { name: target.name })}
+                      onClick={() => page.openDeleteDialog([target.id])}
+                    >
+                      <Trash2 aria-hidden="true" />
+                    </Button>
+                  ) : null}
                 </DataTableCell>
               </DataTableRow>
             ))

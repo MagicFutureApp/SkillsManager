@@ -20,6 +20,9 @@ export const RepositoriesPageMain = () => {
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
+            <Button type="button" onClick={page.openCreateModal}>
+              {t("repositories.actions.addRepository")}
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -27,9 +30,6 @@ export const RepositoriesPageMain = () => {
               onClick={() => void page.syncCheckedRepositories()}
             >
               {t("repositories.actions.syncSelected")}
-            </Button>
-            <Button type="button" onClick={page.openCreateModal}>
-              {t("repositories.actions.addRepository")}
             </Button>
           </div>
         </div>

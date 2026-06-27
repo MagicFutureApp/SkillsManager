@@ -32,10 +32,7 @@ export const SkillsPageMain = () => {
   const hasVisibleSkills = visibleSkills.length > 0;
   const selectedDistributionReady = page.checkedDistributionState === "ready";
   const selectedSyncTitle = t(getDistributionTitleKey(page.checkedDistributionState, "selected"));
-  const syncLabel =
-    page.checkedCount > 0
-      ? t("skills.actions.syncSelected", { count: page.checkedCount })
-      : t("skills.actions.sync");
+  const syncLabel = t("skills.actions.sync");
   const sortOptions: SelectOption<SkillSort>[] = [
     { value: "name", label: t("skills.filters.sortName") },
     { value: "repository", label: t("skills.filters.sortRepository") }

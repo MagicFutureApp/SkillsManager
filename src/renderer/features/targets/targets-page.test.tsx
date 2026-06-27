@@ -237,8 +237,15 @@ describe("TargetsPage", () => {
     expect(
       screen.getByText("扫描本机 agent 目录，并汇总 Skills 页面已选择的本地目标。")
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "重新扫描" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "新增目标" })).toBeInTheDocument();
+    const headerButtons = within(pageHeader as HTMLElement)
+      .getAllByRole("button")
+      .map((button) => button.textContent);
+    expect(headerButtons).toEqual(["新增", "重新扫描", "删除"]);
+    const batchDeleteButton = within(pageHeader as HTMLElement).getByRole("button", {
+      name: "删除"
+    });
+    expect(batchDeleteButton.querySelector("svg")).toBeNull();
+    expect(screen.queryByRole("button", { name: "新增目标" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /同步/ })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("目标摘要")).not.toBeInTheDocument();
 
@@ -306,9 +313,9 @@ describe("TargetsPage", () => {
     fireEvent.click(screen.getByLabelText("选择 Local project"));
     fireEvent.click(screen.getByLabelText("选择 Design scratch"));
 
-    expect(screen.getByRole("button", { name: "删除选中 (2)" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "删除" })).toBeEnabled();
 
-    fireEvent.click(screen.getByRole("button", { name: "删除选中 (2)" }));
+    fireEvent.click(screen.getByRole("button", { name: "删除" }));
 
     const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
     expect(within(dialog).getByText("将删除 2 个目标。")).toBeInTheDocument();
@@ -328,12 +335,12 @@ describe("TargetsPage", () => {
 
     await screen.findByRole("button", { name: "Codex" });
 
-    expect(screen.getByLabelText("选择 Codex")).toHaveAttribute("aria-disabled", "true");
-    expect(screen.getByRole("button", { name: "删除 Codex" })).toBeDisabled();
+    expect(screen.queryByLabelText("选择 Codex")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "删除 Codex" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText("选择全部可删除目标"));
 
-    expect(screen.getByLabelText("选择 Codex")).not.toBeChecked();
+    expect(screen.queryByLabelText("选择 Codex")).not.toBeInTheDocument();
     expect(screen.getByLabelText("选择 Local project")).toBeChecked();
     expect(screen.getByLabelText("选择 Design scratch")).toBeChecked();
   });
@@ -342,7 +349,7 @@ describe("TargetsPage", () => {
     await renderTargetsPage();
     await screen.findByRole("button", { name: "Local project" });
 
-    fireEvent.click(screen.getByRole("button", { name: "新增目标" }));
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
 
     expect(window.skillsManager?.selectTargetDirectory).toHaveBeenCalledOnce();
     await waitFor(() => {
@@ -363,7 +370,7 @@ describe("TargetsPage", () => {
     vi.mocked(window.skillsManager?.selectTargetDirectory!).mockResolvedValueOnce(null);
     await screen.findByRole("button", { name: "Local project" });
 
-    fireEvent.click(screen.getByRole("button", { name: "新增目标" }));
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
 
     expect(window.skillsManager?.selectTargetDirectory).toHaveBeenCalledOnce();
     await waitFor(() => {
