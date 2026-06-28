@@ -327,6 +327,9 @@ describe("TargetsPage", () => {
     ).toBeInTheDocument();
     expect(within(identityCard as HTMLElement).queryByText("codex")).not.toBeInTheDocument();
     expect(within(identityCard as HTMLElement).queryByText("已检测")).not.toBeInTheDocument();
+    expect(
+      within(identityCard as HTMLElement).queryByRole("button", { name: "删除" })
+    ).not.toBeInTheDocument();
     expect(within(scanResultCard as HTMLElement).getByText("已检测")).toBeInTheDocument();
     expect(
       within(scanResultCard as HTMLElement).getByText("Target directory exists and is writable.")

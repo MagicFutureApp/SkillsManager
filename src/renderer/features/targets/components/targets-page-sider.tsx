@@ -35,14 +35,16 @@ export const TargetsPageSider = () => {
           <Button type="button" variant="outline" onClick={copySelectedTargetPath}>
             {t("targets.actions.copyTarget")}
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={!selectedTarget.deletable || isDeletingTargets}
-            onClick={() => openDeleteDialog([selectedTarget.id])}
-          >
-            {t("targets.actions.deleteSelected")}
-          </Button>
+          {selectedTarget.deletable ? (
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeletingTargets}
+              onClick={() => openDeleteDialog([selectedTarget.id])}
+            >
+              {t("targets.actions.deleteSelected")}
+            </Button>
+          ) : null}
         </div>
       </section>
 
