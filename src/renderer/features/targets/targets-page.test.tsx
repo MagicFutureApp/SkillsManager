@@ -360,6 +360,22 @@ describe("TargetsPage", () => {
     expect(screen.getByRole("button", { name: "Design scratch" })).toBeInTheDocument();
   });
 
+  it("opens the delete confirmation dialog from the target detail header", async () => {
+    await renderTargetsPage();
+    await screen.findByRole("button", { name: "Local project" });
+
+    const detail = screen.getByLabelText("目标详情");
+
+    fireEvent.click(within(detail).getByRole("button", { name: "删除" }));
+
+    const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
+    expect(within(dialog).getByText("Local project")).toHaveAttribute("title", "Local project");
+    expect(within(dialog).getByText("/Users/test/project/.codex/skills")).toHaveAttribute(
+      "title",
+      "/Users/test/project/.codex/skills"
+    );
+  });
+
   it("deletes selected targets in a batch after confirmation", async () => {
     await renderTargetsPage({ deletedTargets: { registeredTargets: [] } });
     await screen.findByRole("button", { name: "Local project" });
@@ -367,9 +383,15 @@ describe("TargetsPage", () => {
     fireEvent.click(screen.getByLabelText("选择 Local project"));
     fireEvent.click(screen.getByLabelText("选择 Design scratch"));
 
-    expect(screen.getByRole("button", { name: "删除" })).toBeEnabled();
+    const pageHeader = screen.getByRole("heading", { name: "目标管理" }).closest("header");
+    expect(pageHeader).not.toBeNull();
+    const batchDeleteButton = within(pageHeader as HTMLElement).getByRole("button", {
+      name: "删除"
+    });
 
-    fireEvent.click(screen.getByRole("button", { name: "删除" }));
+    expect(batchDeleteButton).toBeEnabled();
+
+    fireEvent.click(batchDeleteButton);
 
     const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
     expect(within(dialog).getByText("将删除 2 个目标。")).toBeInTheDocument();
