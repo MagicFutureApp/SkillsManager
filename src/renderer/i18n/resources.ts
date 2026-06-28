@@ -122,10 +122,12 @@ export const resources = {
         filters: {
           ariaLabel: "目标筛选",
           search: "搜索目标",
-          searchPlaceholder: "搜索名称、类型、路径或已选择技能",
+          searchPlaceholder: "搜索名称、路径或已选择技能",
           sort: "排序",
           sortName: "名称",
-          sortSkills: "技能数"
+          sortPath: "路径",
+          sortScope: "范围",
+          sortSkills: "技能"
         },
         table: {
           actions: "操作",
@@ -537,9 +539,11 @@ export const resources = {
         filters: {
           ariaLabel: "Target filters",
           search: "Search targets",
-          searchPlaceholder: "Search name, type, path, or selected skill",
+          searchPlaceholder: "Search name, path, or selected skill",
           sort: "Sort",
           sortName: "Name",
+          sortPath: "Path",
+          sortScope: "Scope",
           sortSkills: "Skill count"
         },
         table: {

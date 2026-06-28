@@ -180,6 +180,62 @@ const targetsWithNewCustomDirectoryFixture: TargetsListResult = {
   ]
 };
 
+const targetsForSortFixture: TargetsListResult = {
+  registeredTargets: [
+    {
+      createdAt: "2026-06-25T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "target-alpha-independent",
+      name: "Alpha independent",
+      normalizedPath: "/Users/test/z-target",
+      path: "/Users/test/z-target",
+      scanMessage: null,
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "independent",
+      status: "registered",
+      type: "custom-directory",
+      updatedAt: "2026-06-25T00:00:00.000Z"
+    },
+    {
+      createdAt: "2026-06-25T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "target-beta-global",
+      name: "Beta global",
+      normalizedPath: "/Users/test/m-target",
+      path: "/Users/test/m-target",
+      scanMessage: null,
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "global",
+      status: "registered",
+      type: "custom-directory",
+      updatedAt: "2026-06-25T00:00:00.000Z"
+    },
+    {
+      createdAt: "2026-06-25T00:00:00.000Z",
+      defaultInstallStrategy: "copy",
+      enabled: true,
+      id: "target-gamma-independent",
+      name: "Gamma independent",
+      normalizedPath: "/Users/test/a-target",
+      path: "/Users/test/a-target",
+      scanMessage: null,
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "independent",
+      status: "registered",
+      type: "custom-directory",
+      updatedAt: "2026-06-25T00:00:00.000Z"
+    }
+  ]
+};
+
 const renderTargetsPage = async ({
   deletedTargets = {
     registeredTargets: [targetsFixture.registeredTargets[1]]
@@ -218,6 +274,21 @@ const advanceLoadingDuration = async (durationMs: number) => {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(durationMs);
   });
+};
+
+const openSelect = async (label: string) => {
+  fireEvent.pointerDown(screen.getByLabelText(label), { pointerType: "mouse" });
+  fireEvent.mouseDown(screen.getByLabelText(label), { button: 0 });
+
+  return screen.findByRole("listbox");
+};
+
+const selectOption = async (label: string, optionName: string) => {
+  const listbox = await openSelect(label);
+  const option = within(listbox).getByRole("option", { name: optionName });
+
+  fireEvent.pointerDown(option, { pointerType: "mouse" });
+  fireEvent.click(option);
 };
 
 describe("TargetsPage", () => {
@@ -422,6 +493,94 @@ describe("TargetsPage", () => {
     expect(screen.queryByLabelText("选择 Codex")).not.toBeInTheDocument();
     expect(screen.getByLabelText("选择 Local project")).toBeChecked();
     expect(screen.getByLabelText("选择 Design scratch")).toBeChecked();
+  });
+
+  it("does not search targets by type or status", async () => {
+    await renderTargetsPage({
+      targets: { registeredTargets: rescannedTargetsWithIssuesFixture.registeredTargets }
+    });
+    const searchField = await screen.findByLabelText("搜索目标");
+
+    expect(searchField).toHaveAttribute("placeholder", "搜索名称、路径或已选择技能");
+
+    fireEvent.change(searchField, { target: { value: "custom-directory" } });
+
+    expect(screen.queryByRole("button", { name: "Local project" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Gemini CLI" })).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "not-writable" } });
+
+    expect(screen.queryByRole("button", { name: "Local project" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Gemini CLI" })).not.toBeInTheDocument();
+  });
+
+  it("does not offer scan status as a target sort mode", async () => {
+    await renderTargetsPage({ targets: targetsForSortFixture });
+    await screen.findByRole("button", { name: "Alpha independent" });
+
+    const listbox = await openSelect("排序");
+    const sortOptions = within(listbox)
+      .getAllByRole("option")
+      .map((option) => option.textContent);
+
+    expect(sortOptions).toEqual(["名称", "路径", "范围", "技能"]);
+    expect(within(listbox).queryByRole("option", { name: "状态" })).not.toBeInTheDocument();
+  });
+
+  it("sorts targets by path and scope when those sort modes are selected", async () => {
+    await renderTargetsPage({ targets: targetsForSortFixture });
+    await screen.findByRole("button", { name: "Alpha independent" });
+
+    await selectOption("排序", "路径");
+
+    let targetTable = within(screen.getByRole("main")).getByRole("table");
+    let targetButtons = within(targetTable).getAllByRole("button", {
+      name: /^(Alpha independent|Beta global|Gamma independent)$/
+    });
+
+    expect(targetButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Gamma independent",
+      "Beta global",
+      "Alpha independent"
+    ]);
+
+    await selectOption("排序", "范围");
+
+    targetTable = within(screen.getByRole("main")).getByRole("table");
+    targetButtons = within(targetTable).getAllByRole("button", {
+      name: /^(Alpha independent|Beta global|Gamma independent)$/
+    });
+
+    expect(targetButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Beta global",
+      "Alpha independent",
+      "Gamma independent"
+    ]);
+  });
+
+  it("keeps target table headers passive while the sort select controls order", async () => {
+    await renderTargetsPage({ targets: targetsForSortFixture });
+    await screen.findByRole("button", { name: "Alpha independent" });
+
+    const targetTable = within(screen.getByRole("main")).getByRole("table");
+    const nameHeader = within(targetTable).getByRole("columnheader", { name: "目标" });
+    const pathHeader = within(targetTable).getByRole("columnheader", { name: "路径" });
+
+    expect(nameHeader).not.toHaveAttribute("aria-sort");
+    expect(pathHeader).not.toHaveAttribute("aria-sort");
+    expect(within(pathHeader).queryByRole("button", { name: "路径" })).not.toBeInTheDocument();
+
+    await selectOption("排序", "路径");
+
+    const targetButtons = within(targetTable).getAllByRole("button", {
+      name: /^(Alpha independent|Beta global|Gamma independent)$/
+    });
+
+    expect(targetButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Gamma independent",
+      "Beta global",
+      "Alpha independent"
+    ]);
   });
 
   it("opens a directory picker and saves the selected path as a global target", async () => {

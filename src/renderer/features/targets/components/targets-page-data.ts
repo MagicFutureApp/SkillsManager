@@ -9,7 +9,7 @@ import type {
 
 export type TargetStatus = RegisteredTargetStatus;
 export type TargetScope = TargetRegistrationScope;
-export type TargetSort = "status" | "name" | "skills";
+export type TargetSort = "name" | "path" | "scope" | "skills";
 export type TargetIssue = TargetScanIssue;
 
 export type TargetViewModel = {
@@ -46,15 +46,7 @@ export const filterTargets = ({
 }): TargetViewModel[] => {
   const normalizedQuery = query.trim().toLowerCase();
   const visible = targets.filter((target) => {
-    const searchable = [
-      target.name,
-      target.type,
-      target.path,
-      target.scope,
-      ...target.selectedSkills.map((skill) => `${skill.name} ${skill.repository}`)
-    ]
-      .join(" ")
-      .toLowerCase();
+    const searchable = getTargetSearchText(target);
 
     return !normalizedQuery || searchable.includes(normalizedQuery);
   });
@@ -68,10 +60,18 @@ export const filterTargets = ({
       return second.skillCount - first.skillCount || first.name.localeCompare(second.name);
     }
 
-    return (
-      statusPriority[first.status] - statusPriority[second.status] ||
-      first.name.localeCompare(second.name)
-    );
+    if (sort === "path") {
+      return first.path.localeCompare(second.path) || first.name.localeCompare(second.name);
+    }
+
+    if (sort === "scope") {
+      return (
+        scopePriority[first.scope] - scopePriority[second.scope] ||
+        first.name.localeCompare(second.name)
+      );
+    }
+
+    return first.name.localeCompare(second.name);
   });
 };
 
@@ -92,14 +92,18 @@ const adaptRegisteredTarget = (target: RegisteredTargetRecord): TargetViewModel 
   };
 };
 
-const statusPriority: Record<TargetStatus, number> = {
-  detected: 0,
-  registered: 1,
-  "path-missing": 2,
-  "not-writable": 3,
-  "not-directory": 4,
-  "scan-error": 5,
-  "app-missing": 6,
-  missing: 7,
-  disabled: 8
+const getTargetSearchText = (target: TargetViewModel): string => {
+  return [
+    target.name,
+    target.normalizedPath,
+    target.path,
+    ...target.selectedSkills.map((skill) => `${skill.id} ${skill.name} ${skill.repository}`)
+  ]
+    .join(" ")
+    .toLowerCase();
+};
+
+const scopePriority: Record<TargetScope, number> = {
+  global: 0,
+  independent: 1
 };

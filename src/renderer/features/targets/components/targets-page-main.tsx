@@ -25,6 +25,8 @@ export const TargetsPageMain = () => {
   const page = useTargetsPageContext();
   const sortOptions: SelectOption<TargetSort>[] = [
     { value: "name", label: t("targets.filters.sortName") },
+    { value: "path", label: t("targets.filters.sortPath") },
+    { value: "scope", label: t("targets.filters.sortScope") },
     { value: "skills", label: t("targets.filters.sortSkills") }
   ];
 
