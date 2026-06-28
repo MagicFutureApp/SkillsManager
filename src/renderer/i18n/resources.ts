@@ -114,6 +114,7 @@ export const resources = {
         actions: {
           addTarget: "新增",
           addTargetUnavailable: "新增目标暂未实现",
+          copyTarget: "复制目标",
           deleteSelected: "删除",
           deleteTarget: "删除 {{name}}",
           rescan: "重新扫描"
@@ -528,6 +529,7 @@ export const resources = {
         actions: {
           addTarget: "Add",
           addTargetUnavailable: "Adding targets is not implemented yet",
+          copyTarget: "Copy target",
           deleteSelected: "Delete",
           deleteTarget: "Delete {{name}}",
           rescan: "Rescan"

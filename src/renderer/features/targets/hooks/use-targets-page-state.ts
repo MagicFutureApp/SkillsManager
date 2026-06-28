@@ -324,6 +324,13 @@ export const useTargetsPageState = () => {
   const pendingDeleteTargets = pendingDeleteTargetIds
     .map((targetId) => targets.find((target) => target.id === targetId))
     .filter((target): target is TargetViewModel => Boolean(target));
+  const copySelectedTargetPath = () => {
+    if (!selectedTarget) {
+      return;
+    }
+
+    void navigator.clipboard?.writeText(selectedTarget.path);
+  };
 
   return {
     addTargetError,
@@ -349,6 +356,7 @@ export const useTargetsPageState = () => {
     visibleSomeChecked,
     closeAddTargetDialog,
     closeDeleteDialog,
+    copySelectedTargetPath,
     confirmDeleteTargets,
     openAddTargetDialog,
     openCheckedDeleteDialog,

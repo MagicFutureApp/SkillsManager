@@ -223,6 +223,12 @@ const advanceLoadingDuration = async (durationMs: number) => {
 describe("TargetsPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: vi.fn().mockResolvedValue(undefined)
+      }
+    });
   });
 
   it("renders database targets without mixing in system scan data on initial load", async () => {
@@ -276,11 +282,55 @@ describe("TargetsPage", () => {
 
     const detail = screen.getByLabelText("目标详情");
     expect(within(detail).getByRole("heading", { name: "Local project" })).toBeInTheDocument();
-    expect(within(detail).getByText("已登记")).toBeInTheDocument();
+    const detailPath = within(detail).getByText("/Users/test/project/.codex/skills");
+
+    expect(detailPath).toBeInTheDocument();
+    expect(detailPath).toHaveClass("break-all");
+    expect(detailPath).not.toHaveClass("truncate");
+    fireEvent.click(within(detail).getByRole("button", { name: "复制目标" }));
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("/Users/test/project/.codex/skills");
+    const identityCard = within(detail)
+      .getByRole("heading", { name: "Local project" })
+      .closest("section");
+    const scanResultCard = within(detail)
+      .getByRole("heading", { name: "扫描结果" })
+      .closest("section");
+
+    expect(identityCard).not.toBeNull();
+    expect(scanResultCard).not.toBeNull();
+    expect(
+      within(identityCard as HTMLElement).queryByText("custom-directory")
+    ).not.toBeInTheDocument();
+    expect(within(identityCard as HTMLElement).queryByText("已登记")).not.toBeInTheDocument();
+    expect(within(scanResultCard as HTMLElement).getByText("已登记")).toBeInTheDocument();
     expect(within(detail).queryByRole("heading", { name: "路径" })).not.toBeInTheDocument();
     expect(within(detail).queryByText("技能目录")).not.toBeInTheDocument();
     expect(within(detail).queryByText("安装目录")).not.toBeInTheDocument();
     expect(within(detail).queryByText("CLI 路径")).not.toBeInTheDocument();
+  });
+
+  it("renders target identity in the detail header and scan status in the scan result block", async () => {
+    await renderTargetsPage({ targets: targetsWithSystemFixture });
+
+    await screen.findByRole("button", { name: "Codex" });
+
+    const detail = screen.getByLabelText("目标详情");
+    const heading = within(detail).getByRole("heading", { name: "Codex" });
+    const identityCard = heading.closest("section");
+    const scanResultHeading = within(detail).getByRole("heading", { name: "扫描结果" });
+    const scanResultCard = scanResultHeading.closest("section");
+
+    expect(identityCard).not.toBeNull();
+    expect(scanResultCard).not.toBeNull();
+    expect(
+      within(identityCard as HTMLElement).getByText("/Users/test/.codex/skills")
+    ).toBeInTheDocument();
+    expect(within(identityCard as HTMLElement).queryByText("codex")).not.toBeInTheDocument();
+    expect(within(identityCard as HTMLElement).queryByText("已检测")).not.toBeInTheDocument();
+    expect(within(scanResultCard as HTMLElement).getByText("已检测")).toBeInTheDocument();
+    expect(
+      within(scanResultCard as HTMLElement).getByText("Target directory exists and is writable.")
+    ).toBeInTheDocument();
   });
 
   it("opens a confirmation dialog before deleting a single target", async () => {
@@ -381,7 +431,11 @@ describe("TargetsPage", () => {
       });
       expect(screen.getByRole("button", { name: "review-skills" })).toBeInTheDocument();
     });
-    expect(screen.getByText("/Users/test/review-skills")).toBeInTheDocument();
+    expect(
+      within(within(screen.getByRole("main")).getByRole("table")).getByText(
+        "/Users/test/review-skills"
+      )
+    ).toBeInTheDocument();
     expect(
       within(screen.getByLabelText("目标详情")).getByRole("heading", { name: "review-skills" })
     ).toBeInTheDocument();

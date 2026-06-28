@@ -1,12 +1,13 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { TargetScopeBadge, TargetStatusBadge } from "./targets-page-main";
+import { Button } from "@/components/ui/button";
+import { TargetStatusBadge } from "./targets-page-main";
 import { useTargetsPageContext } from "./targets-page-context";
 
 export const TargetsPageSider = () => {
   const { t } = useTranslation();
-  const { selectedTarget } = useTargetsPageContext();
+  const { copySelectedTargetPath, selectedTarget } = useTargetsPageContext();
 
   if (!selectedTarget) {
     return (
@@ -22,28 +23,34 @@ export const TargetsPageSider = () => {
   return (
     <>
       <section className="rounded-xl border border-border bg-card p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="truncate text-xl font-semibold">{selectedTarget.name}</h2>
-            <p className="mt-2 truncate font-mono text-xs text-muted-foreground">
-              {selectedTarget.type}
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-wrap justify-end gap-2">
-            <TargetScopeBadge scope={selectedTarget.scope} />
-            <TargetStatusBadge status={selectedTarget.status} />
-          </div>
+        <h2 className="truncate text-xl font-semibold">{selectedTarget.name}</h2>
+        <p
+          className="mt-3 break-all font-mono text-xs leading-5 text-muted-foreground"
+          title={selectedTarget.path}
+        >
+          {selectedTarget.path}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button type="button" variant="outline" onClick={copySelectedTargetPath}>
+            {t("targets.actions.copyTarget")}
+          </Button>
         </div>
       </section>
 
-      {selectedTarget.scanMessage ? (
-        <section className="rounded-xl border border-border bg-card p-4">
+      <section className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between gap-3">
           <h3 className="font-semibold">{t("targets.detail.scanResult")}</h3>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          <TargetStatusBadge status={selectedTarget.status} />
+        </div>
+        {selectedTarget.scanMessage ? (
+          <p
+            className="mt-3 text-sm leading-6 text-muted-foreground"
+            title={selectedTarget.scanMessage}
+          >
             {selectedTarget.scanMessage}
           </p>
-        </section>
-      ) : null}
+        ) : null}
+      </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-center justify-between gap-3">
