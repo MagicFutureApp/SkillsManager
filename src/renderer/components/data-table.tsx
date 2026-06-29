@@ -24,9 +24,64 @@ export const DataTable = ({ className, containerClassName, ...props }: DataTable
   );
 };
 
+export const DataTableFixed = ({ className, containerClassName, ...props }: DataTableProps) => {
+  return (
+    <DataTable
+      containerClassName={cn(
+        "flex min-h-0 flex-1 flex-col overflow-hidden [&>[data-slot=table-container]]:h-full [&>[data-slot=table-container]]:min-h-0",
+        containerClassName
+      )}
+      className={cn("flex h-full min-h-0 flex-col table-fixed", className)}
+      {...props}
+    />
+  );
+};
+
+const fixedTableRowsClassName = "[&>tr]:table [&>tr]:w-full [&>tr]:table-fixed";
+
 export const DataTableHeader = TableHeader;
 export const DataTableBody = TableBody;
 export const DataTableFooter = TableFooter;
+
+export const DataTableFixedHeader = ({
+  className,
+  ...props
+}: React.ComponentProps<typeof TableHeader>) => {
+  return (
+    <DataTableHeader
+      className={cn("block shrink-0 max-[820px]:hidden", fixedTableRowsClassName, className)}
+      {...props}
+    />
+  );
+};
+
+export const DataTableFixedBody = ({
+  className,
+  ...props
+}: React.ComponentProps<typeof TableBody>) => {
+  return (
+    <DataTableBody
+      className={cn("block min-h-0 flex-1 overflow-y-auto", fixedTableRowsClassName, className)}
+      {...props}
+    />
+  );
+};
+
+export const DataTableFixedFooter = ({
+  className,
+  ...props
+}: React.ComponentProps<typeof TableFooter>) => {
+  return (
+    <DataTableFooter
+      className={cn(
+        "block shrink-0 border-t border-border bg-card font-normal",
+        fixedTableRowsClassName,
+        className
+      )}
+      {...props}
+    />
+  );
+};
 
 export const DataTableHead = ({ className, ...props }: React.ComponentProps<typeof TableHead>) => {
   return (

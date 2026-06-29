@@ -10,7 +10,7 @@ export const RepositoriesPageMain = () => {
   const page = useRepositoriesPageContext();
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       <header className="mb-6">
         <div className="flex items-center justify-between gap-4 max-[860px]:items-start">
           <div className="min-w-0">
@@ -65,7 +65,7 @@ export const RepositoriesPageMain = () => {
         onStatusChange={page.setStatusFilter}
       />
 
-      <div className="mt-5">
+      <div className="mt-5 flex min-h-0 flex-1">
         <RepositoryList
           checkedIds={page.checkedIds}
           copy={{
@@ -91,6 +91,6 @@ export const RepositoriesPageMain = () => {
           onToggleEnabled={page.toggleRepositoryEnabled}
         />
       </div>
-    </>
+    </div>
   );
 };

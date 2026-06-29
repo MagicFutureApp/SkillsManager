@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  DataTable,
-  DataTableBody,
   DataTableCell,
   DataTableEmptyRow,
+  DataTableFixed,
+  DataTableFixedBody,
+  DataTableFixedHeader,
   DataTableHead,
-  DataTableHeader,
   DataTableRow
 } from "@/components/data-table";
 import { Input } from "@/components/ui/input";
@@ -98,11 +98,8 @@ export const SkillsPageMain = () => {
         </Field>
       </section>
 
-      <DataTable
-        containerClassName="mt-5 flex min-h-0 flex-1 flex-col overflow-hidden [&>[data-slot=table-container]]:h-full [&>[data-slot=table-container]]:min-h-0"
-        className="flex h-full min-h-0 flex-col table-fixed"
-      >
-        <DataTableHeader className="block shrink-0 max-[820px]:hidden [&>tr]:table [&>tr]:w-full [&>tr]:table-fixed">
+      <DataTableFixed containerClassName="mt-5">
+        <DataTableFixedHeader>
           <DataTableRow>
             <DataTableHead className="w-10">
               <span className="grid place-items-center">
@@ -120,22 +117,22 @@ export const SkillsPageMain = () => {
             <DataTableHead className="w-[10%]">{t("skills.table.targets")}</DataTableHead>
             <DataTableHead className="w-23">{t("skills.table.actions")}</DataTableHead>
           </DataTableRow>
-        </DataTableHeader>
+        </DataTableFixedHeader>
 
-        <DataTableBody className="block min-h-0 flex-1 overflow-y-auto [&>tr]:table [&>tr]:w-full [&>tr]:table-fixed">
+        <DataTableFixedBody>
           {hasVisibleSkills ? (
             visibleSkills.map((skill) => <SkillTableRow key={skill.id} skill={skill} />)
           ) : (
             <DataTableEmptyRow colSpan={5}>{t("skills.empty")}</DataTableEmptyRow>
           )}
-        </DataTableBody>
+        </DataTableFixedBody>
 
         <SkillsPaginationFooter
           colSpan={5}
           onPageChange={page.setSkillsPage}
           pagination={page.pagination}
         />
-      </DataTable>
+      </DataTableFixed>
     </div>
   );
 };

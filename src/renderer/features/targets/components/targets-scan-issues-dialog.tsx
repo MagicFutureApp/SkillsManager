@@ -11,7 +11,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTargetsPageContext } from "./targets-page-context";
-import { TargetStatusBadge } from "./targets-page-main";
+import { TargetStatusBadge } from "./target-badges";
 
 export const TargetsScanIssuesDialog = () => {
   const { t } = useTranslation();

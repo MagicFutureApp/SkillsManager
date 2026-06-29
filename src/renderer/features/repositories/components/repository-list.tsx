@@ -3,12 +3,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  DataTable,
-  DataTableBody,
   DataTableCell,
   DataTableEmptyRow,
+  DataTableFixed,
+  DataTableFixedBody,
+  DataTableFixedHeader,
   DataTableHead,
-  DataTableHeader,
   DataTableRow
 } from "@/components/data-table";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
@@ -59,8 +59,8 @@ export const RepositoryList = ({
   onToggleEnabled
 }: RepositoryListProps) => {
   return (
-    <DataTable>
-      <DataTableHeader className="max-[820px]:hidden">
+    <DataTableFixed>
+      <DataTableFixedHeader>
         <DataTableRow>
           <DataTableHead className="w-[42px]">
             <span className="grid place-items-center">
@@ -80,9 +80,9 @@ export const RepositoryList = ({
           <DataTableHead className="w-[42px]" aria-label="sync" />
           <DataTableHead className="w-[72px]">{copy.actions}</DataTableHead>
         </DataTableRow>
-      </DataTableHeader>
+      </DataTableFixedHeader>
 
-      <DataTableBody>
+      <DataTableFixedBody>
         {repositories.length === 0 ? (
           <DataTableEmptyRow colSpan={7}>{copy.empty}</DataTableEmptyRow>
         ) : (
@@ -149,8 +149,8 @@ export const RepositoryList = ({
             </DataTableRow>
           ))
         )}
-      </DataTableBody>
-    </DataTable>
+      </DataTableFixedBody>
+    </DataTableFixed>
   );
 };
 

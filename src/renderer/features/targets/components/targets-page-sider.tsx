@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
-import { TargetStatusBadge } from "./targets-page-main";
+import { TargetStatusBadge } from "./target-badges";
 import { useTargetsPageContext } from "./targets-page-context";
 
 export const TargetsPageSider = () => {

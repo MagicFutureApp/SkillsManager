@@ -1,4 +1,4 @@
-import { DataTableCell, DataTableFooter, DataTableRow } from "@/components/data-table";
+import { DataTableCell, DataTableFixedFooter, DataTableRow } from "@/components/data-table";
 import {
   Pagination,
   PaginationContent,
@@ -33,7 +33,7 @@ export const SkillsPaginationFooter = ({
   }
 
   return (
-    <DataTableFooter className="block shrink-0 border-t border-border bg-card font-normal [&>tr]:table [&>tr]:w-full [&>tr]:table-fixed">
+    <DataTableFixedFooter>
       <DataTableRow className="hover:bg-transparent">
         <DataTableCell colSpan={colSpan} className="px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -113,7 +113,7 @@ export const SkillsPaginationFooter = ({
           </div>
         </DataTableCell>
       </DataTableRow>
-    </DataTableFooter>
+    </DataTableFixedFooter>
   );
 };
 

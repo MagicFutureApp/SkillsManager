@@ -108,7 +108,17 @@ describe("RepositoriesPage", () => {
       "true"
     );
     const sourceTable = within(screen.getByRole("main")).getByRole("table");
+    const sourceTableBody = sourceTable.querySelector("[data-slot='table-body']");
+
+    expect(sourceTable.closest("section")).toHaveClass("flex-1", "min-h-0", "overflow-hidden");
+    expect(sourceTableBody).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
+    expect(sourceTableBody).toContainElement(
+      screen.getByRole("button", { name: "Team skills repository" })
+    );
     expect(within(sourceTable).getByRole("columnheader", { name: "来源" })).toBeInTheDocument();
+    expect(sourceTableBody).not.toContainElement(
+      within(sourceTable).getByRole("columnheader", { name: "来源" })
+    );
     expect(within(sourceTable).getByRole("columnheader", { name: "类型" })).toBeInTheDocument();
     expect(within(sourceTable).getByRole("columnheader", { name: "状态" })).toBeInTheDocument();
     expect(within(sourceTable).getByRole("columnheader", { name: "技能" })).toBeInTheDocument();

@@ -330,11 +330,17 @@ describe("TargetsPage", () => {
     expect(screen.queryByRole("button", { name: "Claude Code" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Local project" })).toBeInTheDocument();
     const targetTable = within(screen.getByRole("main")).getByRole("table");
+    const targetTableBody = targetTable.querySelector("[data-slot='table-body']");
+
+    expect(targetTable.closest("section")).toHaveClass("flex-1", "min-h-0", "overflow-hidden");
+    expect(targetTableBody).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
+    expect(targetTableBody).toContainElement(screen.getByRole("button", { name: "Local project" }));
     expect(within(targetTable).getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
     expect(within(targetTable).getByText("2 个技能")).toBeInTheDocument();
     const header = within(targetTable).getByRole("row", {
       name: "选择全部可删除目标 目标 路径 范围 技能 操作"
     });
+    expect(targetTableBody).not.toContainElement(header);
     expect(within(header).getByText("目标")).toBeInTheDocument();
     expect(within(header).getByText("路径")).toBeInTheDocument();
     expect(within(header).getByText("范围")).toBeInTheDocument();
