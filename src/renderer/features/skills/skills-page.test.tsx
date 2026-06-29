@@ -807,7 +807,17 @@ describe("SkillsPage", () => {
     expect(screen.getByRole("button", { name: "Paged Skill 20" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Paged Skill 21" })).not.toBeInTheDocument();
     expect(screen.getByText("1-20 / 25")).toBeInTheDocument();
-    expect(screen.getByText("1-20 / 25").closest("tfoot")).not.toBeNull();
+    const skillsTable = screen.getByRole("table");
+    const tableBody = skillsTable.querySelector("[data-slot='table-body']");
+    const paginationFooter = screen.getByText("1-20 / 25").closest("tfoot");
+
+    expect(skillsTable.closest("section")).toHaveClass("flex-1", "min-h-0", "overflow-hidden");
+    expect(tableBody).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
+    expect(tableBody).toContainElement(screen.getByRole("button", { name: "Paged Skill 20" }));
+    expect(paginationFooter).not.toBeNull();
+    expect(tableBody).not.toContainElement(paginationFooter as HTMLElement);
+    expect(paginationFooter).toHaveClass("shrink-0");
+    expect(paginationFooter).not.toHaveClass("sticky");
 
     fireEvent.click(screen.getByRole("link", { name: "下一页" }));
 

@@ -46,7 +46,7 @@ export const SkillsPageMain = () => {
   );
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       <header className="mb-6">
         <div className="flex items-center justify-between gap-4 max-[860px]:items-start">
           <div className="min-w-0">
@@ -98,8 +98,11 @@ export const SkillsPageMain = () => {
         </Field>
       </section>
 
-      <DataTable containerClassName="mt-5">
-        <DataTableHeader className="max-[820px]:hidden">
+      <DataTable
+        containerClassName="mt-5 flex min-h-0 flex-1 flex-col overflow-hidden [&>[data-slot=table-container]]:h-full [&>[data-slot=table-container]]:min-h-0"
+        className="flex h-full min-h-0 flex-col table-fixed"
+      >
+        <DataTableHeader className="block shrink-0 max-[820px]:hidden [&>tr]:table [&>tr]:w-full [&>tr]:table-fixed">
           <DataTableRow>
             <DataTableHead className="w-10">
               <span className="grid place-items-center">
@@ -119,7 +122,7 @@ export const SkillsPageMain = () => {
           </DataTableRow>
         </DataTableHeader>
 
-        <DataTableBody>
+        <DataTableBody className="block min-h-0 flex-1 overflow-y-auto [&>tr]:table [&>tr]:w-full [&>tr]:table-fixed">
           {hasVisibleSkills ? (
             visibleSkills.map((skill) => <SkillTableRow key={skill.id} skill={skill} />)
           ) : (
@@ -133,7 +136,7 @@ export const SkillsPageMain = () => {
           pagination={page.pagination}
         />
       </DataTable>
-    </>
+    </div>
   );
 };
 

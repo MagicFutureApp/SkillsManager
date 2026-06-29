@@ -33,7 +33,7 @@ export const SkillsPaginationFooter = ({
   }
 
   return (
-    <DataTableFooter className="bg-card font-normal">
+    <DataTableFooter className="block shrink-0 border-t border-border bg-card font-normal [&>tr]:table [&>tr]:w-full [&>tr]:table-fixed">
       <DataTableRow className="hover:bg-transparent">
         <DataTableCell colSpan={colSpan} className="px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
