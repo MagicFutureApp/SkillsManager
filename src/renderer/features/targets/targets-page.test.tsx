@@ -410,6 +410,21 @@ describe("TargetsPage", () => {
     expect(within(detail).queryByText("CLI 路径")).not.toBeInTheDocument();
   });
 
+  it("labels the scan action as initial scan when no targets are registered", async () => {
+    await renderTargetsPage({ targets: { registeredTargets: [] } });
+
+    const pageHeading = await screen.findByRole("heading", { name: "目标管理" });
+    const pageHeader = pageHeading.closest("header");
+
+    expect(pageHeader).not.toBeNull();
+    expect(
+      within(pageHeader as HTMLElement).getByRole("button", { name: "扫描" })
+    ).toBeInTheDocument();
+    expect(
+      within(pageHeader as HTMLElement).queryByRole("button", { name: "重新扫描" })
+    ).not.toBeInTheDocument();
+  });
+
   it("renders target identity in the detail header and scan status in the scan result block", async () => {
     await renderTargetsPage({ targets: targetsWithSystemFixture });
 

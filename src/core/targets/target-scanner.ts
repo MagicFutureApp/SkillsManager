@@ -55,7 +55,7 @@ export const scanSystemTargets = async ({
         : null;
       const directoryExists = await exists(definition.directory(homeDir));
       const appInstalled = Boolean(detectedCommandPath) || directoryExists;
-      const scannedTarget = await scanTargetPath(
+      const scannedTarget = await scanSystemTargetPath(
         {
           defaultInstallStrategy: "copy",
           id: definition.id,
@@ -64,6 +64,7 @@ export const scanSystemTargets = async ({
           path: targetPath,
           type: definition.type
         },
+        definition.directory(homeDir),
         { canWrite, exists, isDirectory }
       );
 
@@ -123,6 +124,40 @@ export const scanTargetPath = async (
       error instanceof Error ? error.message : "Target scan failed."
     );
   }
+};
+
+const scanSystemTargetPath = async (
+  target: TargetScanCandidate,
+  agentConfigDirectory: string,
+  options: Required<ScanTargetPathOptions>
+): Promise<TargetScanRecord> => {
+  const scannedTarget = await scanTargetPath(target, options);
+
+  if (scannedTarget.status !== "path-missing") {
+    return scannedTarget;
+  }
+
+  if (!(await options.exists(agentConfigDirectory))) {
+    return scannedTarget;
+  }
+
+  if (!(await options.isDirectory(agentConfigDirectory))) {
+    return scannedTarget;
+  }
+
+  if (!(await options.canWrite(agentConfigDirectory))) {
+    return toScannedTarget(
+      target,
+      "not-writable",
+      "Agent config directory exists but is not writable."
+    );
+  }
+
+  return toScannedTarget(
+    target,
+    "detected",
+    "Agent config directory exists and can contain the skills directory."
+  );
 };
 
 export const normalizeTargetPath = (targetPath: string): string => {

@@ -124,6 +124,7 @@ export const resources = {
           copyTarget: "复制目标",
           deleteSelected: "删除",
           deleteTarget: "删除 {{name}}",
+          scan: "扫描",
           rescan: "重新扫描"
         },
         filters: {
@@ -562,6 +563,7 @@ export const resources = {
           copyTarget: "Copy target",
           deleteSelected: "Delete",
           deleteTarget: "Delete {{name}}",
+          scan: "Scan",
           rescan: "Rescan"
         },
         filters: {

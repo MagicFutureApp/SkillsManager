@@ -11,6 +11,10 @@ import { useTargetsPageContext } from "./targets-page-context";
 export const TargetsPageMain = () => {
   const { t } = useTranslation();
   const page = useTargetsPageContext();
+  const scanActionLabel =
+    page.hasLoadedTargets && page.targets.length === 0
+      ? t("targets.actions.scan")
+      : t("targets.actions.rescan");
   const sortOptions: SelectOption<TargetSort>[] = [
     { value: "name", label: t("targets.filters.sortName") },
     { value: "path", label: t("targets.filters.sortPath") },
@@ -52,7 +56,7 @@ export const TargetsPageMain = () => {
               disabled={page.isRefreshingTargets}
               onClick={page.refreshTargets}
             >
-              {t("targets.actions.rescan")}
+              {scanActionLabel}
             </Button>
             <Button
               type="button"

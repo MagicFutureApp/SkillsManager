@@ -36,6 +36,7 @@ export const useTargetsPageState = () => {
   const [isDeletingTargets, setIsDeletingTargets] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [query, setQuery] = useState("");
+  const [hasLoadedTargets, setHasLoadedTargets] = useState(false);
   const [isRefreshingTargets, setIsRefreshingTargets] = useState(false);
   const [pendingDeleteTargetIds, setPendingDeleteTargetIds] = useState<string[]>([]);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
@@ -50,6 +51,7 @@ export const useTargetsPageState = () => {
     const nextTargetIds = new Set(nextTargets.map((target) => target.id));
 
     setTargets(nextTargets);
+    setHasLoadedTargets(true);
     setCheckedIds((currentIds) => {
       const nextIds = new Set<string>();
 
@@ -369,6 +371,7 @@ export const useTargetsPageState = () => {
     checkedCount,
     checkedIds,
     deleteError,
+    hasLoadedTargets,
     isDeleteDialogOpen,
     isDeletingTargets,
     isAddTargetDialogOpen,

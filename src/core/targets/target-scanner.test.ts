@@ -95,4 +95,35 @@ describe("scanSystemTargets", () => {
       }
     ]);
   });
+
+  it("accepts built-in target paths when the agent config directory exists without a skills child", async () => {
+    const existingPaths = new Set(["/Users/test/.gemini", "/usr/local/bin/gemini"]);
+
+    const targets = await scanSystemTargets({
+      canWrite: async (candidatePath) => candidatePath === "/Users/test/.gemini",
+      exists: async (candidatePath) => existingPaths.has(candidatePath),
+      homeDir: "/Users/test",
+      isDirectory: async (candidatePath) => existingPaths.has(candidatePath),
+      pathEnv: "/usr/local/bin",
+      platform: "darwin"
+    });
+
+    expect(targets).toMatchObject([
+      {
+        name: "Codex",
+        status: "app-missing"
+      },
+      {
+        name: "Claude Code",
+        status: "app-missing"
+      },
+      {
+        detectionMessage: "Agent config directory exists and can contain the skills directory.",
+        name: "Gemini CLI",
+        path: "/Users/test/.gemini/skills",
+        status: "detected",
+        type: "gemini-cli"
+      }
+    ]);
+  });
 });
