@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DataTablePaginationFooter } from "@/components/data-table-pagination-footer";
 import {
   DataTableCell,
   DataTableEmptyRow,
@@ -13,6 +14,7 @@ import {
 } from "@/components/data-table";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
 import { cn } from "@/lib/utils";
+import type { PaginationState } from "@/lib/pagination";
 import { RepositoryStatusPill } from "./repository-status-pill";
 import type { RepositoryViewModel } from "./repository-data";
 import type { RepositorySyncState } from "../hooks/use-repositories-page-state";
@@ -32,11 +34,13 @@ type RepositoryListProps = {
     toggleEnabled: (name: string) => string;
   };
   checkedIds: Set<string>;
+  pagination: PaginationState;
   repositorySyncStates: Record<string, RepositorySyncState>;
   repositories: RepositoryViewModel[];
   selectedRepositoryId: string | null;
   visibleAllChecked: boolean;
   visibleSomeChecked: boolean;
+  onPageChange: (pageNumber: number) => void;
   onSelectAllVisible: (checked: boolean) => void;
   onSelectRepository: (repositoryId: string) => void;
   onSyncRepository: (repositoryId: string) => void;
@@ -47,11 +51,13 @@ type RepositoryListProps = {
 export const RepositoryList = ({
   checkedIds,
   copy,
+  pagination,
   repositorySyncStates,
   repositories,
   selectedRepositoryId,
   visibleAllChecked,
   visibleSomeChecked,
+  onPageChange,
   onSelectAllVisible,
   onSelectRepository,
   onSyncRepository,
@@ -150,6 +156,13 @@ export const RepositoryList = ({
           ))
         )}
       </DataTableFixedBody>
+
+      <DataTablePaginationFooter
+        colSpan={7}
+        labelKeyPrefix="repositories.pagination"
+        onPageChange={onPageChange}
+        pagination={pagination}
+      />
     </DataTableFixed>
   );
 };

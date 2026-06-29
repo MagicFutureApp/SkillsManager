@@ -236,6 +236,30 @@ const targetsForSortFixture: TargetsListResult = {
   ]
 };
 
+const createPagedTargetsFixture = (count: number): TargetsListResult => ({
+  registeredTargets: Array.from({ length: count }, (_, index) => {
+    const number = String(index + 1).padStart(2, "0");
+
+    return {
+      createdAt: "2026-06-25T00:00:00.000Z",
+      defaultInstallStrategy: "copy" as const,
+      enabled: true,
+      id: `paged-target-${number}`,
+      name: `Paged Target ${number}`,
+      normalizedPath: `/Users/test/paged-target-${number}`,
+      path: `/Users/test/paged-target-${number}`,
+      scanMessage: null,
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: index + 1,
+      scope: "global" as const,
+      status: "registered" as const,
+      type: "custom-directory",
+      updatedAt: "2026-06-25T00:00:00.000Z"
+    };
+  })
+});
+
 const renderTargetsPage = async ({
   deletedTargets = {
     registeredTargets: [targetsFixture.registeredTargets[1]]
@@ -562,6 +586,56 @@ describe("TargetsPage", () => {
       "Alpha independent",
       "Gamma independent"
     ]);
+  });
+
+  it("paginates large target lists after sorting and limits select-all to the current page", async () => {
+    await renderTargetsPage({ targets: createPagedTargetsFixture(25) });
+    await screen.findByRole("button", { name: "Paged Target 01" });
+
+    expect(screen.getByRole("button", { name: "Paged Target 20" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Target 21" })).not.toBeInTheDocument();
+    expect(screen.getByText("1-20 / 25")).toBeInTheDocument();
+    const targetTable = within(screen.getByRole("main")).getByRole("table");
+    const tableBody = targetTable.querySelector("[data-slot='table-body']");
+    const paginationFooter = screen.getByText("1-20 / 25").closest("tfoot");
+
+    expect(paginationFooter).not.toBeNull();
+    expect(tableBody).not.toContainElement(paginationFooter as HTMLElement);
+    expect(paginationFooter).toHaveClass("shrink-0");
+
+    fireEvent.click(screen.getByRole("link", { name: "下一页" }));
+
+    expect(await screen.findByRole("button", { name: "Paged Target 21" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Paged Target 25" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Target 20" })).not.toBeInTheDocument();
+    expect(screen.getByText("21-25 / 25")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("选择全部可删除目标"));
+
+    expect(screen.getByLabelText("选择 Paged Target 21")).toBeChecked();
+    expect(screen.getByLabelText("选择 Paged Target 25")).toBeChecked();
+
+    fireEvent.click(screen.getByRole("link", { name: "上一页" }));
+
+    expect(await screen.findByRole("button", { name: "Paged Target 01" })).toBeInTheDocument();
+    expect(screen.getByLabelText("选择 Paged Target 01")).not.toBeChecked();
+
+    fireEvent.click(screen.getByRole("link", { name: "下一页" }));
+    expect(await screen.findByText("21-25 / 25")).toBeInTheDocument();
+
+    await selectOption("排序", "路径");
+
+    expect(await screen.findByText("1-20 / 25")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Paged Target 01" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Target 21" })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("搜索目标"), {
+      target: { value: "Paged Target 25" }
+    });
+
+    expect(await screen.findByRole("button", { name: "Paged Target 25" })).toBeInTheDocument();
+    expect(screen.getByText("1-1 / 1")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Target 01" })).not.toBeInTheDocument();
   });
 
   it("keeps target table headers passive while the sort select controls order", async () => {

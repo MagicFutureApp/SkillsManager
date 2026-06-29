@@ -79,11 +79,13 @@ export const RepositoriesPageMain = () => {
             status: t("repositories.table.status"),
             toggleEnabled: (name) => t("repositories.table.toggleEnabled", { name })
           }}
+          pagination={page.pagination}
           repositorySyncStates={page.repositorySyncStates}
           repositories={page.visibleRepositories}
           selectedRepositoryId={page.selectedRepositoryId}
           visibleAllChecked={page.visibleAllChecked}
           visibleSomeChecked={page.visibleSomeChecked}
+          onPageChange={page.setRepositoriesPage}
           onSelectAllVisible={page.selectAllVisible}
           onSelectRepository={page.setSelectedRepositoryId}
           onSyncRepository={page.syncRepository}

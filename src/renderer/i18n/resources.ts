@@ -136,6 +136,13 @@ export const resources = {
           sortScope: "范围",
           sortSkills: "技能"
         },
+        pagination: {
+          ariaLabel: "目标分页",
+          next: "下一页",
+          pageAriaLabel: "第 {{page}} 页",
+          previous: "上一页",
+          range: "{{start}}-{{end}} / {{total}}"
+        },
         table: {
           actions: "操作",
           headerAriaLabel: "目标列表表头",
@@ -278,6 +285,13 @@ export const resources = {
           registered: "注册来源",
           scanAttention: "扫描状态需处理",
           skillUnit: "skill unit"
+        },
+        pagination: {
+          ariaLabel: "来源分页",
+          next: "下一页",
+          pageAriaLabel: "第 {{page}} 页",
+          previous: "上一页",
+          range: "{{start}}-{{end}} / {{total}}"
         },
         table: {
           actions: "启用",
@@ -560,6 +574,13 @@ export const resources = {
           sortScope: "Scope",
           sortSkills: "Skill count"
         },
+        pagination: {
+          ariaLabel: "Target pagination",
+          next: "Next",
+          pageAriaLabel: "Page {{page}}",
+          previous: "Previous",
+          range: "{{start}}-{{end}} / {{total}}"
+        },
         table: {
           actions: "Actions",
           headerAriaLabel: "Target list header",
@@ -706,6 +727,13 @@ export const resources = {
           registered: "Registered sources",
           scanAttention: "Scan status needs attention",
           skillUnit: "skill unit"
+        },
+        pagination: {
+          ariaLabel: "Source pagination",
+          next: "Next",
+          pageAriaLabel: "Page {{page}}",
+          previous: "Previous",
+          range: "{{start}}-{{end}} / {{total}}"
         },
         table: {
           actions: "Enabled",

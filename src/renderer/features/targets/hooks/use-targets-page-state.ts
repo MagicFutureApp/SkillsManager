@@ -8,6 +8,13 @@ import {
   type TargetViewModel
 } from "../components/targets-page-data";
 import type { RegisteredTargetRecord } from "../../../../core/targets/target-api";
+import {
+  clampPageNumber,
+  createPaginationState,
+  DEFAULT_PAGE_SIZE,
+  getPagedItems,
+  type PaginationState
+} from "@/lib/pagination";
 
 type TargetsResultLike = {
   registeredTargets?: RegisteredTargetRecord[];
@@ -27,6 +34,7 @@ export const useTargetsPageState = () => {
   const [deleteError, setDeleteError] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeletingTargets, setIsDeletingTargets] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [query, setQuery] = useState("");
   const [isRefreshingTargets, setIsRefreshingTargets] = useState(false);
   const [pendingDeleteTargetIds, setPendingDeleteTargetIds] = useState<string[]>([]);
@@ -294,9 +302,27 @@ export const useTargetsPageState = () => {
     };
   }, []);
 
-  const visibleTargets = useMemo(() => {
+  const filteredTargets = useMemo(() => {
     return filterTargets({ query, sort, targets });
   }, [query, sort, targets]);
+  const pagination = useMemo<PaginationState>(() => {
+    return createPaginationState({
+      currentPage,
+      pageSize: DEFAULT_PAGE_SIZE,
+      totalItems: filteredTargets.length
+    });
+  }, [currentPage, filteredTargets.length]);
+  const visibleTargets = useMemo(() => {
+    return getPagedItems(filteredTargets, pagination);
+  }, [filteredTargets, pagination]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, sort]);
+
+  useEffect(() => {
+    setCurrentPage((current) => clampPageNumber(current, pagination.totalPages));
+  }, [pagination.totalPages]);
 
   useEffect(() => {
     if (!visibleTargets.length) {
@@ -332,6 +358,10 @@ export const useTargetsPageState = () => {
     void navigator.clipboard?.writeText(selectedTarget.path);
   };
 
+  const setTargetsPage = (pageNumber: number) => {
+    setCurrentPage(clampPageNumber(pageNumber, pagination.totalPages));
+  };
+
   return {
     addTargetError,
     addTargetName,
@@ -345,6 +375,7 @@ export const useTargetsPageState = () => {
     isRefreshingTargets,
     isSavingTarget,
     pendingDeleteTargets,
+    pagination,
     query,
     scanIssues,
     selectedTarget,
@@ -365,6 +396,7 @@ export const useTargetsPageState = () => {
     saveAddTarget,
     selectAllVisibleDeletable,
     selectTargetPath,
+    setTargetsPage,
     setScanIssues,
     setPendingTargetName,
     setQuery,

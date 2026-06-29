@@ -8,7 +8,10 @@ import { createI18nInstance } from "@/i18n/react-i18n";
 import type { RepositoriesSyncResult } from "@/global";
 import { providerApiRecordsFixture, repositoryApiRecordsFixture } from "@/test/api-fixtures";
 
-const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
+const renderRepositoriesPage = async (
+  locale: "zh-CN" | "en-US" = "zh-CN",
+  initialRepositoryName = "Team skills repository"
+) => {
   const i18n = await createI18nInstance(locale);
   const skillsManager = window.skillsManager;
 
@@ -42,7 +45,7 @@ const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN") => {
     </I18nextProvider>
   );
 
-  await screen.findByRole("button", { name: "Team skills repository" });
+  await screen.findByRole("button", { name: initialRepositoryName });
 
   return result;
 };
@@ -63,6 +66,32 @@ const getRepositorySyncButton = (repositoryName: string) => {
     );
   });
 };
+
+const createPagedRepositoryRecords = (count: number) =>
+  Array.from({ length: count }, (_, index) => {
+    const number = String(index + 1).padStart(2, "0");
+
+    return {
+      ...repositoryApiRecordsFixture[0],
+      configJson: JSON.stringify({
+        enabled: true,
+        lastScanLabel: "未执行",
+        note: `Paged source ${number}`,
+        patterns: ["skills/*/SKILL.md"],
+        priority: index + 1,
+        providerName: "GitHub",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+        skillUnits: index + 1,
+        status: "ready"
+      }),
+      id: `paged-source-${number}`,
+      lastSync: null,
+      lastScannedCommitSha: `commit-${number}`,
+      localCachePath: `~/.skills-manager/cache/paged-source-${number}`,
+      name: `Paged Source ${number}`,
+      remoteUrl: `git@github.com:team/paged-source-${number}.git`
+    };
+  });
 
 describe("RepositoriesPage", () => {
   beforeEach(() => {
@@ -160,6 +189,59 @@ describe("RepositoriesPage", () => {
 
     await selectOption("状态", "就绪");
     expect(screen.getByText("没有匹配的来源。调整搜索或筛选条件。")).toBeInTheDocument();
+  });
+
+  it("paginates large source lists after sorting and limits select-all to the current page", async () => {
+    window.skillsManager = {
+      listRepositories: vi
+        .fn()
+        .mockResolvedValue({ repositories: createPagedRepositoryRecords(25) })
+    } as unknown as NonNullable<typeof window.skillsManager>;
+
+    await renderRepositoriesPage("zh-CN", "Paged Source 01");
+
+    expect(screen.getByRole("button", { name: "Paged Source 20" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Source 21" })).not.toBeInTheDocument();
+    expect(screen.getByText("1-20 / 25")).toBeInTheDocument();
+    const sourceTable = within(screen.getByRole("main")).getByRole("table");
+    const tableBody = sourceTable.querySelector("[data-slot='table-body']");
+    const paginationFooter = screen.getByText("1-20 / 25").closest("tfoot");
+
+    expect(paginationFooter).not.toBeNull();
+    expect(tableBody).not.toContainElement(paginationFooter as HTMLElement);
+    expect(paginationFooter).toHaveClass("shrink-0");
+
+    fireEvent.click(screen.getByRole("link", { name: "下一页" }));
+
+    expect(await screen.findByRole("button", { name: "Paged Source 21" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Paged Source 25" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Source 20" })).not.toBeInTheDocument();
+    expect(screen.getByText("21-25 / 25")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("选择全部可见来源"));
+
+    expect(screen.getByLabelText("选择 Paged Source 21")).toBeChecked();
+    expect(screen.getByLabelText("选择 Paged Source 25")).toBeChecked();
+
+    fireEvent.click(screen.getByRole("link", { name: "上一页" }));
+
+    expect(await screen.findByRole("button", { name: "Paged Source 01" })).toBeInTheDocument();
+    expect(screen.getByLabelText("选择 Paged Source 01")).not.toBeChecked();
+
+    fireEvent.click(screen.getByRole("link", { name: "下一页" }));
+    expect(await screen.findByText("21-25 / 25")).toBeInTheDocument();
+
+    await selectOption("排序", "技能");
+
+    expect(await screen.findByText("1-20 / 25")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Paged Source 25" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Source 05" })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("搜索"), { target: { value: "Paged Source 25" } });
+
+    expect(await screen.findByRole("button", { name: "Paged Source 25" })).toBeInTheDocument();
+    expect(screen.getByText("1-1 / 1")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Source 01" })).not.toBeInTheDocument();
   });
 
   it("searches sources by name, URL, or note", async () => {

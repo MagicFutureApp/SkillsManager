@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DataTablePaginationFooter } from "@/components/data-table-pagination-footer";
 import {
   DataTableCell,
   DataTableEmptyRow,
@@ -114,6 +115,13 @@ export const TargetList = () => {
           <DataTableEmptyRow colSpan={6}>{t("targets.empty")}</DataTableEmptyRow>
         )}
       </DataTableFixedBody>
+
+      <DataTablePaginationFooter
+        colSpan={6}
+        labelKeyPrefix="targets.pagination"
+        onPageChange={page.setTargetsPage}
+        pagination={page.pagination}
+      />
     </DataTableFixed>
   );
 };

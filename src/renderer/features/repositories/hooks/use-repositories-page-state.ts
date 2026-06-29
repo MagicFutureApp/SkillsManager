@@ -9,6 +9,13 @@ import {
   type RepositoryViewModel
 } from "../components/repository-data";
 import type { RepositoriesSyncResult, RepositoryDeletePreview } from "@/global";
+import {
+  clampPageNumber,
+  createPaginationState,
+  DEFAULT_PAGE_SIZE,
+  getPagedItems,
+  type PaginationState
+} from "@/lib/pagination";
 import { useEffect, useMemo, useState } from "react";
 
 export type RepositorySyncState =
@@ -35,6 +42,7 @@ export const useRepositoriesPageState = () => {
   const [isLoadingDeletePreview, setIsLoadingDeletePreview] = useState(false);
   const [isSavingRepository, setIsSavingRepository] = useState(false);
   const [pendingLocalSyncRepositoryIds, setPendingLocalSyncRepositoryIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [modalError, setModalError] = useState("");
   const [providerFilter, setProviderFilter] = useState<RepositoryProviderFilter>("all");
   const [query, setQuery] = useState("");
@@ -64,7 +72,7 @@ export const useRepositoriesPageState = () => {
     };
   }, []);
 
-  const visibleRepositories = useMemo(() => {
+  const filteredRepositories = useMemo(() => {
     return filterRepositories({
       provider: providerFilter,
       query,
@@ -73,9 +81,45 @@ export const useRepositoriesPageState = () => {
       status: statusFilter
     });
   }, [providerFilter, query, repositories, sort, statusFilter]);
+  const pagination = useMemo<PaginationState>(() => {
+    return createPaginationState({
+      currentPage,
+      pageSize: DEFAULT_PAGE_SIZE,
+      totalItems: filteredRepositories.length
+    });
+  }, [currentPage, filteredRepositories.length]);
+  const visibleRepositories = useMemo(() => {
+    return getPagedItems(filteredRepositories, pagination);
+  }, [filteredRepositories, pagination]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [providerFilter, query, sort, statusFilter]);
+
+  useEffect(() => {
+    setCurrentPage((current) => clampPageNumber(current, pagination.totalPages));
+  }, [pagination.totalPages]);
+
+  useEffect(() => {
+    if (!visibleRepositories.length) {
+      setSelectedRepositoryId(null);
+      return;
+    }
+
+    setSelectedRepositoryId((currentRepositoryId) => {
+      if (
+        currentRepositoryId &&
+        visibleRepositories.some((repository) => repository.id === currentRepositoryId)
+      ) {
+        return currentRepositoryId;
+      }
+
+      return visibleRepositories[0]?.id ?? null;
+    });
+  }, [visibleRepositories]);
 
   const selectedRepository =
-    repositories.find((repository) => repository.id === selectedRepositoryId) ?? null;
+    visibleRepositories.find((repository) => repository.id === selectedRepositoryId) ?? null;
   const editingRepository =
     repositories.find((repository) => repository.id === editingRepositoryId) ?? null;
   const visibleIds = visibleRepositories.map((repository) => repository.id);
@@ -311,6 +355,10 @@ export const useRepositoriesPageState = () => {
     });
   };
 
+  const setRepositoriesPage = (pageNumber: number) => {
+    setCurrentPage(clampPageNumber(pageNumber, pagination.totalPages));
+  };
+
   const openCreateModal = () => {
     setEditingRepositoryId(null);
     setModalError("");
@@ -431,8 +479,8 @@ export const useRepositoriesPageState = () => {
       return;
     }
 
-    const absolutePath = await (
-      window.skillsManager?.resolveRepositoryCachePath?.(selectedRepository.cachePath)
+    const absolutePath = await window.skillsManager?.resolveRepositoryCachePath?.(
+      selectedRepository.cachePath
     );
 
     void navigator.clipboard?.writeText(absolutePath ?? selectedRepository.cachePath);
@@ -492,6 +540,7 @@ export const useRepositoriesPageState = () => {
     isSavingRepository,
     isSyncingRepositories: syncingRepositoryIds.size > 0,
     modalError,
+    pagination,
     providerFilter,
     query,
     repositorySyncStates,
@@ -514,6 +563,7 @@ export const useRepositoriesPageState = () => {
     openRepositoryLocation,
     saveRepository,
     selectAllVisible,
+    setRepositoriesPage,
     setProviderFilter,
     setQuery,
     setSelectedRepositoryId,

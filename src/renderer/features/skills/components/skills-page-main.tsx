@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DataTablePaginationFooter } from "@/components/data-table-pagination-footer";
 import {
   DataTableCell,
   DataTableEmptyRow,
@@ -23,7 +24,6 @@ import {
   type SkillSort
 } from "./skills-page-data";
 import { Field } from "./skills-page-controls";
-import { SkillsPaginationFooter } from "./skills-pagination-footer";
 import { useSkillsPageContext } from "./skills-page-context";
 
 export const SkillsPageMain = () => {
@@ -127,8 +127,9 @@ export const SkillsPageMain = () => {
           )}
         </DataTableFixedBody>
 
-        <SkillsPaginationFooter
+        <DataTablePaginationFooter
           colSpan={5}
+          labelKeyPrefix="skills.pagination"
           onPageChange={page.setSkillsPage}
           pagination={page.pagination}
         />
