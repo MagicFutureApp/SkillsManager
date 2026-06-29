@@ -833,6 +833,98 @@ describe("SkillsPage", () => {
     expect(screen.queryByRole("button", { name: "Paged Skill 01" })).not.toBeInTheDocument();
   });
 
+  it("resets paged results after sorting and filters repositories before paginating", async () => {
+    const skills = createPagedSkillRecords(25).map((skill, index) => ({
+      ...skill,
+      repository: index >= 20 ? "A catalog" : "B catalog"
+    }));
+
+    await renderSkillsPage({ skills });
+    await screen.findByRole("button", { name: "Paged Skill 01" });
+
+    fireEvent.click(screen.getByRole("link", { name: "下一页" }));
+    expect(await screen.findByText("21-25 / 25")).toBeInTheDocument();
+
+    await selectOption("排序", "仓库");
+
+    expect(await screen.findByText("1-20 / 25")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Paged Skill 21" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Skill 16" })).not.toBeInTheDocument();
+
+    await selectOption("仓库", "A catalog");
+
+    expect(await screen.findByText("1-5 / 5")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Paged Skill 25" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Skill 01" })).not.toBeInTheDocument();
+  });
+
+  it("keeps hidden paged selections available to bulk distribution", async () => {
+    const skills = createPagedSkillRecords(25).map((skill) => ({
+      ...skill,
+      targets: ["codex"]
+    }));
+
+    await renderSkillsPage({ skills });
+    await screen.findByRole("button", { name: "Paged Skill 01" });
+
+    const distributeButton = screen.getByRole("button", { name: "分发选中的技能" });
+
+    fireEvent.click(screen.getByRole("link", { name: "下一页" }));
+    expect(await screen.findByRole("button", { name: "Paged Skill 21" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("选择全部可见技能"));
+
+    expect(screen.getByLabelText("选择 Paged Skill 21")).toBeChecked();
+    expect(distributeButton).toBeEnabled();
+    expect(distributeButton).toHaveAttribute("title", "分发功能暂未实现");
+
+    fireEvent.click(screen.getByRole("link", { name: "上一页" }));
+
+    expect(await screen.findByRole("button", { name: "Paged Skill 01" })).toBeInTheDocument();
+    expect(screen.getByLabelText("选择 Paged Skill 01")).not.toBeChecked();
+    expect(distributeButton).toBeEnabled();
+    expect(distributeButton).toHaveAttribute("title", "分发功能暂未实现");
+  });
+
+  it("uses the current paged skill for preview and target preference changes", async () => {
+    const skills = createPagedSkillRecords(21).map((skill) => ({
+      ...skill,
+      targets: ["codex"]
+    }));
+    const { previewDistributionPlan, setSkillTargetPreference } = await renderSkillsPage({
+      skills
+    });
+    await screen.findByRole("button", { name: "Paged Skill 01" });
+
+    fireEvent.click(screen.getByRole("link", { name: "下一页" }));
+
+    expect(await screen.findByRole("button", { name: "Paged Skill 21" })).toBeInTheDocument();
+    const skillDetail = screen.getByLabelText("技能详情");
+
+    expect(
+      within(skillDetail).getByRole("heading", { name: "Paged Skill 21" })
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(skillDetail).getByRole("button", { name: "预览" }));
+
+    await waitFor(() =>
+      expect(previewDistributionPlan).toHaveBeenCalledWith({
+        skillUnitIds: ["catalog__paged-skill-21"],
+        triggerSource: "skill_detail"
+      })
+    );
+
+    fireEvent.click(screen.getByLabelText("选择 Claude Code"));
+
+    await waitFor(() =>
+      expect(setSkillTargetPreference).toHaveBeenCalledWith({
+        agentTargetId: "claude",
+        enabled: true,
+        skillUnitId: "catalog__paged-skill-21"
+      })
+    );
+  });
+
   it("checks individual skills and all currently visible skills", async () => {
     await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
     await screen.findByRole("button", { name: "Review Bot" });
