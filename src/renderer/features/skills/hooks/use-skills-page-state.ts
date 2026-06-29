@@ -14,8 +14,22 @@ import {
   type TargetOption
 } from "../components/skills-page-data";
 
+const SKILLS_PAGE_SIZE = 20;
+
+export type SkillsPaginationState = {
+  currentPage: number;
+  endIndex: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  pageSize: number;
+  startIndex: number;
+  totalItems: number;
+  totalPages: number;
+};
+
 export const useSkillsPageState = () => {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
+  const [currentPage, setCurrentPage] = useState(1);
   const [distributionNoticeKey, setDistributionNoticeKey] = useState<string | null>(null);
   const [distributionPreview, setDistributionPreview] = useState<DistributionPreviewResult | null>(
     null
@@ -47,7 +61,7 @@ export const useSkillsPageState = () => {
     };
   }, []);
 
-  const visibleSkills = useMemo(() => {
+  const filteredSkills = useMemo(() => {
     return filterSkills({
       query,
       repository: repositoryFilter,
@@ -57,6 +71,29 @@ export const useSkillsPageState = () => {
   }, [query, repositoryFilter, skills, sort]);
 
   const repositoryOptions = useMemo(() => getSkillRepositoryOptions(skills), [skills]);
+  const totalPages = Math.max(1, Math.ceil(filteredSkills.length / SKILLS_PAGE_SIZE));
+  const currentPageNumber = Math.min(currentPage, totalPages);
+  const visibleSkills = useMemo(() => {
+    const pageStartIndex = (currentPageNumber - 1) * SKILLS_PAGE_SIZE;
+
+    return filteredSkills.slice(pageStartIndex, pageStartIndex + SKILLS_PAGE_SIZE);
+  }, [currentPageNumber, filteredSkills]);
+  const pagination = useMemo<SkillsPaginationState>(() => {
+    const startIndex =
+      filteredSkills.length === 0 ? 0 : (currentPageNumber - 1) * SKILLS_PAGE_SIZE + 1;
+    const endIndex = Math.min(currentPageNumber * SKILLS_PAGE_SIZE, filteredSkills.length);
+
+    return {
+      currentPage: currentPageNumber,
+      endIndex,
+      hasNextPage: currentPageNumber < totalPages,
+      hasPreviousPage: currentPageNumber > 1,
+      pageSize: SKILLS_PAGE_SIZE,
+      startIndex,
+      totalItems: filteredSkills.length,
+      totalPages
+    };
+  }, [currentPageNumber, filteredSkills.length, totalPages]);
 
   useEffect(() => {
     if (!visibleSkills.length) {
@@ -72,6 +109,14 @@ export const useSkillsPageState = () => {
       return visibleSkills[0]?.id ?? null;
     });
   }, [visibleSkills]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, repositoryFilter, sort]);
+
+  useEffect(() => {
+    setCurrentPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
 
   useEffect(() => {
     if (repositoryOptions.includes(repositoryFilter)) {
@@ -126,6 +171,10 @@ export const useSkillsPageState = () => {
 
       return nextIds;
     });
+  };
+
+  const setSkillsPage = (pageNumber: number) => {
+    setCurrentPage(Math.min(Math.max(1, pageNumber), totalPages));
   };
 
   const announceDistributionUnavailable = () => {
@@ -258,6 +307,7 @@ export const useSkillsPageState = () => {
     query,
     repositoryFilter,
     repositoryOptions,
+    pagination,
     selectedSkill,
     selectedSkillId,
     selectedSkillTargetOptions,
@@ -270,6 +320,7 @@ export const useSkillsPageState = () => {
     closeDistributionPreviewDialog,
     previewSelectedSkillDistribution,
     selectAllVisible,
+    setSkillsPage,
     setQuery,
     setRepositoryFilter,
     setSelectedSkillId,

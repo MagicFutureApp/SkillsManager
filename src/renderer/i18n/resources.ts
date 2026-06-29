@@ -68,6 +68,13 @@ export const resources = {
           status: "状态",
           allStatuses: "全部状态"
         },
+        pagination: {
+          ariaLabel: "技能分页",
+          next: "下一页",
+          pageAriaLabel: "第 {{page}} 页",
+          previous: "上一页",
+          range: "{{start}}-{{end}} / {{total}}"
+        },
         summary: {
           ariaLabel: "技能摘要",
           skillUnit: "skill unit",
@@ -481,6 +488,13 @@ export const resources = {
           allRepositories: "All repositories",
           status: "Status",
           allStatuses: "All statuses"
+        },
+        pagination: {
+          ariaLabel: "Skill pagination",
+          next: "Next",
+          pageAriaLabel: "Page {{page}}",
+          previous: "Previous",
+          range: "{{start}}-{{end}} / {{total}}"
         },
         summary: {
           ariaLabel: "Skill summary",

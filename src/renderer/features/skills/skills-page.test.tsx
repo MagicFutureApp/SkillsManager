@@ -61,6 +61,26 @@ const interactiveSkillRecordsFixture: SkillApiRecord[] = [
   }
 ];
 
+const createPagedSkillRecords = (count: number): SkillApiRecord[] =>
+  Array.from({ length: count }, (_, index) => {
+    const number = String(index + 1).padStart(2, "0");
+
+    return {
+      description: `Paged skill ${number} supports large catalog browsing.`,
+      enabled: true,
+      entry: `skills/paged-skill-${number}/SKILL.md`,
+      id: `catalog__paged-skill-${number}`,
+      name: `Paged Skill ${number}`,
+      repository: "Large catalog",
+      repositoryId: "catalog",
+      skillId: `paged-skill-${number}`,
+      status: "ready",
+      tags: ["paged"],
+      targets: [],
+      version: "8f2c91a"
+    };
+  });
+
 const skillTargetsFixture: TargetsListResult = {
   registeredTargets: [
     {
@@ -778,6 +798,39 @@ describe("SkillsPage", () => {
       "Release Notes",
       "Review Bot"
     ]);
+  });
+
+  it("paginates large skill lists after filtering and limits select-all to the current page", async () => {
+    await renderSkillsPage({ skills: createPagedSkillRecords(25) });
+    await screen.findByRole("button", { name: "Paged Skill 01" });
+
+    expect(screen.getByRole("button", { name: "Paged Skill 20" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Skill 21" })).not.toBeInTheDocument();
+    expect(screen.getByText("1-20 / 25")).toBeInTheDocument();
+    expect(screen.getByText("1-20 / 25").closest("tfoot")).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("link", { name: "下一页" }));
+
+    expect(await screen.findByRole("button", { name: "Paged Skill 21" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Paged Skill 25" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Skill 20" })).not.toBeInTheDocument();
+    expect(screen.getByText("21-25 / 25")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("选择全部可见技能"));
+
+    expect(screen.getByLabelText("选择 Paged Skill 21")).toBeChecked();
+    expect(screen.getByLabelText("选择 Paged Skill 25")).toBeChecked();
+
+    fireEvent.click(screen.getByRole("link", { name: "上一页" }));
+
+    expect(await screen.findByRole("button", { name: "Paged Skill 01" })).toBeInTheDocument();
+    expect(screen.getByLabelText("选择 Paged Skill 01")).not.toBeChecked();
+
+    fireEvent.change(screen.getByLabelText("搜索技能"), { target: { value: "Paged Skill 25" } });
+
+    expect(await screen.findByRole("button", { name: "Paged Skill 25" })).toBeInTheDocument();
+    expect(screen.getByText("1-1 / 1")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Paged Skill 01" })).not.toBeInTheDocument();
   });
 
   it("checks individual skills and all currently visible skills", async () => {

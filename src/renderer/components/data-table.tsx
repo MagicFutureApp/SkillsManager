@@ -2,6 +2,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow
@@ -25,6 +26,7 @@ export const DataTable = ({ className, containerClassName, ...props }: DataTable
 
 export const DataTableHeader = TableHeader;
 export const DataTableBody = TableBody;
+export const DataTableFooter = TableFooter;
 
 export const DataTableHead = ({ className, ...props }: React.ComponentProps<typeof TableHead>) => {
   return (

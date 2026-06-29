@@ -23,6 +23,7 @@ import {
   type SkillSort
 } from "./skills-page-data";
 import { Field } from "./skills-page-controls";
+import { SkillsPaginationFooter } from "./skills-pagination-footer";
 import { useSkillsPageContext } from "./skills-page-context";
 
 export const SkillsPageMain = () => {
@@ -100,7 +101,7 @@ export const SkillsPageMain = () => {
       <DataTable containerClassName="mt-5">
         <DataTableHeader className="max-[820px]:hidden">
           <DataTableRow>
-            <DataTableHead className="w-[40px]">
+            <DataTableHead className="w-10">
               <span className="grid place-items-center">
                 <Checkbox
                   checked={page.visibleAllChecked}
@@ -114,7 +115,7 @@ export const SkillsPageMain = () => {
             <DataTableHead>{t("skills.table.skill")}</DataTableHead>
             <DataTableHead className="w-[18%]">{t("skills.table.repository")}</DataTableHead>
             <DataTableHead className="w-[10%]">{t("skills.table.targets")}</DataTableHead>
-            <DataTableHead className="w-[92px]">{t("skills.table.actions")}</DataTableHead>
+            <DataTableHead className="w-23">{t("skills.table.actions")}</DataTableHead>
           </DataTableRow>
         </DataTableHeader>
 
@@ -125,6 +126,12 @@ export const SkillsPageMain = () => {
             <DataTableEmptyRow colSpan={5}>{t("skills.empty")}</DataTableEmptyRow>
           )}
         </DataTableBody>
+
+        <SkillsPaginationFooter
+          colSpan={5}
+          onPageChange={page.setSkillsPage}
+          pagination={page.pagination}
+        />
       </DataTable>
     </>
   );
