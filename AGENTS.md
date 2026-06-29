@@ -131,3 +131,4 @@ pnpm run electron:version
 - v1 主要区域是 `Sources`、`Repositories`、`Skills`、`Targets`、`Distribution`。
 - 视觉风格保持克制，符合本地工作工具定位。
 - 所有用到的组件，先去 shadcn 的 baseUI 找一找，尽量使用现成组件，必要时稍微调整样式，但不要大幅改动结构或交互。这是地址：https://base-ui.com/llms.txt
+- 样式中的数字单位尽量使用 shadcn / Tailwind v4 的主题化格式，例如 `w-23`、`gap-3`、`rounded-xl`；只有在需要精确像素、外部规格对齐或主题格式无法表达时，才使用 `w-[92px]` 这类 arbitrary value。
