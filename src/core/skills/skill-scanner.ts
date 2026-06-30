@@ -55,6 +55,10 @@ const findSkillEntries = async (rootPath: string, currentPath: string): Promise<
     const absolutePath = path.join(currentPath, entry.name);
 
     if (entry.isDirectory()) {
+      if (entry.name === "node_modules") {
+        continue;
+      }
+
       skillEntries.push(...(await findSkillEntries(rootPath, absolutePath)));
       continue;
     }

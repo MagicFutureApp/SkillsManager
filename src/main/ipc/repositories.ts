@@ -405,7 +405,12 @@ const inspectLocalRepositorySource = async (
 
   return {
     name: path.basename(path.resolve(sourcePath)),
-    patterns: deriveSkillPatterns(discoveredSkills.map((skill) => skill.entryPath)),
+    patterns: deriveSkillPatterns(
+      discoveredSkills.map((skill) => skill.entryPath),
+      {
+        singleTopLevelSkillDirectoryAsGlob: true
+      }
+    ),
     provider: "Local"
   };
 };
@@ -576,6 +581,10 @@ const deriveSourceFolderName = (remoteUrl: string, fallbackPath: string): string
     .trim()
     .replace(/[\\/]+$/, "")
     .replace(/\.git$/i, "");
+
+  if (isLocalPath(trimmedRemoteUrl)) {
+    return path.basename(path.resolve(fallbackPath)) || "repository";
+  }
 
   try {
     const parsedUrl = new URL(trimmedRemoteUrl);

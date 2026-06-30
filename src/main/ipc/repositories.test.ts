@@ -6,7 +6,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createDbClient } from "../../db/client";
 import { providers, repositories, skillUnits, skillVersions, syncRuns } from "../../db/schema";
-import { deleteRepository, syncRepositories } from "./repositories";
+import {
+  deleteRepository,
+  inspectRepositorySourceWithSettings,
+  syncRepositories
+} from "./repositories";
 
 vi.mock("electron", () => ({
   ipcMain: {
@@ -62,6 +66,62 @@ describe("repository IPC handlers", () => {
     await deleteRepository(db, "repo-1", { removeLocalCache });
 
     expect(removeLocalCache).toHaveBeenCalledWith("~/.skills-manager/cache/team-skills");
+  });
+
+  it("infers local discovery entries from the selected project root", async () => {
+    const db = createDbClient(":memory:");
+    const projectPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-local-project-"));
+
+    await mkdir(path.join(projectPath, ".agents", "skills", "kanji-helper"), { recursive: true });
+    await writeFile(
+      path.join(projectPath, ".agents", "skills", "kanji-helper", "SKILL.md"),
+      "# Kanji Helper\n\nPractices kanji.\n",
+      "utf8"
+    );
+
+    await expect(inspectRepositorySourceWithSettings(db, projectPath)).resolves.toEqual({
+      name: path.basename(projectPath),
+      patterns: [".agents/skills/*/SKILL.md"],
+      provider: "Local"
+    });
+  });
+
+  it("infers local discovery entries from the selected agent directory", async () => {
+    const db = createDbClient(":memory:");
+    const projectPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-local-agent-"));
+    const agentPath = path.join(projectPath, ".agents");
+
+    await mkdir(path.join(agentPath, "skills", "kanji-helper"), { recursive: true });
+    await writeFile(
+      path.join(agentPath, "skills", "kanji-helper", "SKILL.md"),
+      "# Kanji Helper\n\nPractices kanji.\n",
+      "utf8"
+    );
+
+    await expect(inspectRepositorySourceWithSettings(db, agentPath)).resolves.toEqual({
+      name: ".agents",
+      patterns: ["skills/*/SKILL.md"],
+      provider: "Local"
+    });
+  });
+
+  it("infers a wildcard discovery entry from a selected skills container", async () => {
+    const db = createDbClient(":memory:");
+    const projectPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-local-skills-"));
+    const skillsPath = path.join(projectPath, ".agents", "skills");
+
+    await mkdir(path.join(skillsPath, "kanji-helper"), { recursive: true });
+    await writeFile(
+      path.join(skillsPath, "kanji-helper", "SKILL.md"),
+      "# Kanji Helper\n\nPractices kanji.\n",
+      "utf8"
+    );
+
+    await expect(inspectRepositorySourceWithSettings(db, skillsPath)).resolves.toEqual({
+      name: "skills",
+      patterns: ["*/SKILL.md"],
+      provider: "Local"
+    });
   });
 
   it("copies a local source into the unified cache before scanning skills", async () => {

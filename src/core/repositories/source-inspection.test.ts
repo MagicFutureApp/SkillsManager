@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { inspectRepositorySource } from "./source-inspection";
+import { deriveSkillPatterns, inspectRepositorySource } from "./source-inspection";
 
 describe("inspectRepositorySource", () => {
   afterEach(() => {
@@ -318,5 +318,15 @@ describe("inspectRepositorySource", () => {
       name: "vercel-labs/skills",
       provider: "GitHub"
     });
+  });
+});
+
+describe("deriveSkillPatterns", () => {
+  it("can infer a wildcard entry when a selected local directory is the skills container", () => {
+    expect(
+      deriveSkillPatterns(["kanji-helper/SKILL.md"], {
+        singleTopLevelSkillDirectoryAsGlob: true
+      })
+    ).toEqual(["*/SKILL.md"]);
   });
 });

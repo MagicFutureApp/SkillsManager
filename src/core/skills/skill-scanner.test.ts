@@ -48,6 +48,30 @@ describe("scanSkillDirectory", () => {
     ]);
   });
 
+  it("ignores SKILL.md files under node_modules while scanning local project roots", async () => {
+    const rootPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-scan-node-modules-"));
+
+    await mkdir(path.join(rootPath, ".agents", "skills", "kanji-helper"), { recursive: true });
+    await mkdir(path.join(rootPath, "node_modules", "package-with-skill"), { recursive: true });
+    await writeFile(
+      path.join(rootPath, ".agents", "skills", "kanji-helper", "SKILL.md"),
+      "# Kanji Helper\n\nPractices kanji.\n",
+      "utf8"
+    );
+    await writeFile(
+      path.join(rootPath, "node_modules", "package-with-skill", "SKILL.md"),
+      "# Package Skill\n\nShould not be parsed from dependencies.\n",
+      "utf8"
+    );
+
+    await expect(scanSkillDirectory(rootPath)).resolves.toMatchObject([
+      {
+        entryPath: ".agents/skills/kanji-helper/SKILL.md",
+        name: "Kanji Helper"
+      }
+    ]);
+  });
+
   it("uses SKILL.md frontmatter name and description as skill metadata", async () => {
     const rootPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-scan-frontmatter-"));
 

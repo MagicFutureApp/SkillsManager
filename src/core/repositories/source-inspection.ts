@@ -34,6 +34,10 @@ type GitHubTreeResponse = {
   }>;
 };
 
+type DeriveSkillPatternOptions = {
+  singleTopLevelSkillDirectoryAsGlob?: boolean;
+};
+
 const defaultFetchJson = async (url: string, githubToken?: string): Promise<unknown> => {
   const response = await fetch(url, {
     headers: {
@@ -348,7 +352,10 @@ const parseGitHubTreeResponse = (response: unknown): string[] => {
     .map((entry) => entry.path as string);
 };
 
-export const deriveSkillPatterns = (paths: string[]): string[] => {
+export const deriveSkillPatterns = (
+  paths: string[],
+  options: DeriveSkillPatternOptions = {}
+): string[] => {
   const skillPaths = Array.from(
     new Set(paths.filter((path) => path === "SKILL.md" || path.endsWith("/SKILL.md")))
   ).sort();
@@ -367,7 +374,12 @@ export const deriveSkillPatterns = (paths: string[]): string[] => {
     )
   );
 
-  if (!rootSkillPatterns.length && !nestedSkillPatterns.length && topLevelSkillPaths.length > 1) {
+  if (
+    !rootSkillPatterns.length &&
+    !nestedSkillPatterns.length &&
+    (topLevelSkillPaths.length > 1 ||
+      (options.singleTopLevelSkillDirectoryAsGlob && topLevelSkillPaths.length === 1))
+  ) {
     return ["*/SKILL.md"];
   }
 
