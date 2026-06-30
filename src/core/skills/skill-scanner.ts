@@ -16,6 +16,37 @@ export type DiscoveredSkill = {
   tags: string[];
 };
 
+const ignoredSkillScanDirectoryNames = new Set([
+  ".bundle",
+  ".build",
+  ".cargo",
+  ".dart_tool",
+  ".gradle",
+  ".kotlin",
+  ".konan",
+  ".m2",
+  ".nuget",
+  ".pub-cache",
+  ".stack-work",
+  ".terraform",
+  ".terragrunt-cache",
+  ".tox",
+  ".venv",
+  "__pycache__",
+  "__pypackages__",
+  "bower_components",
+  "carthage",
+  "dist-packages",
+  "env",
+  "jspm_packages",
+  "node_modules",
+  "pods",
+  "site-packages",
+  "target",
+  "vendor",
+  "venv"
+]);
+
 export const scanSkillDirectory = async (
   rootPath: string,
   discoveryEntries: string[] = []
@@ -55,7 +86,7 @@ const findSkillEntries = async (rootPath: string, currentPath: string): Promise<
     const absolutePath = path.join(currentPath, entry.name);
 
     if (entry.isDirectory()) {
-      if (entry.name === "node_modules") {
+      if (isIgnoredSkillScanDirectory(entry.name)) {
         continue;
       }
 
@@ -69,6 +100,10 @@ const findSkillEntries = async (rootPath: string, currentPath: string): Promise<
   }
 
   return skillEntries;
+};
+
+const isIgnoredSkillScanDirectory = (directoryName: string): boolean => {
+  return ignoredSkillScanDirectoryNames.has(directoryName.toLowerCase());
 };
 
 const normalizeDiscoveryEntries = (entries: string[]): string[] => {

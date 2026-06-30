@@ -48,21 +48,38 @@ describe("scanSkillDirectory", () => {
     ]);
   });
 
-  it("ignores SKILL.md files under node_modules while scanning local project roots", async () => {
+  it("ignores SKILL.md files under common dependency directories while scanning local project roots", async () => {
     const rootPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-scan-node-modules-"));
+    const dependencyDirectories = [
+      "node_modules/package-with-skill",
+      "vendor/package-with-skill",
+      ".venv/lib/python3.12/site-packages/package-with-skill",
+      ".cargo/registry/src/package-with-skill",
+      "target/package-with-skill",
+      ".gradle/caches/modules-2/files-2.1/package-with-skill",
+      ".kotlin/package-with-skill",
+      ".konan/package-with-skill",
+      ".dart_tool/package-with-skill",
+      "Pods/package-with-skill",
+      ".build/checkouts/package-with-skill",
+      ".terraform/providers/package-with-skill"
+    ];
 
     await mkdir(path.join(rootPath, ".agents", "skills", "kanji-helper"), { recursive: true });
-    await mkdir(path.join(rootPath, "node_modules", "package-with-skill"), { recursive: true });
     await writeFile(
       path.join(rootPath, ".agents", "skills", "kanji-helper", "SKILL.md"),
       "# Kanji Helper\n\nPractices kanji.\n",
       "utf8"
     );
-    await writeFile(
-      path.join(rootPath, "node_modules", "package-with-skill", "SKILL.md"),
-      "# Package Skill\n\nShould not be parsed from dependencies.\n",
-      "utf8"
-    );
+
+    for (const dependencyDirectory of dependencyDirectories) {
+      await mkdir(path.join(rootPath, dependencyDirectory), { recursive: true });
+      await writeFile(
+        path.join(rootPath, dependencyDirectory, "SKILL.md"),
+        "# Package Skill\n\nShould not be parsed from dependencies.\n",
+        "utf8"
+      );
+    }
 
     await expect(scanSkillDirectory(rootPath)).resolves.toMatchObject([
       {
