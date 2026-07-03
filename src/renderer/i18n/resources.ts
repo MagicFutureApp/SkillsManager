@@ -11,23 +11,15 @@ export const resources = {
           repositories: "来源",
           skills: "技能",
           targets: "目标",
-          distribution: "同步记录",
           settings: "设置",
-          syncHistory: "同步历史",
           diagnostics: "Diagnostics",
           mainNavigation: "主导航"
-        },
-        guidance: {
-          title: "计划优先",
-          description: "安装前先生成计划预览，确认同步目标和策略后再执行。"
         },
         navigationDescriptions: {
           providers: "管理 Provider 连接入口和访问诊断。",
           repositories: "管理技能来源和本地索引入口。",
-          skills: "浏览 skill unit，选择目标并预览分发计划。",
+          skills: "浏览 skill unit，选择目标并执行 copy 分发。",
           targets: "维护 Codex、Claude Code、Gemini CLI 和自定义目录目标。",
-          distribution: "查看技能同步和分发执行记录。",
-          syncHistory: "查看 source sync 运行记录、扫描摘要和失败日志。",
           versionLabel: "版本: {{version}}"
         }
       },
@@ -42,14 +34,17 @@ export const resources = {
           syncSelectedAria: "分发选中的技能",
           syncCurrentSkillAria: "分发当前技能",
           syncSkillAria: "分发 {{name}}",
+          syncReady: "准备分发",
           syncNoSelection: "请先选择要分发的技能",
           syncNoTargets: "请先添加分发目标",
           syncSelectedNoTargets: "选中的技能没有分发目标",
-          syncUnavailable: "分发功能暂未实现",
-          syncUnavailableStatus: "分发功能暂未实现。",
-          previewGeneratedStatus: "计划预览已生成。",
-          previewFailedStatus: "计划预览失败。",
-          previewUnavailableStatus: "预览功能暂不可用",
+          distributionUnavailableStatus: "分发接口暂不可用。",
+          distributionEmptyStatus: "没有需要分发的项目。",
+          distributionFailedStatus: "分发失败。",
+          distributionCompletedStatus:
+            "分发完成：安装 {{installed}}，更新 {{updated}}，跳过 {{skipped}}，冲突 {{conflicts}}，阻止 {{blocked}}，失败 {{failed}}。",
+          distributionPreviewFailedStatus: "分发预览失败。",
+          cancel: "取消",
           close: "关闭",
           editSkill: "编辑",
           addSyncTarget: "新增分发目标",
@@ -96,12 +91,9 @@ export const resources = {
           ariaLabel: "技能详情",
           emptyTitle: "请选择技能",
           syncTargets: "分发目标",
-          syncTargetsDescription: "选择默认分发范围；安装前仍会先生成计划预览。",
+          syncTargetsDescription:
+            "选择默认分发范围；点击分发后会直接按确认弹窗中的选择 copy 到目标目录。",
           chooseTarget: "选择 {{name}}",
-          planPreview: "计划预览",
-          planPreviewDescription: "计划预览会把每个目标分类为 install、update、skip 或 conflict。",
-          planPreviewEmpty: "尚未预览。选择目标后点击“预览计划”。",
-          planPreviewReady: "已生成 {{count}} 条 dry-run 条目。",
           details: "详情",
           skillId: "Skill ID",
           repository: "仓库",
@@ -111,6 +103,24 @@ export const resources = {
         },
         targets: {
           customDirectory: "Custom directory"
+        },
+        distribution: {
+          confirmTitle: "确认分发",
+          confirmDescription: "确认后会将 {{count}} 个项目 copy 到目标目录。",
+          confirmAction: "确认分发",
+          conflictResolution: "冲突处理",
+          conflictResolutionAria: "处理 {{skill}} 到 {{target}} 的冲突",
+          actions: {
+            blocked: "阻止",
+            conflict: "冲突",
+            install: "安装",
+            skip: "跳过",
+            update: "更新"
+          },
+          resolutions: {
+            overwrite: "覆盖",
+            skip: "不处理"
+          }
         }
       },
       targets: {
@@ -326,10 +336,22 @@ export const resources = {
           provider: "来源类型",
           remoteUrl: "URL / 路径",
           scanAdded: "新增技能",
-          scanChanged: "元数据变更",
+          scanChanged: "变更技能",
           scanHeading: "同步影响",
           scanRemoved: "移除技能",
-          scanWarnings: "扫描警告"
+          scanWarnings: "扫描警告",
+          syncDetailsHeading: "同步明细",
+          distributionHeading: "分发摘要",
+          autoDistribution: "自动分发",
+          autoDistributionEnabled: "已开启",
+          autoDistributionDisabled: "已关闭",
+          distributionEligible: "可分发",
+          distributionInstalled: "安装",
+          distributionUpdated: "更新",
+          distributionSkipped: "跳过",
+          distributionConflicts: "冲突",
+          distributionBlocked: "阻止",
+          distributionFailed: "失败"
         },
         deleteDialog: {
           cachePath: "来源本地缓存",
@@ -374,65 +396,6 @@ export const resources = {
           justForceScanned: "刚刚强制扫描",
           justSynced: "刚刚同步"
         }
-      },
-      syncHistory: {
-        pageLabel: "Sync history",
-        heading: "同步历史",
-        description: "查看 source sync 写入的运行记录和失败日志。",
-        empty: "暂无同步历史。",
-        loading: "正在读取同步历史...",
-        error: "读取同步历史失败。",
-        filters: {
-          allStatuses: "全部状态",
-          ariaLabel: "同步历史筛选",
-          search: "搜索",
-          searchPlaceholder: "搜索仓库、URL、commit、错误或日志路径",
-          sort: "排序",
-          sortNewest: "最新优先",
-          sortRepository: "仓库",
-          sortStatus: "状态",
-          status: "状态"
-        },
-        list: {
-          ariaLabel: "同步运行列表",
-          scanSummary: "新增 {{added}} / 更新 {{changed}} / 移除 {{removed}} / 警告 {{warnings}}",
-          selectRun: "{{repository}} {{status}}"
-        },
-        table: {
-          log: "日志",
-          repository: "仓库",
-          scan: "Scan summary",
-          startedAt: "开始时间",
-          status: "状态"
-        },
-        status: {
-          failed: "失败",
-          interrupted: "中断",
-          running: "运行中",
-          success: "成功"
-        },
-        detail: {
-          ariaLabel: "同步运行详情",
-          duration: "耗时",
-          emptyTitle: "选择一次同步",
-          emptyDescription: "选择左侧记录后查看仓库、时间、状态、扫描摘要和失败日志。",
-          endCommit: "结束 commit",
-          errorMessage: "错误信息",
-          finishedAt: "结束时间",
-          logPath: "日志路径",
-          noValue: "无",
-          repository: "仓库",
-          remoteUrl: "URL / 路径",
-          scanAdded: "新增技能",
-          scanChanged: "元数据变更",
-          scanHeading: "Scan summary",
-          scanRemoved: "移除技能",
-          scanWarnings: "扫描警告",
-          startCommit: "开始 commit",
-          startedAt: "开始时间",
-          status: "状态",
-          summaryJson: "原始 summary"
-        }
       }
     }
   },
@@ -446,31 +409,23 @@ export const resources = {
           repositories: "Sources",
           skills: "Skills",
           targets: "Targets",
-          distribution: "Distribution",
           settings: "Settings",
-          syncHistory: "Sync history",
           diagnostics: "Diagnostics",
           mainNavigation: "Main navigation"
-        },
-        guidance: {
-          title: "Plan first",
-          description: "Preview the plan before installing, then confirm targets and strategy."
         },
         navigationDescriptions: {
           providers: "Manage provider connection entry points and diagnostics.",
           repositories: "Manage skill sources and local index entry points.",
-          skills: "Browse skill units, choose targets, and preview distribution plans.",
+          skills: "Browse skill units, choose targets, and copy them to targets.",
           targets: "Maintain Codex, Claude Code, Gemini CLI, and custom directory targets.",
-          distribution: "Review skill sync and distribution execution records.",
-          syncHistory: "Review source sync runs, scan summaries, and failure logs.",
           versionLabel: "Version: {{version}}"
         }
       },
       skills: {
         pageLabel: "Skills",
-        heading: "Browse skill units and preview distribution plans",
+        heading: "Browse and Distribute Skills",
         description:
-          "Each skill comes from repository scan results. Choose distribution targets and review the plan before execution.",
+          "Each skill comes from repository scan results. Choose distribution targets and copy skills into place.",
         empty: "No indexed skills yet.",
         actions: {
           sync: "Distribute",
@@ -478,14 +433,17 @@ export const resources = {
           syncSelectedAria: "Distribute selected skills",
           syncCurrentSkillAria: "Distribute current skill",
           syncSkillAria: "Distribute {{name}}",
+          syncReady: "Ready to distribute",
           syncNoSelection: "Select skills to distribute first",
           syncNoTargets: "Add a distribution target first",
           syncSelectedNoTargets: "Selected skills have no distribution target",
-          syncUnavailable: "Distribution is not implemented yet",
-          syncUnavailableStatus: "Distribution is not implemented yet.",
-          previewGeneratedStatus: "Plan preview generated.",
-          previewFailedStatus: "Plan preview failed.",
-          previewUnavailableStatus: "Preview is unavailable",
+          distributionUnavailableStatus: "Distribution is unavailable.",
+          distributionEmptyStatus: "There are no items to distribute.",
+          distributionFailedStatus: "Distribution failed.",
+          distributionCompletedStatus:
+            "Distribution finished: installed {{installed}}, updated {{updated}}, skipped {{skipped}}, conflicts {{conflicts}}, blocked {{blocked}}, failed {{failed}}.",
+          distributionPreviewFailedStatus: "Distribution preview failed.",
+          cancel: "Cancel",
           close: "Close",
           editSkill: "Edit skill",
           addSyncTarget: "Add distribution target",
@@ -533,13 +491,8 @@ export const resources = {
           emptyTitle: "Select a skill",
           syncTargets: "Distribution targets",
           syncTargetsDescription:
-            "Choose the default distribution scope. Installation still starts with a plan preview.",
+            "Choose the default distribution scope. Distribution copies skills according to the confirmation dialog.",
           chooseTarget: "Choose {{name}}",
-          planPreview: "Plan preview",
-          planPreviewDescription:
-            "The preview classifies each target as install, update, skip, or conflict.",
-          planPreviewEmpty: "No preview yet. Choose targets, then click Preview.",
-          planPreviewReady: "{{count}} dry-run item generated.",
           details: "Details",
           skillId: "Skill ID",
           repository: "Repository",
@@ -549,6 +502,24 @@ export const resources = {
         },
         targets: {
           customDirectory: "Custom directory"
+        },
+        distribution: {
+          confirmTitle: "Confirm Distribution",
+          confirmDescription: "Confirm to copy {{count}} item(s) to the target directories.",
+          confirmAction: "Confirm Distribution",
+          conflictResolution: "Conflict handling",
+          conflictResolutionAria: "Handle conflict for {{skill}} to {{target}}",
+          actions: {
+            blocked: "Blocked",
+            conflict: "Conflict",
+            install: "Install",
+            skip: "Skip",
+            update: "Update"
+          },
+          resolutions: {
+            overwrite: "Overwrite",
+            skip: "Skip"
+          }
         }
       },
       targets: {
@@ -768,11 +739,23 @@ export const resources = {
           patterns: "Discovery entries",
           provider: "Provider",
           remoteUrl: "URL / path",
-          scanAdded: "Added skill units",
-          scanChanged: "Metadata changes",
+          scanAdded: "Added skills",
+          scanChanged: "Changed skills",
           scanHeading: "Sync impact",
-          scanRemoved: "Removed skill units",
-          scanWarnings: "Scan warnings"
+          scanRemoved: "Removed skills",
+          scanWarnings: "Scan warnings",
+          syncDetailsHeading: "Sync details",
+          distributionHeading: "Distribution summary",
+          autoDistribution: "Auto distribution",
+          autoDistributionEnabled: "Enabled",
+          autoDistributionDisabled: "Disabled",
+          distributionEligible: "Eligible",
+          distributionInstalled: "Installed",
+          distributionUpdated: "Updated",
+          distributionSkipped: "Skipped",
+          distributionConflicts: "Conflicts",
+          distributionBlocked: "Blocked",
+          distributionFailed: "Failed"
         },
         deleteDialog: {
           cachePath: "Source cache",
@@ -818,67 +801,6 @@ export const resources = {
         scan: {
           justForceScanned: "Just force scanned",
           justSynced: "Just synced"
-        }
-      },
-      syncHistory: {
-        pageLabel: "Sync history",
-        heading: "Sync history",
-        description: "Review run records and failure logs written by source sync.",
-        empty: "No sync history yet.",
-        loading: "Loading sync history...",
-        error: "Failed to load sync history.",
-        filters: {
-          allStatuses: "All statuses",
-          ariaLabel: "Sync history filters",
-          search: "Search",
-          searchPlaceholder: "Search repository, URL, commit, error, or log path",
-          sort: "Sort",
-          sortNewest: "Newest first",
-          sortRepository: "Repository",
-          sortStatus: "Status",
-          status: "Status"
-        },
-        list: {
-          ariaLabel: "Sync run list",
-          scanSummary:
-            "Added {{added}} / changed {{changed}} / removed {{removed}} / warnings {{warnings}}",
-          selectRun: "{{repository}} {{status}}"
-        },
-        table: {
-          log: "Log",
-          repository: "Repository",
-          scan: "Scan summary",
-          startedAt: "Started at",
-          status: "Status"
-        },
-        status: {
-          failed: "Failed",
-          interrupted: "Interrupted",
-          running: "Running",
-          success: "Success"
-        },
-        detail: {
-          ariaLabel: "Sync run details",
-          duration: "Duration",
-          emptyTitle: "Choose a sync run",
-          emptyDescription:
-            "Select a run on the left to inspect repository, time, status, scan summary, and failure logs.",
-          endCommit: "End commit",
-          errorMessage: "Error message",
-          finishedAt: "Finished at",
-          logPath: "Log path",
-          noValue: "None",
-          repository: "Repository",
-          remoteUrl: "URL / path",
-          scanAdded: "Added skill units",
-          scanChanged: "Metadata changes",
-          scanHeading: "Scan summary",
-          scanRemoved: "Removed skill units",
-          scanWarnings: "Scan warnings",
-          startCommit: "Start commit",
-          startedAt: "Started at",
-          status: "Status",
-          summaryJson: "Raw summary"
         }
       }
     }

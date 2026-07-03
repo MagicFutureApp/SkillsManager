@@ -57,7 +57,6 @@ export const scanSystemTargets = async ({
       const appInstalled = Boolean(detectedCommandPath) || directoryExists;
       const scannedTarget = await scanSystemTargetPath(
         {
-          defaultInstallStrategy: "copy",
           id: definition.id,
           name: definition.name,
           normalizedPath: normalizeTargetPath(targetPath),
@@ -161,7 +160,25 @@ const scanSystemTargetPath = async (
 };
 
 export const normalizeTargetPath = (targetPath: string): string => {
-  return path.normalize(targetPath).replace(/[\\/]+$/, "");
+  const normalized = /^[A-Za-z]:[\\/]/.test(targetPath)
+    ? path.win32.normalize(targetPath)
+    : targetPath.startsWith("/")
+      ? path.posix.normalize(targetPath)
+      : path.normalize(targetPath);
+
+  return normalized.replace(/[\\/]+$/, "");
+};
+
+const joinTargetPath = (homeDir: string, ...segments: string[]): string => {
+  if (/^[A-Za-z]:[\\/]/.test(homeDir)) {
+    return path.win32.join(homeDir, ...segments);
+  }
+
+  if (homeDir.startsWith("/")) {
+    return path.posix.join(homeDir, ...segments);
+  }
+
+  return path.join(homeDir, ...segments);
 };
 
 const toScannedTarget = (
@@ -179,26 +196,26 @@ const toScannedTarget = (
 const targetDefinitions: TargetDefinition[] = [
   {
     command: "codex",
-    directory: (homeDir) => path.join(homeDir, ".codex"),
+    directory: (homeDir) => joinTargetPath(homeDir, ".codex"),
     id: "system-codex",
     name: "Codex",
-    path: (homeDir) => path.join(homeDir, ".codex", "skills"),
+    path: (homeDir) => joinTargetPath(homeDir, ".codex", "skills"),
     type: "codex"
   },
   {
     command: "claude",
-    directory: (homeDir) => path.join(homeDir, ".claude"),
+    directory: (homeDir) => joinTargetPath(homeDir, ".claude"),
     id: "system-claude-code",
     name: "Claude Code",
-    path: (homeDir) => path.join(homeDir, ".claude", "skills"),
+    path: (homeDir) => joinTargetPath(homeDir, ".claude", "skills"),
     type: "claude-code"
   },
   {
     command: "gemini",
-    directory: (homeDir) => path.join(homeDir, ".gemini"),
+    directory: (homeDir) => joinTargetPath(homeDir, ".gemini"),
     id: "system-gemini-cli",
     name: "Gemini CLI",
-    path: (homeDir) => path.join(homeDir, ".gemini", "skills"),
+    path: (homeDir) => joinTargetPath(homeDir, ".gemini", "skills"),
     type: "gemini-cli"
   }
 ];
@@ -223,7 +240,10 @@ const findExecutablePath = async (
 
   for (const pathEntry of pathEntries) {
     for (const commandName of commandNames) {
-      const candidatePath = path.join(pathEntry, commandName);
+      const candidatePath =
+        platform === "win32"
+          ? path.win32.join(pathEntry, commandName)
+          : path.posix.join(pathEntry, commandName);
 
       if (await exists(candidatePath)) {
         return candidatePath;

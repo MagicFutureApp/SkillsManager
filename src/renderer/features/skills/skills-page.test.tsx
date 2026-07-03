@@ -7,8 +7,11 @@ import { PageLayout } from "@/components/layout/page-layout";
 import { SkillsPage } from "./skills-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import { skillApiRecordsFixture } from "@/test/api-fixtures";
-import type { TargetsListResult } from "@/global";
-import type { DistributionPreviewPlan } from "../../../core/distribution/distribution-api";
+import type {
+  DistributionExecuteResult,
+  DistributionPreviewResult,
+  TargetsListResult
+} from "@/global";
 import type { SkillApiRecord } from "../../../core/skills/skill-api";
 
 const mockDescriptionOverflow = (overflowingText: string) => {
@@ -85,7 +88,6 @@ const skillTargetsFixture: TargetsListResult = {
   registeredTargets: [
     {
       createdAt: "2026-06-21T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "codex",
       name: "Codex",
@@ -102,7 +104,6 @@ const skillTargetsFixture: TargetsListResult = {
     },
     {
       createdAt: "2026-06-21T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "claude",
       name: "Claude Code",
@@ -120,29 +121,36 @@ const skillTargetsFixture: TargetsListResult = {
   ]
 };
 
-const distributionPreviewFixture: DistributionPreviewPlan = {
+const distributionPreviewFixture: DistributionPreviewResult = {
   createdAt: "2026-06-27T00:00:00.000Z",
-  id: "plan-preview-1",
+  id: "preview-1",
   items: [
     {
       action: "install",
       agentTargetId: "codex",
       commitSha: "8f2c91abcdef",
-      id: "plan-item-1",
-      installStrategy: "copy",
+      id: "preview-item-1",
       reason: "Skill is not installed on this target.",
       skillName: "Review Bot",
       skillUnitId: "team-skills__skills-review-bot",
+      skillVersionId: "team-skills__skills-review-bot__8f2c91abcdef",
       sourcePath: "/Users/test/.skills-manager/cache/team-skills/skills/review-bot",
       status: "pending",
       targetName: "Codex",
-      targetPath: "/Users/test/.codex/skills/skills-review-bot"
+      targetPath: "/Users/test/.codex/skills/skills-review-bot",
+      targetSnapshot: {
+        id: "codex",
+        name: "Codex",
+        normalizedPath: "/Users/test/.codex/skills",
+        path: "/Users/test/.codex/skills",
+        type: "codex"
+      }
     }
   ],
   operationType: "install",
   status: "ready",
   summary: {
-    actionCounts: { conflict: 0, install: 1, skip: 0, update: 0 },
+    actionCounts: { blocked: 0, conflict: 0, install: 1, skip: 0, update: 0 },
     itemCount: 1,
     skillCount: 1,
     targetCount: 1
@@ -150,13 +158,59 @@ const distributionPreviewFixture: DistributionPreviewPlan = {
   triggerSource: "skill_detail"
 };
 
+const distributionConflictPreviewFixture: DistributionPreviewResult = {
+  ...distributionPreviewFixture,
+  id: "preview-conflict",
+  items: [
+    {
+      ...distributionPreviewFixture.items[0],
+      action: "conflict",
+      allowedResolutions: ["overwrite", "skip"],
+      defaultResolution: "overwrite",
+      id: "preview-conflict-item-1",
+      reason: "Target path already exists and is not owned by this skill."
+    }
+  ],
+  status: "conflict",
+  summary: {
+    actionCounts: { blocked: 0, conflict: 1, install: 0, skip: 0, update: 0 },
+    itemCount: 1,
+    skillCount: 1,
+    targetCount: 1
+  }
+};
+
+const distributionExecuteFixture: DistributionExecuteResult = {
+  items: [
+    {
+      action: "install",
+      agentTargetId: "codex",
+      errorMessage: null,
+      result: "installed",
+      skillUnitId: "team-skills__skills-review-bot",
+      targetPath: "/Users/test/.codex/skills/skills-review-bot"
+    }
+  ],
+  preview: distributionPreviewFixture,
+  summary: {
+    blocked: 0,
+    conflicts: 0,
+    failed: 0,
+    installed: 1,
+    skipped: 0,
+    updated: 0
+  }
+};
+
 const renderSkillsPage = async ({
+  distributionExecute = distributionExecuteFixture,
   distributionPreview = distributionPreviewFixture,
   locale = "zh-CN",
   skills = [],
   targets = skillTargetsFixture
 }: {
-  distributionPreview?: DistributionPreviewPlan;
+  distributionExecute?: DistributionExecuteResult;
+  distributionPreview?: DistributionPreviewResult;
   locale?: "zh-CN" | "en-US";
   skills?: typeof skillApiRecordsFixture;
   targets?: TargetsListResult;
@@ -164,7 +218,8 @@ const renderSkillsPage = async ({
   const i18n = await createI18nInstance(locale);
   const setSkillTargetPreference = vi.fn().mockResolvedValue({ success: true });
   const addSkillDirectoryTarget = vi.fn().mockResolvedValue(targets);
-  const previewDistributionPlan = vi.fn().mockResolvedValue(distributionPreview);
+  const executeDistribution = vi.fn().mockResolvedValue(distributionExecute);
+  const previewDistribution = vi.fn().mockResolvedValue(distributionPreview);
   const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/review-skills");
 
   window.skillsManager = {
@@ -176,7 +231,8 @@ const renderSkillsPage = async ({
     listSkills: vi.fn().mockResolvedValue({ skills }),
     listTargets: vi.fn().mockResolvedValue(targets),
     addSkillDirectoryTarget,
-    previewDistributionPlan,
+    executeDistribution,
+    previewDistribution,
     selectTargetDirectory,
     setSkillTargetPreference,
     platform: "darwin"
@@ -189,7 +245,8 @@ const renderSkillsPage = async ({
       </I18nextProvider>
     ),
     addSkillDirectoryTarget,
-    previewDistributionPlan,
+    executeDistribution,
+    previewDistribution,
     selectTargetDirectory,
     setSkillTargetPreference
   };
@@ -259,7 +316,7 @@ describe("SkillsPage", () => {
     await renderSkillsPage({ locale: "en-US" });
 
     expect(
-      screen.getByRole("heading", { name: "Browse skill units and preview distribution plans" })
+      screen.getByRole("heading", { name: "Browse and Distribute Skills" })
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Add skill" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Distribute selected skills" })).toBeInTheDocument();
@@ -385,7 +442,6 @@ describe("SkillsPage", () => {
       registeredTargets: [
         {
           createdAt: "2026-06-21T00:00:00.000Z",
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "target-team",
           name: "Team workspace",
@@ -402,7 +458,6 @@ describe("SkillsPage", () => {
         },
         {
           createdAt: "2026-06-21T00:00:00.000Z",
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "target-design-only",
           name: "Design scratch",
@@ -482,7 +537,6 @@ describe("SkillsPage", () => {
       registeredTargets: [
         {
           createdAt: "2026-06-21T00:00:00.000Z",
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "target-kept",
           name: "Kept workspace",
@@ -558,7 +612,6 @@ describe("SkillsPage", () => {
       registeredTargets: [
         {
           createdAt: "2026-06-21T00:00:00.000Z",
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "target-team",
           name: "Team workspace",
@@ -626,7 +679,6 @@ describe("SkillsPage", () => {
       registeredTargets: [
         {
           createdAt: "2026-06-23T00:00:00.000Z",
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "target-disabled-review-scratch",
           name: "review-disabled",
@@ -650,7 +702,6 @@ describe("SkillsPage", () => {
         },
         {
           createdAt: "2026-06-24T00:00:00.000Z",
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "target-custom-users-test-review-skills-16b7af9b49af",
           name: "review-skills",
@@ -886,22 +937,22 @@ describe("SkillsPage", () => {
 
     expect(screen.getByLabelText("选择 Paged Skill 21")).toBeChecked();
     expect(distributeButton).toBeEnabled();
-    expect(distributeButton).toHaveAttribute("title", "分发功能暂未实现");
+    expect(distributeButton).toHaveAttribute("title", "准备分发");
 
     fireEvent.click(screen.getByRole("link", { name: "上一页" }));
 
     expect(await screen.findByRole("button", { name: "Paged Skill 01" })).toBeInTheDocument();
     expect(screen.getByLabelText("选择 Paged Skill 01")).not.toBeChecked();
     expect(distributeButton).toBeEnabled();
-    expect(distributeButton).toHaveAttribute("title", "分发功能暂未实现");
+    expect(distributeButton).toHaveAttribute("title", "准备分发");
   });
 
-  it("uses the current paged skill for preview and target preference changes", async () => {
+  it("uses the current paged skill for distribution and target preference changes", async () => {
     const skills = createPagedSkillRecords(21).map((skill) => ({
       ...skill,
       targets: ["codex"]
     }));
-    const { previewDistributionPlan, setSkillTargetPreference } = await renderSkillsPage({
+    const { previewDistribution, setSkillTargetPreference } = await renderSkillsPage({
       skills
     });
     await screen.findByRole("button", { name: "Paged Skill 01" });
@@ -915,14 +966,17 @@ describe("SkillsPage", () => {
       within(skillDetail).getByRole("heading", { name: "Paged Skill 21" })
     ).toBeInTheDocument();
 
-    fireEvent.click(within(skillDetail).getByRole("button", { name: "预览" }));
+    fireEvent.click(within(skillDetail).getByRole("button", { name: "分发当前技能" }));
 
     await waitFor(() =>
-      expect(previewDistributionPlan).toHaveBeenCalledWith({
+      expect(previewDistribution).toHaveBeenCalledWith({
         skillUnitIds: ["catalog__paged-skill-21"],
         triggerSource: "skill_detail"
       })
     );
+    const confirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
+
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "取消" }));
 
     fireEvent.click(screen.getByLabelText("选择 Claude Code"));
 
@@ -965,10 +1019,10 @@ describe("SkillsPage", () => {
     expect(distributeButton).toHaveTextContent("分发");
     expect(distributeButton).not.toHaveTextContent(/\(\d+\)/);
     expect(distributeButton).toBeEnabled();
-    expect(distributeButton).toHaveAttribute("title", "分发功能暂未实现");
+    expect(distributeButton).toHaveAttribute("title", "准备分发");
   });
 
-  it("implements distribution button states without executing distribution", async () => {
+  it("implements distribution button states before opening confirmation", async () => {
     await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
     await screen.findByRole("button", { name: "Review Bot" });
 
@@ -1000,10 +1054,10 @@ describe("SkillsPage", () => {
     expect(bulkDistributeButton).toHaveTextContent("分发");
     expect(bulkDistributeButton).not.toHaveTextContent(/\(\d+\)/);
     expect(bulkDistributeButton).toBeEnabled();
-    expect(bulkDistributeButton).toHaveAttribute("title", "分发功能暂未实现");
+    expect(bulkDistributeButton).toHaveAttribute("title", "准备分发");
     expect(designRowDistributeButton).toHaveClass("bg-primary", "text-primary-foreground");
     expect(designRowDistributeButton).toBeEnabled();
-    expect(designRowDistributeButton).toHaveAttribute("title", "分发功能暂未实现");
+    expect(designRowDistributeButton).toHaveAttribute("title", "准备分发");
 
     fireEvent.click(screen.getByRole("button", { name: "Design Helper" }));
     const selectedDetailDistributeButton = within(screen.getByLabelText("技能详情")).getByRole(
@@ -1011,13 +1065,10 @@ describe("SkillsPage", () => {
       { name: "分发当前技能" }
     );
     expect(selectedDetailDistributeButton).toBeEnabled();
-    expect(selectedDetailDistributeButton).toHaveAttribute("title", "分发功能暂未实现");
-
-    fireEvent.click(selectedDetailDistributeButton);
-    expect(screen.getByRole("status")).toHaveTextContent("分发功能暂未实现。");
+    expect(selectedDetailDistributeButton).toHaveAttribute("title", "准备分发");
   });
 
-  it("previews the selected skill distribution plan in a dialog", async () => {
+  it("confirms and executes distribution from the selected skill dialog", async () => {
     const skills: SkillApiRecord[] = [
       {
         description: "Reviews pull requests.",
@@ -1034,7 +1085,7 @@ describe("SkillsPage", () => {
         version: "8f2c91a"
       }
     ];
-    const { previewDistributionPlan } = await renderSkillsPage({ skills });
+    const { executeDistribution, previewDistribution } = await renderSkillsPage({ skills });
     await screen.findByRole("button", { name: "Review Bot" });
 
     const skillDetail = screen.getByLabelText("技能详情");
@@ -1043,38 +1094,134 @@ describe("SkillsPage", () => {
       .closest("section") as HTMLElement;
 
     expect(
-      within(skillDetail).queryByRole("heading", { name: "计划预览" })
+      within(skillDetail).queryByRole("heading", { name: "确认分发" })
     ).not.toBeInTheDocument();
-    expect(within(summarySection).getByRole("button", { name: "预览" })).toBeInTheDocument();
+    expect(within(summarySection).queryByRole("button", { name: "预览" })).not.toBeInTheDocument();
     expect(
       within(summarySection).getByRole("button", { name: "分发当前技能" })
     ).toBeInTheDocument();
 
-    fireEvent.click(within(summarySection).getByRole("button", { name: "预览" }));
+    fireEvent.click(within(summarySection).getByRole("button", { name: "分发当前技能" }));
 
     await waitFor(() =>
-      expect(previewDistributionPlan).toHaveBeenCalledWith({
+      expect(previewDistribution).toHaveBeenCalledWith({
         skillUnitIds: ["team-skills__skills-review-bot"],
         triggerSource: "skill_detail"
       })
     );
-    const planDialog = await screen.findByRole("dialog", { name: "计划预览" });
+    const confirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
 
-    expect(within(planDialog).getByText("Codex")).toBeInTheDocument();
-    expect(within(planDialog).getByText("install")).toBeInTheDocument();
+    expect(within(confirmDialog).getByText("Codex")).toBeInTheDocument();
+    expect(within(confirmDialog).getByText("安装")).toBeInTheDocument();
     expect(
-      within(planDialog).getByText("/Users/test/.codex/skills/skills-review-bot")
+      within(confirmDialog).getByText("/Users/test/.codex/skills/skills-review-bot")
     ).toBeInTheDocument();
 
-    fireEvent.click(within(planDialog).getByRole("button", { name: "关闭" }));
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确认分发" }));
 
     await waitFor(() =>
-      expect(screen.queryByRole("dialog", { name: "计划预览" })).not.toBeInTheDocument()
+      expect(executeDistribution).toHaveBeenCalledWith({
+        conflictResolutions: [],
+        skillUnitIds: ["team-skills__skills-review-bot"],
+        triggerSource: "skill_detail"
+      })
     );
-    expect(screen.getByRole("status")).toHaveTextContent("计划预览已生成。");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "确认分发" })).not.toBeInTheDocument()
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。"
+    );
     expect(
-      within(skillDetail).queryByRole("heading", { name: "计划预览" })
+      within(skillDetail).queryByRole("heading", { name: "确认分发" })
     ).not.toBeInTheDocument();
-    expect(within(skillDetail).queryByText("已生成 1 条 dry-run 条目。")).not.toBeInTheDocument();
+  });
+
+  it("defaults conflict distribution to overwrite and allows choosing skip", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: ["codex"],
+        version: "8f2c91a"
+      }
+    ];
+    const { executeDistribution } = await renderSkillsPage({
+      distributionPreview: distributionConflictPreviewFixture,
+      skills
+    });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    fireEvent.click(
+      within(screen.getByLabelText("技能详情")).getByRole("button", {
+        name: "分发当前技能"
+      })
+    );
+
+    const confirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
+
+    expect(within(confirmDialog).getByText("冲突")).toBeInTheDocument();
+    const conflictResolution = within(confirmDialog).getByRole("combobox", {
+      name: "处理 Review Bot 到 Codex 的冲突"
+    });
+
+    expect(conflictResolution).toHaveValue("overwrite");
+
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确认分发" }));
+
+    await waitFor(() =>
+      expect(executeDistribution).toHaveBeenLastCalledWith({
+        conflictResolutions: [
+          {
+            agentTargetId: "codex",
+            previewItemId: "preview-conflict-item-1",
+            resolution: "overwrite",
+            skillUnitId: "team-skills__skills-review-bot",
+            targetPath: "/Users/test/.codex/skills/skills-review-bot"
+          }
+        ],
+        skillUnitIds: ["team-skills__skills-review-bot"],
+        triggerSource: "skill_detail"
+      })
+    );
+
+    fireEvent.click(
+      within(screen.getByLabelText("技能详情")).getByRole("button", {
+        name: "分发当前技能"
+      })
+    );
+
+    const nextConfirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
+    fireEvent.change(
+      within(nextConfirmDialog).getByRole("combobox", {
+        name: "处理 Review Bot 到 Codex 的冲突"
+      }),
+      { target: { value: "skip" } }
+    );
+    fireEvent.click(within(nextConfirmDialog).getByRole("button", { name: "确认分发" }));
+
+    await waitFor(() =>
+      expect(executeDistribution).toHaveBeenLastCalledWith({
+        conflictResolutions: [
+          {
+            agentTargetId: "codex",
+            previewItemId: "preview-conflict-item-1",
+            resolution: "skip",
+            skillUnitId: "team-skills__skills-review-bot",
+            targetPath: "/Users/test/.codex/skills/skills-review-bot"
+          }
+        ],
+        skillUnitIds: ["team-skills__skills-review-bot"],
+        triggerSource: "skill_detail"
+      })
+    );
   });
 });

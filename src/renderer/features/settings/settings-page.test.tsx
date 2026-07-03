@@ -17,12 +17,18 @@ describe("SettingsPage", () => {
     });
 
     window.skillsManager = {
-      clearGitHubToken: vi.fn().mockResolvedValue({ github: { hasToken: false } }),
+      clearGitHubToken: vi.fn().mockResolvedValue({
+        distribution: { autoDistributeOnSync: false },
+        github: { hasToken: false }
+      }),
       getAppStoragePaths: vi.fn().mockResolvedValue({
         databasePath: "/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite",
         localCachePath: "/Users/andrew/.skills-manager/cache"
       }),
-      getAppSettings: vi.fn().mockResolvedValue({ github: { hasToken: true } }),
+      getAppSettings: vi.fn().mockResolvedValue({
+        distribution: { autoDistributeOnSync: false },
+        github: { hasToken: true }
+      }),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
       getInfo: vi.fn().mockResolvedValue({ version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
@@ -31,13 +37,23 @@ describe("SettingsPage", () => {
       openExternalUrl: vi.fn().mockResolvedValue(undefined),
       platform: "win32",
       resetLocalDatabase: vi.fn().mockResolvedValue({
-        settings: { github: { hasToken: false } },
+        settings: {
+          distribution: { autoDistributeOnSync: false },
+          github: { hasToken: false }
+        },
         storage: {
           databasePath: "/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite",
           localCachePath: "/Users/andrew/.skills-manager/cache"
         }
       }),
-      saveGitHubToken: vi.fn().mockResolvedValue({ github: { hasToken: true } })
+      saveGitHubToken: vi.fn().mockResolvedValue({
+        distribution: { autoDistributeOnSync: false },
+        github: { hasToken: true }
+      }),
+      updateDistributionSettings: vi.fn().mockResolvedValue({
+        distribution: { autoDistributeOnSync: true },
+        github: { hasToken: true }
+      })
     };
   });
 
@@ -128,6 +144,25 @@ describe("SettingsPage", () => {
     );
   });
 
+  it("shows automatic distribution disabled by default and saves switch changes", async () => {
+    render(<SettingsPage />);
+
+    const automaticDistributionSwitch = await screen.findByRole("switch", {
+      name: "同步后自动分发到已设置目标"
+    });
+
+    expect(automaticDistributionSwitch).toHaveAttribute("aria-checked", "false");
+
+    fireEvent.click(automaticDistributionSwitch);
+
+    await waitFor(() =>
+      expect(window.skillsManager?.updateDistributionSettings).toHaveBeenCalledWith({
+        autoDistributeOnSync: true
+      })
+    );
+    expect(automaticDistributionSwitch).toHaveAttribute("aria-checked", "true");
+  });
+
   it("requires confirmation before rebuilding the local database", async () => {
     render(<SettingsPage />);
 
@@ -135,7 +170,7 @@ describe("SettingsPage", () => {
 
     const dialog = await screen.findByRole("alertdialog", { name: "重建本地数据库？" });
     expect(dialog).toHaveTextContent(
-      "会清空本地索引、来源、Skills、同步历史和应用设置，但不会删除已安装到 agent 目标目录的文件，也不会清空本地缓存目录。"
+      "会清空本地索引、来源、Skills 和应用设置，但不会删除已安装到 agent 目标目录的文件，也不会清空本地缓存目录。"
     );
     expect(window.skillsManager?.resetLocalDatabase).not.toHaveBeenCalled();
 

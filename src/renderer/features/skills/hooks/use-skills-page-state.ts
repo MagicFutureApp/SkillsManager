@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { DistributionPreviewResult } from "@/global";
+import type {
+  DistributionExecuteResult,
+  DistributionPreviewInput,
+  DistributionPreviewResult
+} from "@/global";
 import {
   clampPageNumber,
   createPaginationState,
@@ -25,12 +29,19 @@ export const useSkillsPageState = () => {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [distributionNoticeKey, setDistributionNoticeKey] = useState<string | null>(null);
+  const [distributionExecuteResult, setDistributionExecuteResult] =
+    useState<DistributionExecuteResult | null>(null);
   const [distributionPreview, setDistributionPreview] = useState<DistributionPreviewResult | null>(
     null
   );
-  const [distributionPreviewDialogOpen, setDistributionPreviewDialogOpen] = useState(false);
+  const [distributionConfirmDialogOpen, setDistributionConfirmDialogOpen] = useState(false);
+  const [distributionConflictResolutions, setDistributionConflictResolutions] = useState<
+    Record<string, DistributionConflictResolution>
+  >({});
+  const [pendingDistribution, setPendingDistribution] = useState<PendingDistribution | null>(null);
   const [query, setQuery] = useState("");
   const [repositoryFilter, setRepositoryFilter] = useState<SkillRepositoryFilter>("all");
+  const [isDistributionExecuting, setIsDistributionExecuting] = useState(false);
   const [isDistributionPreviewLoading, setIsDistributionPreviewLoading] = useState(false);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
@@ -158,42 +169,125 @@ export const useSkillsPageState = () => {
     setCurrentPage(clampPageNumber(pageNumber, pagination.totalPages));
   };
 
-  const announceDistributionUnavailable = () => {
-    setDistributionNoticeKey("skills.actions.syncUnavailableStatus");
+  const showDistributionNotice = (key: string) => {
+    setDistributionExecuteResult(null);
+    setDistributionNoticeKey(key);
   };
 
-  const previewSelectedSkillDistribution = async () => {
-    if (!selectedSkill || selectedSkill.targets.length === 0) {
+  const startDistribution = async (
+    skillUnitIds: string[],
+    triggerSource: DistributionPreviewInput["triggerSource"]
+  ) => {
+    const nextSkillUnitIds = Array.from(new Set(skillUnitIds.filter(Boolean)));
+
+    if (!nextSkillUnitIds.length) {
       return;
     }
 
-    const previewDistributionPlan = window.skillsManager?.previewDistributionPlan;
+    const previewDistribution = window.skillsManager?.previewDistribution;
+    const executeDistribution = window.skillsManager?.executeDistribution;
 
-    if (!previewDistributionPlan) {
-      setDistributionNoticeKey("skills.actions.previewUnavailableStatus");
+    if (!previewDistribution || !executeDistribution) {
+      showDistributionNotice("skills.actions.distributionUnavailableStatus");
       return;
     }
 
     setIsDistributionPreviewLoading(true);
+    setDistributionExecuteResult(null);
+    setDistributionNoticeKey(null);
 
     try {
-      const preview = await previewDistributionPlan({
-        skillUnitIds: [selectedSkill.id],
-        triggerSource: "skill_detail"
+      const preview = await previewDistribution({
+        skillUnitIds: nextSkillUnitIds,
+        triggerSource
       });
 
       setDistributionPreview(preview);
-      setDistributionPreviewDialogOpen(true);
-      setDistributionNoticeKey("skills.actions.previewGeneratedStatus");
+      setDistributionConflictResolutions(createDefaultConflictResolutions(preview));
+      setPendingDistribution({ skillUnitIds: nextSkillUnitIds, triggerSource });
+      setDistributionConfirmDialogOpen(preview.items.length > 0);
+
+      if (!preview.items.length) {
+        showDistributionNotice("skills.actions.distributionEmptyStatus");
+      }
     } catch {
-      setDistributionNoticeKey("skills.actions.previewFailedStatus");
+      showDistributionNotice("skills.actions.distributionPreviewFailedStatus");
     } finally {
       setIsDistributionPreviewLoading(false);
     }
   };
 
-  const closeDistributionPreviewDialog = () => {
-    setDistributionPreviewDialogOpen(false);
+  const startSelectedSkillDistribution = () => {
+    if (!selectedSkill || selectedSkill.targets.length === 0) {
+      return;
+    }
+
+    void startDistribution([selectedSkill.id], "skill_detail");
+  };
+
+  const startSkillDistribution = (skillUnitId: string) => {
+    void startDistribution([skillUnitId], "skill_detail");
+  };
+
+  const startSelectedSkillsDistribution = () => {
+    void startDistribution(
+      checkedSkills.map((skill) => skill.id),
+      "skills_bulk"
+    );
+  };
+
+  const closeDistributionConfirmDialog = () => {
+    if (isDistributionExecuting) {
+      return;
+    }
+
+    setDistributionConfirmDialogOpen(false);
+  };
+
+  const setDistributionConflictResolution = (
+    previewItemId: string,
+    resolution: DistributionConflictResolution
+  ) => {
+    setDistributionConflictResolutions((currentResolutions) => ({
+      ...currentResolutions,
+      [previewItemId]: resolution
+    }));
+  };
+
+  const executeCurrentDistribution = async () => {
+    const executeDistribution = window.skillsManager?.executeDistribution;
+
+    if (!distributionPreview || !pendingDistribution || !executeDistribution) {
+      showDistributionNotice("skills.actions.distributionUnavailableStatus");
+      return;
+    }
+
+    setIsDistributionExecuting(true);
+    setDistributionNoticeKey(null);
+
+    try {
+      const result = await executeDistribution({
+        conflictResolutions: distributionPreview.items
+          .filter((item) => item.action === "conflict")
+          .map((item) => ({
+            agentTargetId: item.agentTargetId,
+            previewItemId: item.id,
+            resolution:
+              distributionConflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite",
+            skillUnitId: item.skillUnitId,
+            targetPath: item.targetPath
+          })),
+        skillUnitIds: pendingDistribution.skillUnitIds,
+        triggerSource: pendingDistribution.triggerSource
+      });
+
+      setDistributionExecuteResult(result);
+      setDistributionConfirmDialogOpen(false);
+    } catch {
+      showDistributionNotice("skills.actions.distributionFailedStatus");
+    } finally {
+      setIsDistributionExecuting(false);
+    }
   };
 
   const toggleSkillTargetPreference = (skillId: string, targetId: string, enabled: boolean) => {
@@ -280,10 +374,13 @@ export const useSkillsPageState = () => {
     checkedDistributionState,
     checkedCount,
     checkedIds,
+    distributionConflictResolutions,
+    distributionConfirmDialogOpen,
+    distributionExecuteResult,
     distributionNoticeKey,
-    distributionNoticeVisible: Boolean(distributionNoticeKey),
+    distributionNoticeVisible: Boolean(distributionNoticeKey || distributionExecuteResult),
     distributionPreview,
-    distributionPreviewDialogOpen,
+    isDistributionExecuting,
     isDistributionPreviewLoading,
     query,
     repositoryFilter,
@@ -297,16 +394,19 @@ export const useSkillsPageState = () => {
     visibleAllChecked,
     visibleSkills,
     visibleSomeChecked,
-    announceDistributionUnavailable,
-    closeDistributionPreviewDialog,
-    previewSelectedSkillDistribution,
+    closeDistributionConfirmDialog,
+    executeCurrentDistribution,
     selectAllVisible,
+    setDistributionConflictResolution,
     setSkillsPage,
     setQuery,
     setRepositoryFilter,
     setSelectedSkillId,
     setSort,
     addSyncTargetForSelectedSkill,
+    startSelectedSkillDistribution,
+    startSelectedSkillsDistribution,
+    startSkillDistribution,
     toggleSkillChecked,
     toggleSkillTargetPreference
   };
@@ -329,4 +429,23 @@ const loadSkillsPageData = async (): Promise<{
       .filter((target) => target.enabled)
       .map(adaptTargetOption)
   };
+};
+
+type DistributionConflictResolution = NonNullable<
+  DistributionPreviewResult["items"][number]["defaultResolution"]
+>;
+
+type PendingDistribution = {
+  skillUnitIds: string[];
+  triggerSource: DistributionPreviewInput["triggerSource"];
+};
+
+const createDefaultConflictResolutions = (
+  preview: DistributionPreviewResult
+): Record<string, DistributionConflictResolution> => {
+  return Object.fromEntries(
+    preview.items
+      .filter((item) => item.action === "conflict")
+      .map((item) => [item.id, item.defaultResolution ?? "overwrite"])
+  );
 };

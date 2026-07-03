@@ -112,7 +112,7 @@ export const getDistributionTitleKey = (
   scope: SkillDistributionScope
 ) => {
   if (state === "ready") {
-    return "skills.actions.syncUnavailable";
+    return "skills.actions.syncReady";
   }
 
   if (state === "no-selection") {

@@ -22,9 +22,22 @@ type RepositoryDetailProps = {
     provider: string;
     remoteUrl: string;
     scanAdded: string;
+    scanChanged: string;
     scanHeading: string;
     scanRemoved: string;
     scanWarnings: string;
+    syncDetailsHeading: string;
+    distributionHeading: string;
+    autoDistribution: string;
+    autoDistributionEnabled: string;
+    autoDistributionDisabled: string;
+    distributionEligible: string;
+    distributionInstalled: string;
+    distributionUpdated: string;
+    distributionSkipped: string;
+    distributionConflicts: string;
+    distributionBlocked: string;
+    distributionFailed: string;
   };
   repository: RepositoryViewModel | null;
   onCopyCachePath: () => void;
@@ -44,8 +57,48 @@ export const RepositoryDetail = ({
   const scanRows = repository
     ? ([
         [copy.scanAdded, repository.scan.added],
+        [copy.scanChanged, repository.scan.changed],
         [copy.scanRemoved, repository.scan.removed]
       ] satisfies Array<[string, number]>)
+    : [];
+  const lastSyncSummary = repository?.lastSyncSummary ?? null;
+  const scanDetails = lastSyncSummary?.scan;
+  const skillGroups = scanDetails
+    ? [
+        { label: copy.scanAdded, skills: scanDetails.added },
+        { label: copy.scanChanged, skills: scanDetails.changed },
+        { label: copy.scanRemoved, skills: scanDetails.removed }
+      ]
+    : [];
+  const hasSyncDetails =
+    skillGroups.some((group) => group.skills.length > 0) || Boolean(scanDetails?.warnings.length);
+  const distribution = lastSyncSummary?.distribution;
+  const hasDistributionSummary = distribution
+    ? distribution.autoDistributionEnabled ||
+      distribution.eligible > 0 ||
+      distribution.installed > 0 ||
+      distribution.updated > 0 ||
+      distribution.skipped > 0 ||
+      distribution.conflicts > 0 ||
+      distribution.blocked > 0 ||
+      distribution.failed > 0
+    : false;
+  const distributionRows = distribution
+    ? ([
+        [
+          copy.autoDistribution,
+          distribution.autoDistributionEnabled
+            ? copy.autoDistributionEnabled
+            : copy.autoDistributionDisabled
+        ],
+        [copy.distributionEligible, distribution.eligible],
+        [copy.distributionInstalled, distribution.installed],
+        [copy.distributionUpdated, distribution.updated],
+        [copy.distributionSkipped, distribution.skipped],
+        [copy.distributionConflicts, distribution.conflicts],
+        [copy.distributionBlocked, distribution.blocked],
+        [copy.distributionFailed, distribution.failed]
+      ] satisfies Array<[string, string | number]>)
     : [];
   const isLocalRepository = repository?.provider === "Local";
   const detailDescription = repository ? repository.note : copy.defaultDescription;
@@ -125,6 +178,58 @@ export const RepositoryDetail = ({
           ))}
         </div>
       </section>
+
+      {repository && hasSyncDetails ? (
+        <section className="rounded-xl border border-border bg-card p-4">
+          <h3 className="font-semibold">{copy.syncDetailsHeading}</h3>
+          <div className="mt-3 grid gap-3">
+            {skillGroups.map((group) =>
+              group.skills.length > 0 ? (
+                <div key={group.label} className="rounded-lg border border-border bg-muted/40 p-3">
+                  <strong className="block text-sm">{group.label}</strong>
+                  <ul className="mt-2 grid gap-1 text-sm">
+                    {group.skills.map((skill) => (
+                      <li key={skill.skillUnitId} className="min-w-0">
+                        <span className="block truncate">{skill.name}</span>
+                        <span className="block truncate font-mono text-xs text-muted-foreground">
+                          {skill.skillKey}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null
+            )}
+            {scanDetails?.warnings.length ? (
+              <div className="rounded-lg border border-border bg-muted/40 p-3">
+                <strong className="block text-sm">{copy.scanWarnings}</strong>
+                <ul className="mt-2 grid gap-1 text-sm text-muted-foreground">
+                  {scanDetails.warnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {repository && hasDistributionSummary ? (
+        <section className="rounded-xl border border-border bg-card p-4">
+          <h3 className="font-semibold">{copy.distributionHeading}</h3>
+          <div className="mt-3 grid gap-2">
+            {distributionRows.map(([label, value]) => (
+              <div
+                key={label}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3"
+              >
+                <strong className="block text-sm">{label}</strong>
+                <span className="font-mono text-sm">{value}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </>
   );
 };

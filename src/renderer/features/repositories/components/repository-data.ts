@@ -4,13 +4,15 @@ import type {
   RepositoryLastSync,
   RepositoryProviderName,
   RepositoryScanStatus,
-  RepositoryScanSummary
+  RepositoryScanSummary,
+  RepositorySyncSummary
 } from "../../../../core/repositories/repository-api";
 import {
   buildRepositoryCachePath,
   formatRepositoryDateTime,
   normalizeDiscoveryEntries,
-  normalizeRepositoryScanSummary
+  normalizeRepositoryScanSummary,
+  parseRepositorySyncSummaryJson
 } from "../../../../core/repositories/repository-utils";
 
 export type RepositoryProviderFilter = RepositoryProviderName | "all";
@@ -26,6 +28,7 @@ export type RepositoryViewModel = {
   lastScanLabel: string;
   lastScanTime: string;
   lastSync: RepositoryLastSync | null;
+  lastSyncSummary: RepositorySyncSummary | null;
   name: string;
   note: string;
   patterns: string[];
@@ -92,6 +95,9 @@ export const adaptRepositoryRecord = (record: RepositoryApiRecord): RepositoryVi
     lastScanLabel: config.lastScanLabel,
     lastScanTime: formatRepositoryDateTime(record.lastSync?.finishedAt),
     lastSync: record.lastSync,
+    lastSyncSummary: record.lastSync
+      ? parseRepositorySyncSummaryJson(record.lastSync.summaryJson)
+      : null,
     name: record.name,
     note: config.note,
     patterns: config.patterns,
@@ -176,6 +182,7 @@ export const buildRepositoryFromForm = ({
     lastScanLabel: "未执行",
     lastScanTime: "--",
     lastSync: null,
+    lastSyncSummary: null,
     name: formValues.name,
     note: formValues.note || "用户新增的来源，等待第一次同步扫描。",
     patterns: normalizeDiscoveryEntries(formValues.patterns),

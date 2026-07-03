@@ -36,12 +36,10 @@ export const SkillsPageSider = () => {
   const distributionReady = distributionState === "ready";
   const syncTitle = t(getDistributionTitleKey(distributionState, "single"));
   const targetOptions = page.selectedSkillTargetOptions;
-  const planItems =
-    page.distributionPreview?.items.filter((item) => item.skillUnitId === selectedSkill.id) ?? [];
+  const previewItems = page.distributionPreview?.items ?? [];
   const canAddSyncTarget =
     Boolean(window.skillsManager?.selectTargetDirectory) &&
     Boolean(window.skillsManager?.addSkillDirectoryTarget);
-  const canPreviewDistribution = Boolean(window.skillsManager?.previewDistributionPlan);
 
   return (
     <>
@@ -51,23 +49,10 @@ export const SkillsPageSider = () => {
         <div className="mt-4 flex flex-wrap gap-2">
           <Button
             type="button"
-            variant="outline"
-            disabled={
-              !distributionReady || !canPreviewDistribution || page.isDistributionPreviewLoading
-            }
-            title={
-              canPreviewDistribution ? syncTitle : t("skills.actions.previewUnavailableStatus")
-            }
-            onClick={page.previewSelectedSkillDistribution}
-          >
-            {t("skills.actions.preview")}
-          </Button>
-          <Button
-            type="button"
-            disabled={!distributionReady}
+            disabled={!distributionReady || page.isDistributionPreviewLoading}
             title={syncTitle}
             aria-label={t("skills.actions.syncCurrentSkillAria")}
-            onClick={page.announceDistributionUnavailable}
+            onClick={page.startSelectedSkillDistribution}
           >
             {t("skills.actions.sync")}
           </Button>
@@ -134,15 +119,14 @@ export const SkillsPageSider = () => {
         </div>
       </section>
 
-      <DistributionPreviewDialog
-        copy={{
-          close: t("skills.actions.close"),
-          description: t("skills.detail.planPreviewDescription"),
-          title: t("skills.detail.planPreview")
-        }}
-        items={planItems}
-        onClose={page.closeDistributionPreviewDialog}
-        open={page.distributionPreviewDialogOpen && planItems.length > 0}
+      <DistributionConfirmationDialog
+        conflictResolutions={page.distributionConflictResolutions}
+        isExecuting={page.isDistributionExecuting}
+        items={previewItems}
+        onClose={page.closeDistributionConfirmDialog}
+        onConfirm={page.executeCurrentDistribution}
+        onConflictResolutionChange={page.setDistributionConflictResolution}
+        open={page.distributionConfirmDialogOpen && previewItems.length > 0}
       />
 
       <section className="rounded-xl border border-border bg-card p-4">
@@ -166,21 +150,25 @@ export const SkillsPageSider = () => {
   );
 };
 
-const DistributionPreviewDialog = ({
-  copy,
+const DistributionConfirmationDialog = ({
+  conflictResolutions,
+  isExecuting,
   items,
   onClose,
+  onConfirm,
+  onConflictResolutionChange,
   open
 }: {
-  copy: {
-    close: string;
-    description: string;
-    title: string;
-  };
+  conflictResolutions: SkillsPageState["distributionConflictResolutions"];
+  isExecuting: boolean;
   items: NonNullable<SkillsPageState["distributionPreview"]>["items"];
   onClose: () => void;
+  onConfirm: () => void;
+  onConflictResolutionChange: (previewItemId: string, resolution: "overwrite" | "skip") => void;
   open: boolean;
 }) => {
+  const { t } = useTranslation();
+
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogPortal>
@@ -188,29 +176,80 @@ const DistributionPreviewDialog = ({
         <DialogPopup>
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <DialogTitle>{copy.title}</DialogTitle>
-              <DialogDescription>{copy.description}</DialogDescription>
+              <DialogTitle>{t("skills.distribution.confirmTitle")}</DialogTitle>
+              <DialogDescription>
+                {t("skills.distribution.confirmDescription", { count: items.length })}
+              </DialogDescription>
             </div>
-            <DialogClose render={<Button type="button" variant="outline" size="sm" />}>
-              {copy.close}
+            <DialogClose
+              disabled={isExecuting}
+              render={<Button type="button" variant="outline" size="sm" />}
+            >
+              {t("skills.actions.close")}
             </DialogClose>
           </div>
 
           <div className="grid gap-2">
-            {items.map((item) => (
-              <div key={item.id} className="rounded-lg border border-border bg-background p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <strong className="min-w-0 truncate text-sm">{item.targetName}</strong>
-                  <Badge variant={getPlanActionBadgeVariant(item.action)}>{item.action}</Badge>
+            {items.map((item) => {
+              const resolution =
+                conflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite";
+              const allowedResolutions = item.allowedResolutions ?? ["overwrite", "skip"];
+
+              return (
+                <div key={item.id} className="rounded-lg border border-border bg-background p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <strong className="min-w-0 truncate text-sm">{item.targetName}</strong>
+                    <Badge variant={getDistributionActionBadgeVariant(item.action)}>
+                      {t(`skills.distribution.actions.${item.action}`)}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
+                    {item.targetPath}
+                  </p>
+                  {item.reason ? (
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.reason}</p>
+                  ) : null}
+                  {item.action === "conflict" ? (
+                    <label className="mt-3 grid gap-1 text-xs font-semibold text-muted-foreground">
+                      {t("skills.distribution.conflictResolution")}
+                      <select
+                        aria-label={t("skills.distribution.conflictResolutionAria", {
+                          skill: item.skillName,
+                          target: item.targetName
+                        })}
+                        className="h-9 rounded-lg border border-input bg-background px-2 text-sm font-normal text-foreground outline-none focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                        disabled={isExecuting}
+                        value={resolution}
+                        onChange={(event) =>
+                          onConflictResolutionChange(
+                            item.id,
+                            event.currentTarget.value === "skip" ? "skip" : "overwrite"
+                          )
+                        }
+                      >
+                        {allowedResolutions.includes("overwrite") ? (
+                          <option value="overwrite">
+                            {t("skills.distribution.resolutions.overwrite")}
+                          </option>
+                        ) : null}
+                        {allowedResolutions.includes("skip") ? (
+                          <option value="skip">{t("skills.distribution.resolutions.skip")}</option>
+                        ) : null}
+                      </select>
+                    </label>
+                  ) : null}
                 </div>
-                <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
-                  {item.targetPath}
-                </p>
-                {item.reason ? (
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.reason}</p>
-                ) : null}
-              </div>
-            ))}
+              );
+            })}
+          </div>
+
+          <div className="mt-5 flex justify-end gap-2">
+            <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
+              {t("skills.actions.cancel")}
+            </Button>
+            <Button type="button" disabled={isExecuting} onClick={onConfirm}>
+              {t("skills.distribution.confirmAction")}
+            </Button>
           </div>
         </DialogPopup>
       </DialogPortal>
@@ -218,10 +257,10 @@ const DistributionPreviewDialog = ({
   );
 };
 
-const getPlanActionBadgeVariant = (
-  action: "install" | "update" | "skip" | "conflict"
+const getDistributionActionBadgeVariant = (
+  action: "blocked" | "install" | "update" | "skip" | "conflict"
 ): React.ComponentProps<typeof Badge>["variant"] => {
-  if (action === "conflict") {
+  if (action === "blocked" || action === "conflict") {
     return "destructive";
   }
 

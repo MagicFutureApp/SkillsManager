@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { openExternalUrl } from "./settings";
+import { getAppSettings, openExternalUrl, updateDistributionSettings } from "./settings";
+import { createDbClient } from "../../db/client";
 
 vi.mock("electron", () => ({
   ipcMain: {
@@ -27,5 +28,29 @@ describe("openExternalUrl", () => {
         openExternal: vi.fn()
       })
     ).rejects.toThrow("Only GitHub URLs can be opened from settings.");
+  });
+});
+
+describe("app settings", () => {
+  it("keeps automatic distribution disabled by default", async () => {
+    const db = createDbClient(":memory:");
+
+    await expect(getAppSettings(db)).resolves.toMatchObject({
+      distribution: {
+        autoDistributeOnSync: false
+      }
+    });
+  });
+
+  it("updates automatic distribution settings", async () => {
+    const db = createDbClient(":memory:");
+
+    await updateDistributionSettings(db, { autoDistributeOnSync: true });
+
+    await expect(getAppSettings(db)).resolves.toMatchObject({
+      distribution: {
+        autoDistributeOnSync: true
+      }
+    });
   });
 });

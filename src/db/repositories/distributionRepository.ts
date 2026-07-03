@@ -3,19 +3,16 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 import type {
-  DistributionOperationType,
-  DistributionPlanAction,
+  DistributionAction,
   DistributionPreviewInput,
   DistributionPreviewItem,
-  DistributionPreviewPlan,
+  DistributionPreviewResult,
   DistributionPreviewSummary
 } from "../../core/distribution/distribution-api";
 import { resolveSkillKey } from "../../core/skills/skill-utils";
 import type { createDbClient } from "../client";
 import {
   agentTargets,
-  distributionPlanItems,
-  distributionPlans,
   installInstances,
   repositories,
   skillTargetPreferences,
@@ -39,14 +36,15 @@ type SkillVersionRow = {
 
 type TargetPreferenceRow = {
   agentTargetId: string;
-  defaultInstallStrategy: string;
+  targetEnabled: boolean;
   targetName: string;
+  targetNormalizedPath: string;
   targetPath: string;
+  targetType: string;
 };
 
 type InstalledInstanceRow = {
   agentTargetId: string;
-  commitSha: string;
   installedCommitSha: string;
   installedPath: string;
   skillUnitId: string;
@@ -79,11 +77,16 @@ export const createDistributionRepository = (db: DbClient) => {
       });
       const summary = summarizePreviewItems(items);
       const operationType = resolveOperationType(items);
-      const status = summary.actionCounts.conflict > 0 ? "draft" : "ready";
-      const planId = randomUUID();
-      const plan: DistributionPreviewPlan = {
+      const status =
+        summary.actionCounts.blocked > 0
+          ? "blocked"
+          : summary.actionCounts.conflict > 0
+            ? "conflict"
+            : "ready";
+      const previewId = randomUUID();
+      const preview: DistributionPreviewResult = {
         createdAt: createdAt.toISOString(),
-        id: planId,
+        id: previewId,
         items,
         operationType,
         status,
@@ -91,51 +94,7 @@ export const createDistributionRepository = (db: DbClient) => {
         triggerSource: input.triggerSource
       };
 
-      db.transaction((tx) => {
-        tx.insert(distributionPlans)
-          .values({
-            confirmationsJson: "[]",
-            createdAt,
-            createdBy: "local-user",
-            id: planId,
-            operationType,
-            status,
-            summaryJson: JSON.stringify(summary),
-            triggerSource: input.triggerSource,
-            updatedAt: createdAt
-          })
-          .run();
-
-        if (items.length) {
-          tx.insert(distributionPlanItems)
-            .values(
-              items.map((item) => ({
-                action: item.action,
-                agentTargetId: item.agentTargetId,
-                createdAt,
-                distributionPlanId: planId,
-                errorMessage: null,
-                id: item.id,
-                installStrategy: item.installStrategy,
-                reason: item.reason,
-                resultJson: JSON.stringify({
-                  commitSha: item.commitSha,
-                  skillName: item.skillName,
-                  skillUnitId: item.skillUnitId,
-                  targetName: item.targetName
-                }),
-                skillVersionId: skillsById.get(item.skillUnitId)?.skillVersionId ?? "",
-                sourcePath: item.sourcePath,
-                status: item.status,
-                targetPath: item.targetPath,
-                updatedAt: createdAt
-              }))
-            )
-            .run();
-        }
-      });
-
-      return plan;
+      return preview;
     }
   };
 };
@@ -179,18 +138,19 @@ const getTargetPreferencesBySkillId = async (
   const rows = await db
     .select({
       agentTargetId: agentTargets.id,
-      defaultInstallStrategy: agentTargets.defaultInstallStrategy,
+      targetEnabled: agentTargets.enabled,
       skillUnitId: skillTargetPreferences.skillUnitId,
       targetName: agentTargets.name,
-      targetPath: agentTargets.path
+      targetNormalizedPath: agentTargets.normalizedPath,
+      targetPath: agentTargets.path,
+      targetType: agentTargets.type
     })
     .from(skillTargetPreferences)
     .innerJoin(agentTargets, eq(agentTargets.id, skillTargetPreferences.agentTargetId))
     .where(
       and(
         inArray(skillTargetPreferences.skillUnitId, skillUnitIds),
-        eq(skillTargetPreferences.enabled, true),
-        eq(agentTargets.enabled, true)
+        eq(skillTargetPreferences.enabled, true)
       )
     )
     .orderBy(asc(agentTargets.name));
@@ -210,16 +170,14 @@ const getInstalledInstances = async (db: DbClient): Promise<InstalledInstanceRow
   return db
     .select({
       agentTargetId: installInstances.agentTargetId,
-      commitSha: skillVersions.commitSha,
       installedCommitSha: installInstances.installedCommitSha,
       installedPath: installInstances.installedPath,
-      skillUnitId: skillVersions.skillUnitId,
+      skillUnitId: installInstances.skillUnitId,
       skillVersionId: installInstances.skillVersionId,
       status: installInstances.status,
       updatedAt: installInstances.updatedAt
     })
     .from(installInstances)
-    .innerJoin(skillVersions, eq(skillVersions.id, installInstances.skillVersionId))
     .orderBy(asc(installInstances.updatedAt));
 };
 
@@ -284,10 +242,10 @@ const buildPreviewItems = ({
 
     const targets = targetPreferencesBySkillId.get(skillUnitId) ?? [];
     const skillKey = resolveSkillKey(skill.metadataSnapshotJson, skill.skillRootPath);
-    const sourcePath = path.join(skill.repositoryCachePath, skill.skillRootPath);
+    const sourcePath = joinStoredPath(skill.repositoryCachePath, skill.skillRootPath);
 
     return targets.map((target) => {
-      const targetPath = path.join(target.targetPath, skillKey);
+      const targetPath = joinStoredPath(target.targetPath, skillKey);
       const installedAtPath = installedByTargetPath.get(
         createTargetPathKey(target.agentTargetId, targetPath)
       );
@@ -298,25 +256,41 @@ const buildPreviewItems = ({
         installedAtPath,
         installedForSkillTarget,
         skill,
-        skillUnitId
+        skillUnitId,
+        target
       });
 
       return {
         action: classification.action,
         agentTargetId: target.agentTargetId,
+        ...(classification.action === "conflict"
+          ? {
+              allowedResolutions: ["overwrite", "skip"] as const,
+              defaultResolution: "overwrite" as const
+            }
+          : {}),
         commitSha: skill.commitSha,
         id: randomUUID(),
-        installStrategy: target.defaultInstallStrategy,
         reason: classification.reason,
         skillName: skill.skillName,
         skillUnitId,
+        skillVersionId: skill.skillVersionId,
         sourcePath,
         status:
-          classification.action === "skip" || classification.action === "conflict"
-            ? "skipped"
-            : "pending",
+          classification.action === "blocked"
+            ? "blocked"
+            : classification.action === "skip"
+              ? "skipped"
+              : "pending",
         targetName: target.targetName,
-        targetPath
+        targetPath,
+        targetSnapshot: {
+          id: target.agentTargetId,
+          name: target.targetName,
+          normalizedPath: target.targetNormalizedPath,
+          path: target.targetPath,
+          type: target.targetType
+        }
       };
     });
   });
@@ -326,13 +300,22 @@ const classifyPreviewItem = ({
   installedAtPath,
   installedForSkillTarget,
   skill,
-  skillUnitId
+  skillUnitId,
+  target
 }: {
   installedAtPath: InstalledInstanceRow | undefined;
   installedForSkillTarget: InstalledInstanceRow | undefined;
   skill: SkillVersionRow;
   skillUnitId: string;
-}): { action: DistributionPlanAction; reason: string | null } => {
+  target: TargetPreferenceRow;
+}): { action: DistributionAction; reason: string | null } => {
+  if (!target.targetEnabled) {
+    return {
+      action: "blocked",
+      reason: "Target is disabled."
+    };
+  }
+
   if (installedAtPath && installedAtPath.skillUnitId !== skillUnitId) {
     return {
       action: "conflict",
@@ -369,6 +352,7 @@ const summarizePreviewItems = (items: DistributionPreviewItem[]): DistributionPr
 
   return {
     actionCounts: {
+      blocked: countActions(items, "blocked"),
       conflict: countActions(items, "conflict"),
       install: countActions(items, "install"),
       skip: countActions(items, "skip"),
@@ -380,11 +364,11 @@ const summarizePreviewItems = (items: DistributionPreviewItem[]): DistributionPr
   };
 };
 
-const countActions = (items: DistributionPreviewItem[], action: DistributionPlanAction): number => {
+const countActions = (items: DistributionPreviewItem[], action: DistributionAction): number => {
   return items.filter((item) => item.action === action).length;
 };
 
-const resolveOperationType = (items: DistributionPreviewItem[]): DistributionOperationType => {
+const resolveOperationType = (items: DistributionPreviewItem[]) => {
   const writingActions = new Set(
     items
       .map((item) => item.action)
@@ -406,4 +390,18 @@ const createSkillTargetKey = (skillUnitId: string, agentTargetId: string): strin
 
 const createTargetPathKey = (agentTargetId: string, targetPath: string): string => {
   return `${agentTargetId}\u0000${targetPath}`;
+};
+
+const joinStoredPath = (rootPath: string, childPath: string): string => {
+  const childSegments = childPath === "." ? [] : childPath.split(/[\\/]+/).filter(Boolean);
+
+  if (/^[A-Za-z]:[\\/]/.test(rootPath)) {
+    return path.win32.join(rootPath, ...childSegments);
+  }
+
+  if (rootPath.startsWith("/")) {
+    return path.posix.join(rootPath, ...childSegments);
+  }
+
+  return path.join(rootPath, ...childSegments);
 };

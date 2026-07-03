@@ -27,9 +27,22 @@ export const RepositoriesPageSider = () => {
         provider: t("repositories.detail.provider"),
         remoteUrl: t("repositories.detail.remoteUrl"),
         scanAdded: t("repositories.detail.scanAdded"),
+        scanChanged: t("repositories.detail.scanChanged"),
         scanHeading: t("repositories.detail.scanHeading"),
         scanRemoved: t("repositories.detail.scanRemoved"),
-        scanWarnings: t("repositories.detail.scanWarnings")
+        scanWarnings: t("repositories.detail.scanWarnings"),
+        syncDetailsHeading: t("repositories.detail.syncDetailsHeading"),
+        distributionHeading: t("repositories.detail.distributionHeading"),
+        autoDistribution: t("repositories.detail.autoDistribution"),
+        autoDistributionEnabled: t("repositories.detail.autoDistributionEnabled"),
+        autoDistributionDisabled: t("repositories.detail.autoDistributionDisabled"),
+        distributionEligible: t("repositories.detail.distributionEligible"),
+        distributionInstalled: t("repositories.detail.distributionInstalled"),
+        distributionUpdated: t("repositories.detail.distributionUpdated"),
+        distributionSkipped: t("repositories.detail.distributionSkipped"),
+        distributionConflicts: t("repositories.detail.distributionConflicts"),
+        distributionBlocked: t("repositories.detail.distributionBlocked"),
+        distributionFailed: t("repositories.detail.distributionFailed")
       }}
       repository={page.selectedRepository}
       onCopyCachePath={page.copyCachePath}

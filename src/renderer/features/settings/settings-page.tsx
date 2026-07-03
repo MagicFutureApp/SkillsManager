@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { toErrorMessage } from "@/lib/errors";
 import {
   AlertTriangle,
@@ -21,6 +22,7 @@ import {
   ExternalLink,
   FolderOpen,
   KeyRound,
+  PackageCheck,
   RotateCcw,
   Save,
   Trash2
@@ -34,7 +36,11 @@ const GITHUB_TOKEN_CREATION_URL =
   "https://github.com/settings/personal-access-tokens/new?name=Skills+Manager&description=Read+repository+metadata+and+SKILL.md+files&contents=read";
 
 export const SettingsPage = () => {
-  const [settings, setSettings] = useState<AppSettingsResult>({ github: { hasToken: false } });
+  const [settings, setSettings] = useState<AppSettingsResult>({
+    distribution: { autoDistributeOnSync: false },
+    github: { hasToken: false }
+  });
+  const [distributionStatus, setDistributionStatus] = useState<SaveStatus>("idle");
   const [storagePaths, setStoragePaths] = useState<AppStoragePathsResult | null>(null);
   const [githubToken, setGithubToken] = useState("");
   const [status, setStatus] = useState<SaveStatus>("idle");
@@ -120,6 +126,28 @@ export const SettingsPage = () => {
       });
   };
 
+  const updateAutoDistributeOnSync = (autoDistributeOnSync: boolean) => {
+    if (!window.skillsManager?.updateDistributionSettings) {
+      setError("分发设置接口不可用。");
+      setDistributionStatus("error");
+      return;
+    }
+
+    setDistributionStatus("saving");
+    setError("");
+
+    void window.skillsManager
+      .updateDistributionSettings({ autoDistributeOnSync })
+      .then((nextSettings) => {
+        setSettings(nextSettings);
+        setDistributionStatus("saved");
+      })
+      .catch((unknownError: unknown) => {
+        setError(toErrorMessage(unknownError) || "保存分发设置失败。");
+        setDistributionStatus("error");
+      });
+  };
+
   const openGitHubTokenCreationPage = () => {
     void window.skillsManager
       ?.openExternalUrl?.(GITHUB_TOKEN_CREATION_URL)
@@ -162,8 +190,10 @@ export const SettingsPage = () => {
   };
 
   const isSaving = status === "saving";
+  const isSavingDistribution = distributionStatus === "saving";
   const isResetting = storageStatus === "resetting";
   const tokenStatusLabel = settings.github.hasToken ? "已配置" : "未配置";
+  const autoDistributeOnSync = settings.distribution.autoDistributeOnSync;
 
   return (
     <div className="grid min-h-full grid-cols-[minmax(620px,1fr)_360px] bg-background">
@@ -222,6 +252,44 @@ export const SettingsPage = () => {
                 <p className="text-sm text-muted-foreground">已保存 GitHub token。</p>
               ) : null}
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            </div>
+          </SettingsPanel>
+
+          <SettingsPanel
+            id="skill-distribution"
+            icon={<PackageCheck aria-hidden="true" />}
+            title="技能分发"
+            description="控制来源同步完成后，是否自动 copy 到已经在 Skills/Targets 中设置的目标目录。"
+            action={
+              <Badge variant={autoDistributeOnSync ? "secondary" : "outline"}>
+                {autoDistributeOnSync ? "已开启" : "已关闭"}
+              </Badge>
+            }
+          >
+            <div className="grid max-w-2xl gap-3">
+              <label className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-border bg-muted/40 p-3">
+                <span className="min-w-0">
+                  <span
+                    id="skill-distribution-auto-label"
+                    className="block text-sm font-semibold text-foreground"
+                  >
+                    同步后自动分发到已设置目标
+                  </span>
+                  <span className="mt-1 block text-sm leading-6 text-muted-foreground">
+                    关闭时，同步完成后只显示可手动分发的数量；开启后，会自动 copy
+                    到已选择的目标目录。
+                  </span>
+                </span>
+                <Switch
+                  aria-labelledby="skill-distribution-auto-label"
+                  checked={autoDistributeOnSync}
+                  disabled={isSavingDistribution}
+                  onCheckedChange={updateAutoDistributeOnSync}
+                />
+              </label>
+              {distributionStatus === "saved" ? (
+                <p className="text-sm text-muted-foreground">已保存分发设置。</p>
+              ) : null}
             </div>
           </SettingsPanel>
 
@@ -321,7 +389,7 @@ export const SettingsPage = () => {
               </h2>
             </div>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              重建数据库会清空本地索引、来源、Skills、同步历史和应用设置。已安装到 agent
+              重建数据库会清空本地索引、来源、Skills 和应用设置。已安装到 agent
               目标目录的文件不会被删除。
             </p>
           </div>
@@ -354,7 +422,7 @@ export const SettingsPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>重建本地数据库？</AlertDialogTitle>
             <AlertDialogDescription>
-              会清空本地索引、来源、Skills、同步历史和应用设置，但不会删除已安装到 agent
+              会清空本地索引、来源、Skills 和应用设置，但不会删除已安装到 agent
               目标目录的文件，也不会清空本地缓存目录。
             </AlertDialogDescription>
           </AlertDialogHeader>

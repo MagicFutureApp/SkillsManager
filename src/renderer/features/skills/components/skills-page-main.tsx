@@ -34,6 +34,11 @@ export const SkillsPageMain = () => {
   const selectedDistributionReady = page.checkedDistributionState === "ready";
   const selectedSyncTitle = t(getDistributionTitleKey(page.checkedDistributionState, "selected"));
   const syncLabel = t("skills.actions.sync");
+  const distributionStatus = page.distributionExecuteResult
+    ? t("skills.actions.distributionCompletedStatus", page.distributionExecuteResult.summary)
+    : page.distributionNoticeKey
+      ? t(page.distributionNoticeKey)
+      : null;
   const sortOptions: SelectOption<SkillSort>[] = [
     { value: "name", label: t("skills.filters.sortName") },
     { value: "repository", label: t("skills.filters.sortRepository") }
@@ -61,7 +66,7 @@ export const SkillsPageMain = () => {
               disabled={!selectedDistributionReady}
               title={selectedSyncTitle}
               aria-label={t("skills.actions.syncSelectedAria")}
-              onClick={page.announceDistributionUnavailable}
+              onClick={page.startSelectedSkillsDistribution}
             >
               {syncLabel}
             </Button>
@@ -69,7 +74,7 @@ export const SkillsPageMain = () => {
         </div>
         {page.distributionNoticeVisible ? (
           <p role="status" className="mt-2 text-sm text-muted-foreground">
-            {page.distributionNoticeKey ? t(page.distributionNoticeKey) : null}
+            {distributionStatus}
           </p>
         ) : null}
       </header>
@@ -197,7 +202,7 @@ const SkillTableRow = ({ skill }: { skill: Skill }) => {
           aria-label={t("skills.actions.syncSkillAria", { name: skill.name })}
           onClick={(event) => {
             event.stopPropagation();
-            page.announceDistributionUnavailable();
+            page.startSkillDistribution(skill.id);
           }}
         >
           {t("skills.actions.sync")}

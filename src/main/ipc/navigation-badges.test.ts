@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createDbClient } from "../../db/client";
-import {
-  agentTargets,
-  providers,
-  repositories,
-  skillUnits,
-  skillVersions,
-  syncRuns
-} from "../../db/schema";
+import { agentTargets, providers, repositories, skillUnits, skillVersions } from "../../db/schema";
 import { getNavigationBadgeCounts } from "./navigation-badges";
 
 describe("navigation badge IPC handlers", () => {
@@ -117,7 +110,6 @@ describe("navigation badge IPC handlers", () => {
     ]);
     await db.insert(agentTargets).values({
       createdAt,
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-project",
       name: "Local project",
@@ -126,39 +118,11 @@ describe("navigation badge IPC handlers", () => {
       type: "custom-directory",
       updatedAt: createdAt
     });
-    await db.insert(syncRuns).values([
-      {
-        endCommitSha: "abcdef123456",
-        errorMessage: null,
-        finishedAt: createdAt,
-        id: "sync-1",
-        logPath: null,
-        repositoryId: "repo-1",
-        startCommitSha: null,
-        startedAt: createdAt,
-        status: "success",
-        summaryJson: "{}"
-      },
-      {
-        endCommitSha: null,
-        errorMessage: "No access.",
-        finishedAt: createdAt,
-        id: "sync-2",
-        logPath: null,
-        repositoryId: "repo-1",
-        startCommitSha: "abcdef123456",
-        startedAt: createdAt,
-        status: "failed",
-        summaryJson: "{}"
-      }
-    ]);
-
     await expect(getNavigationBadgeCounts(db)).resolves.toEqual({
       counts: {
         repositories: 2,
         skills: 2,
-        targets: 1,
-        "sync-history": 2
+        targets: 1
       }
     });
   });

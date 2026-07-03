@@ -12,7 +12,6 @@ export type TargetRegistrationScope = "global" | "independent";
 export type RegisteredTargetStatus = TargetDetectionStatus | "registered" | "disabled";
 
 export type SystemTargetRecord = {
-  defaultInstallStrategy: string;
   detectionMessage: string;
   id: string;
   name: string;
@@ -23,7 +22,6 @@ export type SystemTargetRecord = {
 };
 
 export type TargetScanCandidate = {
-  defaultInstallStrategy: string;
   id: string;
   name: string;
   normalizedPath: string;
@@ -57,7 +55,6 @@ export type TargetSkillPreference = TargetSkillSelection & {
 
 export type RegisteredTargetRecord = {
   createdAt: string;
-  defaultInstallStrategy: string;
   enabled: boolean;
   id: string;
   name: string;

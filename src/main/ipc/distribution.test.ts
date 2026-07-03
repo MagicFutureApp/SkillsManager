@@ -1,23 +1,28 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { createDbClient } from "../../db/client";
 import {
   agentTargets,
+  installInstances,
   repositories,
   skillTargetPreferences,
   skillUnits,
   skillVersions
 } from "../../db/schema";
-import { previewDistributionPlan } from "./distribution";
+import { executeDistribution, previewDistribution } from "./distribution";
 
 describe("distribution IPC handlers", () => {
-  it("normalizes preview input and returns a dry-run plan", async () => {
+  it("normalizes preview input and returns a one-time preview", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-27T00:00:00.000Z");
 
     await seedPreviewFixture(db, createdAt);
 
-    const result = await previewDistributionPlan(
+    const result = await previewDistribution(
       db,
       {
         skillUnitIds: [" skill-review ", "skill-review"],
@@ -27,7 +32,7 @@ describe("distribution IPC handlers", () => {
     );
 
     expect(result.summary).toMatchObject({
-      actionCounts: { conflict: 0, install: 1, skip: 0, update: 0 },
+      actionCounts: { blocked: 0, conflict: 0, install: 1, skip: 0, update: 0 },
       itemCount: 1
     });
     expect(result.items).toEqual([
@@ -44,7 +49,7 @@ describe("distribution IPC handlers", () => {
     const db = createDbClient(":memory:");
 
     await expect(
-      previewDistributionPlan(
+      previewDistribution(
         db,
         {
           skillUnitIds: ["  "],
@@ -54,17 +59,121 @@ describe("distribution IPC handlers", () => {
       )
     ).rejects.toThrow("At least one skill is required.");
   });
+
+  it("executes an install by copying the skill directory and recording the install instance", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-07-02T00:00:00.000Z");
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-distribution-"));
+    const cachePath = path.join(workspace, "cache");
+    const targetPath = path.join(workspace, "target");
+
+    await seedPreviewFixture(db, createdAt, { cachePath, targetPath });
+    await mkdir(path.join(cachePath, "review-bot"), { recursive: true });
+    await writeFile(path.join(cachePath, "review-bot", "SKILL.md"), "# Review Bot\n", "utf8");
+
+    const result = await executeDistribution(
+      db,
+      {
+        skillUnitIds: ["skill-review"]
+      },
+      { now: () => createdAt }
+    );
+
+    await expect(readFile(path.join(targetPath, "review-bot", "SKILL.md"), "utf8")).resolves.toBe(
+      "# Review Bot\n"
+    );
+    expect(result.summary).toMatchObject({
+      failed: 0,
+      installed: 1,
+      skipped: 0
+    });
+    await expect(db.select().from(installInstances)).resolves.toMatchObject([
+      {
+        agentTargetId: "target-codex",
+        installedCommitSha: "abc123456789",
+        installedPath: path.join(targetPath, "review-bot"),
+        skillUnitId: "skill-review",
+        skillVersionId: "version-review",
+        status: "installed"
+      }
+    ]);
+  });
+
+  it("overwrites a filesystem conflict only when the submitted resolution requests overwrite", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-07-02T00:00:00.000Z");
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-conflict-"));
+    const cachePath = path.join(workspace, "cache");
+    const targetPath = path.join(workspace, "target");
+    const conflictingPath = path.join(targetPath, "review-bot");
+
+    await seedPreviewFixture(db, createdAt, { cachePath, targetPath });
+    await mkdir(path.join(cachePath, "review-bot"), { recursive: true });
+    await writeFile(path.join(cachePath, "review-bot", "SKILL.md"), "# Review Bot\n", "utf8");
+    await mkdir(conflictingPath, { recursive: true });
+    await writeFile(path.join(conflictingPath, "SKILL.md"), "# Existing\n", "utf8");
+
+    await executeDistribution(
+      db,
+      {
+        conflictResolutions: [
+          {
+            agentTargetId: "target-codex",
+            resolution: "skip",
+            skillUnitId: "skill-review",
+            targetPath: conflictingPath
+          }
+        ],
+        skillUnitIds: ["skill-review"]
+      },
+      { now: () => createdAt }
+    );
+    await expect(readFile(path.join(conflictingPath, "SKILL.md"), "utf8")).resolves.toBe(
+      "# Existing\n"
+    );
+
+    const overwriteResult = await executeDistribution(
+      db,
+      {
+        conflictResolutions: [
+          {
+            agentTargetId: "target-codex",
+            resolution: "overwrite",
+            skillUnitId: "skill-review",
+            targetPath: conflictingPath
+          }
+        ],
+        skillUnitIds: ["skill-review"]
+      },
+      { now: () => createdAt }
+    );
+
+    await expect(readFile(path.join(conflictingPath, "SKILL.md"), "utf8")).resolves.toBe(
+      "# Review Bot\n"
+    );
+    expect(overwriteResult.summary).toMatchObject({
+      conflicts: 0,
+      installed: 1
+    });
+  });
 });
 
 const seedPreviewFixture = async (
   db: ReturnType<typeof createDbClient>,
-  createdAt: Date
+  createdAt: Date,
+  paths: {
+    cachePath?: string;
+    targetPath?: string;
+  } = {}
 ): Promise<void> => {
+  const cachePath = paths.cachePath ?? "/Users/test/.skills-manager/cache/team-skills";
+  const targetPath = paths.targetPath ?? "/Users/test/.codex/skills";
+
   await db.insert(repositories).values({
     configJson: "{}",
     createdAt,
     id: "repo-1",
-    localCachePath: "/Users/test/.skills-manager/cache/team-skills",
+    localCachePath: cachePath,
     name: "Team skills",
     providerId: "local",
     remoteUrl: "/Users/test/team-skills",
@@ -74,11 +183,11 @@ const seedPreviewFixture = async (
     createdAt,
     description: "Reviews pull requests.",
     discoveryMethod: "convention",
-    entryPath: "skills/review-bot/SKILL.md",
+    entryPath: "review-bot/SKILL.md",
     id: "skill-review",
     name: "Review Bot",
     repositoryId: "repo-1",
-    rootPath: "skills/review-bot",
+    rootPath: "review-bot",
     status: "ready",
     updatedAt: createdAt
   });
@@ -91,12 +200,11 @@ const seedPreviewFixture = async (
   });
   await db.insert(agentTargets).values({
     createdAt,
-    defaultInstallStrategy: "copy",
     enabled: true,
     id: "target-codex",
     name: "Codex",
-    normalizedPath: "/Users/test/.codex/skills",
-    path: "/Users/test/.codex/skills",
+    normalizedPath: targetPath,
+    path: targetPath,
     type: "codex",
     updatedAt: createdAt
   });

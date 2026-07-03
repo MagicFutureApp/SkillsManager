@@ -262,15 +262,22 @@ action: install | update | skip | conflict | blocked
 reason
 ```
 
+conflict item 额外包含本次确认所需的冲突处理字段：
+
+```text
+defaultResolution: overwrite
+allowedResolutions: overwrite | skip
+```
+
 动作含义：
 
 - `install`：目标路径不存在，且 skill 尚未安装到该目标。
 - `update`：同一 skill-target 已安装，但 commit 不同。
 - `skip`：同一 skill-target 已安装，且 commit 相同。
-- `conflict`：目标路径存在且无法确认由本应用当前 skill 拥有，执行时不能覆盖。
+- `conflict`：目标路径存在且无法确认由本应用当前 skill 拥有。预览和分发确认弹窗必须显示该状态，并默认选择覆盖。
 - `blocked`：目标未启用、目标路径缺失、目标不可写、源路径缺失或路径安全检查失败。
 
-预览只用于 UI 告知和执行前确认。用户点击执行时，main process 必须重新计算一次预览，并执行重新计算后的可写条目。
+预览只用于 UI 告知。用户点击分发时，Skills 页弹出一次和预览类似的分发确认弹窗。弹窗中每个 `conflict` 项默认选择 `overwrite`，用户可以改为 `skip`。用户点击确认分发后，main process 按弹窗提交的选择直接执行，不再进行第二次确认。
 
 ## 6. Copy Executor
 
@@ -285,7 +292,7 @@ reason
 5. 确认目标目录安全：
    - 目标不存在：可以 copy。
    - 目标存在且 `install_instances` 证明是同一个 skill-target 的已安装路径：可以先删除再 copy。
-   - 目标存在但没有本应用当前 skill 的安装事实：标记 conflict，不覆盖。
+   - 目标存在但没有本应用当前 skill 的安装事实：标记 conflict；如果本次分发确认中该项选择 `overwrite`，可以先删除再 copy；如果选择 `skip`，不处理。
 6. 删除旧目标目录。
 7. copy 源 skill root 到目标路径。
 8. upsert `install_instances`。
@@ -302,6 +309,8 @@ executor 必须拒绝以下情况：
 - normalized target path 在同一次执行中重复。
 
 这些情况返回 `blocked` 或 `conflict`，不执行文件写入。
+
+即使用户选择覆盖 conflict 项，路径安全检查仍必须生效。`overwrite` 不能覆盖 target root，不能覆盖 source/target 互相嵌套路径，也不能处理同一次执行中的重复 normalized target path。
 
 ### 6.3 文件系统错误
 
@@ -401,7 +410,7 @@ Skills 页保留：
 按钮行为：
 
 - `预览`：调用即时 preview API，不写数据库。
-- `分发`：调用 execute API，main process 重新计算 preview 后执行 copy。
+- `分发`：打开分发确认弹窗。弹窗列出 install/update/skip/conflict/blocked 项；conflict 项默认选择覆盖，用户可改为跳过；确认后调用 execute API 执行 copy。
 - 批量分发要求所选 skills 都至少有一个 enabled target preference。
 
 ### 8.5 Targets 页面
@@ -427,6 +436,19 @@ settings:updateDistributionSettings
 repositories:sync
 ```
 
+`distribution:execute` 输入包含：
+
+```text
+skillUnitIds
+conflictResolutions: Array<{
+  previewItemId
+  skillUnitId
+  agentTargetId
+  targetPath
+  resolution: overwrite | skip
+}>
+```
+
 删除 IPC：
 
 ```text
@@ -435,7 +457,7 @@ syncHistory:list
 
 `distribution:preview` 不写数据库。
 
-`distribution:execute` 只允许 main process 执行文件写入和数据库更新。
+`distribution:execute` 只允许 main process 执行文件写入和数据库更新。没有 resolution 的 conflict 项按 `skip` 处理；有 `overwrite` resolution 的 conflict 项执行前仍必须通过路径安全检查。
 
 Renderer 只通过 preload 类型化 API 调用，不直接访问文件系统或 SQLite。
 
@@ -460,7 +482,7 @@ UI 表达原则：
 
 - 同步失败显示在 Repositories 行状态和详情中。
 - 分发失败显示在 Skills 页的结果摘要中。
-- 冲突不会自动覆盖，需要用户手动清理目标目录或移除旧安装事实后重试。
+- 冲突默认在分发确认弹窗中选择覆盖；用户可改为跳过。确认分发后不再弹第二次确认。
 
 ## 11. 测试策略
 
@@ -488,10 +510,10 @@ UI 表达原则：
 覆盖：
 
 - preview 不写数据库。
-- execute 重新计算 preview。
 - install copy 到目标目录并写入 `install_instances`。
 - update 删除旧目标目录后重新 copy。
-- conflict 不覆盖目标目录。
+- conflict 默认覆盖目标目录，用户改为 skip 时不覆盖。
+- conflict overwrite 仍受路径安全检查约束。
 - autoDistributeOnSync 关闭时只返回 eligible count。
 - autoDistributeOnSync 开启时同步后执行 copy。
 
@@ -502,6 +524,7 @@ UI 表达原则：
 - Settings 开关默认关闭并可保存。
 - Sidebar 不显示 Distribution / Sync history。
 - Skills 页预览文案不包含 dry-run/plan。
+- Skills 页分发确认弹窗中 conflict 项默认选择覆盖，并可改为跳过。
 - Skills 页手动分发展示结果摘要。
 - Repositories 页同步完成显示自动分发关闭或开启时的摘要。
 - Repository 详情可从 `last_sync_summary_json.scan.added/changed/removed` 展示最近一次同步影响到的具体 Skills。

@@ -5,7 +5,16 @@ import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 import { createDbClient } from "../../db/client";
-import { providers, repositories, skillUnits, skillVersions, syncRuns } from "../../db/schema";
+import {
+  agentTargets,
+  appSettings,
+  installInstances,
+  providers,
+  repositories,
+  skillTargetPreferences,
+  skillUnits,
+  skillVersions
+} from "../../db/schema";
 import {
   deleteRepository,
   inspectRepositorySourceWithSettings,
@@ -172,7 +181,7 @@ describe("repository IPC handlers", () => {
     });
 
     expect(copyLocalSource).toHaveBeenCalledWith(sourcePath, cachePath);
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       results: [
         {
           commitSha: "local",
@@ -188,6 +197,103 @@ describe("repository IPC handlers", () => {
         entryPath: "skills/review-bot/SKILL.md",
         id: "repo-local__skills-review-bot",
         name: "Review Bot"
+      }
+    ]);
+  });
+
+  it("returns eligible distribution count when automatic distribution is disabled", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-07-02T00:00:00.000Z");
+    const sourcePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-auto-off-source-"));
+    const cachePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-auto-off-cache-"));
+    const targetPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-auto-off-target-"));
+
+    await seedSyncRepositoryWithPreference(db, {
+      cachePath,
+      createdAt,
+      repositoryId: "repo-auto-off",
+      sourcePath,
+      targetPath
+    });
+
+    const copyLocalSource = vi.fn().mockImplementation(async () => {
+      await mkdir(path.join(cachePath, "review-bot"), { recursive: true });
+      await writeFile(
+        path.join(cachePath, "review-bot", "SKILL.md"),
+        "# Review Bot\n\nReviews pull requests.\n",
+        "utf8"
+      );
+    });
+
+    const result = await syncRepositories(db, ["repo-auto-off"], {
+      copyLocalSource,
+      ensureGitRepository: vi.fn(),
+      resolveCommitSha: vi.fn().mockResolvedValue("after-sha")
+    });
+
+    expect(result.results[0]).toMatchObject({
+      distribution: {
+        autoDistributionEnabled: false,
+        eligible: 1,
+        installed: 0
+      },
+      repositoryId: "repo-auto-off",
+      status: "ready"
+    });
+  });
+
+  it("copies updated skills to selected targets when automatic distribution is enabled", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-07-02T00:00:00.000Z");
+    const sourcePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-auto-on-source-"));
+    const cachePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-auto-on-cache-"));
+    const targetPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-auto-on-target-"));
+
+    await seedSyncRepositoryWithPreference(db, {
+      cachePath,
+      createdAt,
+      repositoryId: "repo-auto-on",
+      sourcePath,
+      targetPath
+    });
+    await db.insert(appSettings).values({
+      key: "distribution",
+      updatedAt: createdAt,
+      valueJson: JSON.stringify({ autoDistributeOnSync: true })
+    });
+
+    const copyLocalSource = vi.fn().mockImplementation(async () => {
+      await mkdir(path.join(cachePath, "review-bot"), { recursive: true });
+      await writeFile(
+        path.join(cachePath, "review-bot", "SKILL.md"),
+        "# Review Bot\n\nUpdated.\n",
+        "utf8"
+      );
+    });
+
+    const result = await syncRepositories(db, ["repo-auto-on"], {
+      copyLocalSource,
+      ensureGitRepository: vi.fn(),
+      resolveCommitSha: vi.fn().mockResolvedValue("after-sha")
+    });
+
+    await expect(readFile(path.join(targetPath, "review-bot", "SKILL.md"), "utf8")).resolves.toBe(
+      "# Review Bot\n\nUpdated.\n"
+    );
+    expect(result.results[0]).toMatchObject({
+      distribution: {
+        autoDistributionEnabled: true,
+        installed: 1
+      },
+      repositoryId: "repo-auto-on",
+      status: "ready"
+    });
+    await expect(db.select().from(installInstances)).resolves.toMatchObject([
+      {
+        agentTargetId: "target-codex",
+        installedCommitSha: "after-sha",
+        skillUnitId: "repo-auto-on__review-bot",
+        status: "installed"
       }
     ]);
   });
@@ -530,10 +636,10 @@ describe("repository IPC handlers", () => {
     const createdAt = new Date("2026-06-14T00:00:00.000Z");
     const sourcePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-source-running-"));
     const cachePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-cache-running-"));
-    let syncRunIdDuringCopy: string | null = null;
+    let runningStatusDuringCopy: string | null = null;
     const copyLocalSource = vi.fn().mockImplementation(async () => {
-      const runningRows = await db.select().from(syncRuns);
-      syncRunIdDuringCopy = runningRows[0]?.id ?? null;
+      const runningRows = await db.select().from(repositories);
+      runningStatusDuringCopy = runningRows[0]?.lastSyncStatus ?? null;
 
       await mkdir(path.join(cachePath, "skills", "review-bot"), { recursive: true });
       await writeFile(
@@ -570,14 +676,13 @@ describe("repository IPC handlers", () => {
       resolveCommitSha: vi.fn().mockResolvedValue("after-sha")
     });
 
-    expect(syncRunIdDuringCopy).toBeTruthy();
-    await expect(db.select().from(syncRuns)).resolves.toMatchObject([
+    expect(runningStatusDuringCopy).toBe("running");
+    await expect(db.select().from(repositories)).resolves.toMatchObject([
       {
-        endCommitSha: "after-sha",
-        id: syncRunIdDuringCopy,
-        repositoryId: "repo-running",
-        startCommitSha: "before-sha",
-        status: "success"
+        id: "repo-running",
+        lastSyncEndCommitSha: "after-sha",
+        lastSyncStartCommitSha: "before-sha",
+        lastSyncStatus: "success"
       }
     ]);
   });
@@ -633,13 +738,13 @@ describe("repository IPC handlers", () => {
     const logPath = result.results[0]?.error?.logPath;
     expect(logPath).toContain(logDirectory);
     await expect(readFile(logPath ?? "", "utf8")).resolves.toContain(rawGitError);
-    await expect(db.select().from(syncRuns)).resolves.toMatchObject([
+    await expect(db.select().from(repositories)).resolves.toMatchObject([
       {
-        errorMessage:
+        id: "repo-github",
+        lastSyncErrorMessage:
           "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。",
-        logPath,
-        repositoryId: "repo-github",
-        status: "failed"
+        lastSyncLogPath: logPath,
+        lastSyncStatus: "failed"
       }
     ]);
   });
@@ -793,4 +898,78 @@ const pathExists = async (filePath: string): Promise<boolean> => {
   } catch {
     return false;
   }
+};
+
+const seedSyncRepositoryWithPreference = async (
+  db: ReturnType<typeof createDbClient>,
+  {
+    cachePath,
+    createdAt,
+    repositoryId,
+    sourcePath,
+    targetPath
+  }: {
+    cachePath: string;
+    createdAt: Date;
+    repositoryId: string;
+    sourcePath: string;
+    targetPath: string;
+  }
+): Promise<void> => {
+  await db.insert(providers).values({
+    configJson: "{}",
+    createdAt,
+    id: "local-git",
+    name: "Local Git",
+    type: "local_git",
+    updatedAt: createdAt
+  });
+  await db.insert(repositories).values({
+    configJson: JSON.stringify({ patterns: ["*/SKILL.md"] }),
+    createdAt,
+    defaultBranch: "",
+    id: repositoryId,
+    lastScannedCommitSha: "before-sha",
+    localCachePath: cachePath,
+    name: "Local skills",
+    providerId: "local-git",
+    remoteUrl: sourcePath,
+    updatedAt: createdAt
+  });
+  await db.insert(skillUnits).values({
+    createdAt,
+    discoveryMethod: "convention",
+    entryPath: "review-bot/SKILL.md",
+    id: `${repositoryId}__review-bot`,
+    name: "Review Bot",
+    repositoryId,
+    rootPath: "review-bot",
+    status: "ready",
+    updatedAt: createdAt
+  });
+  await db.insert(skillVersions).values({
+    commitSha: "before-sha",
+    createdAt,
+    id: `${repositoryId}__review-bot__before-sha`,
+    metadataSnapshotJson: JSON.stringify({ skillKey: "review-bot", tags: [] }),
+    skillUnitId: `${repositoryId}__review-bot`
+  });
+  await db.insert(agentTargets).values({
+    createdAt,
+    enabled: true,
+    id: "target-codex",
+    name: "Codex",
+    normalizedPath: targetPath,
+    path: targetPath,
+    type: "codex",
+    updatedAt: createdAt
+  });
+  await db.insert(skillTargetPreferences).values({
+    agentTargetId: "target-codex",
+    createdAt,
+    enabled: true,
+    id: `preference-${repositoryId}`,
+    skillUnitId: `${repositoryId}__review-bot`,
+    updatedAt: createdAt
+  });
 };

@@ -63,7 +63,6 @@ describe("createSkillRepository", () => {
     await db.insert(agentTargets).values([
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-codex",
         name: "Codex",
@@ -74,7 +73,6 @@ describe("createSkillRepository", () => {
       },
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-disabled",
         name: "Disabled target",
@@ -165,7 +163,6 @@ describe("createSkillRepository", () => {
     });
     await db.insert(agentTargets).values({
       createdAt,
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-codex",
       name: "Codex",

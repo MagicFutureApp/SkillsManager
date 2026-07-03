@@ -1,7 +1,12 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { SupportedLocale } from "../core/i18n/locale";
 import type { AppInfo } from "./ipc/app-info";
-import type { DistributionPreviewInput, DistributionPreviewResult } from "./ipc/distribution";
+import type {
+  DistributionExecuteInput,
+  DistributionExecuteResult,
+  DistributionPreviewInput,
+  DistributionPreviewResult
+} from "./ipc/distribution";
 import type { AppHealth } from "./ipc/health";
 import type { NavigationBadgeCountsResult } from "./ipc/navigation-badges";
 import type { ProvidersListResult } from "./ipc/providers";
@@ -9,6 +14,7 @@ import type { RepositoriesListResult, RepositoriesSyncResult } from "./ipc/repos
 import type {
   AppSettingsResult,
   AppStoragePathsResult,
+  DistributionSettings,
   ResetLocalDatabaseResult
 } from "./ipc/settings";
 import type {
@@ -16,7 +22,6 @@ import type {
   UpdateSkillTargetPreferenceInput,
   UpdateSkillTargetPreferenceResult
 } from "./ipc/skills";
-import type { SyncHistoryListResult } from "../core/repositories/sync-history-api";
 import type {
   AddCustomDirectoryTargetInput,
   AddSkillDirectoryTargetInput,
@@ -61,8 +66,10 @@ contextBridge.exposeInMainWorld("skillsManager", {
       remoteUrl
     ) as Promise<RepositorySourceInspection>,
   listProviders: () => ipcRenderer.invoke("providers:list") as Promise<ProvidersListResult>,
-  previewDistributionPlan: (input: DistributionPreviewInput) =>
+  previewDistribution: (input: DistributionPreviewInput) =>
     ipcRenderer.invoke("distribution:preview", input) as Promise<DistributionPreviewResult>,
+  executeDistribution: (input: DistributionExecuteInput) =>
+    ipcRenderer.invoke("distribution:execute", input) as Promise<DistributionExecuteResult>,
   listRepositories: () =>
     ipcRenderer.invoke("repositories:list") as Promise<RepositoriesListResult>,
   listSkills: () => ipcRenderer.invoke("skills:list") as Promise<SkillsListResult>,
@@ -71,7 +78,6 @@ contextBridge.exposeInMainWorld("skillsManager", {
       "skills:setTargetPreference",
       input
     ) as Promise<UpdateSkillTargetPreferenceResult>,
-  listSyncHistory: () => ipcRenderer.invoke("syncHistory:list") as Promise<SyncHistoryListResult>,
   listTargets: () => ipcRenderer.invoke("targets:list") as Promise<TargetsListResult>,
   addCustomDirectoryTarget: (input: AddCustomDirectoryTargetInput) =>
     ipcRenderer.invoke("targets:addCustomDirectory", input) as Promise<TargetsListResult>,
@@ -90,6 +96,11 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ipcRenderer.invoke("repositories:resolveCachePath", cachePath) as Promise<string>,
   saveGitHubToken: (token: string) =>
     ipcRenderer.invoke("settings:saveGitHubToken", token) as Promise<AppSettingsResult>,
+  updateDistributionSettings: (settings: Partial<DistributionSettings>) =>
+    ipcRenderer.invoke(
+      "settings:updateDistributionSettings",
+      settings
+    ) as Promise<AppSettingsResult>,
   selectLocalRepositoryPath: () =>
     ipcRenderer.invoke("repositories:selectLocalPath") as Promise<string | null>,
   selectTargetDirectory: () =>

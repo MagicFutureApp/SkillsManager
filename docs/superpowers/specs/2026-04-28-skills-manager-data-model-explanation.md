@@ -2,6 +2,12 @@
 
 日期：2026-04-28
 
+> 归档说明：本文解释的是早期数据模型。当前分发/同步状态模型已在
+> `docs/superpowers/specs/2026-07-02-copy-only-distribution-design.md`
+> 中改为 copy-only 分发、repository 最近一次同步状态、无
+> `distribution_plans` / `distribution_plan_items` / `sync_runs` 表；
+> 新实现和 schema 决策以 2026-07-02 设计及当前代码为准。
+
 本文用于详细解释 `Skills Manager 设计` 中 `## 6. 数据模型` 的各个实体作用。
 
 ## 1. 总体理解

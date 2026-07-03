@@ -19,8 +19,7 @@ const renderSidebar = async (props: Partial<React.ComponentProps<typeof AppSideb
           repositories: 5,
           skills: 37,
           targets: 4,
-          settings: 8,
-          "sync-history": 4
+          settings: 8
         }}
         isAutoCollapsed={false}
         isCollapsed={false}
@@ -76,7 +75,7 @@ describe("AppSidebar", () => {
       badge.textContent?.trim()
     );
 
-    expect(badges).toEqual(["5", "37", "4", "8", "4"]);
+    expect(badges).toEqual(["5", "37", "4", "8"]);
     expect(screen.getByRole("button", { name: "技能" })).not.toHaveAttribute("title");
     expect(
       sidebar.querySelector('[data-slot="tooltip-trigger"][aria-label="Skillport"]')
@@ -92,9 +91,8 @@ describe("AppSidebar", () => {
       badge.textContent?.trim()
     );
 
-    expect(badges).toEqual(["5", "37", "4", "8", "4"]);
+    expect(badges).toEqual(["5", "37", "4", "8"]);
     expect(screen.getByRole("button", { name: "技能" })).toHaveTextContent("37");
-    expect(screen.getByRole("button", { name: "同步记录" })).not.toHaveTextContent("0");
   });
 
   it("renders localized navigation labels without group headings", async () => {
@@ -105,15 +103,13 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("button", { name: /来源/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "技能" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /目标/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "同步记录" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "同步历史" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /设置/ })).toBeInTheDocument();
   });
 
   it("shows the active navigation item description at the bottom of the expanded sidebar", async () => {
     await renderSidebar({ activeRouteId: "skills" });
 
-    expect(screen.getByText("浏览 skill unit，选择目标并预览分发计划。")).toBeInTheDocument();
+    expect(screen.getByText("浏览 skill unit，选择目标并执行 copy 分发。")).toBeInTheDocument();
   });
 
   it("does not repeat the active navigation label in the sidebar footer", async () => {
@@ -135,8 +131,8 @@ describe("AppSidebar", () => {
     const visibleButtons = screen.getAllByRole("button").filter((button) => button !== null);
     const navigationButtons = visibleButtons.filter((button) => button.closest("nav"));
 
-    expect(navigationButtons).toHaveLength(6);
-    expect(sidebar.querySelectorAll("nav button svg")).toHaveLength(6);
+    expect(navigationButtons).toHaveLength(4);
+    expect(sidebar.querySelectorAll("nav button svg")).toHaveLength(4);
   });
 });
 
@@ -146,13 +142,6 @@ describe("shellNavigationGroups", () => {
       group.items.filter((item) => !item.hidden).map((item) => item.routeId)
     );
 
-    expect(visibleRouteIds).toEqual([
-      "repositories",
-      "skills",
-      "targets",
-      "distribution",
-      "settings",
-      "sync-history"
-    ]);
+    expect(visibleRouteIds).toEqual(["repositories", "skills", "targets", "settings"]);
   });
 });

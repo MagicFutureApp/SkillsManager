@@ -1,6 +1,8 @@
 import type { AppHealth as MainAppHealth } from "../main/ipc/health";
 import type { AppInfo as MainAppInfo } from "../main/ipc/app-info";
 import type {
+  DistributionExecuteInput as MainDistributionExecuteInput,
+  DistributionExecuteResult as MainDistributionExecuteResult,
   DistributionPreviewInput as MainDistributionPreviewInput,
   DistributionPreviewResult as MainDistributionPreviewResult
 } from "../main/ipc/distribution";
@@ -13,6 +15,7 @@ import type {
 import type {
   AppSettingsResult as MainAppSettingsResult,
   AppStoragePathsResult as MainAppStoragePathsResult,
+  DistributionSettings as MainDistributionSettings,
   ResetLocalDatabaseResult as MainResetLocalDatabaseResult
 } from "../main/ipc/settings";
 import type {
@@ -27,7 +30,6 @@ import type {
   TargetsListResult as MainTargetsListResult,
   TargetsRescanResult as MainTargetsRescanResult
 } from "../main/ipc/targets";
-import type { SyncHistoryListResult as CoreSyncHistoryListResult } from "../core/repositories/sync-history-api";
 import type {
   CreateRepositoryInput as CoreCreateRepositoryInput,
   DeleteRepositoryResult as CoreDeleteRepositoryResult,
@@ -41,11 +43,14 @@ import type { RuntimePlatform as RendererRuntimePlatform } from "./platform-font
 
 export type AppHealth = MainAppHealth;
 export type AppInfo = MainAppInfo;
+export type DistributionExecuteInput = MainDistributionExecuteInput;
+export type DistributionExecuteResult = MainDistributionExecuteResult;
 export type DistributionPreviewInput = MainDistributionPreviewInput;
 export type DistributionPreviewResult = MainDistributionPreviewResult;
 export type NavigationBadgeCountsResult = MainNavigationBadgeCountsResult;
 export type AppSettingsResult = MainAppSettingsResult;
 export type AppStoragePathsResult = MainAppStoragePathsResult;
+export type DistributionSettings = MainDistributionSettings;
 export type ResetLocalDatabaseResult = MainResetLocalDatabaseResult;
 export type ProvidersListResult = MainProvidersListResult;
 export type RepositoriesListResult = MainRepositoriesListResult;
@@ -58,7 +63,6 @@ export type AddCustomDirectoryTargetInput = MainAddCustomDirectoryTargetInput;
 export type DeleteTargetsInput = MainDeleteTargetsInput;
 export type TargetsListResult = MainTargetsListResult;
 export type TargetsRescanResult = MainTargetsRescanResult;
-export type SyncHistoryListResult = CoreSyncHistoryListResult;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
 export type UpdateRepositoryInput = CoreUpdateRepositoryInput;
 export type DeleteRepositoryResult = CoreDeleteRepositoryResult;
@@ -87,15 +91,13 @@ declare global {
       getRepositoryDeletePreview?: (repositoryId: string) => Promise<RepositoryDeletePreview>;
       inspectRepositorySource?: (remoteUrl: string) => Promise<RepositorySourceInspection>;
       listProviders: () => Promise<ProvidersListResult>;
-      previewDistributionPlan?: (
-        input: DistributionPreviewInput
-      ) => Promise<DistributionPreviewResult>;
+      previewDistribution?: (input: DistributionPreviewInput) => Promise<DistributionPreviewResult>;
+      executeDistribution?: (input: DistributionExecuteInput) => Promise<DistributionExecuteResult>;
       listRepositories: () => Promise<RepositoriesListResult>;
       listSkills?: () => Promise<SkillsListResult>;
       setSkillTargetPreference?: (
         input: UpdateSkillTargetPreferenceInput
       ) => Promise<UpdateSkillTargetPreferenceResult>;
-      listSyncHistory?: () => Promise<SyncHistoryListResult>;
       listTargets?: () => Promise<TargetsListResult>;
       addCustomDirectoryTarget?: (
         input: AddCustomDirectoryTargetInput
@@ -108,6 +110,9 @@ declare global {
       resetLocalDatabase?: () => Promise<ResetLocalDatabaseResult>;
       resolveRepositoryCachePath?: (cachePath: string) => Promise<string>;
       saveGitHubToken?: (token: string) => Promise<AppSettingsResult>;
+      updateDistributionSettings?: (
+        settings: Partial<DistributionSettings>
+      ) => Promise<AppSettingsResult>;
       selectLocalRepositoryPath?: () => Promise<string | null>;
       selectTargetDirectory?: () => Promise<string | null>;
       syncRepositories?: (repositoryIds: string[]) => Promise<RepositoriesSyncResult>;

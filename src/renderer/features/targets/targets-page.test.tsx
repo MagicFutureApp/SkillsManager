@@ -11,7 +11,6 @@ const targetsFixture: TargetsListResult = {
   registeredTargets: [
     {
       createdAt: "2026-06-21T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-project",
       name: "Local project",
@@ -34,7 +33,6 @@ const targetsFixture: TargetsListResult = {
     },
     {
       createdAt: "2026-06-21T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-design-only",
       name: "Design scratch",
@@ -58,7 +56,6 @@ const targetsWithSystemFixture: TargetsListResult = {
   registeredTargets: [
     {
       createdAt: "2026-06-23T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "system-codex",
       name: "Codex",
@@ -81,7 +78,6 @@ const rescannedTargetsFixture: TargetsRescanResult = {
   registeredTargets: [
     {
       createdAt: "2026-06-23T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "system-codex",
       name: "Codex",
@@ -104,7 +100,6 @@ const rescannedTargetsWithIssuesFixture: TargetsRescanResult = {
   registeredTargets: [
     {
       createdAt: "2026-06-23T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: false,
       id: "target-project",
       name: "Local project",
@@ -121,7 +116,6 @@ const rescannedTargetsWithIssuesFixture: TargetsRescanResult = {
     },
     {
       createdAt: "2026-06-23T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: false,
       id: "system-gemini-cli",
       name: "Gemini CLI",
@@ -162,7 +156,6 @@ const targetsWithNewCustomDirectoryFixture: TargetsListResult = {
     ...targetsFixture.registeredTargets,
     {
       createdAt: "2026-06-24T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-custom-users-test-review-skills-16b7af9b49af",
       name: "review-skills",
@@ -184,7 +177,6 @@ const targetsForSortFixture: TargetsListResult = {
   registeredTargets: [
     {
       createdAt: "2026-06-25T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-alpha-independent",
       name: "Alpha independent",
@@ -201,7 +193,6 @@ const targetsForSortFixture: TargetsListResult = {
     },
     {
       createdAt: "2026-06-25T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-beta-global",
       name: "Beta global",
@@ -218,7 +209,6 @@ const targetsForSortFixture: TargetsListResult = {
     },
     {
       createdAt: "2026-06-25T00:00:00.000Z",
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-gamma-independent",
       name: "Gamma independent",
@@ -242,7 +232,6 @@ const createPagedTargetsFixture = (count: number): TargetsListResult => ({
 
     return {
       createdAt: "2026-06-25T00:00:00.000Z",
-      defaultInstallStrategy: "copy" as const,
       enabled: true,
       id: `paged-target-${number}`,
       name: `Paged Target ${number}`,

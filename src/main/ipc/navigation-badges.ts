@@ -2,14 +2,12 @@ import { ipcMain } from "electron";
 
 import { createRepositoryRepository } from "../../db/repositories/repositoryRepository.js";
 import { createSkillRepository } from "../../db/repositories/skillRepository.js";
-import { createSyncHistoryRepository } from "../../db/repositories/syncHistoryRepository.js";
 import { createTargetRepository } from "../../db/repositories/targetRepository.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
 
 export type NavigationBadgeCounts = {
   repositories: number;
   skills: number;
-  "sync-history": number;
   targets: number;
 };
 
@@ -22,20 +20,17 @@ export const getNavigationBadgeCounts = async (
 ): Promise<NavigationBadgeCountsResult> => {
   const repositoryRepository = createRepositoryRepository(db);
   const skillRepository = createSkillRepository(db);
-  const syncHistoryRepository = createSyncHistoryRepository(db);
   const targetRepository = createTargetRepository(db);
-  const [repositoryCount, skillCount, targetCount, syncHistoryCount] = await Promise.all([
+  const [repositoryCount, skillCount, targetCount] = await Promise.all([
     repositoryRepository.count(),
     skillRepository.count(),
-    targetRepository.count(),
-    syncHistoryRepository.count()
+    targetRepository.count()
   ]);
 
   return {
     counts: {
       repositories: repositoryCount,
       skills: skillCount,
-      "sync-history": syncHistoryCount,
       targets: targetCount
     }
   };

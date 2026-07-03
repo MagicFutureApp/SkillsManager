@@ -18,7 +18,6 @@ const ensureDbSchema = (sqlite: Database.Database): void => {
       name text NOT NULL,
       path text NOT NULL,
       normalized_path text NOT NULL,
-      default_install_strategy text NOT NULL,
       detection_status text,
       scan_message text,
       enabled integer DEFAULT true NOT NULL,
@@ -36,49 +35,22 @@ const ensureDbSchema = (sqlite: Database.Database): void => {
       updated_at integer NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS distribution_plan_items (
-      id text PRIMARY KEY NOT NULL,
-      distribution_plan_id text NOT NULL,
-      skill_version_id text NOT NULL,
-      agent_target_id text NOT NULL,
-      action text NOT NULL,
-      source_path text NOT NULL,
-      target_path text NOT NULL,
-      install_strategy text NOT NULL,
-      status text NOT NULL,
-      reason text,
-      error_message text,
-      result_json text NOT NULL,
-      created_at integer NOT NULL,
-      updated_at integer NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS distribution_plans (
-      id text PRIMARY KEY NOT NULL,
-      trigger_source text NOT NULL,
-      operation_type text NOT NULL,
-      status text NOT NULL,
-      summary_json text NOT NULL,
-      confirmations_json text NOT NULL,
-      created_by text NOT NULL,
-      created_at integer NOT NULL,
-      confirmed_at integer,
-      executed_at integer,
-      updated_at integer NOT NULL
-    );
-
     CREATE TABLE IF NOT EXISTS install_instances (
       id text PRIMARY KEY NOT NULL,
+      skill_unit_id text NOT NULL,
       skill_version_id text NOT NULL,
       agent_target_id text NOT NULL,
       target_snapshot_json text NOT NULL,
       installed_path text NOT NULL,
-      install_strategy text NOT NULL,
       installed_commit_sha text NOT NULL,
       status text NOT NULL,
       installed_at integer NOT NULL,
-      updated_at integer NOT NULL
+      updated_at integer NOT NULL,
+      last_error text
     );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS install_instances_skill_target_uq
+      ON install_instances (skill_unit_id, agent_target_id);
 
     CREATE TABLE IF NOT EXISTS providers (
       id text PRIMARY KEY NOT NULL,
@@ -97,6 +69,14 @@ const ensureDbSchema = (sqlite: Database.Database): void => {
       local_cache_path text NOT NULL,
       default_branch text,
       last_scanned_commit_sha text,
+      last_sync_status text DEFAULT 'idle' NOT NULL,
+      last_sync_started_at integer,
+      last_sync_finished_at integer,
+      last_sync_start_commit_sha text,
+      last_sync_end_commit_sha text,
+      last_sync_summary_json text DEFAULT '{}' NOT NULL,
+      last_sync_error_message text,
+      last_sync_log_path text,
       config_json text DEFAULT '{}' NOT NULL,
       created_at integer NOT NULL,
       updated_at integer NOT NULL
@@ -138,17 +118,5 @@ const ensureDbSchema = (sqlite: Database.Database): void => {
       created_at integer NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS sync_runs (
-      id text PRIMARY KEY NOT NULL,
-      repository_id text NOT NULL,
-      status text NOT NULL,
-      started_at integer NOT NULL,
-      finished_at integer,
-      start_commit_sha text,
-      end_commit_sha text,
-      summary_json text NOT NULL,
-      error_message text,
-      log_path text
-    );
   `);
 };

@@ -17,6 +17,48 @@ export type RepositoryScanSummary = {
   warnings: number;
 };
 
+export type RepositorySyncAddedSkill = {
+  commitSha: string;
+  name: string;
+  skillKey: string;
+  skillUnitId: string;
+};
+
+export type RepositorySyncChangedSkill = RepositorySyncAddedSkill & {
+  previousCommitSha: string | null;
+};
+
+export type RepositorySyncRemovedSkill = {
+  name: string;
+  previousCommitSha: string | null;
+  skillKey: string;
+  skillUnitId: string;
+};
+
+export type RepositorySyncScanDetail = {
+  added: RepositorySyncAddedSkill[];
+  changed: RepositorySyncChangedSkill[];
+  counts: RepositoryScanSummary;
+  removed: RepositorySyncRemovedSkill[];
+  warnings: string[];
+};
+
+export type RepositorySyncDistributionSummary = {
+  autoDistributionEnabled: boolean;
+  blocked: number;
+  conflicts: number;
+  eligible: number;
+  failed: number;
+  installed: number;
+  skipped: number;
+  updated: number;
+};
+
+export type RepositorySyncSummary = {
+  distribution: RepositorySyncDistributionSummary;
+  scan: RepositorySyncScanDetail;
+};
+
 export type RepositorySyncFailureCategory =
   | "auth"
   | "filesystem"
@@ -34,6 +76,7 @@ export type RepositorySyncFailure = {
 
 export type RepositorySyncResultItem = {
   commitSha?: string;
+  distribution?: RepositorySyncDistributionSummary;
   error?: RepositorySyncFailure;
   repositoryId: string;
   scan: RepositoryScanSummary;

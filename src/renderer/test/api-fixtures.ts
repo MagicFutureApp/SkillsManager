@@ -70,7 +70,7 @@ export const providerApiRecordsFixture: ProviderApiRecord[] = [
       discoveryPatterns: ["market index manifest"],
       discoveryStrategy: "market index",
       enabled: true,
-      notes: "公共市场 Provider。安装仍需解析到 commit sha，并在 dry-run 计划中确认目标。",
+      notes: "公共市场 Provider。安装会解析到 commit sha，并以 copy 方式分发到目标。",
       priority: 4,
       status: "connected"
     } satisfies ProviderConfig),

@@ -1,4 +1,4 @@
-import { asc, count, eq, inArray } from "drizzle-orm";
+import { and, asc, count, eq, inArray } from "drizzle-orm";
 
 import type {
   CreateRepositoryInput,
@@ -11,8 +11,14 @@ import type {
   RepositoryProviderName,
   RepositoryScanStatus,
   RepositoryScanSummary,
+  RepositorySyncAddedSkill,
+  RepositorySyncChangedSkill,
+  RepositorySyncDistributionSummary,
   RepositorySyncFailure,
+  RepositorySyncRemovedSkill,
   RepositorySyncResultItem,
+  RepositorySyncScanDetail,
+  RepositorySyncSummary,
   UpdateRepositoryInput
 } from "../../core/repositories/repository-api";
 import type { DiscoveredSkill } from "../../core/skills/skill-scanner";
@@ -25,15 +31,15 @@ import {
   parseRepositoryScanSummaryJson,
   slugifyRepositoryName
 } from "../../core/repositories/repository-utils";
+import { parseSkillMetadataSnapshot, toSkillKey } from "../../core/skills/skill-utils";
 import {
-  distributionPlanItems,
   installInstances,
+  agentTargets,
   providers,
   repositories,
   skillTargetPreferences,
   skillUnits,
-  skillVersions,
-  syncRuns
+  skillVersions
 } from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
@@ -49,6 +55,7 @@ export type RepositorySyncRecordInput = {
 
 export type RepositorySyncRecordResult = {
   commitSha: string;
+  distribution: RepositorySyncDistributionSummary;
   repositoryId: string;
   scan: RepositoryScanSummary;
   skillUnits: number;
@@ -178,9 +185,6 @@ export const createRepositoryRepository = (db: DbClient) => {
 
       if (skillVersionIds.length) {
         await db
-          .delete(distributionPlanItems)
-          .where(inArray(distributionPlanItems.skillVersionId, skillVersionIds));
-        await db
           .delete(installInstances)
           .where(inArray(installInstances.skillVersionId, skillVersionIds));
         await db.delete(skillVersions).where(inArray(skillVersions.id, skillVersionIds));
@@ -193,7 +197,6 @@ export const createRepositoryRepository = (db: DbClient) => {
         await db.delete(skillUnits).where(inArray(skillUnits.id, skillUnitIds));
       }
 
-      await db.delete(syncRuns).where(eq(syncRuns.repositoryId, repositoryId));
       await db.delete(repositories).where(eq(repositories.id, repositoryId));
 
       return {
@@ -215,26 +218,27 @@ export const createRepositoryRepository = (db: DbClient) => {
 
     async markInterruptedSyncRuns(): Promise<number> {
       const runningRows = await db
-        .select({ id: syncRuns.id })
-        .from(syncRuns)
-        .where(eq(syncRuns.status, "running"));
+        .select({ id: repositories.id })
+        .from(repositories)
+        .where(eq(repositories.lastSyncStatus, "running"));
 
       if (!runningRows.length) {
         return 0;
       }
 
       await db
-        .update(syncRuns)
+        .update(repositories)
         .set({
-          errorMessage: "上次同步被中断，可能是应用异常退出。",
-          finishedAt: new Date(),
-          status: "interrupted",
-          summaryJson: JSON.stringify({
+          lastSyncErrorMessage: "上次同步被中断，可能是应用异常退出。",
+          lastSyncFinishedAt: new Date(),
+          lastSyncStatus: "interrupted",
+          lastSyncSummaryJson: JSON.stringify({
             category: "interrupted",
             message: "上次同步被中断，可能是应用异常退出。"
-          })
+          }),
+          updatedAt: new Date()
         })
-        .where(eq(syncRuns.status, "running"));
+        .where(eq(repositories.lastSyncStatus, "running"));
 
       return runningRows.length;
     },
@@ -259,29 +263,16 @@ export const createRepositoryRepository = (db: DbClient) => {
         .select({ id: skillUnits.id })
         .from(skillUnits)
         .where(eq(skillUnits.repositoryId, input.repositoryId));
-
-      const syncRunId =
-        input.syncRunId ??
-        (await startSyncRun({
-          db,
-          repositoryId: input.repositoryId,
-          startedAt: input.startedAt
-        }));
-
-      await db
-        .update(syncRuns)
-        .set({
-          endCommitSha: null,
-          errorMessage: input.error.message,
-          finishedAt: now,
-          logPath: input.error.logPath,
-          status: "failed",
-          summaryJson: JSON.stringify({
-            category: input.error.category,
-            scan
-          })
-        })
-        .where(eq(syncRuns.id, syncRunId));
+      const summary: RepositorySyncSummary = {
+        distribution: createEmptyDistributionSummary(false),
+        scan: {
+          added: [],
+          changed: [],
+          counts: scan,
+          removed: [],
+          warnings: [input.error.message]
+        }
+      };
 
       await db
         .update(repositories)
@@ -295,11 +286,23 @@ export const createRepositoryRepository = (db: DbClient) => {
               skillUnits: existingSkillRows.length
             })
           ),
+          lastSyncEndCommitSha: null,
+          lastSyncErrorMessage: input.error.message,
+          lastSyncFinishedAt: now,
+          lastSyncLogPath: input.error.logPath,
+          lastSyncStartedAt: input.startedAt,
+          lastSyncStartCommitSha: repository.lastScannedCommitSha,
+          lastSyncStatus: "failed",
+          lastSyncSummaryJson: JSON.stringify({
+            category: input.error.category,
+            ...summary
+          }),
           updatedAt: now
         })
         .where(eq(repositories.id, input.repositoryId));
 
       return {
+        distribution: summary.distribution,
         error: input.error,
         repositoryId: input.repositoryId,
         scan,
@@ -322,100 +325,153 @@ export const createRepositoryRepository = (db: DbClient) => {
       }
 
       const previousSkillRows = await db
-        .select({ id: skillUnits.id })
+        .select({
+          id: skillUnits.id,
+          name: skillUnits.name,
+          rootPath: skillUnits.rootPath
+        })
         .from(skillUnits)
         .where(eq(skillUnits.repositoryId, input.repositoryId));
       const previousSkillIds = previousSkillRows.map((skill) => skill.id);
-      const nextSkillIds = input.discoveredSkills.map((skill) =>
-        buildSkillUnitId(input.repositoryId, skill.skillKey)
-      );
-      const removed = previousSkillIds.filter((id) => !nextSkillIds.includes(id)).length;
-      const changed = previousSkillIds.filter((id) => nextSkillIds.includes(id)).length;
-      const added = nextSkillIds.filter((id) => !previousSkillIds.includes(id)).length;
-      const scan: RepositoryScanSummary = { added, changed, removed, warnings: 0 };
+      const previousVersionsBySkillId = await getLatestSkillVersionsBySkillId(db, previousSkillIds);
+      const previousSkillsById = new Map(previousSkillRows.map((skill) => [skill.id, skill]));
+      const nextSkills = input.discoveredSkills.map((skill) => ({
+        ...skill,
+        skillUnitId: buildSkillUnitId(input.repositoryId, skill.skillKey)
+      }));
+      const nextSkillIds = nextSkills.map((skill) => skill.skillUnitId);
+      const previousSkillIdSet = new Set(previousSkillIds);
+      const nextSkillIdSet = new Set(nextSkillIds);
+      const removedSkillIds = previousSkillIds.filter((id) => !nextSkillIdSet.has(id));
+      const addedDetails: RepositorySyncAddedSkill[] = nextSkills
+        .filter((skill) => !previousSkillIdSet.has(skill.skillUnitId))
+        .map((skill) => ({
+          commitSha: input.commitSha,
+          name: skill.name,
+          skillKey: skill.skillKey,
+          skillUnitId: skill.skillUnitId
+        }));
+      const changedDetails: RepositorySyncChangedSkill[] = nextSkills
+        .filter((skill) => {
+          const previousVersion = previousVersionsBySkillId.get(skill.skillUnitId);
+
+          return (
+            previousSkillIdSet.has(skill.skillUnitId) &&
+            previousVersion?.commitSha !== input.commitSha
+          );
+        })
+        .map((skill) => ({
+          commitSha: input.commitSha,
+          name: skill.name,
+          previousCommitSha: previousVersionsBySkillId.get(skill.skillUnitId)?.commitSha ?? null,
+          skillKey: skill.skillKey,
+          skillUnitId: skill.skillUnitId
+        }));
+      const removedDetails: RepositorySyncRemovedSkill[] = removedSkillIds.map((skillUnitId) => {
+        const skill = previousSkillsById.get(skillUnitId);
+        const previousVersion = previousVersionsBySkillId.get(skillUnitId);
+
+        return {
+          name: skill?.name ?? skillUnitId,
+          previousCommitSha: previousVersion?.commitSha ?? null,
+          skillKey: resolvePreviousSkillKey({
+            metadataSnapshotJson: previousVersion?.metadataSnapshotJson,
+            rootPath: skill?.rootPath
+          }),
+          skillUnitId
+        };
+      });
+      const scan: RepositoryScanSummary = {
+        added: addedDetails.length,
+        changed: changedDetails.length,
+        removed: removedDetails.length,
+        warnings: 0
+      };
+      const scanDetail: RepositorySyncScanDetail = {
+        added: addedDetails,
+        changed: changedDetails,
+        counts: scan,
+        removed: removedDetails,
+        warnings: []
+      };
       const status: RepositoryScanStatus = scan.warnings > 0 ? "review" : "ready";
 
-      if (previousSkillIds.length) {
-        const previousVersionRows = await db
+      if (removedSkillIds.length) {
+        const removedVersionRows = await db
           .select({ id: skillVersions.id })
           .from(skillVersions)
-          .where(inArray(skillVersions.skillUnitId, previousSkillIds));
-        const previousVersionIds = previousVersionRows.map((version) => version.id);
+          .where(inArray(skillVersions.skillUnitId, removedSkillIds));
+        const removedVersionIds = removedVersionRows.map((version) => version.id);
 
-        if (previousVersionIds.length) {
-          await db
-            .delete(distributionPlanItems)
-            .where(inArray(distributionPlanItems.skillVersionId, previousVersionIds));
+        if (removedVersionIds.length) {
           await db
             .delete(installInstances)
-            .where(inArray(installInstances.skillVersionId, previousVersionIds));
-          await db.delete(skillVersions).where(inArray(skillVersions.id, previousVersionIds));
+            .where(inArray(installInstances.skillVersionId, removedVersionIds));
+          await db.delete(skillVersions).where(inArray(skillVersions.id, removedVersionIds));
         }
 
         await db
           .delete(skillTargetPreferences)
-          .where(inArray(skillTargetPreferences.skillUnitId, previousSkillIds));
-        await db.delete(skillUnits).where(inArray(skillUnits.id, previousSkillIds));
+          .where(inArray(skillTargetPreferences.skillUnitId, removedSkillIds));
+        await db.delete(skillUnits).where(inArray(skillUnits.id, removedSkillIds));
       }
 
-      if (input.discoveredSkills.length) {
-        await db.insert(skillUnits).values(
-          input.discoveredSkills.map((skill) => ({
+      for (const skill of nextSkills) {
+        await db
+          .insert(skillUnits)
+          .values({
             createdAt: now,
             description: skill.description,
             discoveryMethod: skill.discoveryMethod,
             entryPath: skill.entryPath,
-            id: buildSkillUnitId(input.repositoryId, skill.skillKey),
+            id: skill.skillUnitId,
             license: skill.license,
             name: skill.name,
             repositoryId: input.repositoryId,
             rootPath: skill.rootPath,
             status: skill.status,
             updatedAt: now
-          }))
-        );
-        await db.insert(skillVersions).values(
-          input.discoveredSkills.map((skill) => {
-            const skillUnitId = buildSkillUnitId(input.repositoryId, skill.skillKey);
-
-            return {
-              commitSha: input.commitSha,
-              createdAt: now,
-              id: `${skillUnitId}__${input.commitSha}`,
-              metadataSnapshotJson: JSON.stringify({
-                description: skill.description,
-                discoveryMethod: skill.discoveryMethod,
-                entryPath: skill.entryPath,
-                license: skill.license,
-                rootPath: skill.rootPath,
-                skillKey: skill.skillKey,
-                tags: skill.tags
-              }),
-              skillUnitId
-            };
           })
-        );
+          .onConflictDoUpdate({
+            target: skillUnits.id,
+            set: {
+              description: skill.description,
+              discoveryMethod: skill.discoveryMethod,
+              entryPath: skill.entryPath,
+              license: skill.license,
+              name: skill.name,
+              rootPath: skill.rootPath,
+              status: skill.status,
+              updatedAt: now
+            }
+          });
+
+        await db
+          .insert(skillVersions)
+          .values({
+            commitSha: input.commitSha,
+            createdAt: now,
+            id: `${skill.skillUnitId}__${input.commitSha}`,
+            metadataSnapshotJson: JSON.stringify({
+              description: skill.description,
+              discoveryMethod: skill.discoveryMethod,
+              entryPath: skill.entryPath,
+              license: skill.license,
+              rootPath: skill.rootPath,
+              skillKey: skill.skillKey,
+              tags: skill.tags
+            }),
+            skillUnitId: skill.skillUnitId
+          })
+          .onConflictDoNothing();
       }
 
-      const syncRunId =
-        input.syncRunId ??
-        (await startSyncRun({
-          db,
-          repositoryId: input.repositoryId,
-          startedAt: input.startedAt
-        }));
-
-      await db
-        .update(syncRuns)
-        .set({
-          endCommitSha: input.commitSha,
-          errorMessage: null,
-          finishedAt: now,
-          logPath: null,
-          status: "success",
-          summaryJson: JSON.stringify(scan)
-        })
-        .where(eq(syncRuns.id, syncRunId));
+      const distribution = createEmptyDistributionSummary(false);
+      distribution.eligible = await countEnabledTargetPreferences(db, nextSkillIds);
+      const summary: RepositorySyncSummary = {
+        distribution,
+        scan: scanDetail
+      };
 
       await db
         .update(repositories)
@@ -430,6 +486,14 @@ export const createRepositoryRepository = (db: DbClient) => {
               status
             })
           ),
+          lastSyncEndCommitSha: input.commitSha,
+          lastSyncErrorMessage: null,
+          lastSyncFinishedAt: now,
+          lastSyncLogPath: null,
+          lastSyncStartedAt: input.startedAt,
+          lastSyncStartCommitSha: repository.lastScannedCommitSha,
+          lastSyncStatus: "success",
+          lastSyncSummaryJson: JSON.stringify(summary),
           lastScannedCommitSha: input.commitSha,
           updatedAt: now
         })
@@ -437,6 +501,7 @@ export const createRepositoryRepository = (db: DbClient) => {
 
       return {
         commitSha: input.commitSha,
+        distribution: summary.distribution,
         repositoryId: input.repositoryId,
         scan,
         skillUnits: input.discoveredSkills.length,
@@ -452,20 +517,49 @@ export const createRepositoryRepository = (db: DbClient) => {
       });
     },
 
+    async updateLastSyncDistributionSummary(
+      repositoryId: string,
+      distribution: RepositorySyncDistributionSummary
+    ): Promise<void> {
+      const repositoryRows = await db
+        .select({
+          lastSyncSummaryJson: repositories.lastSyncSummaryJson
+        })
+        .from(repositories)
+        .where(eq(repositories.id, repositoryId))
+        .limit(1);
+      const repository = repositoryRows[0];
+
+      if (!repository) {
+        throw new Error("Repository source not found.");
+      }
+
+      const summary = parseRepositorySyncSummary(repository.lastSyncSummaryJson);
+
+      await db
+        .update(repositories)
+        .set({
+          lastSyncSummaryJson: JSON.stringify({
+            ...summary,
+            distribution
+          }),
+          updatedAt: new Date()
+        })
+        .where(eq(repositories.id, repositoryId));
+    },
+
     async list(): Promise<RepositoryApiRecord[]> {
       const repositoryRows = await db.select().from(repositories).orderBy(asc(repositories.id));
       const providerRows = await db.select().from(providers);
       const skillUnitRows = await db.select().from(skillUnits);
-      const syncRunRows = await db.select().from(syncRuns);
       const providersById = new Map(providerRows.map((provider) => [provider.id, provider]));
       const skillUnitCounts = countSkillUnitsByRepository(skillUnitRows);
-      const lastSyncByRepositoryId = latestSyncRunByRepository(syncRunRows);
 
       return repositoryRows.map((repository, index) => {
         const provider = providersById.get(repository.providerId);
         const providerName = providerNameFor(provider?.type, repository.remoteUrl);
         const skillUnitCount = skillUnitCounts.get(repository.id) ?? 0;
-        const lastSync = lastSyncByRepositoryId.get(repository.id) ?? null;
+        const lastSync = repositoryLastSyncFromRow(repository);
         const config = mergeRepositoryConfig({
           configJson: repository.configJson,
           index,
@@ -522,18 +616,20 @@ const startSyncRun = async ({
     .toString(36)
     .slice(2, 8)}`;
 
-  await db.insert(syncRuns).values({
-    endCommitSha: null,
-    errorMessage: null,
-    finishedAt: null,
-    id: syncRunId,
-    logPath: null,
-    repositoryId,
-    startCommitSha: repository.lastScannedCommitSha,
-    startedAt,
-    status: "running",
-    summaryJson: "{}"
-  });
+  await db
+    .update(repositories)
+    .set({
+      lastSyncEndCommitSha: null,
+      lastSyncErrorMessage: null,
+      lastSyncFinishedAt: null,
+      lastSyncLogPath: null,
+      lastSyncStartedAt: startedAt,
+      lastSyncStartCommitSha: repository.lastScannedCommitSha,
+      lastSyncStatus: "running",
+      lastSyncSummaryJson: "{}",
+      updatedAt: startedAt
+    })
+    .where(eq(repositories.id, repositoryId));
 
   return syncRunId;
 };
@@ -610,34 +706,124 @@ const countSkillUnitsByRepository = (
   return counts;
 };
 
-const latestSyncRunByRepository = (
-  rows: Array<typeof syncRuns.$inferSelect>
-): Map<string, RepositoryLastSync> => {
-  const latestByRepositoryId = new Map<string, typeof syncRuns.$inferSelect>();
+const repositoryLastSyncFromRow = (
+  repository: typeof repositories.$inferSelect
+): RepositoryLastSync | null => {
+  if (repository.lastSyncStatus === "idle" || !repository.lastSyncStartedAt) {
+    return null;
+  }
+
+  return {
+    endCommitSha: repository.lastSyncEndCommitSha,
+    errorMessage: repository.lastSyncErrorMessage,
+    finishedAt: repository.lastSyncFinishedAt?.toISOString() ?? null,
+    logPath: repository.lastSyncLogPath,
+    startedAt: repository.lastSyncStartedAt.toISOString(),
+    startCommitSha: repository.lastSyncStartCommitSha,
+    status: normalizeLastSyncStatus(repository.lastSyncStatus),
+    summaryJson: repository.lastSyncSummaryJson
+  };
+};
+
+const getLatestSkillVersionsBySkillId = async (
+  db: DbClient,
+  skillUnitIds: string[]
+): Promise<
+  Map<string, Pick<typeof skillVersions.$inferSelect, "commitSha" | "metadataSnapshotJson">>
+> => {
+  if (!skillUnitIds.length) {
+    return new Map();
+  }
+
+  const rows = await db
+    .select({
+      commitSha: skillVersions.commitSha,
+      createdAt: skillVersions.createdAt,
+      metadataSnapshotJson: skillVersions.metadataSnapshotJson,
+      skillUnitId: skillVersions.skillUnitId
+    })
+    .from(skillVersions)
+    .where(inArray(skillVersions.skillUnitId, skillUnitIds))
+    .orderBy(asc(skillVersions.createdAt));
+  const latestBySkillId = new Map<
+    string,
+    Pick<typeof skillVersions.$inferSelect, "commitSha" | "metadataSnapshotJson">
+  >();
 
   rows.forEach((row) => {
-    const current = latestByRepositoryId.get(row.repositoryId);
-
-    if (!current || row.startedAt.getTime() > current.startedAt.getTime()) {
-      latestByRepositoryId.set(row.repositoryId, row);
-    }
+    latestBySkillId.set(row.skillUnitId, {
+      commitSha: row.commitSha,
+      metadataSnapshotJson: row.metadataSnapshotJson
+    });
   });
 
-  return new Map(
-    Array.from(latestByRepositoryId.entries()).map(([repositoryId, row]) => [
-      repositoryId,
-      {
-        endCommitSha: row.endCommitSha,
-        errorMessage: row.errorMessage,
-        finishedAt: row.finishedAt?.toISOString() ?? null,
-        logPath: row.logPath,
-        startedAt: row.startedAt.toISOString(),
-        startCommitSha: row.startCommitSha,
-        status: normalizeLastSyncStatus(row.status),
-        summaryJson: row.summaryJson
-      }
-    ])
-  );
+  return latestBySkillId;
+};
+
+const resolvePreviousSkillKey = ({
+  metadataSnapshotJson,
+  rootPath
+}: {
+  metadataSnapshotJson: string | undefined;
+  rootPath: string | undefined;
+}): string => {
+  if (metadataSnapshotJson) {
+    const metadata = parseSkillMetadataSnapshot(metadataSnapshotJson);
+
+    if (metadata.skillKey) {
+      return metadata.skillKey;
+    }
+  }
+
+  return rootPath ? toSkillKey(rootPath) : "";
+};
+
+const createEmptyDistributionSummary = (
+  autoDistributionEnabled: boolean
+): RepositorySyncDistributionSummary => {
+  return {
+    autoDistributionEnabled,
+    blocked: 0,
+    conflicts: 0,
+    eligible: 0,
+    failed: 0,
+    installed: 0,
+    skipped: 0,
+    updated: 0
+  };
+};
+
+const parseRepositorySyncSummary = (summaryJson: string): Partial<RepositorySyncSummary> => {
+  try {
+    const parsed = JSON.parse(summaryJson) as Partial<RepositorySyncSummary>;
+
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const countEnabledTargetPreferences = async (
+  db: DbClient,
+  skillUnitIds: string[]
+): Promise<number> => {
+  if (!skillUnitIds.length) {
+    return 0;
+  }
+
+  const rows = await db
+    .select({ value: count() })
+    .from(skillTargetPreferences)
+    .innerJoin(agentTargets, eq(agentTargets.id, skillTargetPreferences.agentTargetId))
+    .where(
+      and(
+        inArray(skillTargetPreferences.skillUnitId, skillUnitIds),
+        eq(skillTargetPreferences.enabled, true),
+        eq(agentTargets.enabled, true)
+      )
+    );
+
+  return rows[0]?.value ?? 0;
 };
 
 const normalizeLastSyncStatus = (status: string): RepositoryLastSyncStatus => {

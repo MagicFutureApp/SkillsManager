@@ -4,14 +4,13 @@ import type { CreateRepositoryInput } from "../../core/repositories/repository-a
 import type { DiscoveredSkill } from "../../core/skills/skill-scanner";
 import { createDbClient } from "../client";
 import {
-  distributionPlanItems,
+  agentTargets,
   installInstances,
   providers,
   repositories,
   skillTargetPreferences,
   skillUnits,
-  skillVersions,
-  syncRuns
+  skillVersions
 } from "../schema";
 import { createRepositoryRepository } from "./repositoryRepository";
 
@@ -127,7 +126,6 @@ describe("createRepositoryRepository", () => {
     const db = createDbClient(":memory:");
     const repositoryRepository = createRepositoryRepository(db);
     const createdAt = new Date("2026-06-08T00:00:00.000Z");
-    const firstSyncAt = new Date("2026-06-08T01:00:00.000Z");
     const latestSyncAt = new Date("2026-06-08T02:00:00.000Z");
 
     await db.insert(providers).values({
@@ -154,41 +152,25 @@ describe("createRepositoryRepository", () => {
       defaultBranch: "main",
       id: "repo-1",
       lastScannedCommitSha: "success-sha",
+      lastSyncEndCommitSha: null,
+      lastSyncErrorMessage: "没有权限访问这个 Git 来源。",
+      lastSyncFinishedAt: latestSyncAt,
+      lastSyncLogPath: "/tmp/sync.log",
+      lastSyncStartedAt: latestSyncAt,
+      lastSyncStartCommitSha: "success-sha",
+      lastSyncStatus: "failed",
+      lastSyncSummaryJson: JSON.stringify({
+        category: "auth",
+        scan: {
+          counts: { added: 0, changed: 0, removed: 0, warnings: 1 }
+        }
+      }),
       localCachePath: "~/.skills-manager/cache/team-skills",
       name: "Team skills",
       providerId: "github",
       remoteUrl: "git@github.com:team/skills.git",
       updatedAt: createdAt
     });
-    await db.insert(syncRuns).values([
-      {
-        endCommitSha: "success-sha",
-        errorMessage: null,
-        finishedAt: firstSyncAt,
-        id: "sync-success",
-        logPath: null,
-        repositoryId: "repo-1",
-        startCommitSha: null,
-        startedAt: firstSyncAt,
-        status: "success",
-        summaryJson: JSON.stringify({ added: 1, changed: 0, removed: 0, warnings: 0 })
-      },
-      {
-        endCommitSha: null,
-        errorMessage: "没有权限访问这个 Git 来源。",
-        finishedAt: latestSyncAt,
-        id: "sync-failed",
-        logPath: "/tmp/sync.log",
-        repositoryId: "repo-1",
-        startCommitSha: "success-sha",
-        startedAt: latestSyncAt,
-        status: "failed",
-        summaryJson: JSON.stringify({
-          category: "auth",
-          scan: { added: 0, changed: 0, removed: 0, warnings: 1 }
-        })
-      }
-    ]);
 
     const result = await repositoryRepository.list();
 
@@ -234,23 +216,23 @@ describe("createRepositoryRepository", () => {
       defaultBranch: "main",
       id: "repo-1",
       lastScannedCommitSha: "success-sha",
+      lastSyncEndCommitSha: "success-sha",
+      lastSyncErrorMessage: null,
+      lastSyncFinishedAt: latestSyncAt,
+      lastSyncLogPath: null,
+      lastSyncStartedAt: latestSyncAt,
+      lastSyncStartCommitSha: "previous-sha",
+      lastSyncStatus: "success",
+      lastSyncSummaryJson: JSON.stringify({
+        scan: {
+          counts: { added: 2, changed: 0, removed: 1, warnings: 0 }
+        }
+      }),
       localCachePath: "~/.skills-manager/cache/team-skills",
       name: "Team skills",
       providerId: "github",
       remoteUrl: "git@github.com:team/skills.git",
       updatedAt: createdAt
-    });
-    await db.insert(syncRuns).values({
-      endCommitSha: "success-sha",
-      errorMessage: null,
-      finishedAt: latestSyncAt,
-      id: "sync-success",
-      logPath: null,
-      repositoryId: "repo-1",
-      startCommitSha: "previous-sha",
-      startedAt: latestSyncAt,
-      status: "success",
-      summaryJson: JSON.stringify({ added: 2, changed: 0, removed: 1, warnings: 0 })
     });
 
     const result = await repositoryRepository.list();
@@ -558,44 +540,15 @@ describe("createRepositoryRepository", () => {
     await db.insert(installInstances).values({
       agentTargetId: "target-1",
       id: "install-1",
-      installStrategy: "copy",
       installedAt: createdAt,
       installedCommitSha: "abcdef123456",
       installedPath: "/Users/test/.codex/skills/review-bot",
+      skillUnitId: "skill-1",
       skillVersionId: "version-1",
       status: "installed",
       targetSnapshotJson: "{}",
       updatedAt: createdAt
     });
-    await db.insert(distributionPlanItems).values({
-      action: "install",
-      agentTargetId: "target-1",
-      createdAt,
-      distributionPlanId: "plan-1",
-      errorMessage: null,
-      id: "plan-item-1",
-      installStrategy: "copy",
-      reason: null,
-      resultJson: "{}",
-      skillVersionId: "version-1",
-      sourcePath: "~/.skills-manager/cache/team-skills/skills/review-bot",
-      status: "executed",
-      targetPath: "/Users/test/.codex/skills/review-bot",
-      updatedAt: createdAt
-    });
-    await db.insert(syncRuns).values({
-      endCommitSha: "abcdef123456",
-      errorMessage: null,
-      finishedAt: createdAt,
-      id: "sync-1",
-      logPath: null,
-      repositoryId: "repo-1",
-      startCommitSha: null,
-      startedAt: createdAt,
-      status: "success",
-      summaryJson: "{}"
-    });
-
     const preview = await repositoryRepository.getDeletePreview("repo-1");
     const deleted = await repositoryRepository.delete("repo-1");
 
@@ -619,11 +572,9 @@ describe("createRepositoryRepository", () => {
     await expect(db.select().from(skillVersions)).resolves.toEqual([]);
     await expect(db.select().from(skillTargetPreferences)).resolves.toEqual([]);
     await expect(db.select().from(installInstances)).resolves.toEqual([]);
-    await expect(db.select().from(distributionPlanItems)).resolves.toEqual([]);
-    await expect(db.select().from(syncRuns)).resolves.toEqual([]);
   });
 
-  it("persists sync results as indexed skills, versions, and sync run history", async () => {
+  it("persists sync results as indexed skills, versions, and repository last sync state", async () => {
     const db = createDbClient(":memory:");
     const repositoryRepository = createRepositoryRepository(db);
     const createdAt = new Date("2026-06-14T00:00:00.000Z");
@@ -698,12 +649,11 @@ describe("createRepositoryRepository", () => {
       repositoryId: "repo-1",
       startedAt: createdAt
     });
-    await expect(db.select().from(syncRuns)).resolves.toMatchObject([
+    await expect(db.select().from(repositories)).resolves.toMatchObject([
       {
-        id: syncRunId,
-        repositoryId: "repo-1",
-        startedAt: createdAt,
-        status: "running"
+        id: "repo-1",
+        lastSyncStartedAt: createdAt,
+        lastSyncStatus: "running"
       }
     ]);
 
@@ -717,6 +667,16 @@ describe("createRepositoryRepository", () => {
 
     expect(result).toEqual({
       commitSha: "abcdef123456",
+      distribution: {
+        autoDistributionEnabled: false,
+        blocked: 0,
+        conflicts: 0,
+        eligible: 0,
+        failed: 0,
+        installed: 0,
+        skipped: 0,
+        updated: 0
+      },
       repositoryId: "repo-1",
       scan: { added: 2, changed: 0, removed: 1, warnings: 0 },
       skillUnits: 2,
@@ -762,14 +722,190 @@ describe("createRepositoryRepository", () => {
       skillUnits: 2,
       status: "ready"
     });
-    await expect(db.select().from(syncRuns)).resolves.toMatchObject([
+    expect(repositoryRows[0]?.lastSync).toMatchObject({
+      endCommitSha: "abcdef123456",
+      errorMessage: null,
+      startCommitSha: null,
+      status: "success"
+    });
+  });
+
+  it("stores the latest sync state on the repository and preserves preferences for stable skill ids", async () => {
+    const db = createDbClient(":memory:");
+    const repositoryRepository = createRepositoryRepository(db);
+    const createdAt = new Date("2026-07-02T00:00:00.000Z");
+    const startedAt = new Date("2026-07-02T01:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({
+        enabled: true,
+        patterns: ["skills/*/SKILL.md"],
+        providerName: "GitHub",
+        scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+        skillUnits: 2,
+        status: "ready"
+      }),
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-1",
+      lastScannedCommitSha: "before-sha",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills",
+      providerId: "github",
+      remoteUrl: "git@github.com:team/skills.git",
+      updatedAt: createdAt
+    });
+    await db.insert(skillUnits).values([
       {
-        endCommitSha: "abcdef123456",
-        errorMessage: null,
-        id: syncRunId,
+        createdAt,
+        discoveryMethod: "convention",
+        entryPath: "skills/review-bot/SKILL.md",
+        id: "repo-1__skills-review-bot",
+        name: "Review Bot",
         repositoryId: "repo-1",
-        startCommitSha: null,
-        status: "success"
+        rootPath: "skills/review-bot",
+        status: "ready",
+        updatedAt: createdAt
+      },
+      {
+        createdAt,
+        discoveryMethod: "convention",
+        entryPath: "skills/old-helper/SKILL.md",
+        id: "repo-1__skills-old-helper",
+        name: "Old Helper",
+        repositoryId: "repo-1",
+        rootPath: "skills/old-helper",
+        status: "ready",
+        updatedAt: createdAt
+      }
+    ]);
+    await db.insert(skillVersions).values([
+      {
+        commitSha: "before-sha",
+        createdAt,
+        id: "repo-1__skills-review-bot__before-sha",
+        metadataSnapshotJson: JSON.stringify({ skillKey: "skills-review-bot", tags: [] }),
+        skillUnitId: "repo-1__skills-review-bot"
+      },
+      {
+        commitSha: "before-sha",
+        createdAt,
+        id: "repo-1__skills-old-helper__before-sha",
+        metadataSnapshotJson: JSON.stringify({ skillKey: "skills-old-helper", tags: [] }),
+        skillUnitId: "repo-1__skills-old-helper"
+      }
+    ]);
+    await db.insert(agentTargets).values({
+      createdAt,
+      enabled: true,
+      id: "target-codex",
+      name: "Codex",
+      normalizedPath: "/Users/test/.codex/skills",
+      path: "/Users/test/.codex/skills",
+      type: "codex",
+      updatedAt: createdAt
+    });
+    await db.insert(skillTargetPreferences).values({
+      agentTargetId: "target-codex",
+      createdAt,
+      enabled: true,
+      id: "preference-review-bot",
+      skillUnitId: "repo-1__skills-review-bot",
+      updatedAt: createdAt
+    });
+
+    await repositoryRepository.recordSyncResult({
+      commitSha: "after-sha",
+      discoveredSkills: [
+        {
+          description: "Reviews pull requests.",
+          discoveryMethod: "convention",
+          entryPath: "skills/review-bot/SKILL.md",
+          license: "MIT",
+          name: "Review Bot",
+          rootPath: "skills/review-bot",
+          skillKey: "skills-review-bot",
+          status: "ready",
+          tags: []
+        },
+        {
+          description: "Writes release notes.",
+          discoveryMethod: "convention",
+          entryPath: "skills/release-notes/SKILL.md",
+          license: "MIT",
+          name: "Release Notes",
+          rootPath: "skills/release-notes",
+          skillKey: "skills-release-notes",
+          status: "ready",
+          tags: []
+        }
+      ],
+      repositoryId: "repo-1",
+      startedAt
+    });
+
+    const [repository] = await repositoryRepository.list();
+    const summary = JSON.parse(repository?.lastSync?.summaryJson ?? "{}");
+
+    expect(repository?.lastSync).toMatchObject({
+      endCommitSha: "after-sha",
+      errorMessage: null,
+      startCommitSha: "before-sha",
+      status: "success"
+    });
+    expect(summary).toMatchObject({
+      distribution: {
+        autoDistributionEnabled: false,
+        conflicts: 0,
+        eligible: 1,
+        failed: 0,
+        installed: 0,
+        skipped: 0,
+        updated: 0
+      },
+      scan: {
+        added: [
+          {
+            commitSha: "after-sha",
+            name: "Release Notes",
+            skillKey: "skills-release-notes",
+            skillUnitId: "repo-1__skills-release-notes"
+          }
+        ],
+        changed: [
+          {
+            commitSha: "after-sha",
+            name: "Review Bot",
+            previousCommitSha: "before-sha",
+            skillKey: "skills-review-bot",
+            skillUnitId: "repo-1__skills-review-bot"
+          }
+        ],
+        counts: { added: 1, changed: 1, removed: 1, warnings: 0 },
+        removed: [
+          {
+            name: "Old Helper",
+            previousCommitSha: "before-sha",
+            skillKey: "skills-old-helper",
+            skillUnitId: "repo-1__skills-old-helper"
+          }
+        ],
+        warnings: []
+      }
+    });
+    await expect(db.select().from(skillTargetPreferences)).resolves.toMatchObject([
+      {
+        agentTargetId: "target-codex",
+        enabled: true,
+        skillUnitId: "repo-1__skills-review-bot"
       }
     ]);
   });
@@ -822,65 +958,70 @@ describe("createRepositoryRepository", () => {
       repositoryId: "repo-1",
       status: "failed"
     });
-    await expect(db.select().from(syncRuns)).resolves.toMatchObject([
-      {
-        endCommitSha: null,
-        errorMessage:
-          "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。",
-        id: syncRunId,
-        logPath: "/tmp/sync.log",
-        repositoryId: "repo-1",
-        startCommitSha: "before-sha",
-        status: "failed"
-      }
-    ]);
+    const [repository] = await repositoryRepository.list();
+    expect(repository?.lastSync).toMatchObject({
+      endCommitSha: null,
+      errorMessage:
+        "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。",
+      logPath: "/tmp/sync.log",
+      startCommitSha: "before-sha",
+      status: "failed"
+    });
   });
 
-  it("marks stale running sync runs as interrupted on startup recovery", async () => {
+  it("marks stale running repository sync state as interrupted on startup recovery", async () => {
     const db = createDbClient(":memory:");
     const repositoryRepository = createRepositoryRepository(db);
     const createdAt = new Date("2026-06-14T00:00:00.000Z");
 
-    await db.insert(syncRuns).values([
+    await db.insert(repositories).values([
       {
-        endCommitSha: null,
-        errorMessage: null,
-        finishedAt: null,
-        id: "sync-running",
-        logPath: null,
-        repositoryId: "repo-1",
-        startCommitSha: "before-sha",
-        startedAt: createdAt,
-        status: "running",
-        summaryJson: "{}"
+        configJson: "{}",
+        createdAt,
+        defaultBranch: "main",
+        id: "repo-running",
+        lastScannedCommitSha: "before-sha",
+        lastSyncStartedAt: createdAt,
+        lastSyncStartCommitSha: "before-sha",
+        lastSyncStatus: "running",
+        localCachePath: "~/.skills-manager/cache/running",
+        name: "Running",
+        providerId: "github",
+        remoteUrl: "git@github.com:team/running.git",
+        updatedAt: createdAt
       },
       {
-        endCommitSha: "after-sha",
-        errorMessage: null,
-        finishedAt: createdAt,
-        id: "sync-success",
-        logPath: null,
-        repositoryId: "repo-1",
-        startCommitSha: "before-sha",
-        startedAt: createdAt,
-        status: "success",
-        summaryJson: "{}"
+        configJson: "{}",
+        createdAt,
+        defaultBranch: "main",
+        id: "repo-success",
+        lastScannedCommitSha: "after-sha",
+        lastSyncEndCommitSha: "after-sha",
+        lastSyncFinishedAt: createdAt,
+        lastSyncStartedAt: createdAt,
+        lastSyncStartCommitSha: "before-sha",
+        lastSyncStatus: "success",
+        localCachePath: "~/.skills-manager/cache/success",
+        name: "Success",
+        providerId: "github",
+        remoteUrl: "git@github.com:team/success.git",
+        updatedAt: createdAt
       }
     ]);
 
     const interrupted = await repositoryRepository.markInterruptedSyncRuns();
 
     expect(interrupted).toBe(1);
-    await expect(db.select().from(syncRuns).orderBy(syncRuns.id)).resolves.toMatchObject([
+    await expect(db.select().from(repositories).orderBy(repositories.id)).resolves.toMatchObject([
       {
-        errorMessage: "上次同步被中断，可能是应用异常退出。",
-        id: "sync-running",
-        status: "interrupted"
+        id: "repo-running",
+        lastSyncErrorMessage: "上次同步被中断，可能是应用异常退出。",
+        lastSyncStatus: "interrupted"
       },
       {
-        errorMessage: null,
-        id: "sync-success",
-        status: "success"
+        id: "repo-success",
+        lastSyncErrorMessage: null,
+        lastSyncStatus: "success"
       }
     ]);
   });

@@ -29,10 +29,11 @@ describe("createTargetRepository", () => {
       createdAt
     );
 
-    await expect(repository.list()).resolves.toMatchObject([
+    const targets = await repository.list();
+
+    expect(targets).toMatchObject([
       {
         createdAt: "2026-06-24T00:00:00.000Z",
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-custom-review-skills",
         name: "review-skills",
@@ -56,7 +57,6 @@ describe("createTargetRepository", () => {
     await repository.saveScannedTargets(
       [
         {
-          defaultInstallStrategy: "copy",
           detectionMessage: "Target directory exists and is writable.",
           id: "system-codex",
           name: "Codex",
@@ -66,7 +66,6 @@ describe("createTargetRepository", () => {
           type: "codex"
         },
         {
-          defaultInstallStrategy: "copy",
           detectionMessage: "Legacy missing target.",
           id: "system-claude-code",
           name: "Claude Code",
@@ -82,7 +81,6 @@ describe("createTargetRepository", () => {
     await repository.saveScannedTargets(
       [
         {
-          defaultInstallStrategy: "copy",
           detectionMessage: "Target directory exists and is writable.",
           id: "system-codex-renamed",
           name: "Codex",
@@ -173,7 +171,6 @@ describe("createTargetRepository", () => {
     await db.insert(agentTargets).values([
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-codex",
         name: "Codex",
@@ -184,7 +181,6 @@ describe("createTargetRepository", () => {
       },
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-project",
         name: "Local project",
@@ -224,7 +220,6 @@ describe("createTargetRepository", () => {
     await expect(createTargetRepository(db).list()).resolves.toEqual([
       {
         createdAt: "2026-06-21T00:00:00.000Z",
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-codex",
         name: "Codex",
@@ -248,7 +243,6 @@ describe("createTargetRepository", () => {
       },
       {
         createdAt: "2026-06-21T00:00:00.000Z",
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-project",
         name: "Local project",
@@ -289,7 +283,6 @@ describe("createTargetRepository", () => {
     await db.insert(agentTargets).values(
       Array.from({ length: 4 }, (_, index) => ({
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: index !== 3,
         id: `target-${index}`,
         name: `Target ${index}`,
@@ -348,7 +341,6 @@ describe("createTargetRepository", () => {
     await db.insert(agentTargets).values([
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-project",
         name: "Project target",
@@ -359,7 +351,6 @@ describe("createTargetRepository", () => {
       },
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-keep",
         name: "Keep target",
@@ -389,10 +380,10 @@ describe("createTargetRepository", () => {
     ]);
     await db.insert(installInstances).values({
       agentTargetId: "target-project",
-      installStrategy: "copy",
       installedAt: createdAt,
       installedCommitSha: "abcdef123456",
       installedPath: "/Users/test/project/.codex/skills/review-bot",
+      skillUnitId: "skill-1",
       skillVersionId: "version-1",
       id: "install-1",
       status: "installed",
@@ -418,7 +409,6 @@ describe("createTargetRepository", () => {
     await db.insert(agentTargets).values([
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "system-codex",
         name: "Codex",
@@ -429,7 +419,6 @@ describe("createTargetRepository", () => {
       },
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-project",
         name: "Project target",
@@ -452,7 +441,6 @@ describe("createTargetRepository", () => {
 
     await db.insert(agentTargets).values({
       createdAt,
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-project",
       name: "Project target",
@@ -476,7 +464,6 @@ describe("createTargetRepository", () => {
 
     await db.insert(agentTargets).values({
       createdAt,
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-design-only",
       name: "Design scratch",
@@ -490,7 +477,6 @@ describe("createTargetRepository", () => {
     await repository.saveScannedTargets(
       [
         {
-          defaultInstallStrategy: "copy",
           detectionMessage: "Target directory exists and is writable.",
           id: "target-design-only",
           name: "Design scratch",

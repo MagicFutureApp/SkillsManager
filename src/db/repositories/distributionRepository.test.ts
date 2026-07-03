@@ -3,8 +3,6 @@ import { describe, expect, it } from "vitest";
 import { createDbClient } from "../client";
 import {
   agentTargets,
-  distributionPlanItems,
-  distributionPlans,
   installInstances,
   repositories,
   skillTargetPreferences,
@@ -14,7 +12,7 @@ import {
 import { createDistributionRepository } from "./distributionRepository";
 
 describe("createDistributionRepository", () => {
-  it("creates and stores an install dry-run preview for enabled skill targets", async () => {
+  it("creates a one-time install preview for enabled skill targets", async () => {
     const db = createDbClient(":memory:");
     const repository = createDistributionRepository(db);
     const createdAt = new Date("2026-06-27T00:00:00.000Z");
@@ -48,25 +46,46 @@ describe("createDistributionRepository", () => {
       metadataSnapshotJson: JSON.stringify({ skillKey: "review-bot", tags: ["review"] }),
       skillUnitId: "skill-review"
     });
-    await db.insert(agentTargets).values({
-      createdAt,
-      defaultInstallStrategy: "copy",
-      enabled: true,
-      id: "target-codex",
-      name: "Codex",
-      normalizedPath: "/Users/test/.codex/skills",
-      path: "/Users/test/.codex/skills",
-      type: "codex",
-      updatedAt: createdAt
-    });
-    await db.insert(skillTargetPreferences).values({
-      agentTargetId: "target-codex",
-      createdAt,
-      enabled: true,
-      id: "preference-review-codex",
-      skillUnitId: "skill-review",
-      updatedAt: createdAt
-    });
+    await db.insert(agentTargets).values([
+      {
+        createdAt,
+        enabled: true,
+        id: "target-codex",
+        name: "Codex",
+        normalizedPath: "/Users/test/.codex/skills",
+        path: "/Users/test/.codex/skills",
+        type: "codex",
+        updatedAt: createdAt
+      },
+      {
+        createdAt,
+        enabled: true,
+        id: "target-claude",
+        name: "Claude Code",
+        normalizedPath: "/Users/test/.claude/skills",
+        path: "/Users/test/.claude/skills",
+        type: "claude",
+        updatedAt: createdAt
+      }
+    ]);
+    await db.insert(skillTargetPreferences).values([
+      {
+        agentTargetId: "target-codex",
+        createdAt,
+        enabled: true,
+        id: "preference-review-codex",
+        skillUnitId: "skill-review",
+        updatedAt: createdAt
+      },
+      {
+        agentTargetId: "target-claude",
+        createdAt,
+        enabled: false,
+        id: "preference-review-claude",
+        skillUnitId: "skill-review",
+        updatedAt: createdAt
+      }
+    ]);
 
     const preview = await repository.createPreview(
       {
@@ -77,7 +96,7 @@ describe("createDistributionRepository", () => {
     );
 
     expect(preview.summary).toEqual({
-      actionCounts: { conflict: 0, install: 1, skip: 0, update: 0 },
+      actionCounts: { blocked: 0, conflict: 0, install: 1, skip: 0, update: 0 },
       itemCount: 1,
       skillCount: 1,
       targetCount: 1
@@ -87,34 +106,13 @@ describe("createDistributionRepository", () => {
         action: "install",
         agentTargetId: "target-codex",
         commitSha: "abc123456789",
-        installStrategy: "copy",
         skillName: "Review Bot",
         skillUnitId: "skill-review",
+        skillVersionId: "version-review",
         sourcePath: "/Users/test/.skills-manager/cache/team-skills/skills/review-bot",
         targetName: "Codex",
         targetPath: "/Users/test/.codex/skills/review-bot"
       })
-    ]);
-    await expect(db.select().from(distributionPlans)).resolves.toMatchObject([
-      {
-        createdAt,
-        createdBy: "local-user",
-        operationType: "install",
-        status: "ready",
-        triggerSource: "skill_detail",
-        updatedAt: createdAt
-      }
-    ]);
-    await expect(db.select().from(distributionPlanItems)).resolves.toMatchObject([
-      {
-        action: "install",
-        agentTargetId: "target-codex",
-        installStrategy: "copy",
-        skillVersionId: "version-review",
-        sourcePath: "/Users/test/.skills-manager/cache/team-skills/skills/review-bot",
-        status: "pending",
-        targetPath: "/Users/test/.codex/skills/review-bot"
-      }
     ]);
   });
 
@@ -136,7 +134,6 @@ describe("createDistributionRepository", () => {
     });
     await db.insert(agentTargets).values({
       createdAt,
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-codex",
       name: "Codex",
@@ -262,10 +259,10 @@ describe("createDistributionRepository", () => {
       {
         agentTargetId: "target-codex",
         id: "install-update-old",
-        installStrategy: "copy",
         installedAt: previousAt,
         installedCommitSha: "1111111",
         installedPath: "/Users/test/.codex/skills/update-bot",
+        skillUnitId: "skill-update",
         skillVersionId: "version-update-old",
         status: "installed",
         targetSnapshotJson: "{}",
@@ -274,10 +271,10 @@ describe("createDistributionRepository", () => {
       {
         agentTargetId: "target-codex",
         id: "install-skip",
-        installStrategy: "copy",
         installedAt: createdAt,
         installedCommitSha: "3333333",
         installedPath: "/Users/test/.codex/skills/skip-bot",
+        skillUnitId: "skill-skip",
         skillVersionId: "version-skip",
         status: "installed",
         targetSnapshotJson: "{}",
@@ -286,10 +283,10 @@ describe("createDistributionRepository", () => {
       {
         agentTargetId: "target-codex",
         id: "install-other",
-        installStrategy: "copy",
         installedAt: createdAt,
         installedCommitSha: "5555555",
         installedPath: "/Users/test/.codex/skills/conflict-bot",
+        skillUnitId: "skill-other",
         skillVersionId: "version-other",
         status: "installed",
         targetSnapshotJson: "{}",
@@ -306,9 +303,10 @@ describe("createDistributionRepository", () => {
     );
     const actionBySkillId = new Map(preview.items.map((item) => [item.skillUnitId, item.action]));
 
-    expect(preview.status).toBe("draft");
+    expect(preview.status).toBe("conflict");
     expect(preview.operationType).toBe("update");
     expect(preview.summary.actionCounts).toEqual({
+      blocked: 0,
       conflict: 1,
       install: 0,
       skip: 1,
@@ -321,5 +319,9 @@ describe("createDistributionRepository", () => {
         ["skill-update", "update"]
       ])
     );
+    expect(preview.items.find((item) => item.skillUnitId === "skill-conflict")).toMatchObject({
+      allowedResolutions: ["overwrite", "skip"],
+      defaultResolution: "overwrite"
+    });
   });
 });

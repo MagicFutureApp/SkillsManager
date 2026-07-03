@@ -43,7 +43,6 @@ describe("scanSystemTargets", () => {
       }
     ]);
     expect(Object.keys(targets[0] ?? {}).sort()).toEqual([
-      "defaultInstallStrategy",
       "detectionMessage",
       "id",
       "name",

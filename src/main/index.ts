@@ -10,7 +10,6 @@ import { registerProvidersIpc } from "./ipc/providers.js";
 import { registerRepositoriesIpc } from "./ipc/repositories.js";
 import { registerSettingsIpc } from "./ipc/settings.js";
 import { registerSkillsIpc } from "./ipc/skills.js";
-import { registerSyncHistoryIpc } from "./ipc/sync-history.js";
 import { registerTargetsIpc } from "./ipc/targets.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
@@ -116,7 +115,6 @@ void app
     registerRepositoriesIpc(dbRuntime.getDb);
     registerSettingsIpc(dbRuntime);
     registerSkillsIpc(dbRuntime.getDb);
-    registerSyncHistoryIpc(dbRuntime.getDb);
     registerTargetsIpc(dbRuntime.getDb);
     await createMainWindow();
     createTray();

@@ -4,6 +4,7 @@ import type { AppDbRuntime, AppStoragePaths } from "../app-storage.js";
 import type { createDbClient } from "../../db/client.js";
 
 const GITHUB_TOKEN_SETTING_KEY = "githubToken";
+const DISTRIBUTION_SETTINGS_KEY = "distribution";
 
 type DbClient = ReturnType<typeof createDbClient>;
 type OpenExternalOperations = {
@@ -11,9 +12,14 @@ type OpenExternalOperations = {
 };
 
 export type AppSettingsResult = {
+  distribution: DistributionSettings;
   github: {
     hasToken: boolean;
   };
+};
+
+export type DistributionSettings = {
+  autoDistributeOnSync: boolean;
 };
 
 export type AppStoragePathsResult = {
@@ -44,10 +50,42 @@ export const getGitHubToken = async (db: DbClient): Promise<string | null> => {
 
 export const getAppSettings = async (db: DbClient): Promise<AppSettingsResult> => {
   return {
+    distribution: await getDistributionSettings(db),
     github: {
       hasToken: Boolean(await getGitHubToken(db))
     }
   };
+};
+
+export const getDistributionSettings = async (db: DbClient): Promise<DistributionSettings> => {
+  const setting = await createAppSettingsRepository(db).get(DISTRIBUTION_SETTINGS_KEY);
+
+  if (!setting) {
+    return { autoDistributeOnSync: false };
+  }
+
+  try {
+    const parsed = JSON.parse(setting.valueJson) as Partial<DistributionSettings>;
+
+    return {
+      autoDistributeOnSync: parsed.autoDistributeOnSync === true
+    };
+  } catch {
+    return { autoDistributeOnSync: false };
+  }
+};
+
+export const updateDistributionSettings = async (
+  db: DbClient,
+  settings: Partial<DistributionSettings>
+): Promise<AppSettingsResult> => {
+  const nextSettings: DistributionSettings = {
+    autoDistributeOnSync: settings.autoDistributeOnSync === true
+  };
+
+  await createAppSettingsRepository(db).set(DISTRIBUTION_SETTINGS_KEY, nextSettings);
+
+  return getAppSettings(db);
 };
 
 export const saveGitHubToken = async (db: DbClient, token: string): Promise<AppSettingsResult> => {
@@ -122,6 +160,13 @@ export const registerSettingsIpc = (runtime: AppDbRuntime): void => {
   ipcMain.handle("settings:clearGitHubToken", (): Promise<AppSettingsResult> => {
     return clearGitHubToken(runtime.getDb());
   });
+
+  ipcMain.handle(
+    "settings:updateDistributionSettings",
+    (_event, settings: Partial<DistributionSettings>): Promise<AppSettingsResult> => {
+      return updateDistributionSettings(runtime.getDb(), settings);
+    }
+  );
 
   ipcMain.handle("settings:openExternalUrl", (_event, url: string): Promise<void> => {
     return openExternalUrl(url);

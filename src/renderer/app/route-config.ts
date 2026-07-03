@@ -1,12 +1,4 @@
-export const routeIds = [
-  "providers",
-  "repositories",
-  "skills",
-  "targets",
-  "distribution",
-  "settings",
-  "sync-history"
-] as const;
+export const routeIds = ["providers", "repositories", "skills", "targets", "settings"] as const;
 
 export type AppRouteId = (typeof routeIds)[number];
 
@@ -15,9 +7,7 @@ export const routePathById: Record<AppRouteId, string> = {
   repositories: "/repositories",
   skills: "/skills",
   targets: "/targets",
-  distribution: "/distribution",
-  settings: "/settings",
-  "sync-history": "/sync-history"
+  settings: "/settings"
 };
 
 export const routeIdByPath: Record<string, AppRouteId> = Object.fromEntries(

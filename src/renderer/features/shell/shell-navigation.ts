@@ -1,13 +1,4 @@
-import {
-  GitBranch,
-  History,
-  MonitorCog,
-  Package,
-  PlugZap,
-  Send,
-  Settings,
-  Target
-} from "lucide-react";
+import { GitBranch, MonitorCog, Package, PlugZap, Settings, Target } from "lucide-react";
 
 import type { AppRouteId } from "@/app/route-config";
 import type { LucideIcon } from "lucide-react";
@@ -55,12 +46,6 @@ export const shellNavigationGroups: ShellNavigationGroup[] = [
         labelKey: "shell.navigation.targets",
         descriptionKey: "shell.navigationDescriptions.targets",
         icon: Target
-      },
-      {
-        routeId: "distribution",
-        labelKey: "shell.navigation.distribution",
-        descriptionKey: "shell.navigationDescriptions.distribution",
-        icon: Send
       }
     ]
   },
@@ -68,12 +53,6 @@ export const shellNavigationGroups: ShellNavigationGroup[] = [
     labelKey: "shell.navigation.system",
     items: [
       { routeId: "settings", labelKey: "shell.navigation.settings", icon: Settings },
-      {
-        routeId: "sync-history",
-        labelKey: "shell.navigation.syncHistory",
-        descriptionKey: "shell.navigationDescriptions.syncHistory",
-        icon: History
-      },
       {
         routeId: "diagnostics",
         labelKey: "shell.navigation.diagnostics",

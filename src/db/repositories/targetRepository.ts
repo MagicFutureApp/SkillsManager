@@ -80,7 +80,6 @@ export const createTargetRepository = (db: DbClient) => {
 
         return {
           createdAt: target.createdAt.toISOString(),
-          defaultInstallStrategy: target.defaultInstallStrategy,
           enabled: target.enabled,
           id: target.id,
           name: target.name,
@@ -105,7 +104,6 @@ export const createTargetRepository = (db: DbClient) => {
       const targetRows = await db.select().from(agentTargets).orderBy(asc(agentTargets.name));
 
       return targetRows.map((target) => ({
-        defaultInstallStrategy: target.defaultInstallStrategy,
         id: target.id,
         name: target.name,
         normalizedPath: target.normalizedPath,
@@ -198,7 +196,6 @@ export const createTargetRepository = (db: DbClient) => {
           .insert(agentTargets)
           .values({
             createdAt: scannedAt,
-            defaultInstallStrategy: target.defaultInstallStrategy,
             detectionStatus: target.status,
             enabled: target.status === "detected",
             id: target.id,
@@ -213,7 +210,6 @@ export const createTargetRepository = (db: DbClient) => {
           .onConflictDoUpdate({
             target: [agentTargets.type, agentTargets.normalizedPath],
             set: {
-              defaultInstallStrategy: target.defaultInstallStrategy,
               detectionStatus: target.status,
               enabled: target.status === "detected",
               name: target.name,
@@ -270,7 +266,6 @@ const buildCustomDirectoryTargetValues = (
 ): AgentTargetInsert => {
   return {
     createdAt: registeredAt,
-    defaultInstallStrategy: "copy",
     enabled: true,
     id: target.id,
     name: target.name,
@@ -288,7 +283,6 @@ const buildCustomDirectoryTargetConflictSet = (
   registeredAt: Date
 ): Partial<AgentTargetInsert> => {
   return {
-    defaultInstallStrategy: "copy",
     enabled: true,
     name: target.name,
     normalizedPath: target.normalizedPath,

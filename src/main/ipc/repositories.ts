@@ -11,7 +11,8 @@ import {
 } from "../../core/repositories/source-inspection.js";
 import { scanSkillDirectory } from "../../core/skills/skill-scanner.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
-import { getGitHubToken } from "./settings.js";
+import { getDistributionSettings, getGitHubToken } from "./settings.js";
+import { executeDistribution } from "./distribution.js";
 import type { RepositorySourceInspection } from "../../core/repositories/source-inspection.js";
 import type {
   CreateRepositoryInput,
@@ -20,6 +21,7 @@ import type {
   RepositoryDeletePreview,
   RepositorySyncFailure,
   RepositorySyncFailureCategory,
+  RepositorySyncDistributionSummary,
   RepositorySyncResultItem,
   UpdateRepositoryInput
 } from "../../core/repositories/repository-api.js";
@@ -263,15 +265,33 @@ export const syncRepositories = async (
 
       const commitSha = await operations.resolveCommitSha(sourcePath);
 
-      results.push(
-        await repositoryRepository.recordSyncResult({
-          commitSha,
-          discoveredSkills,
-          repositoryId,
-          startedAt,
-          syncRunId
-        })
-      );
+      const syncResult = await repositoryRepository.recordSyncResult({
+        commitSha,
+        discoveredSkills,
+        repositoryId,
+        startedAt,
+        syncRunId
+      });
+      const distributionSettings = await getDistributionSettings(db);
+
+      if (distributionSettings.autoDistributeOnSync) {
+        const skillUnitIds = discoveredSkills.map((skill) =>
+          buildSkillUnitId(repositoryId, skill.skillKey)
+        );
+        const distributionResult = await executeDistribution(db, {
+          skillUnitIds,
+          triggerSource: "post_sync"
+        });
+        const distribution = toRepositoryDistributionSummary(distributionResult.summary, true);
+
+        await repositoryRepository.updateLastSyncDistributionSummary(repositoryId, distribution);
+        results.push({
+          ...syncResult,
+          distribution
+        });
+      } else {
+        results.push(syncResult);
+      }
     } catch (error) {
       const failure = await buildSyncFailure({
         cachePath,
@@ -694,10 +714,53 @@ const pathExists = async (value: string): Promise<boolean> => {
 
 const buildSkippedSyncResult = (repositoryId: string): RepositorySyncResultItem => {
   return {
+    distribution: {
+      autoDistributionEnabled: false,
+      blocked: 0,
+      conflicts: 0,
+      eligible: 0,
+      failed: 0,
+      installed: 0,
+      skipped: 0,
+      updated: 0
+    },
     repositoryId,
     scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
     skillUnits: 0,
     status: "skipped"
+  };
+};
+
+const buildSkillUnitId = (repositoryId: string, skillKey: string): string => {
+  return `${repositoryId}__${skillKey}`;
+};
+
+const toRepositoryDistributionSummary = (
+  summary: {
+    blocked: number;
+    conflicts: number;
+    failed: number;
+    installed: number;
+    skipped: number;
+    updated: number;
+  },
+  autoDistributionEnabled: boolean
+): RepositorySyncDistributionSummary => {
+  return {
+    autoDistributionEnabled,
+    blocked: summary.blocked,
+    conflicts: summary.conflicts,
+    eligible:
+      summary.installed +
+      summary.updated +
+      summary.skipped +
+      summary.conflicts +
+      summary.blocked +
+      summary.failed,
+    failed: summary.failed,
+    installed: summary.installed,
+    skipped: summary.skipped,
+    updated: summary.updated
   };
 };
 

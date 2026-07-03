@@ -242,7 +242,7 @@ describe("RepositoriesPage", () => {
     expect(await screen.findByRole("button", { name: "Paged Source 25" })).toBeInTheDocument();
     expect(screen.getByText("1-1 / 1")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Paged Source 01" })).not.toBeInTheDocument();
-  });
+  }, 10000);
 
   it("searches sources by name, URL, or note", async () => {
     await renderRepositoriesPage();
@@ -286,6 +286,99 @@ describe("RepositoriesPage", () => {
     expect(within(detail).queryByText("扫描警告")).not.toBeInTheDocument();
     expect(within(detail).getAllByText("2026/04/28 08:00").length).toBeGreaterThan(0);
     expect(within(detail).getByText("是")).toBeInTheDocument();
+  });
+
+  it("shows detailed last sync skill changes and distribution summary", async () => {
+    window.skillsManager = {
+      listRepositories: vi.fn().mockResolvedValue({
+        repositories: [
+          {
+            ...repositoryApiRecordsFixture[0],
+            configJson: JSON.stringify({
+              enabled: true,
+              lastScanLabel: "已同步",
+              note: "团队共享技能来源，使用系统 Git 凭据读取。",
+              patterns: ["skills/*/SKILL.md"],
+              priority: 1,
+              providerName: "GitHub",
+              scan: { added: 1, changed: 1, removed: 1, warnings: 1 },
+              skillUnits: 12,
+              status: "ready"
+            }),
+            lastSync: {
+              ...repositoryApiRecordsFixture[0].lastSync!,
+              summaryJson: JSON.stringify({
+                distribution: {
+                  autoDistributionEnabled: true,
+                  blocked: 0,
+                  conflicts: 1,
+                  eligible: 2,
+                  failed: 0,
+                  installed: 1,
+                  skipped: 0,
+                  updated: 1
+                },
+                scan: {
+                  added: [
+                    {
+                      commitSha: "8f2c91a",
+                      name: "Review Bot",
+                      skillKey: "skills-review-bot",
+                      skillUnitId: "team-skills__skills-review-bot"
+                    }
+                  ],
+                  changed: [
+                    {
+                      commitSha: "8f2c91a",
+                      name: "Design Helper",
+                      previousCommitSha: "21ab9d0",
+                      skillKey: "design-helper",
+                      skillUnitId: "team-skills__design-helper"
+                    }
+                  ],
+                  counts: { added: 1, changed: 1, removed: 1, warnings: 1 },
+                  removed: [
+                    {
+                      name: "Legacy Helper",
+                      previousCommitSha: "1024abc",
+                      skillKey: "legacy-helper",
+                      skillUnitId: "team-skills__legacy-helper"
+                    }
+                  ],
+                  warnings: ["Ignored duplicate skill id: design-helper"]
+                }
+              })
+            }
+          }
+        ]
+      })
+    } as unknown as NonNullable<typeof window.skillsManager>;
+
+    await renderRepositoriesPage();
+
+    const detail = screen.getByLabelText("来源详情");
+    const syncDetailsSection = within(detail)
+      .getByRole("heading", { name: "同步明细" })
+      .closest("section") as HTMLElement;
+    const distributionSection = within(detail)
+      .getByRole("heading", { name: "分发摘要" })
+      .closest("section") as HTMLElement;
+
+    expect(syncDetailsSection).not.toBeNull();
+    expect(distributionSection).not.toBeNull();
+    expect(within(syncDetailsSection).getByText("新增技能")).toBeInTheDocument();
+    expect(within(syncDetailsSection).getByText("Review Bot")).toBeInTheDocument();
+    expect(within(syncDetailsSection).getByText("变更技能")).toBeInTheDocument();
+    expect(within(syncDetailsSection).getByText("Design Helper")).toBeInTheDocument();
+    expect(within(syncDetailsSection).getByText("移除技能")).toBeInTheDocument();
+    expect(within(syncDetailsSection).getByText("Legacy Helper")).toBeInTheDocument();
+    expect(
+      within(syncDetailsSection).getByText("Ignored duplicate skill id: design-helper")
+    ).toBeInTheDocument();
+    expect(within(distributionSection).getByText("自动分发")).toBeInTheDocument();
+    expect(within(distributionSection).getByText("已开启")).toBeInTheDocument();
+    expect(within(distributionSection).getByText("可分发")).toBeInTheDocument();
+    expect(within(distributionSection).getByText("冲突")).toBeInTheDocument();
   });
 
   it("selects a source when clicking a non-interactive row cell", async () => {

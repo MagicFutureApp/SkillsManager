@@ -46,7 +46,6 @@ describe("target IPC handlers", () => {
     ).resolves.toMatchObject({
       registeredTargets: [
         {
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "target-custom-users-test-review-skills-16b7af9b49af",
           name: "review-skills",
@@ -166,7 +165,6 @@ describe("target IPC handlers", () => {
     await db.insert(agentTargets).values([
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-project",
         name: "Project target",
@@ -177,7 +175,6 @@ describe("target IPC handlers", () => {
       },
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-keep",
         name: "Keep target",
@@ -192,7 +189,6 @@ describe("target IPC handlers", () => {
       registeredTargets: [
         {
           createdAt: "2026-06-24T00:00:00.000Z",
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "target-keep",
           name: "Keep target",
@@ -225,7 +221,6 @@ describe("target IPC handlers", () => {
 
     await db.insert(agentTargets).values({
       createdAt,
-      defaultInstallStrategy: "copy",
       enabled: true,
       id: "target-project",
       name: "Local project",
@@ -239,7 +234,6 @@ describe("target IPC handlers", () => {
       registeredTargets: [
         {
           createdAt: "2026-06-23T00:00:00.000Z",
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "target-project",
           name: "Local project",
@@ -262,7 +256,6 @@ describe("target IPC handlers", () => {
     const db = createDbClient(":memory:");
     const scannedTargets: SystemTargetRecord[] = [
       {
-        defaultInstallStrategy: "copy",
         detectionMessage: "Target directory exists and is writable.",
         id: "system-codex",
         name: "Codex",
@@ -286,7 +279,6 @@ describe("target IPC handlers", () => {
       registeredTargets: [
         {
           createdAt: "2026-06-23T01:00:00.000Z",
-          defaultInstallStrategy: "copy",
           enabled: true,
           id: "system-codex",
           name: "Codex",
@@ -313,7 +305,6 @@ describe("target IPC handlers", () => {
     await db.insert(agentTargets).values([
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-project",
         name: "Local project",
@@ -324,7 +315,6 @@ describe("target IPC handlers", () => {
       },
       {
         createdAt,
-        defaultInstallStrategy: "copy",
         enabled: true,
         id: "target-codex-duplicate",
         name: "Duplicate Codex",
@@ -337,7 +327,6 @@ describe("target IPC handlers", () => {
 
     const scannedTargets: SystemTargetRecord[] = [
       {
-        defaultInstallStrategy: "copy",
         detectionMessage: "Target directory exists and is writable.",
         id: "system-codex",
         name: "Codex",
@@ -348,7 +337,6 @@ describe("target IPC handlers", () => {
       }
     ];
     const rescannedRegisteredTarget: TargetScanRecord = {
-      defaultInstallStrategy: "copy",
       detectionMessage: "Target directory exists but is not writable.",
       id: "target-project",
       name: "Local project",
