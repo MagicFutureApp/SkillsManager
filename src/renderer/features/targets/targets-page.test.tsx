@@ -828,7 +828,8 @@ describe("TargetsPage", () => {
       expect(resolveSelectedTargetDirectory).toHaveBeenCalledWith("/Users/test/project");
       expect(within(dialog).getByText("确认 agent 类型")).toBeInTheDocument();
       expect(within(dialog).getByText("/Users/test/project")).toBeInTheDocument();
-      expect(within(dialog).getByLabelText("本机路径")).toHaveValue("");
+      expect(within(dialog).getByLabelText("本机路径")).toHaveValue("/Users/test/project");
+      expect(within(dialog).getByLabelText("名称")).toHaveValue("project");
     });
 
     fireEvent.click(within(dialog).getByRole("radio", { name: "Claude Code" }));

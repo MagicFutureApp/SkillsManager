@@ -177,14 +177,14 @@ export const useTargetsPageState = () => {
       options: resolution.options
     });
     setSelectedTargetAgentType(null);
-    setAddTargetPath("");
+    setAddTargetPath(resolution.basePath);
     setAddTargetError("");
     setAddTargetName((currentName) => {
       if (isTargetNameDirty && currentName.trim()) {
         return currentName;
       }
 
-      return "";
+      return deriveTargetNameFromPath(resolution.options[0]?.targetPath ?? resolution.basePath);
     });
   };
 
