@@ -200,12 +200,17 @@ export const RepositoryDetail = ({
             );
 
             return canShowDetails ? (
-              <Accordion.Item key={group.key} value={group.key}>
+              <Accordion.Item
+                key={group.key}
+                value={group.key}
+                data-sync-impact-item={group.key}
+                className="overflow-hidden rounded-lg border border-border bg-muted/40"
+              >
                 <Accordion.Header className="contents">
                   <Accordion.Trigger
                     title={copy.scanDetailsAction}
                     className={cn(
-                      "grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3 text-left outline-none transition-colors",
+                      "grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 p-3 text-left outline-none transition-colors",
                       "cursor-pointer hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
                     )}
                   >
@@ -213,22 +218,15 @@ export const RepositoryDetail = ({
                     <ListTree className="size-4 text-muted-foreground" aria-hidden="true" />
                   </Accordion.Trigger>
                 </Accordion.Header>
-                <Accordion.Panel className="pt-2">
-                  <section className="rounded-lg border border-border bg-muted/40 p-3">
-                    <h4 className="font-semibold">{copy.syncDetailsHeading}</h4>
-                    <div className="mt-3 rounded-lg border border-border bg-background/60 p-3">
-                      <strong className="block text-sm">{group.label}</strong>
-                      <ul className="mt-2 grid gap-1 text-sm">
-                        {group.skills.map((skill) => (
-                          <li key={skill.skillUnitId} className="min-w-0">
-                            <span className="block truncate">{skill.name}</span>
-                            <span className="block truncate font-mono text-xs text-muted-foreground">
-                              {skill.skillKey}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                <Accordion.Panel className="border-t border-border/70 px-3 pb-1 pt-2">
+                  <section className="px-1">
+                    <ul className="divide-y divide-border/70 text-sm">
+                      {group.skills.map((skill) => (
+                        <li key={skill.skillUnitId} className="min-w-0 py-2 first:pt-0 last:pb-0">
+                          <span className="block truncate">{skill.name}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </section>
                 </Accordion.Panel>
               </Accordion.Item>

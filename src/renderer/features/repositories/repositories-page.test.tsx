@@ -391,41 +391,63 @@ describe("RepositoriesPage", () => {
 
     fireEvent.click(changedTile);
 
-    const syncDetailsSection = within(detail)
-      .getByRole("heading", { name: "同步明细" })
-      .closest("section") as HTMLElement;
-
-    expect(syncDetailsSection).not.toBeNull();
     const controlledPanelId = changedTile.getAttribute("aria-controls");
+    const syncDetailsPanel = document.getElementById(controlledPanelId as string);
+    const changedTileBox = changedTile.closest(
+      "[data-sync-impact-item='changed']"
+    ) as HTMLElement | null;
 
     expect(controlledPanelId).toBeTruthy();
-    expect(document.getElementById(controlledPanelId as string)).toContainElement(
-      syncDetailsSection
-    );
-    expect(within(syncDetailsSection).getByText("变更技能")).toBeInTheDocument();
-    expect(within(syncDetailsSection).getByText("Design Helper")).toBeInTheDocument();
-    expect(within(syncDetailsSection).queryByText("新增技能")).not.toBeInTheDocument();
-    expect(within(syncDetailsSection).queryByText("Review Bot")).not.toBeInTheDocument();
-    expect(within(syncDetailsSection).queryByText("移除技能")).not.toBeInTheDocument();
-    expect(within(syncDetailsSection).queryByText("Legacy Helper")).not.toBeInTheDocument();
+    expect(syncDetailsPanel).not.toBeNull();
+    expect(changedTileBox).not.toBeNull();
+    expect(changedTileBox).toContainElement(syncDetailsPanel);
+    expect(changedTileBox).toHaveClass("rounded-lg", "border", "border-border", "bg-muted/40");
+    expect(changedTile).not.toHaveClass("border");
+    expect(syncDetailsPanel?.querySelector(".border-l-2")).toBeNull();
+    expect(within(syncDetailsPanel as HTMLElement).queryByText("同步明细")).not.toBeInTheDocument();
+    expect(within(syncDetailsPanel as HTMLElement).queryByText("变更技能")).not.toBeInTheDocument();
+    expect(within(syncDetailsPanel as HTMLElement).getByText("Design Helper")).toBeInTheDocument();
     expect(
-      within(syncDetailsSection).queryByText("Ignored duplicate skill id: design-helper")
+      within(syncDetailsPanel as HTMLElement).queryByText("design-helper")
+    ).not.toBeInTheDocument();
+    expect(within(syncDetailsPanel as HTMLElement).queryByText("新增技能")).not.toBeInTheDocument();
+    expect(
+      within(syncDetailsPanel as HTMLElement).queryByText("Review Bot")
+    ).not.toBeInTheDocument();
+    expect(within(syncDetailsPanel as HTMLElement).queryByText("移除技能")).not.toBeInTheDocument();
+    expect(
+      within(syncDetailsPanel as HTMLElement).queryByText("Legacy Helper")
+    ).not.toBeInTheDocument();
+    expect(
+      within(syncDetailsPanel as HTMLElement).queryByText(
+        "Ignored duplicate skill id: design-helper"
+      )
     ).not.toBeInTheDocument();
 
     fireEvent.click(changedTile);
 
-    expect(within(detail).queryByRole("heading", { name: "同步明细" })).not.toBeInTheDocument();
+    expect(within(detail).queryByText("Design Helper")).not.toBeInTheDocument();
 
     fireEvent.click(addedTile);
 
-    const addedDetailsSection = within(detail)
-      .getByRole("heading", { name: "同步明细" })
-      .closest("section") as HTMLElement;
+    const addedPanelId = addedTile.getAttribute("aria-controls");
+    const addedDetailsPanel = document.getElementById(addedPanelId as string);
 
-    expect(within(addedDetailsSection).getByText("新增技能")).toBeInTheDocument();
-    expect(within(addedDetailsSection).getByText("Review Bot")).toBeInTheDocument();
-    expect(within(addedDetailsSection).queryByText("变更技能")).not.toBeInTheDocument();
-    expect(within(addedDetailsSection).queryByText("Design Helper")).not.toBeInTheDocument();
+    expect(addedPanelId).toBeTruthy();
+    expect(addedDetailsPanel).not.toBeNull();
+    expect(
+      within(addedDetailsPanel as HTMLElement).queryByText("新增技能")
+    ).not.toBeInTheDocument();
+    expect(within(addedDetailsPanel as HTMLElement).getByText("Review Bot")).toBeInTheDocument();
+    expect(
+      within(addedDetailsPanel as HTMLElement).queryByText("skills-review-bot")
+    ).not.toBeInTheDocument();
+    expect(
+      within(addedDetailsPanel as HTMLElement).queryByText("变更技能")
+    ).not.toBeInTheDocument();
+    expect(
+      within(addedDetailsPanel as HTMLElement).queryByText("Design Helper")
+    ).not.toBeInTheDocument();
     expect(within(distributionSection).getByText("自动分发")).toBeInTheDocument();
     expect(within(distributionSection).getByText("已开启")).toBeInTheDocument();
     expect(within(distributionSection).getByText("可分发")).toBeInTheDocument();
