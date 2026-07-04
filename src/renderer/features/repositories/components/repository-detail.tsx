@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { DetailRow } from "@/components/detail-row";
+import { cn } from "@/lib/utils";
+import { Accordion } from "@base-ui/react/accordion";
+import { ListTree } from "lucide-react";
 import type { RepositoryViewModel } from "./repository-data";
 import React from "react";
+
+type SyncDetailGroupKey = "added" | "changed" | "removed";
 
 type RepositoryDetailProps = {
   copy: {
@@ -23,6 +28,7 @@ type RepositoryDetailProps = {
     remoteUrl: string;
     scanAdded: string;
     scanChanged: string;
+    scanDetailsAction: string;
     scanHeading: string;
     scanRemoved: string;
     scanWarnings: string;
@@ -54,24 +60,33 @@ export const RepositoryDetail = ({
   onEdit,
   onOpenLocation
 }: RepositoryDetailProps) => {
-  const scanRows = repository
-    ? ([
-        [copy.scanAdded, repository.scan.added],
-        [copy.scanChanged, repository.scan.changed],
-        [copy.scanRemoved, repository.scan.removed]
-      ] satisfies Array<[string, number]>)
-    : [];
+  const [activeSyncDetailGroups, setActiveSyncDetailGroups] = React.useState<SyncDetailGroupKey[]>(
+    []
+  );
   const lastSyncSummary = repository?.lastSyncSummary ?? null;
   const scanDetails = lastSyncSummary?.scan;
-  const skillGroups = scanDetails
+  const scanRows = repository
     ? [
-        { label: copy.scanAdded, skills: scanDetails.added },
-        { label: copy.scanChanged, skills: scanDetails.changed },
-        { label: copy.scanRemoved, skills: scanDetails.removed }
+        {
+          key: "added" as const,
+          label: copy.scanAdded,
+          skills: scanDetails?.added ?? [],
+          value: repository.scan.added
+        },
+        {
+          key: "changed" as const,
+          label: copy.scanChanged,
+          skills: scanDetails?.changed ?? [],
+          value: repository.scan.changed
+        },
+        {
+          key: "removed" as const,
+          label: copy.scanRemoved,
+          skills: scanDetails?.removed ?? [],
+          value: repository.scan.removed
+        }
       ]
     : [];
-  const hasSyncDetails =
-    skillGroups.some((group) => group.skills.length > 0) || Boolean(scanDetails?.warnings.length);
   const distribution = lastSyncSummary?.distribution;
   const hasDistributionSummary = distribution
     ? distribution.autoDistributionEnabled ||
@@ -102,6 +117,10 @@ export const RepositoryDetail = ({
     : [];
   const isLocalRepository = repository?.provider === "Local";
   const detailDescription = repository ? repository.note : copy.defaultDescription;
+
+  React.useEffect(() => {
+    setActiveSyncDetailGroups([]);
+  }, [repository?.id]);
 
   return (
     <>
@@ -161,58 +180,69 @@ export const RepositoryDetail = ({
 
       <section className="rounded-xl border border-border bg-card p-4">
         <h3 className="font-semibold">{copy.scanHeading}</h3>
-        <div className="mt-3 grid gap-2">
-          {scanRows.map(([label, value]) => (
-            <div
-              key={label}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3"
-            >
-              <span>
-                <strong className="block text-sm">{label}</strong>
-                <span className="text-xs text-muted-foreground">
-                  {repository?.lastScanTime ?? "--"}
-                </span>
-              </span>
-              <span className="font-mono text-sm">{value}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {repository && hasSyncDetails ? (
-        <section className="rounded-xl border border-border bg-card p-4">
-          <h3 className="font-semibold">{copy.syncDetailsHeading}</h3>
-          <div className="mt-3 grid gap-3">
-            {skillGroups.map((group) =>
-              group.skills.length > 0 ? (
-                <div key={group.label} className="rounded-lg border border-border bg-muted/40 p-3">
+        <Accordion.Root<SyncDetailGroupKey>
+          value={activeSyncDetailGroups}
+          onValueChange={(value) => setActiveSyncDetailGroups(value)}
+          className="mt-3 grid gap-2"
+        >
+          {scanRows.map((group) => {
+            const canShowDetails = group.skills.length > 0 && group.value > 0;
+            const content = (
+              <>
+                <span>
                   <strong className="block text-sm">{group.label}</strong>
-                  <ul className="mt-2 grid gap-1 text-sm">
-                    {group.skills.map((skill) => (
-                      <li key={skill.skillUnitId} className="min-w-0">
-                        <span className="block truncate">{skill.name}</span>
-                        <span className="block truncate font-mono text-xs text-muted-foreground">
-                          {skill.skillKey}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null
-            )}
-            {scanDetails?.warnings.length ? (
-              <div className="rounded-lg border border-border bg-muted/40 p-3">
-                <strong className="block text-sm">{copy.scanWarnings}</strong>
-                <ul className="mt-2 grid gap-1 text-sm text-muted-foreground">
-                  {scanDetails.warnings.map((warning) => (
-                    <li key={warning}>{warning}</li>
-                  ))}
-                </ul>
+                  <span className="text-xs text-muted-foreground">
+                    {repository?.lastScanTime ?? "--"}
+                  </span>
+                </span>
+                <span className="font-mono text-sm">{group.value}</span>
+              </>
+            );
+
+            return canShowDetails ? (
+              <Accordion.Item key={group.key} value={group.key}>
+                <Accordion.Header className="contents">
+                  <Accordion.Trigger
+                    title={copy.scanDetailsAction}
+                    className={cn(
+                      "grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3 text-left outline-none transition-colors",
+                      "cursor-pointer hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                    )}
+                  >
+                    {content}
+                    <ListTree className="size-4 text-muted-foreground" aria-hidden="true" />
+                  </Accordion.Trigger>
+                </Accordion.Header>
+                <Accordion.Panel className="pt-2">
+                  <section className="rounded-lg border border-border bg-muted/40 p-3">
+                    <h4 className="font-semibold">{copy.syncDetailsHeading}</h4>
+                    <div className="mt-3 rounded-lg border border-border bg-background/60 p-3">
+                      <strong className="block text-sm">{group.label}</strong>
+                      <ul className="mt-2 grid gap-1 text-sm">
+                        {group.skills.map((skill) => (
+                          <li key={skill.skillUnitId} className="min-w-0">
+                            <span className="block truncate">{skill.name}</span>
+                            <span className="block truncate font-mono text-xs text-muted-foreground">
+                              {skill.skillKey}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </section>
+                </Accordion.Panel>
+              </Accordion.Item>
+            ) : (
+              <div
+                key={group.key}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3"
+              >
+                {content}
               </div>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
+            );
+          })}
+        </Accordion.Root>
+      </section>
 
       {repository && hasDistributionSummary ? (
         <section className="rounded-xl border border-border bg-card p-4">

@@ -28,6 +28,7 @@ export const RepositoriesPageSider = () => {
         remoteUrl: t("repositories.detail.remoteUrl"),
         scanAdded: t("repositories.detail.scanAdded"),
         scanChanged: t("repositories.detail.scanChanged"),
+        scanDetailsAction: t("repositories.detail.scanDetailsAction"),
         scanHeading: t("repositories.detail.scanHeading"),
         scanRemoved: t("repositories.detail.scanRemoved"),
         scanWarnings: t("repositories.detail.scanWarnings"),

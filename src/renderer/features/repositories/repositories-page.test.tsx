@@ -309,7 +309,7 @@ describe("RepositoriesPage", () => {
     expect(within(detail).getByText("是")).toBeInTheDocument();
   });
 
-  it("shows detailed last sync skill changes and distribution summary", async () => {
+  it("shows detailed last sync skill changes after clicking a sync impact tile", async () => {
     window.skillsManager = {
       listRepositories: vi.fn().mockResolvedValue({
         repositories: [
@@ -322,7 +322,7 @@ describe("RepositoriesPage", () => {
               patterns: ["skills/*/SKILL.md"],
               priority: 1,
               providerName: "GitHub",
-              scan: { added: 1, changed: 1, removed: 1, warnings: 1 },
+              scan: { added: 1, changed: 1, removed: 0, warnings: 1 },
               skillUnits: 12,
               status: "ready"
             }),
@@ -357,15 +357,8 @@ describe("RepositoriesPage", () => {
                       skillUnitId: "team-skills__design-helper"
                     }
                   ],
-                  counts: { added: 1, changed: 1, removed: 1, warnings: 1 },
-                  removed: [
-                    {
-                      name: "Legacy Helper",
-                      previousCommitSha: "1024abc",
-                      skillKey: "legacy-helper",
-                      skillUnitId: "team-skills__legacy-helper"
-                    }
-                  ],
+                  counts: { added: 1, changed: 1, removed: 0, warnings: 1 },
+                  removed: [],
                   warnings: ["Ignored duplicate skill id: design-helper"]
                 }
               })
@@ -378,24 +371,61 @@ describe("RepositoriesPage", () => {
     await renderRepositoriesPage();
 
     const detail = screen.getByLabelText("来源详情");
-    const syncDetailsSection = within(detail)
-      .getByRole("heading", { name: "同步明细" })
-      .closest("section") as HTMLElement;
     const distributionSection = within(detail)
       .getByRole("heading", { name: "分发摘要" })
       .closest("section") as HTMLElement;
+    const addedTile = within(detail).getByRole("button", { name: /新增技能/ });
+    const changedTile = within(detail).getByRole("button", { name: /变更技能/ });
+
+    expect(addedTile.querySelector("svg")).not.toBeNull();
+    expect(changedTile.querySelector("svg")).not.toBeNull();
+    expect(within(detail).queryByRole("button", { name: /移除技能/ })).not.toBeInTheDocument();
+    expect(within(detail).getByText("移除技能").closest("div")).not.toContainElement(
+      screen.queryByText("Legacy Helper")
+    );
+    expect(distributionSection).not.toBeNull();
+    expect(within(detail).queryByRole("heading", { name: "同步明细" })).not.toBeInTheDocument();
+    expect(within(detail).queryByText("Review Bot")).not.toBeInTheDocument();
+    expect(within(detail).queryByText("Design Helper")).not.toBeInTheDocument();
+    expect(within(detail).queryByText("Legacy Helper")).not.toBeInTheDocument();
+
+    fireEvent.click(changedTile);
+
+    const syncDetailsSection = within(detail)
+      .getByRole("heading", { name: "同步明细" })
+      .closest("section") as HTMLElement;
 
     expect(syncDetailsSection).not.toBeNull();
-    expect(distributionSection).not.toBeNull();
-    expect(within(syncDetailsSection).getByText("新增技能")).toBeInTheDocument();
-    expect(within(syncDetailsSection).getByText("Review Bot")).toBeInTheDocument();
+    const controlledPanelId = changedTile.getAttribute("aria-controls");
+
+    expect(controlledPanelId).toBeTruthy();
+    expect(document.getElementById(controlledPanelId as string)).toContainElement(
+      syncDetailsSection
+    );
     expect(within(syncDetailsSection).getByText("变更技能")).toBeInTheDocument();
     expect(within(syncDetailsSection).getByText("Design Helper")).toBeInTheDocument();
-    expect(within(syncDetailsSection).getByText("移除技能")).toBeInTheDocument();
-    expect(within(syncDetailsSection).getByText("Legacy Helper")).toBeInTheDocument();
+    expect(within(syncDetailsSection).queryByText("新增技能")).not.toBeInTheDocument();
+    expect(within(syncDetailsSection).queryByText("Review Bot")).not.toBeInTheDocument();
+    expect(within(syncDetailsSection).queryByText("移除技能")).not.toBeInTheDocument();
+    expect(within(syncDetailsSection).queryByText("Legacy Helper")).not.toBeInTheDocument();
     expect(
-      within(syncDetailsSection).getByText("Ignored duplicate skill id: design-helper")
-    ).toBeInTheDocument();
+      within(syncDetailsSection).queryByText("Ignored duplicate skill id: design-helper")
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(changedTile);
+
+    expect(within(detail).queryByRole("heading", { name: "同步明细" })).not.toBeInTheDocument();
+
+    fireEvent.click(addedTile);
+
+    const addedDetailsSection = within(detail)
+      .getByRole("heading", { name: "同步明细" })
+      .closest("section") as HTMLElement;
+
+    expect(within(addedDetailsSection).getByText("新增技能")).toBeInTheDocument();
+    expect(within(addedDetailsSection).getByText("Review Bot")).toBeInTheDocument();
+    expect(within(addedDetailsSection).queryByText("变更技能")).not.toBeInTheDocument();
+    expect(within(addedDetailsSection).queryByText("Design Helper")).not.toBeInTheDocument();
     expect(within(distributionSection).getByText("自动分发")).toBeInTheDocument();
     expect(within(distributionSection).getByText("已开启")).toBeInTheDocument();
     expect(within(distributionSection).getByText("可分发")).toBeInTheDocument();
