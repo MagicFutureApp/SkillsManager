@@ -48,6 +48,15 @@ type RepositoryListProps = {
   onToggleEnabled: (repositoryId: string) => void;
 };
 
+const repositoryTableColumns = {
+  actions: "w-16",
+  provider: "w-24",
+  select: "w-10",
+  skills: "w-14",
+  status: "w-24",
+  sync: "w-12"
+};
+
 export const RepositoryList = ({
   checkedIds,
   copy,
@@ -68,7 +77,7 @@ export const RepositoryList = ({
     <DataTableFixed>
       <DataTableFixedHeader>
         <DataTableRow>
-          <DataTableHead className="w-[42px]">
+          <DataTableHead className={repositoryTableColumns.select}>
             <span className="grid place-items-center">
               <Checkbox
                 checked={visibleAllChecked}
@@ -80,11 +89,11 @@ export const RepositoryList = ({
             </span>
           </DataTableHead>
           <DataTableHead>{copy.repository}</DataTableHead>
-          <DataTableHead className="w-[15%]">{copy.provider}</DataTableHead>
-          <DataTableHead className="w-[14%]">{copy.status}</DataTableHead>
-          <DataTableHead className="w-[10%]">{copy.skills}</DataTableHead>
-          <DataTableHead className="w-[42px]" aria-label="sync" />
-          <DataTableHead className="w-[72px]">{copy.actions}</DataTableHead>
+          <DataTableHead className={repositoryTableColumns.provider}>{copy.provider}</DataTableHead>
+          <DataTableHead className={repositoryTableColumns.status}>{copy.status}</DataTableHead>
+          <DataTableHead className={repositoryTableColumns.skills}>{copy.skills}</DataTableHead>
+          <DataTableHead className={repositoryTableColumns.sync} aria-label="sync" />
+          <DataTableHead className={repositoryTableColumns.actions}>{copy.actions}</DataTableHead>
         </DataTableRow>
       </DataTableFixedHeader>
 
@@ -105,7 +114,7 @@ export const RepositoryList = ({
                 onSelectRepository(repository.id);
               }}
             >
-              <DataTableCell className="w-[42px]">
+              <DataTableCell className={repositoryTableColumns.select}>
                 <span className="grid place-items-center">
                   <Checkbox
                     checked={checkedIds.has(repository.id)}
@@ -126,23 +135,27 @@ export const RepositoryList = ({
                   <span className="truncate text-sm font-semibold">{repository.name}</span>
                 </Button>
               </DataTableCell>
-              <DataTableCell className="text-sm max-[820px]:hidden">
+              <DataTableCell
+                className={`${repositoryTableColumns.provider} text-sm max-[820px]:hidden`}
+              >
                 {repository.provider}
               </DataTableCell>
-              <DataTableCell className="max-[820px]:hidden">
+              <DataTableCell className={`${repositoryTableColumns.status} max-[820px]:hidden`}>
                 <RepositoryStatusPill status={repository.status} />
               </DataTableCell>
-              <DataTableCell className="font-mono text-sm max-[820px]:hidden">
+              <DataTableCell
+                className={`${repositoryTableColumns.skills} font-mono text-sm max-[820px]:hidden`}
+              >
                 {repository.skillUnits}
               </DataTableCell>
-              <DataTableCell className="w-[42px]">
+              <DataTableCell className={repositoryTableColumns.sync}>
                 <RepositorySyncIndicator
                   repository={repository}
                   state={repositorySyncStates[repository.id]}
                   onSyncRepository={onSyncRepository}
                 />
               </DataTableCell>
-              <DataTableCell className="w-[72px]">
+              <DataTableCell className={repositoryTableColumns.actions}>
                 <Switch
                   checked={repository.enabled}
                   aria-label={copy.toggleEnabled(repository.name)}

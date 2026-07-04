@@ -26,6 +26,13 @@ import {
 import { Field } from "./skills-page-controls";
 import { useSkillsPageContext } from "./skills-page-context";
 
+const skillTableColumns = {
+  actions: "w-18",
+  repository: "w-[24%]",
+  select: "w-10",
+  targets: "w-14"
+};
+
 export const SkillsPageMain = () => {
   const { t } = useTranslation();
   const page = useSkillsPageContext();
@@ -106,7 +113,7 @@ export const SkillsPageMain = () => {
       <DataTableFixed containerClassName="mt-5">
         <DataTableFixedHeader>
           <DataTableRow>
-            <DataTableHead className="w-10">
+            <DataTableHead className={skillTableColumns.select}>
               <span className="grid place-items-center">
                 <Checkbox
                   checked={page.visibleAllChecked}
@@ -118,9 +125,15 @@ export const SkillsPageMain = () => {
               </span>
             </DataTableHead>
             <DataTableHead>{t("skills.table.skill")}</DataTableHead>
-            <DataTableHead className="w-[18%]">{t("skills.table.repository")}</DataTableHead>
-            <DataTableHead className="w-[10%]">{t("skills.table.targets")}</DataTableHead>
-            <DataTableHead className="w-23">{t("skills.table.actions")}</DataTableHead>
+            <DataTableHead className={skillTableColumns.repository}>
+              {t("skills.table.repository")}
+            </DataTableHead>
+            <DataTableHead className={skillTableColumns.targets}>
+              {t("skills.table.targets")}
+            </DataTableHead>
+            <DataTableHead className={skillTableColumns.actions}>
+              {t("skills.table.actions")}
+            </DataTableHead>
           </DataTableRow>
         </DataTableFixedHeader>
 
@@ -163,7 +176,7 @@ const SkillTableRow = ({ skill }: { skill: Skill }) => {
         page.setSelectedSkillId(skill.id);
       }}
     >
-      <DataTableCell className="w-[40px]">
+      <DataTableCell className={skillTableColumns.select}>
         <span className="grid place-items-center">
           <Checkbox
             checked={page.checkedIds.has(skill.id)}
@@ -184,13 +197,17 @@ const SkillTableRow = ({ skill }: { skill: Skill }) => {
           <strong className="block truncate text-sm">{skill.name}</strong>
         </Button>
       </DataTableCell>
-      <DataTableCell className="truncate text-sm max-[820px]:hidden">
+      <DataTableCell
+        className={`${skillTableColumns.repository} truncate text-sm max-[820px]:hidden`}
+      >
         {skill.repository}
       </DataTableCell>
-      <DataTableCell className="font-mono text-sm max-[820px]:hidden">
+      <DataTableCell
+        className={`${skillTableColumns.targets} font-mono text-sm max-[820px]:hidden`}
+      >
         {skill.targets.length}
       </DataTableCell>
-      <DataTableCell>
+      <DataTableCell className={skillTableColumns.actions}>
         <Button
           type="button"
           size="sm"

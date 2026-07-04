@@ -18,6 +18,14 @@ import { useTranslation } from "react-i18next";
 import { TargetScopeBadge } from "./target-badges";
 import { useTargetsPageContext } from "./targets-page-context";
 
+const targetTableColumns = {
+  actions: "w-14",
+  select: "w-10",
+  skills: "w-16",
+  scope: "w-20",
+  target: "w-[24%]"
+};
+
 export const TargetList = () => {
   const { t } = useTranslation();
   const page = useTargetsPageContext();
@@ -26,7 +34,7 @@ export const TargetList = () => {
     <DataTableFixed containerClassName="mt-5">
       <DataTableFixedHeader>
         <DataTableRow>
-          <DataTableHead className="w-[42px]">
+          <DataTableHead className={targetTableColumns.select}>
             <span className="grid place-items-center">
               <Checkbox
                 checked={page.visibleAllChecked}
@@ -37,11 +45,19 @@ export const TargetList = () => {
               />
             </span>
           </DataTableHead>
-          <DataTableHead className="w-[28%]">{t("targets.table.target")}</DataTableHead>
+          <DataTableHead className={targetTableColumns.target}>
+            {t("targets.table.target")}
+          </DataTableHead>
           <DataTableHead>{t("targets.table.path")}</DataTableHead>
-          <DataTableHead className="w-[96px]">{t("targets.table.scope")}</DataTableHead>
-          <DataTableHead className="w-[120px]">{t("targets.table.skills")}</DataTableHead>
-          <DataTableHead className="w-[72px]">{t("targets.table.actions")}</DataTableHead>
+          <DataTableHead className={targetTableColumns.scope}>
+            {t("targets.table.scope")}
+          </DataTableHead>
+          <DataTableHead className={targetTableColumns.skills}>
+            {t("targets.table.skills")}
+          </DataTableHead>
+          <DataTableHead className={targetTableColumns.actions}>
+            {t("targets.table.actions")}
+          </DataTableHead>
         </DataTableRow>
       </DataTableFixedHeader>
 
@@ -60,7 +76,7 @@ export const TargetList = () => {
                 page.setSelectedTargetId(target.id);
               }}
             >
-              <DataTableCell className="w-[42px]">
+              <DataTableCell className={targetTableColumns.select}>
                 <span className="grid place-items-center">
                   {target.deletable ? (
                     <Checkbox
@@ -71,7 +87,7 @@ export const TargetList = () => {
                   ) : null}
                 </span>
               </DataTableCell>
-              <DataTableCell className="min-w-0">
+              <DataTableCell className={`${targetTableColumns.target} min-w-0`}>
                 <Button
                   type="button"
                   variant="ghost"
@@ -86,13 +102,13 @@ export const TargetList = () => {
               <DataTableCell className="truncate font-mono text-sm max-[820px]:hidden">
                 {target.path}
               </DataTableCell>
-              <DataTableCell className="max-[820px]:hidden">
+              <DataTableCell className={`${targetTableColumns.scope} max-[820px]:hidden`}>
                 <TargetScopeBadge scope={target.scope} />
               </DataTableCell>
-              <DataTableCell className="text-sm">
+              <DataTableCell className={`${targetTableColumns.skills} text-sm`}>
                 {t("targets.table.skillCount", { count: target.skillCount })}
               </DataTableCell>
-              <DataTableCell className="w-[72px]">
+              <DataTableCell className={targetTableColumns.actions}>
                 {target.deletable ? (
                   <Button
                     type="button"

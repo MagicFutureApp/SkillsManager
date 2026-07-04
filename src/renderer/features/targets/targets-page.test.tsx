@@ -348,6 +348,20 @@ describe("TargetsPage", () => {
     expect(targetTable.closest("section")).toHaveClass("flex-1", "min-h-0", "overflow-hidden");
     expect(targetTableBody).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
     expect(targetTableBody).toContainElement(screen.getByRole("button", { name: "Local project" }));
+    const targetHeaderCells = within(targetTable).getAllByRole("columnheader");
+    const firstTargetRow = targetTableBody?.querySelector("tr");
+    const targetBodyCells = within(firstTargetRow as HTMLElement).getAllByRole("cell");
+
+    expect(targetHeaderCells[0]).toHaveClass("w-10");
+    expect(targetBodyCells[0]).toHaveClass("w-10");
+    expect(targetHeaderCells[1]).toHaveClass("w-[24%]");
+    expect(targetBodyCells[1]).toHaveClass("w-[24%]");
+    expect(targetHeaderCells[3]).toHaveClass("w-20");
+    expect(targetBodyCells[3]).toHaveClass("w-20");
+    expect(targetHeaderCells[4]).toHaveClass("w-16");
+    expect(targetBodyCells[4]).toHaveClass("w-16");
+    expect(targetHeaderCells[5]).toHaveClass("w-14");
+    expect(targetBodyCells[5]).toHaveClass("w-14");
     expect(screen.getByRole("button", { name: "Local project" })).toHaveTextContent(
       "Local project"
     );
@@ -356,7 +370,7 @@ describe("TargetsPage", () => {
       within(targetTableBody as HTMLElement).queryByText("custom-directory")
     ).not.toBeInTheDocument();
     expect(within(targetTable).getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
-    expect(within(targetTable).getByText("2 个技能")).toBeInTheDocument();
+    expect(within(targetTable).getByText("2")).toBeInTheDocument();
     const header = within(targetTable).getByRole("row", {
       name: "选择全部可删除目标 目标 路径 范围 技能 操作"
     });

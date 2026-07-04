@@ -330,8 +330,19 @@ describe("SkillsPage", () => {
     const skillButton = await screen.findByRole("button", { name: "Review Bot" });
     const skillsTable = within(screen.getByRole("main")).getByRole("table");
     const skillsTableBody = skillsTable.querySelector("[data-slot='table-body']");
+    const skillHeaderCells = within(skillsTable).getAllByRole("columnheader");
+    const firstSkillRow = skillsTableBody?.querySelector("tr");
+    const skillBodyCells = within(firstSkillRow as HTMLElement).getAllByRole("cell");
 
     expect(skillButton).toBeInTheDocument();
+    expect(skillHeaderCells[0]).toHaveClass("w-10");
+    expect(skillBodyCells[0]).toHaveClass("w-10");
+    expect(skillHeaderCells[2]).toHaveClass("w-[24%]");
+    expect(skillBodyCells[2]).toHaveClass("w-[24%]");
+    expect(skillHeaderCells[3]).toHaveClass("w-14");
+    expect(skillBodyCells[3]).toHaveClass("w-14");
+    expect(skillHeaderCells[4]).toHaveClass("w-18");
+    expect(skillBodyCells[4]).toHaveClass("w-18");
     expect(skillButton.textContent).toBe("Review Bot");
     expect(
       within(skillsTableBody as HTMLElement).queryByText("skills-review-bot")

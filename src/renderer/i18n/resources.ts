@@ -160,7 +160,7 @@ export const resources = {
           path: "路径",
           selectAll: "选择全部可删除目标",
           selectTarget: "选择 {{name}}",
-          skillCount: "{{count}} 个技能",
+          skillCount: "{{count}}",
           skills: "技能",
           scope: "范围",
           target: "目标"

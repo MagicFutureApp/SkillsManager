@@ -141,12 +141,27 @@ describe("RepositoriesPage", () => {
     );
     const sourceTable = within(screen.getByRole("main")).getByRole("table");
     const sourceTableBody = sourceTable.querySelector("[data-slot='table-body']");
+    const sourceHeaderCells = within(sourceTable).getAllByRole("columnheader");
+    const firstSourceRow = sourceTableBody?.querySelector("tr");
+    const sourceBodyCells = within(firstSourceRow as HTMLElement).getAllByRole("cell");
 
     expect(sourceTable.closest("section")).toHaveClass("flex-1", "min-h-0", "overflow-hidden");
     expect(sourceTableBody).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
     expect(sourceTableBody).toContainElement(
       screen.getByRole("button", { name: "Team skills repository" })
     );
+    expect(sourceHeaderCells[0]).toHaveClass("w-10");
+    expect(sourceBodyCells[0]).toHaveClass("w-10");
+    expect(sourceHeaderCells[2]).toHaveClass("w-24");
+    expect(sourceBodyCells[2]).toHaveClass("w-24");
+    expect(sourceHeaderCells[3]).toHaveClass("w-24");
+    expect(sourceBodyCells[3]).toHaveClass("w-24");
+    expect(sourceHeaderCells[4]).toHaveClass("w-14");
+    expect(sourceBodyCells[4]).toHaveClass("w-14");
+    expect(sourceHeaderCells[5]).toHaveClass("w-12");
+    expect(sourceBodyCells[5]).toHaveClass("w-12");
+    expect(sourceHeaderCells[6]).toHaveClass("w-16");
+    expect(sourceBodyCells[6]).toHaveClass("w-16");
     expect(
       within(sourceTableBody as HTMLElement).queryByText("git@github.com:team/skills.git")
     ).not.toBeInTheDocument();
