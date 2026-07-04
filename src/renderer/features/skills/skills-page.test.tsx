@@ -328,7 +328,14 @@ describe("SkillsPage", () => {
     await renderSkillsPage({ skills: skillApiRecordsFixture });
 
     const skillButton = await screen.findByRole("button", { name: "Review Bot" });
+    const skillsTable = within(screen.getByRole("main")).getByRole("table");
+    const skillsTableBody = skillsTable.querySelector("[data-slot='table-body']");
+
     expect(skillButton).toBeInTheDocument();
+    expect(skillButton.textContent).toBe("Review Bot");
+    expect(
+      within(skillsTableBody as HTMLElement).queryByText("skills-review-bot")
+    ).not.toBeInTheDocument();
     expect(screen.getAllByText("skills-review-bot").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Team skills repository").length).toBeGreaterThan(0);
     expect(within(screen.getByRole("main")).queryByText("版本")).not.toBeInTheDocument();

@@ -124,9 +124,6 @@ export const RepositoryList = ({
                   onClick={() => onSelectRepository(repository.id)}
                 >
                   <span className="truncate text-sm font-semibold">{repository.name}</span>
-                  <span className="truncate font-mono text-xs text-muted-foreground">
-                    {repository.remoteUrl}
-                  </span>
                 </Button>
               </DataTableCell>
               <DataTableCell className="text-sm max-[820px]:hidden">

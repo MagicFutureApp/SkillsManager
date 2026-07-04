@@ -182,9 +182,6 @@ const SkillTableRow = ({ skill }: { skill: Skill }) => {
           onClick={() => page.setSelectedSkillId(skill.id)}
         >
           <strong className="block truncate text-sm">{skill.name}</strong>
-          <span className="block truncate font-mono text-xs text-muted-foreground">
-            {skill.skillId}
-          </span>
         </Button>
       </DataTableCell>
       <DataTableCell className="truncate text-sm max-[820px]:hidden">

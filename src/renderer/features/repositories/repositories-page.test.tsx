@@ -136,6 +136,9 @@ describe("RepositoriesPage", () => {
       "aria-selected",
       "true"
     );
+    expect(screen.getByRole("button", { name: "Team skills repository" }).textContent).toBe(
+      "Team skills repository"
+    );
     const sourceTable = within(screen.getByRole("main")).getByRole("table");
     const sourceTableBody = sourceTable.querySelector("[data-slot='table-body']");
 
@@ -144,6 +147,9 @@ describe("RepositoriesPage", () => {
     expect(sourceTableBody).toContainElement(
       screen.getByRole("button", { name: "Team skills repository" })
     );
+    expect(
+      within(sourceTableBody as HTMLElement).queryByText("git@github.com:team/skills.git")
+    ).not.toBeInTheDocument();
     expect(within(sourceTable).getByRole("columnheader", { name: "来源" })).toBeInTheDocument();
     expect(sourceTableBody).not.toContainElement(
       within(sourceTable).getByRole("columnheader", { name: "来源" })

@@ -348,6 +348,13 @@ describe("TargetsPage", () => {
     expect(targetTable.closest("section")).toHaveClass("flex-1", "min-h-0", "overflow-hidden");
     expect(targetTableBody).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
     expect(targetTableBody).toContainElement(screen.getByRole("button", { name: "Local project" }));
+    expect(screen.getByRole("button", { name: "Local project" })).toHaveTextContent(
+      "Local project"
+    );
+    expect(screen.getByRole("button", { name: "Local project" }).textContent).toBe("Local project");
+    expect(
+      within(targetTableBody as HTMLElement).queryByText("custom-directory")
+    ).not.toBeInTheDocument();
     expect(within(targetTable).getByText("/Users/test/project/.codex/skills")).toBeInTheDocument();
     expect(within(targetTable).getByText("2 个技能")).toBeInTheDocument();
     const header = within(targetTable).getByRole("row", {

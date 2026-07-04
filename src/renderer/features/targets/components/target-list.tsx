@@ -81,9 +81,6 @@ export const TargetList = () => {
                   onClick={() => page.setSelectedTargetId(target.id)}
                 >
                   <strong className="block truncate text-sm">{target.name}</strong>
-                  <span className="block truncate font-mono text-xs text-muted-foreground">
-                    {target.type}
-                  </span>
                 </Button>
               </DataTableCell>
               <DataTableCell className="truncate font-mono text-sm max-[820px]:hidden">
