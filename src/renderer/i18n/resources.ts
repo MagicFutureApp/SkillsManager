@@ -190,6 +190,8 @@ export const resources = {
           title: "正在扫描目标"
         },
         modal: {
+          agentType: "确认 agent 类型",
+          agentTypeDescription: "未找到 skills 目录，请选择要归一化到哪一种 agent 目录。",
           browse: "浏览",
           cancel: "取消",
           close: "关闭",
@@ -199,6 +201,7 @@ export const resources = {
           requiredError: "请填写名称和本机路径。",
           save: "保存",
           saveError: "保存目标失败。",
+          selectedDirectory: "已选择目录",
           title: "新增目标"
         },
         deleteDialog: {
@@ -592,6 +595,9 @@ export const resources = {
           title: "Scanning targets"
         },
         modal: {
+          agentType: "Confirm agent type",
+          agentTypeDescription:
+            "No skills directory was found. Choose which agent directory to normalize into.",
           browse: "Browse",
           cancel: "Cancel",
           close: "Close",
@@ -601,6 +607,7 @@ export const resources = {
           requiredError: "Name and local path are required.",
           save: "Save",
           saveError: "Failed to save target.",
+          selectedDirectory: "Selected directory",
           title: "Add target"
         },
         deleteDialog: {

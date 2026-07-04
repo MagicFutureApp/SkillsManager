@@ -8,6 +8,7 @@ import {
   type TargetViewModel
 } from "../components/targets-page-data";
 import type { RegisteredTargetRecord } from "../../../../core/targets/target-api";
+import type { TargetDirectoryAgentOption } from "@/global";
 import {
   clampPageNumber,
   createPaginationState,
@@ -19,6 +20,11 @@ import {
 type TargetsResultLike = {
   registeredTargets?: RegisteredTargetRecord[];
   scanIssues?: TargetIssue[];
+};
+
+type PendingTargetAgentDirectory = {
+  basePath: string;
+  options: TargetDirectoryAgentOption[];
 };
 
 const minimumRescanLoadingMs = 2000;
@@ -34,6 +40,8 @@ export const useTargetsPageState = () => {
   const [deleteError, setDeleteError] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeletingTargets, setIsDeletingTargets] = useState(false);
+  const [pendingTargetAgentDirectory, setPendingTargetAgentDirectory] =
+    useState<PendingTargetAgentDirectory | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [query, setQuery] = useState("");
   const [hasLoadedTargets, setHasLoadedTargets] = useState(false);
@@ -41,6 +49,7 @@ export const useTargetsPageState = () => {
   const [pendingDeleteTargetIds, setPendingDeleteTargetIds] = useState<string[]>([]);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [scanIssues, setScanIssues] = useState<TargetIssue[]>([]);
+  const [selectedTargetAgentType, setSelectedTargetAgentType] = useState<string | null>(null);
   const [sort, setSort] = useState<TargetSort>("name");
   const [targets, setTargets] = useState<TargetViewModel[]>([]);
 
@@ -109,6 +118,8 @@ export const useTargetsPageState = () => {
     setAddTargetName("");
     setAddTargetPath("");
     setIsTargetNameDirty(false);
+    setPendingTargetAgentDirectory(null);
+    setSelectedTargetAgentType(null);
     setIsAddTargetDialogOpen(true);
   };
 
@@ -126,6 +137,18 @@ export const useTargetsPageState = () => {
     setAddTargetName(name);
   };
 
+  const applyResolvedTargetPath = (targetPath: string) => {
+    setAddTargetPath(targetPath);
+    setAddTargetError("");
+    setAddTargetName((currentName) => {
+      if (isTargetNameDirty && currentName.trim()) {
+        return currentName;
+      }
+
+      return deriveTargetNameFromPath(targetPath);
+    });
+  };
+
   const selectTargetPath = async () => {
     const selectedPath = await window.skillsManager?.selectTargetDirectory?.();
 
@@ -133,15 +156,41 @@ export const useTargetsPageState = () => {
       return;
     }
 
-    setAddTargetPath(selectedPath);
+    if (!window.skillsManager?.resolveSelectedTargetDirectory) {
+      setPendingTargetAgentDirectory(null);
+      setSelectedTargetAgentType(null);
+      applyResolvedTargetPath(selectedPath);
+      return;
+    }
+
+    const resolution = await window.skillsManager.resolveSelectedTargetDirectory(selectedPath);
+
+    if (resolution.status === "resolved") {
+      setPendingTargetAgentDirectory(null);
+      setSelectedTargetAgentType(null);
+      applyResolvedTargetPath(resolution.targetPath);
+      return;
+    }
+
+    setPendingTargetAgentDirectory({
+      basePath: resolution.basePath,
+      options: resolution.options
+    });
+    setSelectedTargetAgentType(null);
+    setAddTargetPath("");
     setAddTargetError("");
     setAddTargetName((currentName) => {
       if (isTargetNameDirty && currentName.trim()) {
         return currentName;
       }
 
-      return deriveTargetNameFromPath(selectedPath);
+      return "";
     });
+  };
+
+  const selectTargetAgentDirectoryOption = (option: TargetDirectoryAgentOption) => {
+    setSelectedTargetAgentType(option.type);
+    applyResolvedTargetPath(option.targetPath);
   };
 
   const saveAddTarget = async () => {
@@ -173,6 +222,8 @@ export const useTargetsPageState = () => {
       setAddTargetName("");
       setAddTargetPath("");
       setIsTargetNameDirty(false);
+      setPendingTargetAgentDirectory(null);
+      setSelectedTargetAgentType(null);
     } catch (error) {
       setAddTargetError(error instanceof Error ? error.message : "failed");
     } finally {
@@ -377,11 +428,13 @@ export const useTargetsPageState = () => {
     isAddTargetDialogOpen,
     isRefreshingTargets,
     isSavingTarget,
+    pendingTargetAgentDirectory,
     pendingDeleteTargets,
     pagination,
     query,
     scanIssues,
     selectedTarget,
+    selectedTargetAgentType,
     selectedTargetId,
     sort,
     targets,
@@ -398,6 +451,7 @@ export const useTargetsPageState = () => {
     refreshTargets,
     saveAddTarget,
     selectAllVisibleDeletable,
+    selectTargetAgentDirectoryOption,
     selectTargetPath,
     setTargetsPage,
     setScanIssues,
@@ -429,5 +483,5 @@ const deriveTargetNameFromPath = (targetPath: string): string => {
   const normalizedPath = targetPath.trim().replace(/[\\/]+$/g, "");
   const segments = normalizedPath.split(/[\\/]+/).filter(Boolean);
 
-  return segments.at(-1) ?? targetPath.trim();
+  return segments.at(-3) ?? segments.at(-1) ?? targetPath.trim();
 };

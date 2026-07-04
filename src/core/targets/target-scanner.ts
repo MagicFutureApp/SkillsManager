@@ -13,13 +13,14 @@ import type {
 
 type RuntimePlatform = NodeJS.Platform;
 
-type TargetDefinition = {
+export type AgentTargetDirectoryDefinition = {
   command?: string;
+  directoryName: string;
   directory: (homeDir: string) => string;
   id: string;
   name: string;
   path: (homeDir: string) => string;
-  type: AgentTargetType;
+  type: Exclude<AgentTargetType, "custom-directory">;
 };
 
 export type ScanSystemTargetsOptions = {
@@ -48,7 +49,7 @@ export const scanSystemTargets = async ({
   const pathEntries = splitPathEnv(pathEnv, platform);
 
   return Promise.all(
-    targetDefinitions.map(async (definition) => {
+    agentTargetDirectoryDefinitions.map(async (definition) => {
       const targetPath = definition.path(homeDir);
       const detectedCommandPath = definition.command
         ? await findExecutablePath(definition.command, pathEntries, exists, platform)
@@ -169,7 +170,7 @@ export const normalizeTargetPath = (targetPath: string): string => {
   return normalized.replace(/[\\/]+$/, "");
 };
 
-const joinTargetPath = (homeDir: string, ...segments: string[]): string => {
+export const joinTargetPath = (homeDir: string, ...segments: string[]): string => {
   if (/^[A-Za-z]:[\\/]/.test(homeDir)) {
     return path.win32.join(homeDir, ...segments);
   }
@@ -193,9 +194,10 @@ const toScannedTarget = (
   };
 };
 
-const targetDefinitions: TargetDefinition[] = [
+export const agentTargetDirectoryDefinitions: AgentTargetDirectoryDefinition[] = [
   {
     command: "codex",
+    directoryName: ".codex",
     directory: (homeDir) => joinTargetPath(homeDir, ".codex"),
     id: "system-codex",
     name: "Codex",
@@ -204,6 +206,7 @@ const targetDefinitions: TargetDefinition[] = [
   },
   {
     command: "claude",
+    directoryName: ".claude",
     directory: (homeDir) => joinTargetPath(homeDir, ".claude"),
     id: "system-claude-code",
     name: "Claude Code",
@@ -212,6 +215,7 @@ const targetDefinitions: TargetDefinition[] = [
   },
   {
     command: "gemini",
+    directoryName: ".gemini",
     directory: (homeDir) => joinTargetPath(homeDir, ".gemini"),
     id: "system-gemini-cli",
     name: "Gemini CLI",

@@ -9,7 +9,7 @@ import {
   DialogPortal,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { FolderOpen } from "lucide-react";
 import React from "react";
@@ -85,6 +85,47 @@ export const TargetsPageModal = () => {
                   </Button>
                 </div>
               </Field>
+
+              {page.pendingTargetAgentDirectory ? (
+                <Field>
+                  <FieldLabel>{t("targets.modal.agentType")}</FieldLabel>
+                  <FieldDescription>{t("targets.modal.agentTypeDescription")}</FieldDescription>
+                  <div className="rounded-lg border border-border bg-muted/30 p-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-muted-foreground">
+                        {t("targets.modal.selectedDirectory")}
+                      </p>
+                      <p className="mt-1 break-all text-xs font-normal text-foreground">
+                        {page.pendingTargetAgentDirectory.basePath}
+                      </p>
+                    </div>
+                    <div
+                      role="radiogroup"
+                      aria-label={t("targets.modal.agentType")}
+                      className="mt-3 grid grid-cols-3 gap-2"
+                    >
+                      {page.pendingTargetAgentDirectory.options.map((option) => {
+                        const isSelected = page.selectedTargetAgentType === option.type;
+
+                        return (
+                          <Button
+                            key={option.type}
+                            type="button"
+                            role="radio"
+                            aria-checked={isSelected}
+                            variant={isSelected ? "secondary" : "outline"}
+                            className="h-8 min-w-0 px-2"
+                            disabled={page.isSavingTarget}
+                            onClick={() => page.selectTargetAgentDirectoryOption(option)}
+                          >
+                            <span className="truncate">{option.name}</span>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </Field>
+              ) : null}
 
               <Field>
                 <FieldLabel>{t("targets.modal.name")}</FieldLabel>

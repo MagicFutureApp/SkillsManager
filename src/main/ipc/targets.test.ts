@@ -8,6 +8,7 @@ import {
   addCustomDirectoryTarget,
   deleteTargets,
   getTargets,
+  resolveSelectedTargetDirectory,
   rescanTargets,
   selectTargetDirectory
 } from "./targets";
@@ -34,6 +35,97 @@ describe("target IPC handlers", () => {
     });
 
     await expect(selectTargetDirectory({ showOpenDialog })).resolves.toBeNull();
+  });
+
+  it("resolves a selected skills directory without filesystem probing", async () => {
+    const isDirectory = vi.fn();
+    const readDirectory = vi.fn();
+
+    await expect(
+      resolveSelectedTargetDirectory("/Users/test/project/.claude/skills", {
+        isDirectory,
+        readDirectory
+      })
+    ).resolves.toEqual({
+      status: "resolved",
+      targetPath: "/Users/test/project/.claude/skills"
+    });
+    expect(isDirectory).not.toHaveBeenCalled();
+    expect(readDirectory).not.toHaveBeenCalled();
+  });
+
+  it("resolves a selected agent config directory that contains skills", async () => {
+    const isDirectory = vi.fn(async (candidatePath: string) => {
+      return candidatePath === "/Users/test/project/.claude/skills";
+    });
+    const readDirectory = vi.fn();
+
+    await expect(
+      resolveSelectedTargetDirectory("/Users/test/project/.claude", {
+        isDirectory,
+        readDirectory
+      })
+    ).resolves.toEqual({
+      status: "resolved",
+      targetPath: "/Users/test/project/.claude/skills"
+    });
+    expect(isDirectory).toHaveBeenCalledWith("/Users/test/project/.claude/skills");
+    expect(readDirectory).not.toHaveBeenCalled();
+  });
+
+  it("resolves a one-level child skills directory under the selected directory", async () => {
+    const isDirectory = vi.fn(async (candidatePath: string) => {
+      return candidatePath === "/Users/test/project/.claude/skills";
+    });
+    const readDirectory = vi.fn().mockResolvedValue(["README.md", ".claude", ".codex"]);
+
+    await expect(
+      resolveSelectedTargetDirectory("/Users/test/project", {
+        isDirectory,
+        readDirectory
+      })
+    ).resolves.toEqual({
+      status: "resolved",
+      targetPath: "/Users/test/project/.claude/skills"
+    });
+    expect(isDirectory).toHaveBeenCalledWith("/Users/test/project/skills");
+    expect(isDirectory).toHaveBeenCalledWith("/Users/test/project/.claude/skills");
+    expect(readDirectory).toHaveBeenCalledWith("/Users/test/project");
+  });
+
+  it("returns agent options when the selected directory has no skills directory", async () => {
+    const isDirectory = vi.fn().mockResolvedValue(false);
+    const readDirectory = vi.fn().mockResolvedValue(["README.md"]);
+
+    await expect(
+      resolveSelectedTargetDirectory("/Users/test/project", {
+        isDirectory,
+        readDirectory
+      })
+    ).resolves.toEqual({
+      basePath: "/Users/test/project",
+      options: [
+        {
+          directoryName: ".codex",
+          name: "Codex",
+          targetPath: "/Users/test/project/.codex/skills",
+          type: "codex"
+        },
+        {
+          directoryName: ".claude",
+          name: "Claude Code",
+          targetPath: "/Users/test/project/.claude/skills",
+          type: "claude-code"
+        },
+        {
+          directoryName: ".gemini",
+          name: "Gemini CLI",
+          targetPath: "/Users/test/project/.gemini/skills",
+          type: "gemini-cli"
+        }
+      ],
+      status: "requires-agent-type"
+    });
   });
 
   it("adds a selected custom directory target as global and returns refreshed targets", async () => {

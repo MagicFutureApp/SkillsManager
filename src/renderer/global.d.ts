@@ -27,6 +27,8 @@ import type {
   AddCustomDirectoryTargetInput as MainAddCustomDirectoryTargetInput,
   AddSkillDirectoryTargetInput as MainAddSkillDirectoryTargetInput,
   DeleteTargetsInput as MainDeleteTargetsInput,
+  SelectedTargetDirectoryResolution as MainSelectedTargetDirectoryResolution,
+  TargetDirectoryAgentOption as MainTargetDirectoryAgentOption,
   TargetsListResult as MainTargetsListResult,
   TargetsRescanResult as MainTargetsRescanResult
 } from "../main/ipc/targets";
@@ -61,6 +63,8 @@ export type UpdateSkillTargetPreferenceResult = MainUpdateSkillTargetPreferenceR
 export type AddSkillDirectoryTargetInput = MainAddSkillDirectoryTargetInput;
 export type AddCustomDirectoryTargetInput = MainAddCustomDirectoryTargetInput;
 export type DeleteTargetsInput = MainDeleteTargetsInput;
+export type SelectedTargetDirectoryResolution = MainSelectedTargetDirectoryResolution;
+export type TargetDirectoryAgentOption = MainTargetDirectoryAgentOption;
 export type TargetsListResult = MainTargetsListResult;
 export type TargetsRescanResult = MainTargetsRescanResult;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
@@ -115,6 +119,9 @@ declare global {
       ) => Promise<AppSettingsResult>;
       selectLocalRepositoryPath?: () => Promise<string | null>;
       selectTargetDirectory?: () => Promise<string | null>;
+      resolveSelectedTargetDirectory?: (
+        selectedPath: string
+      ) => Promise<SelectedTargetDirectoryResolution>;
       syncRepositories?: (repositoryIds: string[]) => Promise<RepositoriesSyncResult>;
       platform: RuntimePlatform;
     };

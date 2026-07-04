@@ -26,6 +26,7 @@ import type {
   AddCustomDirectoryTargetInput,
   AddSkillDirectoryTargetInput,
   DeleteTargetsInput,
+  SelectedTargetDirectoryResolution,
   TargetsListResult,
   TargetsRescanResult
 } from "./ipc/targets";
@@ -105,6 +106,11 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ipcRenderer.invoke("repositories:selectLocalPath") as Promise<string | null>,
   selectTargetDirectory: () =>
     ipcRenderer.invoke("targets:selectDirectory") as Promise<string | null>,
+  resolveSelectedTargetDirectory: (selectedPath: string) =>
+    ipcRenderer.invoke(
+      "targets:resolveSelectedDirectory",
+      selectedPath
+    ) as Promise<SelectedTargetDirectoryResolution>,
   syncRepositories: (repositoryIds: string[]) =>
     ipcRenderer.invoke("repositories:sync", repositoryIds) as Promise<RepositoriesSyncResult>,
   platform: process.platform

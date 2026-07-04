@@ -7,6 +7,8 @@ import { createI18nInstance } from "@/i18n/react-i18n";
 import { TargetsPage } from "./targets-page";
 import type { TargetsListResult, TargetsRescanResult } from "@/global";
 
+type SkillsManagerApi = NonNullable<Window["skillsManager"]>;
+
 const targetsFixture: TargetsListResult = {
   registeredTargets: [
     {
@@ -173,6 +175,28 @@ const targetsWithNewCustomDirectoryFixture: TargetsListResult = {
   ]
 };
 
+const targetsWithClaudeProjectTargetFixture: TargetsListResult = {
+  registeredTargets: [
+    ...targetsFixture.registeredTargets,
+    {
+      createdAt: "2026-06-24T00:00:00.000Z",
+      enabled: true,
+      id: "target-custom-users-test-project-claude-skills-77ce27877bf8",
+      name: "project",
+      normalizedPath: "/Users/test/project/.claude/skills",
+      path: "/Users/test/project/.claude/skills",
+      scanMessage: null,
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "global",
+      status: "registered",
+      type: "custom-directory",
+      updatedAt: "2026-06-24T00:00:00.000Z"
+    }
+  ]
+};
+
 const targetsForSortFixture: TargetsListResult = {
   registeredTargets: [
     {
@@ -254,10 +278,12 @@ const renderTargetsPage = async ({
     registeredTargets: [targetsFixture.registeredTargets[1]]
   },
   locale = "zh-CN",
+  managerOverrides = {},
   targets = targetsFixture
 }: {
   deletedTargets?: TargetsListResult;
   locale?: "zh-CN" | "en-US";
+  managerOverrides?: Partial<SkillsManagerApi>;
   targets?: TargetsListResult;
 } = {}) => {
   const i18n = await createI18nInstance(locale);
@@ -272,8 +298,13 @@ const renderTargetsPage = async ({
     addCustomDirectoryTarget: vi.fn().mockResolvedValue(targetsWithNewCustomDirectoryFixture),
     deleteTargets: vi.fn().mockResolvedValue(deletedTargets),
     selectTargetDirectory: vi.fn().mockResolvedValue("/Users/test/review-skills"),
+    resolveSelectedTargetDirectory: vi.fn().mockResolvedValue({
+      status: "resolved",
+      targetPath: "/Users/test/review-skills"
+    }),
     rescanTargets: vi.fn().mockResolvedValue(rescannedTargetsFixture),
-    platform: "darwin"
+    platform: "darwin",
+    ...managerOverrides
   };
 
   return render(
@@ -688,8 +719,23 @@ describe("TargetsPage", () => {
     ]);
   });
 
-  it("opens a directory picker and saves the selected path as a global target", async () => {
-    await renderTargetsPage();
+  it("opens a directory picker and saves the resolved skills path as a global target", async () => {
+    const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/project");
+    const resolveSelectedTargetDirectory = vi.fn().mockResolvedValue({
+      status: "resolved",
+      targetPath: "/Users/test/project/.claude/skills"
+    });
+    const addCustomDirectoryTarget = vi
+      .fn()
+      .mockResolvedValue(targetsWithClaudeProjectTargetFixture);
+
+    await renderTargetsPage({
+      managerOverrides: {
+        addCustomDirectoryTarget,
+        resolveSelectedTargetDirectory,
+        selectTargetDirectory
+      }
+    });
     await screen.findByRole("button", { name: "Local project" });
 
     fireEvent.click(screen.getByRole("button", { name: "新增" }));
@@ -706,29 +752,104 @@ describe("TargetsPage", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "浏览" }));
 
     await waitFor(() => {
-      expect(window.skillsManager?.selectTargetDirectory).toHaveBeenCalledOnce();
-      expect(within(dialog).getByLabelText("本机路径")).toHaveValue("/Users/test/review-skills");
-      expect(within(dialog).getByLabelText("名称")).toHaveValue("review-skills");
+      expect(selectTargetDirectory).toHaveBeenCalledOnce();
+      expect(resolveSelectedTargetDirectory).toHaveBeenCalledWith("/Users/test/project");
+      expect(within(dialog).getByLabelText("本机路径")).toHaveValue(
+        "/Users/test/project/.claude/skills"
+      );
+      expect(within(dialog).getByLabelText("名称")).toHaveValue("project");
     });
 
     fireEvent.click(within(dialog).getByRole("button", { name: "保存" }));
 
     await waitFor(() => {
-      expect(window.skillsManager?.addCustomDirectoryTarget).toHaveBeenCalledWith({
-        name: "review-skills",
-        targetPath: "/Users/test/review-skills"
+      expect(addCustomDirectoryTarget).toHaveBeenCalledWith({
+        name: "project",
+        targetPath: "/Users/test/project/.claude/skills"
       });
-      expect(screen.getByRole("button", { name: "review-skills" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "project" })).toBeInTheDocument();
     });
     expect(
       within(within(screen.getByRole("main")).getByRole("table")).getByText(
-        "/Users/test/review-skills"
+        "/Users/test/project/.claude/skills"
       )
     ).toBeInTheDocument();
     expect(
-      within(screen.getByLabelText("目标详情")).getByRole("heading", { name: "review-skills" })
+      within(screen.getByLabelText("目标详情")).getByRole("heading", { name: "project" })
     ).toBeInTheDocument();
     expect(screen.getAllByText("全局").length).toBeGreaterThan(0);
+  });
+
+  it("requires an agent type confirmation when no skills directory is found", async () => {
+    const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/project");
+    const resolveSelectedTargetDirectory = vi.fn().mockResolvedValue({
+      basePath: "/Users/test/project",
+      options: [
+        {
+          directoryName: ".codex",
+          name: "Codex",
+          targetPath: "/Users/test/project/.codex/skills",
+          type: "codex"
+        },
+        {
+          directoryName: ".claude",
+          name: "Claude Code",
+          targetPath: "/Users/test/project/.claude/skills",
+          type: "claude-code"
+        },
+        {
+          directoryName: ".gemini",
+          name: "Gemini CLI",
+          targetPath: "/Users/test/project/.gemini/skills",
+          type: "gemini-cli"
+        }
+      ],
+      status: "requires-agent-type"
+    });
+    const addCustomDirectoryTarget = vi
+      .fn()
+      .mockResolvedValue(targetsWithClaudeProjectTargetFixture);
+
+    await renderTargetsPage({
+      managerOverrides: {
+        addCustomDirectoryTarget,
+        resolveSelectedTargetDirectory,
+        selectTargetDirectory
+      }
+    });
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    const dialog = screen.getByRole("dialog", { name: "新增目标" });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "浏览" }));
+
+    await waitFor(() => {
+      expect(resolveSelectedTargetDirectory).toHaveBeenCalledWith("/Users/test/project");
+      expect(within(dialog).getByText("确认 agent 类型")).toBeInTheDocument();
+      expect(within(dialog).getByText("/Users/test/project")).toBeInTheDocument();
+      expect(within(dialog).getByLabelText("本机路径")).toHaveValue("");
+    });
+
+    fireEvent.click(within(dialog).getByRole("radio", { name: "Claude Code" }));
+
+    expect(within(dialog).getByRole("radio", { name: "Claude Code" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(within(dialog).getByLabelText("本机路径")).toHaveValue(
+      "/Users/test/project/.claude/skills"
+    );
+    expect(within(dialog).getByLabelText("名称")).toHaveValue("project");
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "保存" }));
+
+    await waitFor(() => {
+      expect(addCustomDirectoryTarget).toHaveBeenCalledWith({
+        name: "project",
+        targetPath: "/Users/test/project/.claude/skills"
+      });
+    });
   });
 
   it("does not save a target when directory selection is canceled", async () => {
