@@ -380,9 +380,10 @@ describe("RepositoriesPage", () => {
     expect(addedTile.querySelector("svg")).not.toBeNull();
     expect(changedTile.querySelector("svg")).not.toBeNull();
     expect(within(detail).queryByRole("button", { name: /移除技能/ })).not.toBeInTheDocument();
-    expect(within(detail).getByText("移除技能").closest("div")).not.toContainElement(
-      screen.queryByText("Legacy Helper")
-    );
+    const removedTile = within(detail).getByText("移除技能").closest("div");
+
+    expect(removedTile).not.toContainElement(screen.queryByText("Legacy Helper"));
+    expect(removedTile?.querySelector("svg")).not.toBeNull();
     expect(distributionSection).not.toBeNull();
     expect(within(detail).queryByRole("heading", { name: "同步明细" })).not.toBeInTheDocument();
     expect(within(detail).queryByText("Review Bot")).not.toBeInTheDocument();

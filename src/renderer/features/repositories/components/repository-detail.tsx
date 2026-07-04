@@ -233,9 +233,10 @@ export const RepositoryDetail = ({
             ) : (
               <div
                 key={group.key}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3"
+                className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3"
               >
                 {content}
+                <ListTree className="size-4 text-muted-foreground" aria-hidden="true" />
               </div>
             );
           })}
