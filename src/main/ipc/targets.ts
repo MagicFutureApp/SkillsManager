@@ -48,6 +48,12 @@ export type DeleteTargetsInput = {
   targetIds: string[];
 };
 
+export type UpdateCustomDirectoryTargetInput = {
+  name: string;
+  targetId: string;
+  targetPath: string;
+};
+
 export type TargetDirectoryAgentOption = {
   directoryName: string;
   name: string;
@@ -227,6 +233,37 @@ export const deleteTargets = async (
   return getTargets(db);
 };
 
+export const updateCustomDirectoryTarget = async (
+  db: DbClient,
+  input: UpdateCustomDirectoryTargetInput,
+  operations: AddCustomDirectoryTargetOperations = {
+    now: () => new Date()
+  }
+): Promise<TargetsListResult> => {
+  const targetId = input.targetId.trim();
+  const name = input.name.trim();
+  const targetPath = input.targetPath.trim();
+
+  if (!targetId || !name || !targetPath) {
+    throw new Error("Target, name, and directory are required.");
+  }
+
+  const normalizedPath = normalizeTargetPath(targetPath);
+  const targetRepository = createTargetRepository(db);
+
+  await targetRepository.updateCustomDirectoryTarget(
+    {
+      id: targetId,
+      name,
+      normalizedPath,
+      path: targetPath
+    },
+    operations.now()
+  );
+
+  return getTargets(db);
+};
+
 export const rescanTargets = async (
   db: DbClient,
   operations: TargetsRescanOperations = {
@@ -285,6 +322,12 @@ export const registerTargetsIpc = (db: DbProvider): void => {
     "targets:addSkillDirectory",
     (_event, input: AddSkillDirectoryTargetInput): Promise<TargetsListResult> => {
       return addSkillDirectoryTarget(resolveDb(db), input);
+    }
+  );
+  ipcMain.handle(
+    "targets:updateCustomDirectory",
+    (_event, input: UpdateCustomDirectoryTargetInput): Promise<TargetsListResult> => {
+      return updateCustomDirectoryTarget(resolveDb(db), input);
     }
   );
   ipcMain.handle(

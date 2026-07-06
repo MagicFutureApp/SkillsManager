@@ -134,6 +134,7 @@ export const resources = {
           copyTarget: "复制目标",
           deleteSelected: "删除",
           deleteTarget: "删除 {{name}}",
+          editTarget: "编辑",
           scan: "扫描",
           rescan: "重新扫描"
         },
@@ -195,6 +196,10 @@ export const resources = {
           browse: "浏览",
           cancel: "取消",
           close: "关闭",
+          customAgentFolder: "自定义文件夹",
+          customAgentFolderPlaceholder: "例如 .cursor",
+          customAgentFolderRequiredError: "请填写自定义文件夹名称。",
+          customAgentType: "自定义",
           description: "选择本机目录并命名为一个全局分发目标。",
           name: "名称",
           path: "本机路径",
@@ -210,6 +215,18 @@ export const resources = {
           confirm: "确认删除",
           description: "目标目录里的 Skills 文件不会被删除。如有需要，请删除后手动清理。",
           title: "删除目标"
+        },
+        editDialog: {
+          cancel: "取消",
+          close: "关闭",
+          description: "只更新这个目标的已选择目录和名称。",
+          name: "名称",
+          path: "已选择目录",
+          requiredError: "请填写名称和已选择目录。",
+          save: "保存",
+          saveError: "保存目标失败。",
+          title: "编辑目标",
+          unavailableError: "编辑目标暂不可用。"
         },
         detail: {
           ariaLabel: "目标详情",
@@ -538,6 +555,7 @@ export const resources = {
           copyTarget: "Copy target",
           deleteSelected: "Delete",
           deleteTarget: "Delete {{name}}",
+          editTarget: "Edit",
           scan: "Scan",
           rescan: "Rescan"
         },
@@ -601,6 +619,10 @@ export const resources = {
           browse: "Browse",
           cancel: "Cancel",
           close: "Close",
+          customAgentFolder: "Custom folder",
+          customAgentFolderPlaceholder: "For example .cursor",
+          customAgentFolderRequiredError: "Custom folder name is required.",
+          customAgentType: "Custom",
           description: "Choose a local directory and name it as a global distribution target.",
           name: "Name",
           path: "Local path",
@@ -617,6 +639,18 @@ export const resources = {
           description:
             "Skills files in the target folders will not be deleted. Remove them manually after deletion if needed.",
           title: "Delete target"
+        },
+        editDialog: {
+          cancel: "Cancel",
+          close: "Close",
+          description: "Only the selected directory and name for this target will be updated.",
+          name: "Name",
+          path: "Selected directory",
+          requiredError: "Name and selected directory are required.",
+          save: "Save",
+          saveError: "Failed to save target.",
+          title: "Edit target",
+          unavailableError: "Editing targets is unavailable."
         },
         detail: {
           ariaLabel: "Target details",

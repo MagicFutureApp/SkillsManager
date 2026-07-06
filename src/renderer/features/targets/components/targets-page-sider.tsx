@@ -7,8 +7,13 @@ import { useTargetsPageContext } from "./targets-page-context";
 
 export const TargetsPageSider = () => {
   const { t } = useTranslation();
-  const { copySelectedTargetPath, isDeletingTargets, openDeleteDialog, selectedTarget } =
-    useTargetsPageContext();
+  const {
+    copySelectedTargetPath,
+    isDeletingTargets,
+    openDeleteDialog,
+    openEditTargetDialog,
+    selectedTarget
+  } = useTargetsPageContext();
 
   if (!selectedTarget) {
     return (
@@ -32,6 +37,15 @@ export const TargetsPageSider = () => {
           {selectedTarget.path}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
+          {selectedTarget.deletable ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => openEditTargetDialog(selectedTarget)}
+            >
+              {t("targets.actions.editTarget")}
+            </Button>
+          ) : null}
           <Button type="button" variant="outline" onClick={copySelectedTargetPath}>
             {t("targets.actions.copyTarget")}
           </Button>

@@ -29,6 +29,7 @@ import type {
   DeleteTargetsInput as MainDeleteTargetsInput,
   SelectedTargetDirectoryResolution as MainSelectedTargetDirectoryResolution,
   TargetDirectoryAgentOption as MainTargetDirectoryAgentOption,
+  UpdateCustomDirectoryTargetInput as MainUpdateCustomDirectoryTargetInput,
   TargetsListResult as MainTargetsListResult,
   TargetsRescanResult as MainTargetsRescanResult
 } from "../main/ipc/targets";
@@ -65,6 +66,7 @@ export type AddCustomDirectoryTargetInput = MainAddCustomDirectoryTargetInput;
 export type DeleteTargetsInput = MainDeleteTargetsInput;
 export type SelectedTargetDirectoryResolution = MainSelectedTargetDirectoryResolution;
 export type TargetDirectoryAgentOption = MainTargetDirectoryAgentOption;
+export type UpdateCustomDirectoryTargetInput = MainUpdateCustomDirectoryTargetInput;
 export type TargetsListResult = MainTargetsListResult;
 export type TargetsRescanResult = MainTargetsRescanResult;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
@@ -107,6 +109,9 @@ declare global {
         input: AddCustomDirectoryTargetInput
       ) => Promise<TargetsListResult>;
       addSkillDirectoryTarget?: (input: AddSkillDirectoryTargetInput) => Promise<TargetsListResult>;
+      updateCustomDirectoryTarget?: (
+        input: UpdateCustomDirectoryTargetInput
+      ) => Promise<TargetsListResult>;
       deleteTargets?: (input: DeleteTargetsInput) => Promise<TargetsListResult>;
       rescanTargets?: () => Promise<TargetsRescanResult>;
       openExternalUrl?: (url: string) => Promise<void>;

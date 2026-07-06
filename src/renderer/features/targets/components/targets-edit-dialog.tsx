@@ -1,4 +1,7 @@
 import { Form } from "@base-ui/react/form";
+import React from "react";
+import { useTranslation } from "react-i18next";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,35 +14,32 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import React from "react";
-import { useTranslation } from "react-i18next";
 
 import { TargetDirectorySelector } from "./target-directory-selector";
 import { useTargetsPageContext } from "./targets-page-context";
 
-export const TargetsPageModal = () => {
+export const TargetsEditDialog = () => {
   const { t } = useTranslation();
   const page = useTargetsPageContext();
 
-  if (!page.isAddTargetDialogOpen) {
+  if (!page.isEditTargetDialogOpen) {
     return null;
   }
 
   const submitForm = () => {
-    void page.saveAddTarget();
+    void page.saveEditTarget();
   };
-
-  const errorMessage = getAddTargetErrorMessage(page.addTargetError, {
+  const errorMessage = getEditTargetErrorMessage(page.editTargetError, {
     customAgentDirectoryRequired: t("targets.modal.customAgentFolderRequiredError"),
-    failed: t("targets.modal.saveError"),
-    required: t("targets.modal.requiredError"),
-    unavailable: t("targets.actions.addTargetUnavailable")
+    failed: t("targets.editDialog.saveError"),
+    required: t("targets.editDialog.requiredError"),
+    unavailable: t("targets.editDialog.unavailableError")
   });
 
   return (
     <Dialog
-      open={page.isAddTargetDialogOpen}
-      onOpenChange={(nextOpen) => !nextOpen && page.closeAddTargetDialog()}
+      open={page.isEditTargetDialogOpen}
+      onOpenChange={(nextOpen) => !nextOpen && page.closeEditTargetDialog()}
     >
       <DialogPortal>
         <DialogBackdrop />
@@ -47,8 +47,8 @@ export const TargetsPageModal = () => {
           <Form onFormSubmit={submitForm}>
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
-                <DialogTitle>{t("targets.modal.title")}</DialogTitle>
-                <DialogDescription>{t("targets.modal.description")}</DialogDescription>
+                <DialogTitle>{t("targets.editDialog.title")}</DialogTitle>
+                <DialogDescription>{t("targets.editDialog.description")}</DialogDescription>
               </div>
               <DialogClose
                 render={
@@ -56,35 +56,35 @@ export const TargetsPageModal = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    disabled={page.isSavingTarget}
+                    disabled={page.isSavingEditTarget}
                   />
                 }
               >
-                {t("targets.modal.close")}
+                {t("targets.editDialog.close")}
               </DialogClose>
             </div>
 
             <div className="grid gap-3">
               <TargetDirectorySelector
                 customAgentDirectoryName={page.customTargetAgentDirectoryName}
-                disabled={page.isSavingTarget}
+                disabled={page.isSavingEditTarget}
                 isCustomAgentDirectorySelected={page.isCustomTargetAgentDirectorySelected}
-                onBrowse={() => void page.selectTargetPath()}
-                onCustomAgentDirectoryNameChange={page.setCustomTargetAgentDirectoryName}
-                onSelectAgentDirectoryOption={page.selectTargetAgentDirectoryOption}
-                onSelectCustomAgentDirectoryOption={page.selectCustomTargetAgentDirectoryOption}
-                path={page.addTargetPath}
-                pathLabel={t("targets.modal.path")}
+                onCustomAgentDirectoryNameChange={page.setEditCustomTargetAgentDirectoryName}
+                onSelectAgentDirectoryOption={page.selectEditTargetAgentDirectoryOption}
+                onSelectCustomAgentDirectoryOption={page.selectEditCustomTargetAgentDirectoryOption}
+                path={page.editTargetPath}
+                pathLabel={t("targets.editDialog.path")}
                 pendingDirectory={page.pendingTargetAgentDirectory}
                 selectedAgentType={page.selectedTargetAgentType}
+                showBrowse={false}
               />
 
               <Field>
-                <FieldLabel>{t("targets.modal.name")}</FieldLabel>
+                <FieldLabel>{t("targets.editDialog.name")}</FieldLabel>
                 <Input
-                  disabled={page.isSavingTarget}
-                  value={page.addTargetName}
-                  onValueChange={page.setPendingTargetName}
+                  disabled={page.isSavingEditTarget}
+                  value={page.editTargetName}
+                  onValueChange={page.setEditTargetName}
                 />
               </Field>
             </div>
@@ -93,12 +93,14 @@ export const TargetsPageModal = () => {
 
             <div className="mt-4 flex justify-end gap-2">
               <DialogClose
-                render={<Button type="button" variant="outline" disabled={page.isSavingTarget} />}
+                render={
+                  <Button type="button" variant="outline" disabled={page.isSavingEditTarget} />
+                }
               >
-                {t("targets.modal.cancel")}
+                {t("targets.editDialog.cancel")}
               </DialogClose>
-              <Button type="submit" disabled={page.isSavingTarget}>
-                {t("targets.modal.save")}
+              <Button type="submit" disabled={page.isSavingEditTarget}>
+                {t("targets.editDialog.save")}
               </Button>
             </div>
           </Form>
@@ -108,7 +110,7 @@ export const TargetsPageModal = () => {
   );
 };
 
-const getAddTargetErrorMessage = (
+const getEditTargetErrorMessage = (
   error: string,
   messages: {
     customAgentDirectoryRequired: string;

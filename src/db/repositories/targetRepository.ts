@@ -23,6 +23,12 @@ type RegisterCustomDirectoryTargetInput = {
   normalizedPath: string;
   path: string;
 };
+type UpdateCustomDirectoryTargetInput = {
+  id: string;
+  name: string;
+  normalizedPath: string;
+  path: string;
+};
 type AgentTargetInsert = typeof agentTargets.$inferInsert;
 
 export const createTargetRepository = (db: DbClient) => {
@@ -143,6 +149,42 @@ export const createTargetRepository = (db: DbClient) => {
           .run();
         tx.delete(agentTargets).where(inArray(agentTargets.id, deletableTargetIds)).run();
       });
+    },
+
+    async updateCustomDirectoryTarget(
+      target: UpdateCustomDirectoryTargetInput,
+      updatedAt = new Date()
+    ): Promise<void> {
+      const targetRows = await db
+        .select({
+          id: agentTargets.id,
+          type: agentTargets.type
+        })
+        .from(agentTargets)
+        .where(eq(agentTargets.id, target.id));
+      const existingTarget = targetRows[0];
+
+      if (!existingTarget) {
+        throw new Error("Target not found.");
+      }
+
+      if (isBuiltInTargetType(existingTarget.type)) {
+        throw new Error("System built-in targets cannot be edited.");
+      }
+
+      await db
+        .update(agentTargets)
+        .set({
+          detectionStatus: null,
+          enabled: true,
+          name: target.name,
+          normalizedPath: target.normalizedPath,
+          path: target.path,
+          scanMessage: null,
+          type: "custom-directory",
+          updatedAt
+        })
+        .where(eq(agentTargets.id, target.id));
     },
 
     async registerCustomDirectoryTarget(

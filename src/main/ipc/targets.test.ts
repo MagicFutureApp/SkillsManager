@@ -10,7 +10,8 @@ import {
   getTargets,
   resolveSelectedTargetDirectory,
   rescanTargets,
-  selectTargetDirectory
+  selectTargetDirectory,
+  updateCustomDirectoryTarget
 } from "./targets";
 
 describe("target IPC handlers", () => {
@@ -305,6 +306,77 @@ describe("target IPC handlers", () => {
     await expect(deleteTargets(db, { targetIds: [" "] })).rejects.toThrow(
       "At least one target is required."
     );
+  });
+
+  it("updates a selected custom directory target and returns refreshed targets", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+
+    await db.insert(agentTargets).values({
+      createdAt,
+      enabled: true,
+      id: "target-project",
+      name: "Local project",
+      normalizedPath: "/Users/test/project/.codex/skills",
+      path: "/Users/test/project/.codex/skills",
+      type: "custom-directory",
+      updatedAt: createdAt
+    });
+
+    await expect(
+      updateCustomDirectoryTarget(
+        db,
+        {
+          name: "Edited target",
+          targetId: "target-project",
+          targetPath: "/Users/test/edited/.codex/skills"
+        },
+        {
+          now: () => new Date("2026-06-25T00:00:00.000Z")
+        }
+      )
+    ).resolves.toMatchObject({
+      registeredTargets: [
+        {
+          id: "target-project",
+          name: "Edited target",
+          normalizedPath: "/Users/test/edited/.codex/skills",
+          path: "/Users/test/edited/.codex/skills",
+          type: "custom-directory",
+          updatedAt: "2026-06-25T00:00:00.000Z"
+        }
+      ]
+    });
+  });
+
+  it("rejects updates to system built-in targets", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+
+    await db.insert(agentTargets).values({
+      createdAt,
+      enabled: true,
+      id: "system-codex",
+      name: "Codex",
+      normalizedPath: "/Users/test/.codex/skills",
+      path: "/Users/test/.codex/skills",
+      type: "codex",
+      updatedAt: createdAt
+    });
+
+    await expect(
+      updateCustomDirectoryTarget(
+        db,
+        {
+          name: "Edited Codex",
+          targetId: "system-codex",
+          targetPath: "/Users/test/other/.codex/skills"
+        },
+        {
+          now: () => new Date("2026-06-25T00:00:00.000Z")
+        }
+      )
+    ).rejects.toThrow("System built-in targets cannot be edited.");
   });
 
   it("lists targets from the database without mixing in system scan results", async () => {

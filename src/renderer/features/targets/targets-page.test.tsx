@@ -197,6 +197,41 @@ const targetsWithClaudeProjectTargetFixture: TargetsListResult = {
   ]
 };
 
+const targetsWithCustomProjectTargetFixture: TargetsListResult = {
+  registeredTargets: [
+    ...targetsFixture.registeredTargets,
+    {
+      createdAt: "2026-06-24T00:00:00.000Z",
+      enabled: true,
+      id: "target-custom-users-test-project-cursor-skills-77ce27877bf8",
+      name: "project",
+      normalizedPath: "/Users/test/project/.cursor/skills",
+      path: "/Users/test/project/.cursor/skills",
+      scanMessage: null,
+      selectedSkills: [],
+      skillPreferences: [],
+      skillCount: 0,
+      scope: "global",
+      status: "registered",
+      type: "custom-directory",
+      updatedAt: "2026-06-24T00:00:00.000Z"
+    }
+  ]
+};
+
+const targetsWithEditedCustomDirectoryFixture: TargetsListResult = {
+  registeredTargets: [
+    {
+      ...targetsFixture.registeredTargets[0],
+      name: "Edited target",
+      normalizedPath: "/Users/test/project/.claude/skills",
+      path: "/Users/test/project/.claude/skills",
+      updatedAt: "2026-06-24T00:00:00.000Z"
+    },
+    targetsFixture.registeredTargets[1]
+  ]
+};
+
 const targetsForSortFixture: TargetsListResult = {
   registeredTargets: [
     {
@@ -297,6 +332,7 @@ const renderTargetsPage = async ({
     listTargets: vi.fn().mockResolvedValue(targets),
     addCustomDirectoryTarget: vi.fn().mockResolvedValue(targetsWithNewCustomDirectoryFixture),
     deleteTargets: vi.fn().mockResolvedValue(deletedTargets),
+    updateCustomDirectoryTarget: vi.fn().mockResolvedValue(targetsWithEditedCustomDirectoryFixture),
     selectTargetDirectory: vi.fn().mockResolvedValue("/Users/test/review-skills"),
     resolveSelectedTargetDirectory: vi.fn().mockResolvedValue({
       status: "resolved",
@@ -487,6 +523,9 @@ describe("TargetsPage", () => {
     expect(
       within(identityCard as HTMLElement).queryByRole("button", { name: "删除" })
     ).not.toBeInTheDocument();
+    expect(
+      within(identityCard as HTMLElement).queryByRole("button", { name: "编辑" })
+    ).not.toBeInTheDocument();
     expect(within(scanResultCard as HTMLElement).getByText("已检测")).toBeInTheDocument();
     expect(
       within(scanResultCard as HTMLElement).getByText("Target directory exists and is writable.")
@@ -534,6 +573,173 @@ describe("TargetsPage", () => {
       "title",
       "/Users/test/project/.codex/skills"
     );
+  });
+
+  it("edits a custom target name and agent directory from the target detail header", async () => {
+    const updateCustomDirectoryTarget = vi
+      .fn()
+      .mockResolvedValue(targetsWithEditedCustomDirectoryFixture);
+    const selectTargetDirectory = vi.fn();
+    const resolveSelectedTargetDirectory = vi.fn();
+
+    await renderTargetsPage({
+      managerOverrides: {
+        resolveSelectedTargetDirectory,
+        selectTargetDirectory,
+        updateCustomDirectoryTarget
+      }
+    });
+    await screen.findByRole("button", { name: "Local project" });
+
+    const detail = screen.getByLabelText("目标详情");
+    const detailActions = within(
+      within(detail)
+        .getByRole("heading", { name: "Local project" })
+        .closest("section") as HTMLElement
+    ).getAllByRole("button");
+
+    expect(detailActions.map((button) => button.textContent)).toEqual(["编辑", "复制目标", "删除"]);
+
+    fireEvent.click(within(detail).getByRole("button", { name: "编辑" }));
+
+    const dialog = screen.getByRole("dialog", { name: "编辑目标" });
+
+    expect(within(dialog).getByLabelText("名称")).toHaveValue("Local project");
+    expect(within(dialog).getByLabelText("已选择目录")).toHaveValue(
+      "/Users/test/project/.codex/skills"
+    );
+    expect(within(dialog).getByLabelText("已选择目录")).toHaveAttribute("readonly");
+    expect(within(dialog).queryByRole("button", { name: "浏览" })).not.toBeInTheDocument();
+    expect(within(dialog).getByText("/Users/test/project")).toBeInTheDocument();
+    expect(within(dialog).getByRole("radio", { name: "Codex" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+
+    fireEvent.click(within(dialog).getByLabelText("已选择目录"));
+
+    expect(selectTargetDirectory).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole("radio", { name: "Claude Code" }));
+
+    expect(selectTargetDirectory).not.toHaveBeenCalled();
+    expect(resolveSelectedTargetDirectory).not.toHaveBeenCalled();
+    expect(within(dialog).getByRole("radio", { name: "Claude Code" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(within(dialog).getByLabelText("已选择目录")).toHaveValue(
+      "/Users/test/project/.claude/skills"
+    );
+    expect(within(dialog).getByLabelText("名称")).toHaveValue("Local project");
+
+    fireEvent.change(within(dialog).getByLabelText("名称"), {
+      target: { value: "Edited target" }
+    });
+
+    expect(within(dialog).getByLabelText("名称")).toHaveValue("Edited target");
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "保存" }));
+
+    await waitFor(() => {
+      expect(updateCustomDirectoryTarget).toHaveBeenCalledWith({
+        name: "Edited target",
+        targetId: "target-project",
+        targetPath: "/Users/test/project/.claude/skills"
+      });
+      expect(screen.getByRole("button", { name: "Edited target" })).toBeInTheDocument();
+    });
+    expect(
+      within(screen.getByLabelText("目标详情")).getByText("/Users/test/project/.claude/skills")
+    ).toBeInTheDocument();
+  });
+
+  it("confirms a custom agent folder when editing the current target directory", async () => {
+    const updateCustomDirectoryTarget = vi.fn().mockResolvedValue({
+      registeredTargets: [
+        {
+          ...targetsFixture.registeredTargets[0],
+          name: "Cursor target",
+          normalizedPath: "/Users/test/project/.cursor/skills",
+          path: "/Users/test/project/.cursor/skills"
+        },
+        targetsFixture.registeredTargets[1]
+      ]
+    });
+    const selectTargetDirectory = vi.fn();
+    const resolveSelectedTargetDirectory = vi.fn();
+
+    await renderTargetsPage({
+      managerOverrides: {
+        resolveSelectedTargetDirectory,
+        selectTargetDirectory,
+        updateCustomDirectoryTarget
+      }
+    });
+    await screen.findByRole("button", { name: "Local project" });
+
+    const detail = screen.getByLabelText("目标详情");
+
+    fireEvent.click(within(detail).getByRole("button", { name: "编辑" }));
+
+    const dialog = screen.getByRole("dialog", { name: "编辑目标" });
+
+    fireEvent.change(within(dialog).getByLabelText("名称"), {
+      target: { value: "Cursor target" }
+    });
+
+    expect(within(dialog).queryByRole("button", { name: "浏览" })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("radio", { name: "自定义" })).toBeInTheDocument();
+    expect(within(dialog).getByText("/Users/test/project")).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("radio", { name: "自定义" }));
+    fireEvent.change(within(dialog).getByLabelText("自定义文件夹"), {
+      target: { value: ".cursor" }
+    });
+
+    expect(within(dialog).getByRole("radio", { name: "自定义" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(within(dialog).getByLabelText("已选择目录")).toHaveValue(
+      "/Users/test/project/.cursor/skills"
+    );
+    expect(within(dialog).getByLabelText("名称")).toHaveValue("Cursor target");
+
+    fireEvent.click(within(dialog).getByRole("radio", { name: "Claude Code" }));
+    expect(within(dialog).queryByLabelText("自定义文件夹")).not.toBeInTheDocument();
+    expect(within(dialog).getByLabelText("已选择目录")).toHaveValue(
+      "/Users/test/project/.claude/skills"
+    );
+
+    fireEvent.click(within(dialog).getByRole("radio", { name: "自定义" }));
+    expect(within(dialog).getByLabelText("自定义文件夹")).toHaveValue(".cursor");
+    expect(within(dialog).getByLabelText("已选择目录")).toHaveValue(
+      "/Users/test/project/.cursor/skills"
+    );
+
+    fireEvent.change(within(dialog).getByLabelText("自定义文件夹"), {
+      target: { value: ".windsurf" }
+    });
+    fireEvent.click(within(dialog).getByRole("radio", { name: "Codex" }));
+    fireEvent.click(within(dialog).getByRole("radio", { name: "自定义" }));
+
+    expect(within(dialog).getByLabelText("自定义文件夹")).toHaveValue(".windsurf");
+    expect(within(dialog).getByLabelText("已选择目录")).toHaveValue(
+      "/Users/test/project/.windsurf/skills"
+    );
+    expect(selectTargetDirectory).not.toHaveBeenCalled();
+    expect(resolveSelectedTargetDirectory).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "保存" }));
+
+    await waitFor(() => {
+      expect(updateCustomDirectoryTarget).toHaveBeenCalledWith({
+        name: "Cursor target",
+        targetId: "target-project",
+        targetPath: "/Users/test/project/.windsurf/skills"
+      });
+    });
   });
 
   it("deletes selected targets in a batch after confirmation", async () => {
@@ -849,6 +1055,79 @@ describe("TargetsPage", () => {
       expect(addCustomDirectoryTarget).toHaveBeenCalledWith({
         name: "project",
         targetPath: "/Users/test/project/.claude/skills"
+      });
+    });
+  });
+
+  it("uses a custom agent folder name when confirming an unknown target directory", async () => {
+    const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/project");
+    const resolveSelectedTargetDirectory = vi.fn().mockResolvedValue({
+      basePath: "/Users/test/project",
+      options: [
+        {
+          directoryName: ".codex",
+          name: "Codex",
+          targetPath: "/Users/test/project/.codex/skills",
+          type: "codex"
+        }
+      ],
+      status: "requires-agent-type"
+    });
+    const addCustomDirectoryTarget = vi
+      .fn()
+      .mockResolvedValue(targetsWithCustomProjectTargetFixture);
+
+    await renderTargetsPage({
+      managerOverrides: {
+        addCustomDirectoryTarget,
+        resolveSelectedTargetDirectory,
+        selectTargetDirectory
+      }
+    });
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    const dialog = screen.getByRole("dialog", { name: "新增目标" });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "浏览" }));
+
+    await waitFor(() => {
+      expect(within(dialog).getByRole("radio", { name: "自定义" })).toBeInTheDocument();
+      expect(within(dialog).getByLabelText("名称")).toHaveValue("project");
+    });
+
+    fireEvent.click(within(dialog).getByRole("radio", { name: "自定义" }));
+    fireEvent.change(within(dialog).getByLabelText("自定义文件夹"), {
+      target: { value: ".cursor" }
+    });
+
+    expect(within(dialog).getByRole("radio", { name: "自定义" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(within(dialog).getByLabelText("本机路径")).toHaveValue(
+      "/Users/test/project/.cursor/skills"
+    );
+    expect(within(dialog).getByLabelText("名称")).toHaveValue("project");
+
+    fireEvent.click(within(dialog).getByRole("radio", { name: "Codex" }));
+    expect(within(dialog).queryByLabelText("自定义文件夹")).not.toBeInTheDocument();
+    expect(within(dialog).getByLabelText("本机路径")).toHaveValue(
+      "/Users/test/project/.codex/skills"
+    );
+
+    fireEvent.click(within(dialog).getByRole("radio", { name: "自定义" }));
+    expect(within(dialog).getByLabelText("自定义文件夹")).toHaveValue(".cursor");
+    expect(within(dialog).getByLabelText("本机路径")).toHaveValue(
+      "/Users/test/project/.cursor/skills"
+    );
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "保存" }));
+
+    await waitFor(() => {
+      expect(addCustomDirectoryTarget).toHaveBeenCalledWith({
+        name: "project",
+        targetPath: "/Users/test/project/.cursor/skills"
       });
     });
   });

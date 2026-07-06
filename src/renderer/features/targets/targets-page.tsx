@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { TargetsPageProvider } from "./components/targets-page-context";
 import { TargetsDeleteDialog } from "./components/targets-delete-dialog";
+import { TargetsEditDialog } from "./components/targets-edit-dialog";
 import { TargetsPageMain } from "./components/targets-page-main";
 import { TargetsPageModal } from "./components/targets-page-modal";
 import { TargetsPageSider } from "./components/targets-page-sider";
@@ -23,6 +24,7 @@ export const TargetsPage = () => {
         siderLabel={t("targets.detail.ariaLabel")}
       />
       <TargetsPageModal />
+      <TargetsEditDialog />
       <TargetsDeleteDialog />
       <TargetsScanLoadingDialog />
       <TargetsScanIssuesDialog />

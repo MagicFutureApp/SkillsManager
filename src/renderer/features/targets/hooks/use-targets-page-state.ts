@@ -27,7 +27,15 @@ type PendingTargetAgentDirectory = {
   options: TargetDirectoryAgentOption[];
 };
 
+type TargetPathEditor = "add" | "edit";
+
 const minimumRescanLoadingMs = 2000;
+const customTargetAgentType = "custom";
+const editableTargetAgentDirectoryDefinitions = [
+  { directoryName: ".codex", name: "Codex", type: "codex" },
+  { directoryName: ".claude", name: "Claude Code", type: "claude-code" },
+  { directoryName: ".gemini", name: "Gemini CLI", type: "gemini-cli" }
+] satisfies Array<Omit<TargetDirectoryAgentOption, "targetPath">>;
 
 export const useTargetsPageState = () => {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
@@ -38,8 +46,15 @@ export const useTargetsPageState = () => {
   const [isSavingTarget, setIsSavingTarget] = useState(false);
   const [isTargetNameDirty, setIsTargetNameDirty] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [editTargetError, setEditTargetError] = useState("");
+  const [editTargetId, setEditTargetId] = useState<string | null>(null);
+  const [editTargetName, setEditTargetName] = useState("");
+  const [editTargetPath, setEditTargetPath] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeletingTargets, setIsDeletingTargets] = useState(false);
+  const [isEditTargetDialogOpen, setIsEditTargetDialogOpen] = useState(false);
+  const [isSavingEditTarget, setIsSavingEditTarget] = useState(false);
+  const [customTargetAgentDirectoryName, setCustomTargetAgentDirectoryNameValue] = useState("");
   const [pendingTargetAgentDirectory, setPendingTargetAgentDirectory] =
     useState<PendingTargetAgentDirectory | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -118,6 +133,7 @@ export const useTargetsPageState = () => {
     setAddTargetName("");
     setAddTargetPath("");
     setIsTargetNameDirty(false);
+    setCustomTargetAgentDirectoryNameValue("");
     setPendingTargetAgentDirectory(null);
     setSelectedTargetAgentType(null);
     setIsAddTargetDialogOpen(true);
@@ -137,11 +153,49 @@ export const useTargetsPageState = () => {
     setAddTargetName(name);
   };
 
-  const applyResolvedTargetPath = (targetPath: string) => {
-    setAddTargetPath(targetPath);
-    setAddTargetError("");
-    setAddTargetName((currentName) => {
-      if (isTargetNameDirty && currentName.trim()) {
+  const setPendingEditTargetName = (name: string) => {
+    setEditTargetName(name);
+  };
+
+  const isTargetNameDirtyForEditor = (editor: TargetPathEditor) => {
+    return editor === "add" ? isTargetNameDirty : true;
+  };
+
+  const setTargetError = (editor: TargetPathEditor, error: string) => {
+    if (editor === "add") {
+      setAddTargetError(error);
+      return;
+    }
+
+    setEditTargetError(error);
+  };
+
+  const setTargetPath = (editor: TargetPathEditor, targetPath: string) => {
+    if (editor === "add") {
+      setAddTargetPath(targetPath);
+      return;
+    }
+
+    setEditTargetPath(targetPath);
+  };
+
+  const setTargetName = (
+    editor: TargetPathEditor,
+    getNextName: (currentName: string) => string
+  ) => {
+    if (editor === "add") {
+      setAddTargetName(getNextName);
+      return;
+    }
+
+    setEditTargetName(getNextName);
+  };
+
+  const applyResolvedTargetPath = (editor: TargetPathEditor, targetPath: string) => {
+    setTargetPath(editor, targetPath);
+    setTargetError(editor, "");
+    setTargetName(editor, (currentName) => {
+      if (isTargetNameDirtyForEditor(editor) && currentName.trim()) {
         return currentName;
       }
 
@@ -149,7 +203,52 @@ export const useTargetsPageState = () => {
     });
   };
 
+  const applyCustomTargetAgentDirectoryName = (
+    editor: TargetPathEditor,
+    directoryName: string,
+    pendingDirectory: PendingTargetAgentDirectory | null = pendingTargetAgentDirectory
+  ) => {
+    if (!pendingDirectory) {
+      return;
+    }
+
+    const normalizedDirectoryName = normalizeCustomTargetAgentDirectoryName(directoryName);
+
+    setTargetError(editor, "");
+
+    if (!normalizedDirectoryName) {
+      setTargetPath(editor, pendingDirectory.basePath);
+      return;
+    }
+
+    applyResolvedTargetPath(
+      editor,
+      joinTargetPathSegments(pendingDirectory.basePath, normalizedDirectoryName, "skills")
+    );
+  };
+
+  const selectCustomTargetAgentDirectoryOption = () => {
+    selectCustomTargetAgentDirectoryOptionForEditor("add");
+  };
+
+  const selectEditCustomTargetAgentDirectoryOption = () => {
+    selectCustomTargetAgentDirectoryOptionForEditor("edit");
+  };
+
+  const selectCustomTargetAgentDirectoryOptionForEditor = (editor: TargetPathEditor) => {
+    setSelectedTargetAgentType(customTargetAgentType);
+    applyCustomTargetAgentDirectoryName(editor, customTargetAgentDirectoryName);
+  };
+
   const selectTargetPath = async () => {
+    await selectTargetPathForEditor("add");
+  };
+
+  const selectEditTargetPath = async () => {
+    await selectTargetPathForEditor("edit");
+  };
+
+  const selectTargetPathForEditor = async (editor: TargetPathEditor) => {
     const selectedPath = await window.skillsManager?.selectTargetDirectory?.();
 
     if (!selectedPath) {
@@ -159,7 +258,8 @@ export const useTargetsPageState = () => {
     if (!window.skillsManager?.resolveSelectedTargetDirectory) {
       setPendingTargetAgentDirectory(null);
       setSelectedTargetAgentType(null);
-      applyResolvedTargetPath(selectedPath);
+      setCustomTargetAgentDirectoryNameValue("");
+      applyResolvedTargetPath(editor, selectedPath);
       return;
     }
 
@@ -168,7 +268,8 @@ export const useTargetsPageState = () => {
     if (resolution.status === "resolved") {
       setPendingTargetAgentDirectory(null);
       setSelectedTargetAgentType(null);
-      applyResolvedTargetPath(resolution.targetPath);
+      setCustomTargetAgentDirectoryNameValue("");
+      applyResolvedTargetPath(editor, resolution.targetPath);
       return;
     }
 
@@ -177,10 +278,11 @@ export const useTargetsPageState = () => {
       options: resolution.options
     });
     setSelectedTargetAgentType(null);
-    setAddTargetPath(resolution.basePath);
-    setAddTargetError("");
-    setAddTargetName((currentName) => {
-      if (isTargetNameDirty && currentName.trim()) {
+    setCustomTargetAgentDirectoryNameValue("");
+    setTargetPath(editor, resolution.basePath);
+    setTargetError(editor, "");
+    setTargetName(editor, (currentName) => {
+      if (isTargetNameDirtyForEditor(editor) && currentName.trim()) {
         return currentName;
       }
 
@@ -189,13 +291,49 @@ export const useTargetsPageState = () => {
   };
 
   const selectTargetAgentDirectoryOption = (option: TargetDirectoryAgentOption) => {
+    selectTargetAgentDirectoryOptionForEditor("add", option);
+  };
+
+  const selectEditTargetAgentDirectoryOption = (option: TargetDirectoryAgentOption) => {
+    selectTargetAgentDirectoryOptionForEditor("edit", option);
+  };
+
+  const selectTargetAgentDirectoryOptionForEditor = (
+    editor: TargetPathEditor,
+    option: TargetDirectoryAgentOption
+  ) => {
     setSelectedTargetAgentType(option.type);
-    applyResolvedTargetPath(option.targetPath);
+    applyResolvedTargetPath(editor, option.targetPath);
+  };
+
+  const setCustomTargetAgentDirectoryName = (directoryName: string) => {
+    setCustomTargetAgentDirectoryNameForEditor("add", directoryName);
+  };
+
+  const setEditCustomTargetAgentDirectoryName = (directoryName: string) => {
+    setCustomTargetAgentDirectoryNameForEditor("edit", directoryName);
+  };
+
+  const setCustomTargetAgentDirectoryNameForEditor = (
+    editor: TargetPathEditor,
+    directoryName: string
+  ) => {
+    setCustomTargetAgentDirectoryNameValue(directoryName);
+    setSelectedTargetAgentType(customTargetAgentType);
+    applyCustomTargetAgentDirectoryName(editor, directoryName);
   };
 
   const saveAddTarget = async () => {
     const name = addTargetName.trim();
     const targetPath = addTargetPath.trim();
+
+    if (
+      selectedTargetAgentType === customTargetAgentType &&
+      !normalizeCustomTargetAgentDirectoryName(customTargetAgentDirectoryName)
+    ) {
+      setAddTargetError("customAgentDirectoryRequired");
+      return;
+    }
 
     if (!name || !targetPath) {
       setAddTargetError("required");
@@ -222,6 +360,7 @@ export const useTargetsPageState = () => {
       setAddTargetName("");
       setAddTargetPath("");
       setIsTargetNameDirty(false);
+      setCustomTargetAgentDirectoryNameValue("");
       setPendingTargetAgentDirectory(null);
       setSelectedTargetAgentType(null);
     } catch (error) {
@@ -302,6 +441,86 @@ export const useTargetsPageState = () => {
     setDeleteError("");
     setIsDeleteDialogOpen(false);
     setPendingDeleteTargetIds([]);
+  };
+
+  const openEditTargetDialog = (target: TargetViewModel) => {
+    if (!target.deletable) {
+      return;
+    }
+
+    setEditTargetError("");
+    setEditTargetId(target.id);
+    setEditTargetName(target.name);
+    setEditTargetPath(target.path);
+    const editableTargetDirectory = createEditableTargetAgentDirectory(target.path);
+
+    setCustomTargetAgentDirectoryNameValue(editableTargetDirectory.customDirectoryName);
+    setPendingTargetAgentDirectory({
+      basePath: editableTargetDirectory.basePath,
+      options: editableTargetDirectory.options
+    });
+    setSelectedTargetAgentType(editableTargetDirectory.selectedAgentType);
+    setIsEditTargetDialogOpen(true);
+  };
+
+  const closeEditTargetDialog = () => {
+    if (isSavingEditTarget) {
+      return;
+    }
+
+    setEditTargetError("");
+    setCustomTargetAgentDirectoryNameValue("");
+    setPendingTargetAgentDirectory(null);
+    setSelectedTargetAgentType(null);
+    setIsEditTargetDialogOpen(false);
+  };
+
+  const saveEditTarget = async () => {
+    const targetId = editTargetId?.trim() ?? "";
+    const name = editTargetName.trim();
+    const targetPath = editTargetPath.trim();
+
+    if (
+      selectedTargetAgentType === customTargetAgentType &&
+      !normalizeCustomTargetAgentDirectoryName(customTargetAgentDirectoryName)
+    ) {
+      setEditTargetError("customAgentDirectoryRequired");
+      return;
+    }
+
+    if (!targetId || !name || !targetPath) {
+      setEditTargetError("required");
+      return;
+    }
+
+    if (!window.skillsManager?.updateCustomDirectoryTarget) {
+      setEditTargetError("unavailable");
+      return;
+    }
+
+    setEditTargetError("");
+    setIsSavingEditTarget(true);
+
+    try {
+      const result = await window.skillsManager.updateCustomDirectoryTarget({
+        name,
+        targetId,
+        targetPath
+      });
+
+      applyTargetsResult(result, targetId);
+      setIsEditTargetDialogOpen(false);
+      setEditTargetId(null);
+      setEditTargetName("");
+      setEditTargetPath("");
+      setCustomTargetAgentDirectoryNameValue("");
+      setPendingTargetAgentDirectory(null);
+      setSelectedTargetAgentType(null);
+    } catch (error) {
+      setEditTargetError(error instanceof Error ? error.message : "failed");
+    } finally {
+      setIsSavingEditTarget(false);
+    }
   };
 
   const confirmDeleteTargets = async () => {
@@ -422,12 +641,19 @@ export const useTargetsPageState = () => {
     checkedCount,
     checkedIds,
     deleteError,
+    editTargetError,
+    editTargetName,
+    editTargetPath,
     hasLoadedTargets,
     isDeleteDialogOpen,
     isDeletingTargets,
+    isEditTargetDialogOpen,
     isAddTargetDialogOpen,
+    isCustomTargetAgentDirectorySelected: selectedTargetAgentType === customTargetAgentType,
     isRefreshingTargets,
+    isSavingEditTarget,
     isSavingTarget,
+    customTargetAgentDirectoryName,
     pendingTargetAgentDirectory,
     pendingDeleteTargets,
     pagination,
@@ -443,17 +669,27 @@ export const useTargetsPageState = () => {
     visibleSomeChecked,
     closeAddTargetDialog,
     closeDeleteDialog,
+    closeEditTargetDialog,
     copySelectedTargetPath,
     confirmDeleteTargets,
     openAddTargetDialog,
     openCheckedDeleteDialog,
     openDeleteDialog,
+    openEditTargetDialog,
     refreshTargets,
     saveAddTarget,
+    saveEditTarget,
     selectAllVisibleDeletable,
+    selectCustomTargetAgentDirectoryOption,
+    selectEditCustomTargetAgentDirectoryOption,
+    selectEditTargetAgentDirectoryOption,
+    selectEditTargetPath,
     selectTargetAgentDirectoryOption,
     selectTargetPath,
     setTargetsPage,
+    setCustomTargetAgentDirectoryName,
+    setEditCustomTargetAgentDirectoryName,
+    setEditTargetName: setPendingEditTargetName,
     setScanIssues,
     setPendingTargetName,
     setQuery,
@@ -484,4 +720,59 @@ const deriveTargetNameFromPath = (targetPath: string): string => {
   const segments = normalizedPath.split(/[\\/]+/).filter(Boolean);
 
   return segments.at(-3) ?? segments.at(-1) ?? targetPath.trim();
+};
+
+const createEditableTargetAgentDirectory = (targetPath: string) => {
+  const normalizedPath = targetPath.trim().replace(/[\\/]+$/g, "");
+  const lastSegment = getLastPathSegment(normalizedPath);
+  const agentDirectoryPath =
+    lastSegment === "skills" ? getPathDirname(normalizedPath) : normalizedPath;
+  const agentDirectoryName = getLastPathSegment(agentDirectoryPath);
+  const basePath = getPathDirname(agentDirectoryPath) || normalizedPath;
+  const knownDefinition = editableTargetAgentDirectoryDefinitions.find(
+    (definition) => definition.directoryName === agentDirectoryName
+  );
+
+  return {
+    basePath,
+    customDirectoryName: knownDefinition ? "" : agentDirectoryName,
+    options: editableTargetAgentDirectoryDefinitions.map((definition) => ({
+      ...definition,
+      targetPath: joinTargetPathSegments(basePath, definition.directoryName, "skills")
+    })),
+    selectedAgentType: knownDefinition?.type ?? customTargetAgentType
+  };
+};
+
+const normalizeCustomTargetAgentDirectoryName = (directoryName: string): string => {
+  return directoryName.trim().replace(/[\\/]+/g, "");
+};
+
+const getLastPathSegment = (targetPath: string): string => {
+  return (
+    targetPath
+      .replace(/[\\/]+$/g, "")
+      .split(/[\\/]+/)
+      .filter(Boolean)
+      .at(-1) ?? ""
+  );
+};
+
+const getPathDirname = (targetPath: string): string => {
+  const normalizedPath = targetPath.replace(/[\\/]+$/g, "");
+  const dirnameMatch = normalizedPath.match(/^(.*)[\\/][^\\/]+$/);
+
+  if (!dirnameMatch) {
+    return "";
+  }
+
+  return dirnameMatch[1] || (normalizedPath.startsWith("/") ? "/" : "");
+};
+
+const joinTargetPathSegments = (basePath: string, ...segments: string[]): string => {
+  const separator = /^[A-Za-z]:[\\/]/.test(basePath) && basePath.includes("\\") ? "\\" : "/";
+  const normalizedBasePath = basePath.trim().replace(/[\\/]+$/g, "");
+  const normalizedSegments = segments.map((segment) => segment.replace(/^[\\/]+|[\\/]+$/g, ""));
+
+  return [normalizedBasePath, ...normalizedSegments].filter(Boolean).join(separator);
 };
