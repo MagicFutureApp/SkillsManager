@@ -277,16 +277,18 @@ export const useTargetsPageState = () => {
       basePath: resolution.basePath,
       options: resolution.options
     });
-    setSelectedTargetAgentType(null);
-    setCustomTargetAgentDirectoryNameValue("");
-    setTargetPath(editor, resolution.basePath);
+    setSelectedTargetAgentType(resolution.selectedAgentType ?? null);
+    setCustomTargetAgentDirectoryNameValue(resolution.customDirectoryName ?? "");
+    setTargetPath(editor, resolution.targetPath ?? resolution.basePath);
     setTargetError(editor, "");
     setTargetName(editor, (currentName) => {
       if (isTargetNameDirtyForEditor(editor) && currentName.trim()) {
         return currentName;
       }
 
-      return deriveTargetNameFromPath(resolution.options[0]?.targetPath ?? resolution.basePath);
+      return deriveTargetNameFromPath(
+        resolution.targetPath ?? resolution.options[0]?.targetPath ?? resolution.basePath
+      );
     });
   };
 

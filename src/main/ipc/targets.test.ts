@@ -14,6 +14,27 @@ import {
   updateCustomDirectoryTarget
 } from "./targets";
 
+const createExpectedTargetDirectoryAgentOptions = (basePath: string) => [
+  {
+    directoryName: ".codex",
+    name: "Codex",
+    targetPath: `${basePath}/.codex/skills`,
+    type: "codex"
+  },
+  {
+    directoryName: ".claude",
+    name: "Claude Code",
+    targetPath: `${basePath}/.claude/skills`,
+    type: "claude-code"
+  },
+  {
+    directoryName: ".gemini",
+    name: "Gemini CLI",
+    targetPath: `${basePath}/.gemini/skills`,
+    type: "gemini-cli"
+  }
+];
+
 describe("target IPC handlers", () => {
   it("returns the selected target directory path", async () => {
     const showOpenDialog = vi.fn().mockResolvedValue({
@@ -38,7 +59,7 @@ describe("target IPC handlers", () => {
     await expect(selectTargetDirectory({ showOpenDialog })).resolves.toBeNull();
   });
 
-  it("resolves a selected skills directory without filesystem probing", async () => {
+  it("requires agent type confirmation for a selected known agent skills directory", async () => {
     const isDirectory = vi.fn();
     const readDirectory = vi.fn();
 
@@ -48,17 +69,18 @@ describe("target IPC handlers", () => {
         readDirectory
       })
     ).resolves.toEqual({
-      status: "resolved",
+      basePath: "/Users/test/project",
+      options: createExpectedTargetDirectoryAgentOptions("/Users/test/project"),
+      selectedAgentType: "claude-code",
+      status: "requires-agent-type",
       targetPath: "/Users/test/project/.claude/skills"
     });
     expect(isDirectory).not.toHaveBeenCalled();
     expect(readDirectory).not.toHaveBeenCalled();
   });
 
-  it("resolves a selected agent config directory that contains skills", async () => {
-    const isDirectory = vi.fn(async (candidatePath: string) => {
-      return candidatePath === "/Users/test/project/.claude/skills";
-    });
+  it("requires agent type confirmation for a selected known agent config directory", async () => {
+    const isDirectory = vi.fn();
     const readDirectory = vi.fn();
 
     await expect(
@@ -67,14 +89,17 @@ describe("target IPC handlers", () => {
         readDirectory
       })
     ).resolves.toEqual({
-      status: "resolved",
+      basePath: "/Users/test/project",
+      options: createExpectedTargetDirectoryAgentOptions("/Users/test/project"),
+      selectedAgentType: "claude-code",
+      status: "requires-agent-type",
       targetPath: "/Users/test/project/.claude/skills"
     });
-    expect(isDirectory).toHaveBeenCalledWith("/Users/test/project/.claude/skills");
+    expect(isDirectory).not.toHaveBeenCalled();
     expect(readDirectory).not.toHaveBeenCalled();
   });
 
-  it("resolves a one-level child skills directory under the selected directory", async () => {
+  it("requires agent type confirmation for a known child agent skills directory", async () => {
     const isDirectory = vi.fn(async (candidatePath: string) => {
       return candidatePath === "/Users/test/project/.claude/skills";
     });
@@ -86,7 +111,10 @@ describe("target IPC handlers", () => {
         readDirectory
       })
     ).resolves.toEqual({
-      status: "resolved",
+      basePath: "/Users/test/project",
+      options: createExpectedTargetDirectoryAgentOptions("/Users/test/project"),
+      selectedAgentType: "claude-code",
+      status: "requires-agent-type",
       targetPath: "/Users/test/project/.claude/skills"
     });
     expect(isDirectory).toHaveBeenCalledWith("/Users/test/project/skills");
@@ -105,26 +133,7 @@ describe("target IPC handlers", () => {
       })
     ).resolves.toEqual({
       basePath: "/Users/test/project",
-      options: [
-        {
-          directoryName: ".codex",
-          name: "Codex",
-          targetPath: "/Users/test/project/.codex/skills",
-          type: "codex"
-        },
-        {
-          directoryName: ".claude",
-          name: "Claude Code",
-          targetPath: "/Users/test/project/.claude/skills",
-          type: "claude-code"
-        },
-        {
-          directoryName: ".gemini",
-          name: "Gemini CLI",
-          targetPath: "/Users/test/project/.gemini/skills",
-          type: "gemini-cli"
-        }
-      ],
+      options: createExpectedTargetDirectoryAgentOptions("/Users/test/project"),
       status: "requires-agent-type"
     });
   });

@@ -925,10 +925,33 @@ describe("TargetsPage", () => {
     ]);
   });
 
-  it("opens a directory picker and saves the resolved skills path as a global target", async () => {
+  it("shows agent type confirmation for a detected agent target path", async () => {
     const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/project");
     const resolveSelectedTargetDirectory = vi.fn().mockResolvedValue({
-      status: "resolved",
+      basePath: "/Users/test/project",
+      customDirectoryName: "",
+      options: [
+        {
+          directoryName: ".codex",
+          name: "Codex",
+          targetPath: "/Users/test/project/.codex/skills",
+          type: "codex"
+        },
+        {
+          directoryName: ".claude",
+          name: "Claude Code",
+          targetPath: "/Users/test/project/.claude/skills",
+          type: "claude-code"
+        },
+        {
+          directoryName: ".gemini",
+          name: "Gemini CLI",
+          targetPath: "/Users/test/project/.gemini/skills",
+          type: "gemini-cli"
+        }
+      ],
+      selectedAgentType: "claude-code",
+      status: "requires-agent-type",
       targetPath: "/Users/test/project/.claude/skills"
     });
     const addCustomDirectoryTarget = vi
@@ -962,6 +985,12 @@ describe("TargetsPage", () => {
       expect(resolveSelectedTargetDirectory).toHaveBeenCalledWith("/Users/test/project");
       expect(within(dialog).getByLabelText("本机路径")).toHaveValue(
         "/Users/test/project/.claude/skills"
+      );
+      expect(within(dialog).getByText("确认 agent 类型")).toBeInTheDocument();
+      expect(within(dialog).getByText("/Users/test/project")).toBeInTheDocument();
+      expect(within(dialog).getByRole("radio", { name: "Claude Code" })).toHaveAttribute(
+        "aria-checked",
+        "true"
       );
       expect(within(dialog).getByLabelText("名称")).toHaveValue("project");
     });

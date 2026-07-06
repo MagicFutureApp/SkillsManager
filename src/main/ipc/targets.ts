@@ -68,8 +68,11 @@ export type SelectedTargetDirectoryResolution =
     }
   | {
       basePath: string;
+      customDirectoryName?: string;
       options: TargetDirectoryAgentOption[];
+      selectedAgentType?: string;
       status: "requires-agent-type";
+      targetPath?: string;
     };
 
 type TargetsRescanOperations = {
@@ -126,10 +129,42 @@ export const resolveSelectedTargetDirectory = async (
   }
 
   if (getPathBasename(targetPath).toLowerCase() === "skills") {
+    const agentDirectoryPath = getPathDirname(targetPath);
+    const agentDirectoryName = getPathBasename(agentDirectoryPath);
+    const knownDefinition = getKnownAgentDirectoryDefinition(agentDirectoryName);
+
+    if (knownDefinition) {
+      return createTargetDirectoryAgentTypeResolution({
+        basePath: getPathDirname(agentDirectoryPath),
+        selectedAgentType: knownDefinition.type,
+        targetPath
+      });
+    }
+
+    if (isCustomAgentDirectoryName(agentDirectoryName)) {
+      return createTargetDirectoryAgentTypeResolution({
+        basePath: getPathDirname(agentDirectoryPath),
+        customDirectoryName: agentDirectoryName,
+        selectedAgentType: "custom",
+        targetPath
+      });
+    }
+
     return {
       status: "resolved",
       targetPath
     };
+  }
+
+  const selectedDirectoryName = getPathBasename(targetPath);
+  const knownSelectedDirectoryDefinition = getKnownAgentDirectoryDefinition(selectedDirectoryName);
+
+  if (knownSelectedDirectoryDefinition) {
+    return createTargetDirectoryAgentTypeResolution({
+      basePath: getPathDirname(targetPath),
+      selectedAgentType: knownSelectedDirectoryDefinition.type,
+      targetPath: joinTargetPath(targetPath, "skills")
+    });
   }
 
   const directSkillsPath = joinTargetPath(targetPath, "skills");
@@ -147,18 +182,28 @@ export const resolveSelectedTargetDirectory = async (
     const childSkillsPath = joinTargetPath(targetPath, childDirectoryName, "skills");
 
     if (await isDirectory(childSkillsPath)) {
-      return {
-        status: "resolved",
+      const knownChildDirectoryDefinition = getKnownAgentDirectoryDefinition(childDirectoryName);
+
+      if (knownChildDirectoryDefinition) {
+        return createTargetDirectoryAgentTypeResolution({
+          basePath: targetPath,
+          selectedAgentType: knownChildDirectoryDefinition.type,
+          targetPath: childSkillsPath
+        });
+      }
+
+      return createTargetDirectoryAgentTypeResolution({
+        basePath: targetPath,
+        customDirectoryName: childDirectoryName,
+        selectedAgentType: "custom",
         targetPath: childSkillsPath
-      };
+      });
     }
   }
 
-  return {
-    basePath: targetPath,
-    options: createTargetDirectoryAgentOptions(targetPath),
-    status: "requires-agent-type"
-  };
+  return createTargetDirectoryAgentTypeResolution({
+    basePath: targetPath
+  });
 };
 
 export const addCustomDirectoryTarget = async (
@@ -342,28 +387,42 @@ const normalizeTargetIds = (targetIds: string[]): string[] => {
   return Array.from(new Set(targetIds.map((targetId) => targetId.trim()).filter(Boolean)));
 };
 
-const createTargetDirectoryAgentOptions = (selectedPath: string): TargetDirectoryAgentOption[] => {
-  const agentDirectoryRoot = getKnownAgentDirectoryRoot(selectedPath);
+const createTargetDirectoryAgentTypeResolution = ({
+  basePath,
+  customDirectoryName,
+  selectedAgentType,
+  targetPath
+}: {
+  basePath: string;
+  customDirectoryName?: string;
+  selectedAgentType?: string;
+  targetPath?: string;
+}): SelectedTargetDirectoryResolution => ({
+  basePath,
+  ...(customDirectoryName !== undefined ? { customDirectoryName } : {}),
+  options: createTargetDirectoryAgentOptions(basePath),
+  ...(selectedAgentType ? { selectedAgentType } : {}),
+  status: "requires-agent-type",
+  ...(targetPath ? { targetPath } : {})
+});
 
+const createTargetDirectoryAgentOptions = (basePath: string): TargetDirectoryAgentOption[] => {
   return agentTargetDirectoryDefinitions.map((definition) => ({
     directoryName: definition.directoryName,
     name: definition.name,
-    targetPath: joinTargetPath(agentDirectoryRoot, definition.directoryName, "skills"),
+    targetPath: joinTargetPath(basePath, definition.directoryName, "skills"),
     type: definition.type
   }));
 };
 
-const getKnownAgentDirectoryRoot = (selectedPath: string): string => {
-  const selectedDirectoryName = getPathBasename(selectedPath);
-  const isKnownAgentDirectory = agentTargetDirectoryDefinitions.some(
-    (definition) => definition.directoryName === selectedDirectoryName
+const getKnownAgentDirectoryDefinition = (directoryName: string) => {
+  return agentTargetDirectoryDefinitions.find(
+    (definition) => definition.directoryName === directoryName
   );
+};
 
-  if (!isKnownAgentDirectory) {
-    return selectedPath;
-  }
-
-  return getPathDirname(selectedPath);
+const isCustomAgentDirectoryName = (directoryName: string): boolean => {
+  return directoryName.startsWith(".") && !getKnownAgentDirectoryDefinition(directoryName);
 };
 
 const prioritizeTargetDirectoryNames = (directoryNames: string[]): string[] => {
