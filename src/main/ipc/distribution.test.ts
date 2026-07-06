@@ -99,6 +99,62 @@ describe("distribution IPC handlers", () => {
     ]);
   });
 
+  it("expands home-relative repository cache paths before copying", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-07-02T00:00:00.000Z");
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-home-cache-"));
+    const targetPath = path.join(workspace, "target");
+    const expectedSourcePath = path.join(
+      os.homedir(),
+      ".skills-manager",
+      "cache",
+      "team-skills",
+      "review-bot"
+    );
+    const copiedPaths: Array<{ sourcePath: string; targetPath: string }> = [];
+
+    await seedPreviewFixture(db, createdAt, {
+      cachePath: "~/.skills-manager/cache/team-skills",
+      targetPath
+    });
+
+    const result = await executeDistribution(
+      db,
+      {
+        skillUnitIds: ["skill-review"]
+      },
+      {
+        async copyDirectory(sourcePath, nextTargetPath) {
+          copiedPaths.push({ sourcePath, targetPath: nextTargetPath });
+        },
+        async ensureDirectory() {
+          return undefined;
+        },
+        async isDirectory(candidatePath) {
+          return candidatePath === expectedSourcePath;
+        },
+        now: () => createdAt,
+        async pathExists(candidatePath) {
+          return candidatePath === expectedSourcePath;
+        },
+        async removePath() {
+          return undefined;
+        }
+      }
+    );
+
+    expect(result.summary).toMatchObject({
+      blocked: 0,
+      installed: 1
+    });
+    expect(copiedPaths).toEqual([
+      {
+        sourcePath: expectedSourcePath,
+        targetPath: path.join(targetPath, "review-bot")
+      }
+    ]);
+  });
+
   it("overwrites a filesystem conflict only when the submitted resolution requests overwrite", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-07-02T00:00:00.000Z");

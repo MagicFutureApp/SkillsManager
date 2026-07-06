@@ -16,6 +16,7 @@ import type {
 import { createDistributionRepository } from "../../db/repositories/distributionRepository.js";
 import { installInstances } from "../../db/schema.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
+import { expandHomePath } from "../path-utils.js";
 
 type DistributionPreviewOperations = {
   now: () => Date;
@@ -177,18 +178,24 @@ const executePreviewItem = async ({
   operations: DistributionExecuteOperations;
   seenTargetPaths: Set<string>;
 }): Promise<DistributionExecuteItemResult> => {
+  const filesystemItem = resolvePreviewItemFilesystemPaths(item);
+
   if (item.action === "skip") {
-    return createItemResult(item, "skipped", null);
+    return createItemResult(filesystemItem, "skipped", null);
   }
 
   if (item.action === "blocked") {
-    return createItemResult(item, "blocked", item.reason ?? "Distribution item is blocked.");
+    return createItemResult(
+      filesystemItem,
+      "blocked",
+      item.reason ?? "Distribution item is blocked."
+    );
   }
 
-  const validation = await validateWritableItem(item, operations, seenTargetPaths);
+  const validation = await validateWritableItem(filesystemItem, operations, seenTargetPaths);
 
   if (validation.result === "blocked") {
-    return createItemResult(item, "blocked", validation.message);
+    return createItemResult(filesystemItem, "blocked", validation.message);
   }
 
   const resolution = resolveConflictResolution(item, conflictResolutions);
@@ -197,27 +204,45 @@ const executePreviewItem = async ({
     (item.action === "conflict" || validation.result === "conflict") &&
     resolution !== "overwrite"
   ) {
-    return createItemResult(item, "conflict", validation.message ?? item.reason);
+    return createItemResult(filesystemItem, "conflict", validation.message ?? item.reason);
   }
 
   try {
-    await operations.ensureDirectory(path.dirname(item.targetPath));
+    await operations.ensureDirectory(path.dirname(filesystemItem.targetPath));
 
-    if (await operations.pathExists(item.targetPath)) {
-      await operations.removePath(item.targetPath);
+    if (await operations.pathExists(filesystemItem.targetPath)) {
+      await operations.removePath(filesystemItem.targetPath);
     }
 
-    await operations.copyDirectory(item.sourcePath, item.targetPath);
-    await upsertInstallInstance(db, item, now, "installed", null);
+    await operations.copyDirectory(filesystemItem.sourcePath, filesystemItem.targetPath);
+    await upsertInstallInstance(db, filesystemItem, now, "installed", null);
 
-    return createItemResult(item, item.action === "update" ? "updated" : "installed", null);
+    return createItemResult(
+      filesystemItem,
+      item.action === "update" ? "updated" : "installed",
+      null
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Distribution failed.";
 
-    await upsertInstallInstance(db, item, now, "failed", message);
+    await upsertInstallInstance(db, filesystemItem, now, "failed", message);
 
-    return createItemResult(item, "failed", message);
+    return createItemResult(filesystemItem, "failed", message);
   }
+};
+
+const resolvePreviewItemFilesystemPaths = (
+  item: DistributionPreviewItem
+): DistributionPreviewItem => {
+  return {
+    ...item,
+    sourcePath: expandHomePath(item.sourcePath),
+    targetPath: expandHomePath(item.targetPath),
+    targetSnapshot: {
+      ...item.targetSnapshot,
+      path: expandHomePath(item.targetSnapshot.path)
+    }
+  };
 };
 
 const validateWritableItem = async (

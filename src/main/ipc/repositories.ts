@@ -13,6 +13,7 @@ import { scanSkillDirectory } from "../../core/skills/skill-scanner.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
 import { getDistributionSettings, getGitHubToken } from "./settings.js";
 import { executeDistribution } from "./distribution.js";
+import { expandHomePath } from "../path-utils.js";
 import type { RepositorySourceInspection } from "../../core/repositories/source-inspection.js";
 import type {
   CreateRepositoryInput,
@@ -625,18 +626,6 @@ const deriveSourceFolderName = (remoteUrl: string, fallbackPath: string): string
   }
 
   return path.basename(path.resolve(fallbackPath)) || "repository";
-};
-
-const expandHomePath = (value: string): string => {
-  if (value === "~") {
-    return os.homedir();
-  }
-
-  if (value.startsWith(`~${path.sep}`) || value.startsWith("~/")) {
-    return path.join(os.homedir(), value.slice(2));
-  }
-
-  return value;
 };
 
 const isLocalPath = (value: string): boolean => {
