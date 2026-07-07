@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
+  DistributionExecuteInput,
   DistributionExecuteResult,
   DistributionPreviewInput,
   DistributionPreviewResult
@@ -39,14 +40,20 @@ export const useSkillsPageState = () => {
   const [distributionConflictResolutions, setDistributionConflictResolutions] = useState<
     Record<string, DistributionConflictResolution>
   >({});
+  const [distributionRuntimeOverwriteResolutions, setDistributionRuntimeOverwriteResolutions] =
+    useState<Record<string, boolean>>({});
   const [distributionExecutionItemStatuses, setDistributionExecutionItemStatuses] = useState<
     Record<string, DistributionExecutionItemStatus>
   >({});
   const [pendingDistribution, setPendingDistribution] = useState<PendingDistribution | null>(null);
+  const [pendingTargetRemoval, setPendingTargetRemoval] = useState<PendingTargetRemoval | null>(
+    null
+  );
   const [query, setQuery] = useState("");
   const [repositoryFilter, setRepositoryFilter] = useState<SkillRepositoryFilter>("all");
   const [isDistributionExecuting, setIsDistributionExecuting] = useState(false);
   const [isDistributionPreviewLoading, setIsDistributionPreviewLoading] = useState(false);
+  const [isTargetRemovalExecuting, setIsTargetRemovalExecuting] = useState(false);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [sort, setSort] = useState<SkillSort>("name");
@@ -211,6 +218,7 @@ export const useSkillsPageState = () => {
     setDistributionExecuteResult(null);
     setDistributionNoticeKey(null);
     setDistributionExecutionItemStatuses({});
+    setDistributionRuntimeOverwriteResolutions({});
     clearDistributionExecutionTimers();
 
     try {
@@ -260,6 +268,7 @@ export const useSkillsPageState = () => {
 
     setDistributionConfirmDialogOpen(false);
     setDistributionExecutionItemStatuses({});
+    setDistributionRuntimeOverwriteResolutions({});
   };
 
   const setDistributionConflictResolution = (
@@ -269,6 +278,13 @@ export const useSkillsPageState = () => {
     setDistributionConflictResolutions((currentResolutions) => ({
       ...currentResolutions,
       [previewItemId]: resolution
+    }));
+  };
+
+  const setDistributionRuntimeOverwriteResolution = (previewItemId: string, overwrite: boolean) => {
+    setDistributionRuntimeOverwriteResolutions((currentResolutions) => ({
+      ...currentResolutions,
+      [previewItemId]: overwrite
     }));
   };
 
@@ -285,6 +301,7 @@ export const useSkillsPageState = () => {
     }
 
     setIsDistributionExecuting(true);
+    setDistributionExecuteResult(null);
     setDistributionNoticeKey(null);
     clearDistributionExecutionTimers();
 
@@ -297,16 +314,11 @@ export const useSkillsPageState = () => {
 
     try {
       const result = await executeDistribution({
-        conflictResolutions: distributionPreview.items
-          .filter((item) => item.action === "conflict")
-          .map((item) => ({
-            agentTargetId: item.agentTargetId,
-            previewItemId: item.id,
-            resolution:
-              distributionConflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite",
-            skillUnitId: item.skillUnitId,
-            targetPath: item.targetPath
-          })),
+        conflictResolutions: createDistributionExecuteConflictResolutions({
+          previewConflictResolutions: distributionConflictResolutions,
+          previewItems: distributionPreview.items,
+          runtimeOverwriteResolutions: distributionRuntimeOverwriteResolutions
+        }),
         skillUnitIds: pendingDistribution.skillUnitIds,
         triggerSource: pendingDistribution.triggerSource
       });
@@ -366,6 +378,24 @@ export const useSkillsPageState = () => {
   };
 
   const toggleSkillTargetPreference = (skillId: string, targetId: string, enabled: boolean) => {
+    if (!enabled) {
+      const skill = skills.find((currentSkill) => currentSkill.id === skillId);
+      const target = targetOptions.find((currentTarget) => currentTarget.id === targetId);
+
+      if (!skill || !target) {
+        return;
+      }
+
+      setPendingTargetRemoval({
+        skillId,
+        skillName: skill.name,
+        targetId,
+        targetName: target.name,
+        targetPath: target.path
+      });
+      return;
+    }
+
     setSkills((currentSkills) => {
       return currentSkills.map((skill) => {
         if (skill.id !== skillId) {
@@ -399,6 +429,84 @@ export const useSkillsPageState = () => {
       agentTargetId: targetId,
       enabled,
       skillUnitId: skillId
+    });
+  };
+
+  const closeTargetRemovalDialog = () => {
+    if (isTargetRemovalExecuting) {
+      return;
+    }
+
+    setPendingTargetRemoval(null);
+  };
+
+  const confirmTargetRemoval = async (deleteInstalledFiles: boolean) => {
+    if (!pendingTargetRemoval || isTargetRemovalExecuting) {
+      return;
+    }
+
+    const removeSkillTargetPreference = window.skillsManager?.removeSkillTargetPreference;
+
+    if (!removeSkillTargetPreference) {
+      showDistributionNotice("skills.actions.targetRemovalUnavailableStatus");
+      setPendingTargetRemoval(null);
+      return;
+    }
+
+    setIsTargetRemovalExecuting(true);
+    setDistributionNoticeKey(null);
+
+    try {
+      await removeSkillTargetPreference({
+        agentTargetId: pendingTargetRemoval.targetId,
+        deleteInstalledFiles,
+        skillUnitId: pendingTargetRemoval.skillId
+      });
+      removeSkillTargetLocally({
+        skillId: pendingTargetRemoval.skillId,
+        targetId: pendingTargetRemoval.targetId
+      });
+      setPendingTargetRemoval(null);
+    } catch {
+      showDistributionNotice("skills.actions.targetRemovalFailedStatus");
+    } finally {
+      setIsTargetRemovalExecuting(false);
+    }
+  };
+
+  const removeSkillTargetLocally = ({
+    skillId,
+    targetId
+  }: {
+    skillId: string;
+    targetId: string;
+  }) => {
+    setSkills((currentSkills) => {
+      return currentSkills.map((skill) => {
+        if (skill.id !== skillId) {
+          return skill;
+        }
+
+        return {
+          ...skill,
+          targets: skill.targets.filter((id) => id !== targetId)
+        };
+      });
+    });
+    setTargetOptions((currentTargets) => {
+      return currentTargets.map((target) => {
+        if (target.id !== targetId) {
+          return target;
+        }
+
+        return {
+          ...target,
+          selectedSkillIds: target.selectedSkillIds.filter((id) => id !== skillId),
+          skillPreferenceIds: target.skillPreferenceIds.includes(skillId)
+            ? target.skillPreferenceIds
+            : [...target.skillPreferenceIds, skillId]
+        };
+      });
     });
   };
 
@@ -456,8 +564,11 @@ export const useSkillsPageState = () => {
     distributionNoticeKey,
     distributionNoticeVisible: Boolean(distributionNoticeKey || distributionExecuteResult),
     distributionPreview,
+    distributionRuntimeOverwriteResolutions,
     isDistributionExecuting,
     isDistributionPreviewLoading,
+    isTargetRemovalExecuting,
+    pendingTargetRemoval,
     query,
     repositoryFilter,
     repositoryOptions,
@@ -471,9 +582,12 @@ export const useSkillsPageState = () => {
     visibleSkills,
     visibleSomeChecked,
     closeDistributionConfirmDialog,
+    closeTargetRemovalDialog,
+    confirmTargetRemoval,
     executeCurrentDistribution,
     selectAllVisible,
     setDistributionConflictResolution,
+    setDistributionRuntimeOverwriteResolution,
     setSkillsPage,
     setQuery,
     setRepositoryFilter,
@@ -510,10 +624,21 @@ const loadSkillsPageData = async (): Promise<{
 type DistributionConflictResolution = NonNullable<
   DistributionPreviewResult["items"][number]["defaultResolution"]
 >;
+type DistributionExecuteConflictResolution = NonNullable<
+  DistributionExecuteInput["conflictResolutions"]
+>[number];
 
 type PendingDistribution = {
   skillUnitIds: string[];
   triggerSource: DistributionPreviewInput["triggerSource"];
+};
+
+type PendingTargetRemoval = {
+  skillId: string;
+  skillName: string;
+  targetId: string;
+  targetName: string;
+  targetPath: string;
 };
 
 type DistributionExecuteItemResult = DistributionExecuteResult["items"][number];
@@ -601,6 +726,52 @@ const createDistributionResultItemKey = ({
   targetPath
 }: Pick<DistributionExecuteItemResult, "agentTargetId" | "skillUnitId" | "targetPath">): string => {
   return `${skillUnitId}\u0000${agentTargetId}\u0000${targetPath}`;
+};
+
+const createDistributionExecuteConflictResolutions = ({
+  previewConflictResolutions,
+  previewItems,
+  runtimeOverwriteResolutions
+}: {
+  previewConflictResolutions: Record<string, DistributionConflictResolution>;
+  previewItems: DistributionPreviewResult["items"];
+  runtimeOverwriteResolutions: Record<string, boolean>;
+}): DistributionExecuteConflictResolution[] => {
+  const resolutionsByPreviewItemId = new Map<string, DistributionExecuteConflictResolution>();
+
+  previewItems.forEach((item) => {
+    if (item.action === "conflict") {
+      resolutionsByPreviewItemId.set(
+        item.id,
+        createDistributionExecuteConflictResolution(
+          item,
+          previewConflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite"
+        )
+      );
+    }
+
+    if (runtimeOverwriteResolutions[item.id]) {
+      resolutionsByPreviewItemId.set(
+        item.id,
+        createDistributionExecuteConflictResolution(item, "overwrite")
+      );
+    }
+  });
+
+  return Array.from(resolutionsByPreviewItemId.values());
+};
+
+const createDistributionExecuteConflictResolution = (
+  item: DistributionPreviewResult["items"][number],
+  resolution: DistributionConflictResolution
+): DistributionExecuteConflictResolution => {
+  return {
+    agentTargetId: item.agentTargetId,
+    previewItemId: item.id,
+    resolution,
+    skillUnitId: item.skillUnitId,
+    targetPath: item.targetPath
+  };
 };
 
 const stringifyDistributionError = (error: unknown): string => {

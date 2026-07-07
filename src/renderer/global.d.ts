@@ -20,6 +20,8 @@ import type {
   ResetLocalDatabaseResult as MainResetLocalDatabaseResult
 } from "../main/ipc/settings";
 import type {
+  RemoveSkillTargetPreferenceInput as MainRemoveSkillTargetPreferenceInput,
+  RemoveSkillTargetPreferenceResult as MainRemoveSkillTargetPreferenceResult,
   SkillsListResult as MainSkillsListResult,
   UpdateSkillTargetPreferenceInput as MainUpdateSkillTargetPreferenceInput,
   UpdateSkillTargetPreferenceResult as MainUpdateSkillTargetPreferenceResult
@@ -61,6 +63,8 @@ export type RepositoriesListResult = MainRepositoriesListResult;
 export type RepositoriesSyncProgressEvent = MainRepositoriesSyncProgressEvent;
 export type RepositoriesSyncResult = MainRepositoriesSyncResult;
 export type SkillsListResult = MainSkillsListResult;
+export type RemoveSkillTargetPreferenceInput = MainRemoveSkillTargetPreferenceInput;
+export type RemoveSkillTargetPreferenceResult = MainRemoveSkillTargetPreferenceResult;
 export type UpdateSkillTargetPreferenceInput = MainUpdateSkillTargetPreferenceInput;
 export type UpdateSkillTargetPreferenceResult = MainUpdateSkillTargetPreferenceResult;
 export type AddSkillDirectoryTargetInput = MainAddSkillDirectoryTargetInput;
@@ -106,6 +110,9 @@ declare global {
       setSkillTargetPreference?: (
         input: UpdateSkillTargetPreferenceInput
       ) => Promise<UpdateSkillTargetPreferenceResult>;
+      removeSkillTargetPreference?: (
+        input: RemoveSkillTargetPreferenceInput
+      ) => Promise<RemoveSkillTargetPreferenceResult>;
       listTargets?: () => Promise<TargetsListResult>;
       addCustomDirectoryTarget?: (
         input: AddCustomDirectoryTargetInput

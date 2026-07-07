@@ -123,12 +123,21 @@ export const SkillsPageSider = () => {
       <DistributionConfirmationDialog
         conflictResolutions={page.distributionConflictResolutions}
         executionItemStatuses={page.distributionExecutionItemStatuses}
+        runtimeOverwriteResolutions={page.distributionRuntimeOverwriteResolutions}
         isExecuting={page.isDistributionExecuting}
         items={previewItems}
         onClose={page.closeDistributionConfirmDialog}
         onConfirm={page.executeCurrentDistribution}
         onConflictResolutionChange={page.setDistributionConflictResolution}
+        onRuntimeOverwriteResolutionChange={page.setDistributionRuntimeOverwriteResolution}
         open={page.distributionConfirmDialogOpen && previewItems.length > 0}
+      />
+
+      <SkillTargetRemovalDialog
+        isExecuting={page.isTargetRemovalExecuting}
+        onClose={page.closeTargetRemovalDialog}
+        onConfirm={page.confirmTargetRemoval}
+        removal={page.pendingTargetRemoval}
       />
 
       <section className="rounded-xl border border-border bg-card p-4">
@@ -152,28 +161,132 @@ export const SkillsPageSider = () => {
   );
 };
 
+const SkillTargetRemovalDialog = ({
+  isExecuting,
+  onClose,
+  onConfirm,
+  removal
+}: {
+  isExecuting: boolean;
+  onClose: () => void;
+  onConfirm: (deleteInstalledFiles: boolean) => void;
+  removal: SkillsPageState["pendingTargetRemoval"];
+}) => {
+  const { t } = useTranslation();
+
+  if (!removal) {
+    return null;
+  }
+
+  const targetName = removal.targetName.startsWith("skills.")
+    ? t(removal.targetName)
+    : removal.targetName;
+
+  return (
+    <Dialog open={Boolean(removal)} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <DialogPortal>
+        <DialogBackdrop />
+        <DialogPopup>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <DialogTitle>{t("skills.targetRemoval.title")}</DialogTitle>
+              <DialogDescription>{t("skills.targetRemoval.description")}</DialogDescription>
+            </div>
+            <DialogClose
+              disabled={isExecuting}
+              render={<Button type="button" variant="outline" size="sm" />}
+            >
+              {t("skills.actions.close")}
+            </DialogClose>
+          </div>
+
+          <div className="grid gap-3 rounded-lg border border-border bg-background p-3">
+            <div>
+              <span className="text-xs font-semibold text-muted-foreground">
+                {t("skills.targetRemoval.skill")}
+              </span>
+              <p className="mt-1 break-words text-sm font-medium">{removal.skillName}</p>
+            </div>
+            <div>
+              <span className="text-xs font-semibold text-muted-foreground">
+                {t("skills.targetRemoval.target")}
+              </span>
+              <p className="mt-1 break-words text-sm font-medium">{targetName}</p>
+              <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
+                {removal.targetPath}
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            {t("skills.targetRemoval.deleteQuestion")}
+          </p>
+
+          <div className="mt-5 flex flex-wrap justify-end gap-2">
+            <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
+              {t("skills.targetRemoval.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isExecuting}
+              onClick={() => onConfirm(false)}
+            >
+              {t("skills.targetRemoval.keepFiles")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isExecuting}
+              onClick={() => onConfirm(true)}
+            >
+              {isExecuting ? (
+                <>
+                  <LoaderCircle aria-hidden="true" className="animate-spin" />
+                  {t("skills.targetRemoval.removing")}
+                </>
+              ) : (
+                t("skills.targetRemoval.deleteFiles")
+              )}
+            </Button>
+          </div>
+        </DialogPopup>
+      </DialogPortal>
+    </Dialog>
+  );
+};
+
 const DistributionConfirmationDialog = ({
   conflictResolutions,
   executionItemStatuses,
+  runtimeOverwriteResolutions,
   isExecuting,
   items,
   onClose,
   onConfirm,
   onConflictResolutionChange,
+  onRuntimeOverwriteResolutionChange,
   open
 }: {
   conflictResolutions: SkillsPageState["distributionConflictResolutions"];
   executionItemStatuses: SkillsPageState["distributionExecutionItemStatuses"];
+  runtimeOverwriteResolutions: SkillsPageState["distributionRuntimeOverwriteResolutions"];
   isExecuting: boolean;
   items: NonNullable<SkillsPageState["distributionPreview"]>["items"];
   onClose: () => void;
   onConfirm: () => void;
   onConflictResolutionChange: (previewItemId: string, resolution: "overwrite" | "skip") => void;
+  onRuntimeOverwriteResolutionChange: (previewItemId: string, overwrite: boolean) => void;
   open: boolean;
 }) => {
   const { t } = useTranslation();
   const executionStarted = Object.keys(executionItemStatuses).length > 0;
   const executionFinished = executionStarted && !isExecuting;
+  const hasRuntimeOverwriteSelection = items.some((item) => {
+    return canOverwriteRuntimeConflict(executionItemStatuses[item.id])
+      ? runtimeOverwriteResolutions[item.id]
+      : false;
+  });
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -201,21 +314,39 @@ const DistributionConfirmationDialog = ({
                 conflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite";
               const allowedResolutions = item.allowedResolutions ?? ["overwrite", "skip"];
               const executionStatus = executionItemStatuses[item.id];
+              const showRuntimeOverwriteControl = canOverwriteRuntimeConflict(executionStatus);
 
               return (
                 <div key={item.id} className="rounded-lg border border-border bg-background p-3">
                   <div className="flex items-center justify-between gap-2">
                     <strong className="min-w-0 truncate text-sm">{item.targetName}</strong>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {executionStatus ? (
-                        <DistributionItemExecutionIcon
-                          name={item.targetName}
-                          status={executionStatus}
-                        />
+                    <div className="grid shrink-0 justify-items-end gap-1">
+                      <div className="flex items-center gap-2">
+                        {executionStatus ? (
+                          <DistributionItemExecutionIcon
+                            name={item.targetName}
+                            status={executionStatus}
+                          />
+                        ) : null}
+                        <Badge variant={getDistributionActionBadgeVariant(item.action)}>
+                          {t(`skills.distribution.actions.${item.action}`)}
+                        </Badge>
+                      </div>
+                      {showRuntimeOverwriteControl ? (
+                        <label className="mt-1 flex h-6 items-center gap-1.5 text-red-500 text-xs font-medium cursor-pointer">
+                          <Checkbox
+                            checked={runtimeOverwriteResolutions[item.id] ?? false}
+                            aria-label={t("skills.distribution.runtimeOverwriteAria", {
+                              name: item.targetName
+                            })}
+                            disabled={isExecuting}
+                            onCheckedChange={(nextChecked) =>
+                              onRuntimeOverwriteResolutionChange(item.id, nextChecked)
+                            }
+                          />
+                          {t("skills.distribution.runtimeOverwrite")}
+                        </label>
                       ) : null}
-                      <Badge variant={getDistributionActionBadgeVariant(item.action)}>
-                        {t(`skills.distribution.actions.${item.action}`)}
-                      </Badge>
                     </div>
                   </div>
                   <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
@@ -265,7 +396,7 @@ const DistributionConfirmationDialog = ({
             <Button
               type="button"
               disabled={isExecuting}
-              onClick={executionFinished ? onClose : onConfirm}
+              onClick={executionFinished && !hasRuntimeOverwriteSelection ? onClose : onConfirm}
             >
               {isExecuting ? (
                 <>
@@ -336,6 +467,12 @@ const DistributionItemExecutionIcon = ({
       </TooltipContent>
     </Tooltip>
   );
+};
+
+const canOverwriteRuntimeConflict = (
+  status: SkillsPageState["distributionExecutionItemStatuses"][string] | undefined
+): boolean => {
+  return status?.status === "result" && status.result === "conflict";
 };
 
 const getDistributionResultIcon = (

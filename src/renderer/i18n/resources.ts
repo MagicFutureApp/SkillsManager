@@ -41,6 +41,8 @@ export const resources = {
           distributionUnavailableStatus: "分发接口暂不可用。",
           distributionEmptyStatus: "没有需要分发的项目。",
           distributionFailedStatus: "分发失败。",
+          targetRemovalFailedStatus: "取消分发目标失败。请检查目标目录权限后重试。",
+          targetRemovalUnavailableStatus: "取消分发目标接口暂不可用。",
           distributionCompletedStatus:
             "分发完成：安装 {{installed}}，更新 {{updated}}，跳过 {{skipped}}，冲突 {{conflicts}}，阻止 {{blocked}}，失败 {{failed}}。",
           distributionPreviewFailedStatus: "分发预览失败。",
@@ -104,6 +106,17 @@ export const resources = {
         targets: {
           customDirectory: "Custom directory"
         },
+        targetRemoval: {
+          cancel: "取消",
+          deleteFiles: "删除文件并取消",
+          deleteQuestion: "是否同时删除这个目标目录中由当前 skill 分发出来的文件？",
+          description: "取消勾选后会保留这个目标偏好，并清理这个 skill 的同步记录。",
+          keepFiles: "仅取消勾选",
+          removing: "处理中",
+          skill: "Skill",
+          target: "目标",
+          title: "取消分发目标"
+        },
         distribution: {
           confirmTitle: "确认分发",
           confirmDescription: "确认后会将 {{count}} 个项目 copy 到目标目录。",
@@ -114,6 +127,8 @@ export const resources = {
           conflictResolutionAria: "处理 {{skill}} 到 {{target}} 的冲突",
           itemDistributing: "{{name}} 分发中",
           itemCompleted: "{{name}} 完成",
+          runtimeOverwrite: "覆盖",
+          runtimeOverwriteAria: "覆盖 {{name}}",
           itemResults: {
             blocked: "{{name}} 分发被阻止",
             conflict: "{{name}} 存在冲突",
@@ -496,6 +511,9 @@ export const resources = {
           distributionUnavailableStatus: "Distribution is unavailable.",
           distributionEmptyStatus: "There are no items to distribute.",
           distributionFailedStatus: "Distribution failed.",
+          targetRemovalFailedStatus:
+            "Failed to remove the distribution target. Check target permissions and try again.",
+          targetRemovalUnavailableStatus: "Removing distribution targets is unavailable.",
           distributionCompletedStatus:
             "Distribution finished: installed {{installed}}, updated {{updated}}, skipped {{skipped}}, conflicts {{conflicts}}, blocked {{blocked}}, failed {{failed}}.",
           distributionPreviewFailedStatus: "Distribution preview failed.",
@@ -559,6 +577,19 @@ export const resources = {
         targets: {
           customDirectory: "Custom directory"
         },
+        targetRemoval: {
+          cancel: "Cancel",
+          deleteFiles: "Delete files and remove",
+          deleteQuestion:
+            "Also delete the files distributed by this skill from the target directory?",
+          description:
+            "Removing the check keeps this target preference and clears this skill's sync record.",
+          keepFiles: "Remove only",
+          removing: "Removing",
+          skill: "Skill",
+          target: "Target",
+          title: "Remove Distribution Target"
+        },
         distribution: {
           confirmTitle: "Confirm Distribution",
           confirmDescription: "Confirm to copy {{count}} item(s) to the target directories.",
@@ -569,6 +600,8 @@ export const resources = {
           conflictResolutionAria: "Handle conflict for {{skill}} to {{target}}",
           itemDistributing: "{{name}} distributing",
           itemCompleted: "{{name}} completed",
+          runtimeOverwrite: "Overwrite",
+          runtimeOverwriteAria: "Overwrite {{name}}",
           itemResults: {
             blocked: "{{name}} blocked",
             conflict: "{{name}} has a conflict",

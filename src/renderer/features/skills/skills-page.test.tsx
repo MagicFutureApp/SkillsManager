@@ -226,6 +226,28 @@ const distributionFailedExecuteFixture: DistributionExecuteResult = {
   }
 };
 
+const distributionRuntimeConflictExecuteFixture: DistributionExecuteResult = {
+  items: [
+    {
+      action: "install",
+      agentTargetId: "codex",
+      errorMessage: "Target path already exists and is not owned by this skill.",
+      result: "conflict",
+      skillUnitId: "team-skills__skills-review-bot",
+      targetPath: "/Users/test/.codex/skills/skills-review-bot"
+    }
+  ],
+  preview: distributionPreviewFixture,
+  summary: {
+    blocked: 0,
+    conflicts: 1,
+    failed: 0,
+    installed: 0,
+    skipped: 0,
+    updated: 0
+  }
+};
+
 const renderSkillsPage = async ({
   distributionExecute = distributionExecuteFixture,
   distributionPreview = distributionPreviewFixture,
@@ -241,6 +263,10 @@ const renderSkillsPage = async ({
 } = {}) => {
   const i18n = await createI18nInstance(locale);
   const setSkillTargetPreference = vi.fn().mockResolvedValue({ success: true });
+  const removeSkillTargetPreference = vi.fn().mockResolvedValue({
+    deletedInstalledPath: null,
+    success: true
+  });
   const addSkillDirectoryTarget = vi.fn().mockResolvedValue(targets);
   const executeDistribution = vi.fn().mockResolvedValue(distributionExecute);
   const previewDistribution = vi.fn().mockResolvedValue(distributionPreview);
@@ -257,6 +283,7 @@ const renderSkillsPage = async ({
     addSkillDirectoryTarget,
     executeDistribution,
     previewDistribution,
+    removeSkillTargetPreference,
     selectTargetDirectory,
     setSkillTargetPreference,
     platform: "darwin"
@@ -273,6 +300,7 @@ const renderSkillsPage = async ({
     addSkillDirectoryTarget,
     executeDistribution,
     previewDistribution,
+    removeSkillTargetPreference,
     selectTargetDirectory,
     setSkillTargetPreference
   };
@@ -639,7 +667,86 @@ describe("SkillsPage", () => {
     expect(screen.queryByText("/Users/test/deleted/.codex/skills")).not.toBeInTheDocument();
   });
 
-  it("records target checkbox changes and keeps the last checked state locally", async () => {
+  it("confirms target removal before clearing files or database records", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: ["target-team"],
+        version: "8f2c91a"
+      }
+    ];
+    const targets: TargetsListResult = {
+      registeredTargets: [
+        {
+          createdAt: "2026-06-21T00:00:00.000Z",
+          enabled: true,
+          id: "target-team",
+          name: "Team workspace",
+          normalizedPath: "/Users/test/team/.codex/skills",
+          path: "/Users/test/team/.codex/skills",
+          scanMessage: null,
+          selectedSkills: [],
+          skillPreferences: [],
+          skillCount: 0,
+          scope: "global",
+          status: "registered",
+          type: "custom-directory",
+          updatedAt: "2026-06-21T00:00:00.000Z"
+        }
+      ]
+    };
+    const { removeSkillTargetPreference, setSkillTargetPreference } = await renderSkillsPage({
+      skills,
+      targets
+    });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    const targetCheckbox = screen.getByLabelText("选择 Team workspace");
+
+    expect(targetCheckbox).toBeChecked();
+
+    fireEvent.click(targetCheckbox);
+
+    expect(targetCheckbox).toBeChecked();
+    expect(setSkillTargetPreference).not.toHaveBeenCalled();
+    expect(removeSkillTargetPreference).not.toHaveBeenCalled();
+    const cancelDialog = await screen.findByRole("dialog", { name: "取消分发目标" });
+
+    expect(within(cancelDialog).getByText("Review Bot")).toBeInTheDocument();
+    expect(within(cancelDialog).getByText("Team workspace")).toBeInTheDocument();
+    expect(within(cancelDialog).getByText("/Users/test/team/.codex/skills")).toBeInTheDocument();
+    fireEvent.click(within(cancelDialog).getByRole("button", { name: "取消" }));
+
+    expect(targetCheckbox).toBeChecked();
+    expect(screen.queryByRole("dialog", { name: "取消分发目标" })).not.toBeInTheDocument();
+
+    fireEvent.click(targetCheckbox);
+    const confirmDialog = await screen.findByRole("dialog", { name: "取消分发目标" });
+
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "仅取消勾选" }));
+
+    await waitFor(() =>
+      expect(removeSkillTargetPreference).toHaveBeenCalledWith({
+        agentTargetId: "target-team",
+        deleteInstalledFiles: false,
+        skillUnitId: "team-skills__skills-review-bot"
+      })
+    );
+    expect(targetCheckbox).not.toBeChecked();
+    expect(screen.getByText("0 / 1")).toBeInTheDocument();
+    expect(setSkillTargetPreference).not.toHaveBeenCalled();
+  });
+
+  it("records target checkbox additions and deletes target files when confirmed", async () => {
     const skills: SkillApiRecord[] = [
       {
         description: "Reviews pull requests.",
@@ -676,7 +783,10 @@ describe("SkillsPage", () => {
         }
       ]
     };
-    const { setSkillTargetPreference } = await renderSkillsPage({ skills, targets });
+    const { removeSkillTargetPreference, setSkillTargetPreference } = await renderSkillsPage({
+      skills,
+      targets
+    });
     await screen.findByRole("button", { name: "Review Bot" });
 
     const targetCheckbox = screen.getByLabelText("选择 Team workspace");
@@ -695,15 +805,18 @@ describe("SkillsPage", () => {
     );
 
     fireEvent.click(targetCheckbox);
+    const confirmDialog = await screen.findByRole("dialog", { name: "取消分发目标" });
 
-    expect(targetCheckbox).not.toBeChecked();
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "删除文件并取消" }));
+
     await waitFor(() =>
-      expect(setSkillTargetPreference).toHaveBeenLastCalledWith({
+      expect(removeSkillTargetPreference).toHaveBeenCalledWith({
         agentTargetId: "target-team",
-        enabled: false,
+        deleteInstalledFiles: true,
         skillUnitId: "team-skills__skills-review-bot"
       })
     );
+    expect(targetCheckbox).not.toBeChecked();
   });
 
   it("adds a selected directory as an independent checked target for the current skill", async () => {
@@ -779,7 +892,7 @@ describe("SkillsPage", () => {
         }
       ]
     };
-    const { addSkillDirectoryTarget, selectTargetDirectory, setSkillTargetPreference } =
+    const { addSkillDirectoryTarget, removeSkillTargetPreference, selectTargetDirectory } =
       await renderSkillsPage({ skills, targets: { registeredTargets: [] } });
 
     addSkillDirectoryTarget.mockResolvedValueOnce(addedTargets);
@@ -804,14 +917,19 @@ describe("SkillsPage", () => {
 
     fireEvent.click(addedTargetCheckbox);
 
-    expect(addedTargetCheckbox).not.toBeChecked();
+    expect(addedTargetCheckbox).toBeChecked();
+    const confirmDialog = await screen.findByRole("dialog", { name: "取消分发目标" });
+
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "仅取消勾选" }));
+
     await waitFor(() =>
-      expect(setSkillTargetPreference).toHaveBeenLastCalledWith({
+      expect(removeSkillTargetPreference).toHaveBeenCalledWith({
         agentTargetId: "target-custom-users-test-review-skills-16b7af9b49af",
-        enabled: false,
+        deleteInstalledFiles: false,
         skillUnitId: "team-skills__skills-review-bot"
       })
     );
+    expect(addedTargetCheckbox).not.toBeChecked();
   });
 
   it("searches skills by name, repository, or description only", async () => {
@@ -1335,6 +1453,93 @@ describe("SkillsPage", () => {
     expect(
       await screen.findByText("目标目录没有写入权限，请检查目录权限后重试。")
     ).toBeInTheDocument();
+  });
+
+  it("allows overwriting a runtime target-path conflict from the confirmation dialog", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: ["codex"],
+        version: "8f2c91a"
+      }
+    ];
+    const { executeDistribution } = await renderSkillsPage({ skills });
+
+    executeDistribution.mockReset();
+    executeDistribution
+      .mockResolvedValueOnce(distributionRuntimeConflictExecuteFixture)
+      .mockResolvedValueOnce(distributionExecuteFixture);
+
+    await screen.findByRole("button", { name: "Review Bot" });
+    fireEvent.click(
+      within(screen.getByLabelText("技能详情")).getByRole("button", {
+        name: "分发当前技能"
+      })
+    );
+
+    const confirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
+
+    vi.useFakeTimers();
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确认分发" }));
+
+    expect(executeDistribution).toHaveBeenLastCalledWith({
+      conflictResolutions: [],
+      skillUnitIds: ["team-skills__skills-review-bot"],
+      triggerSource: "skill_detail"
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    expect(within(confirmDialog).getByLabelText("Codex 存在冲突")).toBeInTheDocument();
+    const overwriteCheckbox = within(confirmDialog).getByLabelText("覆盖 Codex");
+    const overwriteControl = overwriteCheckbox.closest("label");
+
+    expect(overwriteCheckbox).not.toBeChecked();
+    expect(overwriteControl).not.toBeNull();
+    expect(overwriteControl).toHaveClass("mt-1");
+    expect(overwriteControl).not.toHaveClass("border", "border-destructive/40");
+    expect(overwriteControl?.parentElement).toHaveClass("grid", "justify-items-end");
+
+    fireEvent.click(overwriteCheckbox);
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确定" }));
+
+    expect(executeDistribution).toHaveBeenLastCalledWith({
+      conflictResolutions: [
+        {
+          agentTargetId: "codex",
+          previewItemId: "preview-item-1",
+          resolution: "overwrite",
+          skillUnitId: "team-skills__skills-review-bot",
+          targetPath: "/Users/test/.codex/skills/skills-review-bot"
+        }
+      ],
+      skillUnitIds: ["team-skills__skills-review-bot"],
+      triggerSource: "skill_detail"
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    expect(within(confirmDialog).getByLabelText("Codex 安装完成")).toBeInTheDocument();
+    expect(within(confirmDialog).getByRole("button", { name: "确定" })).toBeEnabled();
   });
 
   it("defaults conflict distribution to overwrite and allows choosing skip", async () => {

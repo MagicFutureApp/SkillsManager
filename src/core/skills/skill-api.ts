@@ -10,6 +10,17 @@ export type UpdateSkillTargetPreferenceResult = {
   success: true;
 };
 
+export type RemoveSkillTargetPreferenceInput = {
+  agentTargetId: string;
+  deleteInstalledFiles: boolean;
+  skillUnitId: string;
+};
+
+export type RemoveSkillTargetPreferenceResult = {
+  deletedInstalledPath: string | null;
+  success: true;
+};
+
 export type SkillApiRecord = {
   description: string;
   enabled: boolean;

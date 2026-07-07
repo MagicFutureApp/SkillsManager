@@ -16,7 +16,7 @@ import type {
 import { createDistributionRepository } from "../../db/repositories/distributionRepository.js";
 import { installInstances } from "../../db/schema.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
-import { expandHomePath } from "../path-utils.js";
+import { expandHomePath, isSameOrChildPath, normalizeFilesystemPath } from "../path-utils.js";
 
 type DistributionPreviewOperations = {
   now: () => Date;
@@ -409,17 +409,6 @@ const createItemResult = (
     skillUnitId: item.skillUnitId,
     targetPath: item.targetPath
   };
-};
-
-const normalizeFilesystemPath = (value: string): string => {
-  return path
-    .resolve(value)
-    .replace(/[\\/]+$/, "")
-    .toLowerCase();
-};
-
-const isSameOrChildPath = (candidate: string, parent: string): boolean => {
-  return candidate === parent || candidate.startsWith(`${parent.toLowerCase()}${path.sep}`);
 };
 
 const defaultExecuteOperations: DistributionExecuteOperations = {

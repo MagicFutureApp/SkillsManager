@@ -22,6 +22,8 @@ import type {
   ResetLocalDatabaseResult
 } from "./ipc/settings";
 import type {
+  RemoveSkillTargetPreferenceInput,
+  RemoveSkillTargetPreferenceResult,
   SkillsListResult,
   UpdateSkillTargetPreferenceInput,
   UpdateSkillTargetPreferenceResult
@@ -84,6 +86,11 @@ contextBridge.exposeInMainWorld("skillsManager", {
       "skills:setTargetPreference",
       input
     ) as Promise<UpdateSkillTargetPreferenceResult>,
+  removeSkillTargetPreference: (input: RemoveSkillTargetPreferenceInput) =>
+    ipcRenderer.invoke(
+      "skills:removeTargetPreference",
+      input
+    ) as Promise<RemoveSkillTargetPreferenceResult>,
   listTargets: () => ipcRenderer.invoke("targets:list") as Promise<TargetsListResult>,
   addCustomDirectoryTarget: (input: AddCustomDirectoryTargetInput) =>
     ipcRenderer.invoke("targets:addCustomDirectory", input) as Promise<TargetsListResult>,

@@ -12,3 +12,20 @@ export const expandHomePath = (value: string): string => {
 
   return value;
 };
+
+export const normalizeFilesystemPath = (value: string): string => {
+  return path
+    .resolve(value)
+    .replace(/[\\/]+$/, "")
+    .toLowerCase();
+};
+
+export const isSameOrChildPath = (candidate: string, parent: string): boolean => {
+  const normalizedCandidate = candidate.toLowerCase();
+  const normalizedParent = parent.toLowerCase();
+
+  return (
+    normalizedCandidate === normalizedParent ||
+    normalizedCandidate.startsWith(`${normalizedParent}${path.sep}`)
+  );
+};
