@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   DistributionExecuteResult,
@@ -26,6 +26,7 @@ import {
 } from "../components/skills-page-data";
 
 export const useSkillsPageState = () => {
+  const distributionExecutionTimerIdsRef = useRef<number[]>([]);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [distributionNoticeKey, setDistributionNoticeKey] = useState<string | null>(null);
@@ -38,6 +39,9 @@ export const useSkillsPageState = () => {
   const [distributionConflictResolutions, setDistributionConflictResolutions] = useState<
     Record<string, DistributionConflictResolution>
   >({});
+  const [distributionExecutionItemStatuses, setDistributionExecutionItemStatuses] = useState<
+    Record<string, DistributionExecutionItemStatus>
+  >({});
   const [pendingDistribution, setPendingDistribution] = useState<PendingDistribution | null>(null);
   const [query, setQuery] = useState("");
   const [repositoryFilter, setRepositoryFilter] = useState<SkillRepositoryFilter>("all");
@@ -47,6 +51,11 @@ export const useSkillsPageState = () => {
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [sort, setSort] = useState<SkillSort>("name");
   const [targetOptions, setTargetOptions] = useState<TargetOption[]>([]);
+
+  const clearDistributionExecutionTimers = () => {
+    distributionExecutionTimerIdsRef.current.forEach((timerId) => window.clearTimeout(timerId));
+    distributionExecutionTimerIdsRef.current = [];
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -63,6 +72,12 @@ export const useSkillsPageState = () => {
 
     return () => {
       isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearDistributionExecutionTimers();
     };
   }, []);
 
@@ -195,6 +210,8 @@ export const useSkillsPageState = () => {
     setIsDistributionPreviewLoading(true);
     setDistributionExecuteResult(null);
     setDistributionNoticeKey(null);
+    setDistributionExecutionItemStatuses({});
+    clearDistributionExecutionTimers();
 
     try {
       const preview = await previewDistribution({
@@ -264,6 +281,14 @@ export const useSkillsPageState = () => {
 
     setIsDistributionExecuting(true);
     setDistributionNoticeKey(null);
+    clearDistributionExecutionTimers();
+
+    const startedAt = Date.now();
+    const previewItemIds = distributionPreview.items.map((item) => item.id);
+
+    setDistributionExecutionItemStatuses(
+      createDistributionExecutionItemStatuses(previewItemIds, "loading")
+    );
 
     try {
       const result = await executeDistribution({
@@ -281,13 +306,46 @@ export const useSkillsPageState = () => {
         triggerSource: pendingDistribution.triggerSource
       });
 
-      setDistributionExecuteResult(result);
-      setDistributionConfirmDialogOpen(false);
+      scheduleDistributionExecutionCompletion({
+        onFinish: () => setDistributionExecuteResult(result),
+        previewItemIds,
+        startedAt
+      });
     } catch {
-      showDistributionNotice("skills.actions.distributionFailedStatus");
-    } finally {
-      setIsDistributionExecuting(false);
+      scheduleDistributionExecutionCompletion({
+        onFinish: () => showDistributionNotice("skills.actions.distributionFailedStatus"),
+        previewItemIds,
+        startedAt
+      });
     }
+  };
+
+  const scheduleDistributionExecutionCompletion = ({
+    onFinish,
+    previewItemIds,
+    startedAt
+  }: {
+    onFinish: () => void;
+    previewItemIds: string[];
+    startedAt: number;
+  }) => {
+    const elapsedMs = Date.now() - startedAt;
+    const completeDelayMs = Math.max(0, MIN_DISTRIBUTION_ITEM_LOADING_MS - elapsedMs);
+    const closeDelayMs = Math.max(0, MIN_DISTRIBUTION_DIALOG_OPEN_MS - elapsedMs);
+
+    const completeTimerId = window.setTimeout(() => {
+      setDistributionExecutionItemStatuses(
+        createDistributionExecutionItemStatuses(previewItemIds, "completed")
+      );
+    }, completeDelayMs);
+    const closeTimerId = window.setTimeout(() => {
+      onFinish();
+      setDistributionConfirmDialogOpen(false);
+      setIsDistributionExecuting(false);
+      setDistributionExecutionItemStatuses({});
+    }, closeDelayMs);
+
+    distributionExecutionTimerIdsRef.current.push(completeTimerId, closeTimerId);
   };
 
   const toggleSkillTargetPreference = (skillId: string, targetId: string, enabled: boolean) => {
@@ -376,6 +434,7 @@ export const useSkillsPageState = () => {
     checkedIds,
     distributionConflictResolutions,
     distributionConfirmDialogOpen,
+    distributionExecutionItemStatuses,
     distributionExecuteResult,
     distributionNoticeKey,
     distributionNoticeVisible: Boolean(distributionNoticeKey || distributionExecuteResult),
@@ -438,6 +497,18 @@ type DistributionConflictResolution = NonNullable<
 type PendingDistribution = {
   skillUnitIds: string[];
   triggerSource: DistributionPreviewInput["triggerSource"];
+};
+
+type DistributionExecutionItemStatus = "completed" | "loading";
+
+const MIN_DISTRIBUTION_ITEM_LOADING_MS = 1000;
+const MIN_DISTRIBUTION_DIALOG_OPEN_MS = 2000;
+
+const createDistributionExecutionItemStatuses = (
+  itemIds: string[],
+  status: DistributionExecutionItemStatus
+): Record<string, DistributionExecutionItemStatus> => {
+  return Object.fromEntries(itemIds.map((itemId) => [itemId, status]));
 };
 
 const createDefaultConflictResolutions = (

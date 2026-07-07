@@ -23,6 +23,7 @@ import type {
   RepositorySyncFailure,
   RepositorySyncFailureCategory,
   RepositorySyncDistributionSummary,
+  RepositorySyncProgressEvent,
   RepositorySyncResultItem,
   UpdateRepositoryInput
 } from "../../core/repositories/repository-api.js";
@@ -34,6 +35,8 @@ export type RepositoriesListResult = {
 export type RepositoriesSyncResult = {
   results: RepositorySyncResultItem[];
 };
+
+export type RepositoriesSyncProgressEvent = RepositorySyncProgressEvent;
 
 type RepositoryInspectionOperations = {
   getGitHubToken: (db: DbClient) => Promise<string | null>;
@@ -57,12 +60,16 @@ type RepositorySyncOperations = {
   materializeSourceCache?: (
     input: SourceCacheMaterializationInput
   ) => Promise<SourceCacheMaterializationResult>;
+  onProgress?: (event: RepositorySyncProgressEvent) => void;
   resolveCommitSha: (cachePath: string) => Promise<string>;
 };
 
 type SourceCacheMaterializationInput = {
   cachePath: string;
   discoveryEntries: string[];
+  onProgress?: (event: RepositorySyncProgressEvent) => void;
+  repositoryId: string;
+  repositoryName: string;
   sourceFolderName: string;
   sourcePath: string;
 };
@@ -235,6 +242,9 @@ export const syncRepositories = async (
           const materializedCache = await operations.materializeSourceCache({
             cachePath,
             discoveryEntries,
+            onProgress: operations.onProgress,
+            repositoryId,
+            repositoryName: repository.name,
             sourceFolderName: deriveSourceFolderName(repository.remoteUrl, remoteUrl),
             sourcePath
           });
@@ -250,6 +260,9 @@ export const syncRepositories = async (
           const materializedCache = await operations.materializeSourceCache({
             cachePath,
             discoveryEntries,
+            onProgress: operations.onProgress,
+            repositoryId,
+            repositoryName: repository.name,
             sourceFolderName: deriveSourceFolderName(repository.remoteUrl, sourcePath),
             sourcePath
           });
@@ -368,8 +381,13 @@ export const registerRepositoriesIpc = (db: DbProvider): void => {
 
   ipcMain.handle(
     "repositories:sync",
-    (_event, repositoryIds: string[]): Promise<RepositoriesSyncResult> => {
-      return syncRepositories(resolveDb(db), repositoryIds);
+    (event, repositoryIds: string[]): Promise<RepositoriesSyncResult> => {
+      return syncRepositories(resolveDb(db), repositoryIds, {
+        ...defaultSyncOperations,
+        onProgress: (progressEvent) => {
+          event.sender.send("repositories:syncProgress", progressEvent);
+        }
+      });
     }
   );
 
@@ -475,6 +493,9 @@ const defaultSyncOperations: RepositorySyncOperations = {
 async function materializeSourceCacheFromDiscoveryEntries({
   cachePath,
   discoveryEntries,
+  onProgress,
+  repositoryId,
+  repositoryName,
   sourceFolderName,
   sourcePath
 }: SourceCacheMaterializationInput): Promise<SourceCacheMaterializationResult> {
@@ -512,6 +533,16 @@ async function materializeSourceCacheFromDiscoveryEntries({
 
     copiedDestinationPaths.add(destinationRootPath);
     scanDiscoveryEntries.push(`${destinationRootPath}/SKILL.md`);
+    onProgress?.({
+      repositoryId,
+      repositoryName,
+      skill: {
+        name: skill.name,
+        skillKey: skill.skillKey,
+        skillUnitId: buildSkillUnitId(repositoryId, skill.skillKey)
+      },
+      status: "syncing"
+    });
     await cp(
       toAbsoluteSourceRootPath(sourcePath, skill.rootPath),
       path.join(cachePath, ...destinationRootPath.split("/")),
@@ -522,6 +553,16 @@ async function materializeSourceCacheFromDiscoveryEntries({
         recursive: true
       }
     );
+    onProgress?.({
+      repositoryId,
+      repositoryName,
+      skill: {
+        name: skill.name,
+        skillKey: skill.skillKey,
+        skillUnitId: buildSkillUnitId(repositoryId, skill.skillKey)
+      },
+      status: "completed"
+    });
   }
 
   return {

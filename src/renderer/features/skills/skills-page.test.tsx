@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
 
@@ -263,6 +263,10 @@ const selectOption = async (label: string, optionName: string) => {
 describe("SkillsPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders layout slots inside the page main and sider containers", () => {
@@ -1135,24 +1139,108 @@ describe("SkillsPage", () => {
       within(confirmDialog).getByText("/Users/test/.codex/skills/skills-review-bot")
     ).toBeInTheDocument();
 
+    vi.useFakeTimers();
     fireEvent.click(within(confirmDialog).getByRole("button", { name: "确认分发" }));
 
-    await waitFor(() =>
-      expect(executeDistribution).toHaveBeenCalledWith({
-        conflictResolutions: [],
-        skillUnitIds: ["team-skills__skills-review-bot"],
-        triggerSource: "skill_detail"
-      })
-    );
-    await waitFor(() =>
-      expect(screen.queryByRole("dialog", { name: "确认分发" })).not.toBeInTheDocument()
-    );
+    expect(executeDistribution).toHaveBeenCalledWith({
+      conflictResolutions: [],
+      skillUnitIds: ["team-skills__skills-review-bot"],
+      triggerSource: "skill_detail"
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    expect(screen.queryByRole("dialog", { name: "确认分发" })).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent(
       "分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。"
     );
     expect(
       within(skillDetail).queryByRole("heading", { name: "确认分发" })
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps distribution rows loading for one second and closes after two seconds", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: ["codex"],
+        version: "8f2c91a"
+      }
+    ];
+    const { executeDistribution } = await renderSkillsPage({ skills });
+
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    fireEvent.click(
+      within(screen.getByLabelText("技能详情")).getByRole("button", {
+        name: "分发当前技能"
+      })
+    );
+
+    const confirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
+
+    vi.useFakeTimers();
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确认分发" }));
+
+    expect(executeDistribution).toHaveBeenCalledWith({
+      conflictResolutions: [],
+      skillUnitIds: ["team-skills__skills-review-bot"],
+      triggerSource: "skill_detail"
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const executingDialog = screen.getByRole("dialog", { name: "确认分发" });
+    const loadingIndicator = within(executingDialog).getByLabelText("Codex 分发中");
+
+    expect(within(executingDialog).getByRole("button", { name: "确认分发" })).toBeDisabled();
+    expect(loadingIndicator.querySelector("svg")).toHaveClass("animate-spin");
+
+    act(() => {
+      vi.advanceTimersByTime(999);
+    });
+    expect(within(executingDialog).getByLabelText("Codex 分发中").querySelector("svg")).toHaveClass(
+      "animate-spin"
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(
+      within(executingDialog).getByLabelText("Codex 完成").querySelector("svg")
+    ).not.toHaveClass("animate-spin");
+
+    act(() => {
+      vi.advanceTimersByTime(999);
+    });
+    expect(screen.getByRole("dialog", { name: "确认分发" })).toBeInTheDocument();
+    expect(
+      screen.queryByText("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。")
+    ).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(screen.queryByRole("dialog", { name: "确认分发" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。"
+    );
   });
 
   it("defaults conflict distribution to overwrite and allows choosing skip", async () => {
@@ -1193,31 +1281,40 @@ describe("SkillsPage", () => {
 
     expect(conflictResolution).toHaveValue("overwrite");
 
+    vi.useFakeTimers();
     fireEvent.click(within(confirmDialog).getByRole("button", { name: "确认分发" }));
 
-    await waitFor(() =>
-      expect(executeDistribution).toHaveBeenLastCalledWith({
-        conflictResolutions: [
-          {
-            agentTargetId: "codex",
-            previewItemId: "preview-conflict-item-1",
-            resolution: "overwrite",
-            skillUnitId: "team-skills__skills-review-bot",
-            targetPath: "/Users/test/.codex/skills/skills-review-bot"
-          }
-        ],
-        skillUnitIds: ["team-skills__skills-review-bot"],
-        triggerSource: "skill_detail"
-      })
-    );
+    expect(executeDistribution).toHaveBeenLastCalledWith({
+      conflictResolutions: [
+        {
+          agentTargetId: "codex",
+          previewItemId: "preview-conflict-item-1",
+          resolution: "overwrite",
+          skillUnitId: "team-skills__skills-review-bot",
+          targetPath: "/Users/test/.codex/skills/skills-review-bot"
+        }
+      ],
+      skillUnitIds: ["team-skills__skills-review-bot"],
+      triggerSource: "skill_detail"
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
 
     fireEvent.click(
       within(screen.getByLabelText("技能详情")).getByRole("button", {
         name: "分发当前技能"
       })
     );
+    await act(async () => {
+      await Promise.resolve();
+    });
 
-    const nextConfirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
+    const nextConfirmDialog = screen.getByRole("dialog", { name: "确认分发" });
     fireEvent.change(
       within(nextConfirmDialog).getByRole("combobox", {
         name: "处理 Review Bot 到 Codex 的冲突"
@@ -1226,20 +1323,25 @@ describe("SkillsPage", () => {
     );
     fireEvent.click(within(nextConfirmDialog).getByRole("button", { name: "确认分发" }));
 
-    await waitFor(() =>
-      expect(executeDistribution).toHaveBeenLastCalledWith({
-        conflictResolutions: [
-          {
-            agentTargetId: "codex",
-            previewItemId: "preview-conflict-item-1",
-            resolution: "skip",
-            skillUnitId: "team-skills__skills-review-bot",
-            targetPath: "/Users/test/.codex/skills/skills-review-bot"
-          }
-        ],
-        skillUnitIds: ["team-skills__skills-review-bot"],
-        triggerSource: "skill_detail"
-      })
-    );
+    expect(executeDistribution).toHaveBeenLastCalledWith({
+      conflictResolutions: [
+        {
+          agentTargetId: "codex",
+          previewItemId: "preview-conflict-item-1",
+          resolution: "skip",
+          skillUnitId: "team-skills__skills-review-bot",
+          targetPath: "/Users/test/.codex/skills/skills-review-bot"
+        }
+      ],
+      skillUnitIds: ["team-skills__skills-review-bot"],
+      triggerSource: "skill_detail"
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
   });
 });

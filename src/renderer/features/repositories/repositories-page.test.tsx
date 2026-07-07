@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
 
@@ -7,6 +7,17 @@ import { RepositoriesPage } from "./repositories-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import type { RepositoriesSyncResult } from "@/global";
 import { providerApiRecordsFixture, repositoryApiRecordsFixture } from "@/test/api-fixtures";
+
+type RepositorySyncProgressCallback = (event: {
+  repositoryId: string;
+  repositoryName: string;
+  skill: {
+    name: string;
+    skillKey: string;
+    skillUnitId: string;
+  };
+  status: "completed" | "syncing";
+}) => void;
 
 const renderRepositoriesPage = async (
   locale: "zh-CN" | "en-US" = "zh-CN",
@@ -33,6 +44,7 @@ const renderRepositoriesPage = async (
       skillsManager?.listRepositories ??
       vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
     openRepositoryLocation: skillsManager?.openRepositoryLocation,
+    onRepositorySyncProgress: skillsManager?.onRepositorySyncProgress,
     selectLocalRepositoryPath: skillsManager?.selectLocalRepositoryPath,
     syncRepositories: skillsManager?.syncRepositories,
     updateRepository: skillsManager?.updateRepository,
@@ -96,6 +108,10 @@ const createPagedRepositoryRecords = (count: number) =>
 describe("RepositoriesPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders the repositories management surface from the HTML mockup", async () => {
@@ -721,6 +737,215 @@ describe("RepositoriesPage", () => {
         }
       ]
     });
+  });
+
+  it("shows per-skill sync progress and closes the progress dialog after completion", async () => {
+    let progressCallback: RepositorySyncProgressCallback = () => undefined;
+    let resolveSync: (value: RepositoriesSyncResult) => void = () => undefined;
+    const syncRepositories = vi.fn(
+      () =>
+        new Promise<RepositoriesSyncResult>((resolve) => {
+          resolveSync = resolve;
+        })
+    );
+    const onRepositorySyncProgress = vi.fn((callback: RepositorySyncProgressCallback) => {
+      progressCallback = callback;
+      return vi.fn();
+    });
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      onRepositorySyncProgress,
+      platform: "win32",
+      syncRepositories
+    } as unknown as NonNullable<typeof window.skillsManager>;
+    await renderRepositoriesPage();
+
+    fireEvent.click(getRepositorySyncButton("Team skills repository"));
+    await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
+    vi.useFakeTimers();
+
+    act(() => {
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Review Bot",
+          skillKey: "review-bot",
+          skillUnitId: "team-skills__review-bot"
+        },
+        status: "syncing"
+      });
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Design Helper",
+          skillKey: "design-helper",
+          skillUnitId: "team-skills__design-helper"
+        },
+        status: "syncing"
+      });
+    });
+
+    const dialog = screen.getByRole("dialog", { name: "同步进度" });
+    const reviewRow = within(dialog).getByText("Review Bot").closest("li") as HTMLElement;
+    const designRow = within(dialog).getByText("Design Helper").closest("li") as HTMLElement;
+
+    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass(
+      "animate-spin"
+    );
+    expect(
+      within(designRow).getByLabelText("Design Helper 同步中").querySelector("svg")
+    ).toHaveClass("animate-spin");
+
+    act(() => {
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Review Bot",
+          skillKey: "review-bot",
+          skillUnitId: "team-skills__review-bot"
+        },
+        status: "completed"
+      });
+    });
+
+    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass(
+      "animate-spin"
+    );
+    expect(
+      within(designRow).getByLabelText("Design Helper 同步中").querySelector("svg")
+    ).toHaveClass("animate-spin");
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(
+      within(reviewRow).getByLabelText("Review Bot 完成").querySelector("svg")
+    ).not.toHaveClass("animate-spin");
+    expect(
+      within(designRow).getByLabelText("Design Helper 同步中").querySelector("svg")
+    ).toHaveClass("animate-spin");
+
+    await act(async () => {
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Design Helper",
+          skillKey: "design-helper",
+          skillUnitId: "team-skills__design-helper"
+        },
+        status: "completed"
+      });
+      resolveSync({
+        results: [
+          {
+            commitSha: "8f2c91a",
+            repositoryId: "team-skills",
+            scan: { added: 1, changed: 1, removed: 0, warnings: 0 },
+            skillUnits: 12,
+            status: "ready"
+          }
+        ]
+      });
+    });
+
+    expect(within(dialog).getByText("同步完成。")).toBeInTheDocument();
+    await act(async () => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(screen.queryByRole("dialog", { name: "同步进度" })).not.toBeInTheDocument();
+  }, 10000);
+
+  it("keeps a completed skill loader spinning for at least one second", async () => {
+    let progressCallback: RepositorySyncProgressCallback = () => undefined;
+    const syncRepositories = vi.fn(
+      () =>
+        new Promise<RepositoriesSyncResult>(() => {
+          // Keep the repository sync open so the test only exercises per-item progress timing.
+        })
+    );
+    const onRepositorySyncProgress = vi.fn((callback: RepositorySyncProgressCallback) => {
+      progressCallback = callback;
+      return vi.fn();
+    });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      onRepositorySyncProgress,
+      platform: "win32",
+      syncRepositories
+    } as unknown as NonNullable<typeof window.skillsManager>;
+    await renderRepositoriesPage();
+
+    fireEvent.click(getRepositorySyncButton("Team skills repository"));
+    await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
+    vi.useFakeTimers();
+
+    act(() => {
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Review Bot",
+          skillKey: "review-bot",
+          skillUnitId: "team-skills__review-bot"
+        },
+        status: "syncing"
+      });
+    });
+
+    const dialog = screen.getByRole("dialog", { name: "同步进度" });
+    const reviewRow = within(dialog).getByText("Review Bot").closest("li") as HTMLElement;
+
+    act(() => {
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Review Bot",
+          skillKey: "review-bot",
+          skillUnitId: "team-skills__review-bot"
+        },
+        status: "completed"
+      });
+    });
+
+    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass(
+      "animate-spin"
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(999);
+    });
+    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass(
+      "animate-spin"
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(
+      within(reviewRow).getByLabelText("Review Bot 完成").querySelector("svg")
+    ).not.toHaveClass("animate-spin");
   });
 
   it("keeps batch sync available and skips sources that are already syncing", async () => {

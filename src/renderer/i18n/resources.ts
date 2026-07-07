@@ -110,6 +110,8 @@ export const resources = {
           confirmAction: "确认分发",
           conflictResolution: "冲突处理",
           conflictResolutionAria: "处理 {{skill}} 到 {{target}} 的冲突",
+          itemDistributing: "{{name}} 分发中",
+          itemCompleted: "{{name}} 完成",
           actions: {
             blocked: "阻止",
             conflict: "冲突",
@@ -392,6 +394,17 @@ export const resources = {
             "本地路径同步会复制文件到 Skills Manager 的统一本地缓存目录。旧地址的文件需要用户手动删除。是否继续？",
           title: "本地路径同步确认"
         },
+        syncProgress: {
+          close: "关闭",
+          completedDescription: "同步完成。",
+          completedItem: "{{name}} 完成",
+          empty: "等待扫描到 Skills 后显示逐项进度。",
+          failedDescription: "同步失败。请检查来源状态后重试。",
+          failedItem: "{{name}} 失败",
+          syncingDescription: "正在同步来源中的 Skills。",
+          syncingItem: "{{name}} 同步中",
+          title: "同步进度"
+        },
         modal: {
           branch: "分支",
           browseLocalPath: "浏览",
@@ -530,6 +543,8 @@ export const resources = {
           confirmAction: "Confirm Distribution",
           conflictResolution: "Conflict handling",
           conflictResolutionAria: "Handle conflict for {{skill}} to {{target}}",
+          itemDistributing: "{{name}} distributing",
+          itemCompleted: "{{name}} completed",
           actions: {
             blocked: "Blocked",
             conflict: "Conflict",
@@ -817,6 +832,17 @@ export const resources = {
           description:
             "Local path sync copies files into Skills Manager's unified local cache. Files at the old path must be removed manually. Continue?",
           title: "Local path sync confirmation"
+        },
+        syncProgress: {
+          close: "Close",
+          completedDescription: "Sync completed.",
+          completedItem: "{{name}} completed",
+          empty: "Per-skill progress appears after skills are discovered.",
+          failedDescription: "Sync failed. Check the source status and retry.",
+          failedItem: "{{name}} failed",
+          syncingDescription: "Syncing skills from the source.",
+          syncingItem: "{{name}} syncing",
+          title: "Sync progress"
         },
         modal: {
           branch: "Branch",

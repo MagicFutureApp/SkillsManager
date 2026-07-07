@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { LoaderCircle } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -121,6 +122,7 @@ export const SkillsPageSider = () => {
 
       <DistributionConfirmationDialog
         conflictResolutions={page.distributionConflictResolutions}
+        executionItemStatuses={page.distributionExecutionItemStatuses}
         isExecuting={page.isDistributionExecuting}
         items={previewItems}
         onClose={page.closeDistributionConfirmDialog}
@@ -152,6 +154,7 @@ export const SkillsPageSider = () => {
 
 const DistributionConfirmationDialog = ({
   conflictResolutions,
+  executionItemStatuses,
   isExecuting,
   items,
   onClose,
@@ -160,6 +163,7 @@ const DistributionConfirmationDialog = ({
   open
 }: {
   conflictResolutions: SkillsPageState["distributionConflictResolutions"];
+  executionItemStatuses: SkillsPageState["distributionExecutionItemStatuses"];
   isExecuting: boolean;
   items: NonNullable<SkillsPageState["distributionPreview"]>["items"];
   onClose: () => void;
@@ -194,14 +198,37 @@ const DistributionConfirmationDialog = ({
               const resolution =
                 conflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite";
               const allowedResolutions = item.allowedResolutions ?? ["overwrite", "skip"];
+              const executionStatus = executionItemStatuses[item.id];
+              const itemIsExecuting = executionStatus === "loading";
+              const itemExecutionLabel =
+                executionStatus === "completed"
+                  ? t("skills.distribution.itemCompleted", { name: item.targetName })
+                  : t("skills.distribution.itemDistributing", { name: item.targetName });
 
               return (
                 <div key={item.id} className="rounded-lg border border-border bg-background p-3">
                   <div className="flex items-center justify-between gap-2">
                     <strong className="min-w-0 truncate text-sm">{item.targetName}</strong>
-                    <Badge variant={getDistributionActionBadgeVariant(item.action)}>
-                      {t(`skills.distribution.actions.${item.action}`)}
-                    </Badge>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {executionStatus ? (
+                        <span
+                          role="status"
+                          aria-label={itemExecutionLabel}
+                          className={cn(
+                            "flex size-7 items-center justify-center rounded-lg text-muted-foreground",
+                            itemIsExecuting && "text-primary"
+                          )}
+                        >
+                          <LoaderCircle
+                            aria-hidden="true"
+                            className={cn("size-4", itemIsExecuting && "animate-spin")}
+                          />
+                        </span>
+                      ) : null}
+                      <Badge variant={getDistributionActionBadgeVariant(item.action)}>
+                        {t(`skills.distribution.actions.${item.action}`)}
+                      </Badge>
+                    </div>
                   </div>
                   <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
                     {item.targetPath}

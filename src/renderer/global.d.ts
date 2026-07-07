@@ -10,6 +10,7 @@ import type { NavigationBadgeCountsResult as MainNavigationBadgeCountsResult } f
 import type { ProvidersListResult as MainProvidersListResult } from "../main/ipc/providers";
 import type {
   RepositoriesListResult as MainRepositoriesListResult,
+  RepositoriesSyncProgressEvent as MainRepositoriesSyncProgressEvent,
   RepositoriesSyncResult as MainRepositoriesSyncResult
 } from "../main/ipc/repositories";
 import type {
@@ -57,6 +58,7 @@ export type DistributionSettings = MainDistributionSettings;
 export type ResetLocalDatabaseResult = MainResetLocalDatabaseResult;
 export type ProvidersListResult = MainProvidersListResult;
 export type RepositoriesListResult = MainRepositoriesListResult;
+export type RepositoriesSyncProgressEvent = MainRepositoriesSyncProgressEvent;
 export type RepositoriesSyncResult = MainRepositoriesSyncResult;
 export type SkillsListResult = MainSkillsListResult;
 export type UpdateSkillTargetPreferenceInput = MainUpdateSkillTargetPreferenceInput;
@@ -116,6 +118,9 @@ declare global {
       rescanTargets?: () => Promise<TargetsRescanResult>;
       openExternalUrl?: (url: string) => Promise<void>;
       openRepositoryLocation?: (location: string) => Promise<void>;
+      onRepositorySyncProgress?: (
+        callback: (event: RepositoriesSyncProgressEvent) => void
+      ) => () => void;
       resetLocalDatabase?: () => Promise<ResetLocalDatabaseResult>;
       resolveRepositoryCachePath?: (cachePath: string) => Promise<string>;
       saveGitHubToken?: (token: string) => Promise<AppSettingsResult>;

@@ -10,7 +10,11 @@ import type {
 import type { AppHealth } from "./ipc/health";
 import type { NavigationBadgeCountsResult } from "./ipc/navigation-badges";
 import type { ProvidersListResult } from "./ipc/providers";
-import type { RepositoriesListResult, RepositoriesSyncResult } from "./ipc/repositories";
+import type {
+  RepositoriesListResult,
+  RepositoriesSyncProgressEvent,
+  RepositoriesSyncResult
+} from "./ipc/repositories";
 import type {
   AppSettingsResult,
   AppStoragePathsResult,
@@ -114,6 +118,14 @@ contextBridge.exposeInMainWorld("skillsManager", {
       "targets:resolveSelectedDirectory",
       selectedPath
     ) as Promise<SelectedTargetDirectoryResolution>,
+  onRepositorySyncProgress: (callback: (event: RepositoriesSyncProgressEvent) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, progress: RepositoriesSyncProgressEvent) =>
+      callback(progress);
+
+    ipcRenderer.on("repositories:syncProgress", listener);
+
+    return () => ipcRenderer.removeListener("repositories:syncProgress", listener);
+  },
   syncRepositories: (repositoryIds: string[]) =>
     ipcRenderer.invoke("repositories:sync", repositoryIds) as Promise<RepositoriesSyncResult>,
   platform: process.platform

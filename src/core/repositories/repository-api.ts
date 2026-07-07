@@ -84,6 +84,17 @@ export type RepositorySyncResultItem = {
   status: RepositorySyncItemStatus;
 };
 
+export type RepositorySyncProgressEvent = {
+  repositoryId: string;
+  repositoryName: string;
+  skill: {
+    name: string;
+    skillKey: string;
+    skillUnitId: string;
+  };
+  status: "completed" | "syncing";
+};
+
 export type RepositoryLastSync = {
   endCommitSha: string | null;
   errorMessage: string | null;
