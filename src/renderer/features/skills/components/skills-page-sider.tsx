@@ -320,7 +320,7 @@ const DistributionConfirmationDialog = ({
                 <div
                   key={item.id}
                   data-testid={`distribution-preview-item-${item.id}`}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 rounded-lg border border-border bg-background p-3"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 rounded-lg border border-border bg-background px-3 py-2"
                 >
                   <strong
                     className="col-start-1 row-start-1 block min-w-0 truncate text-sm leading-5"
@@ -329,14 +329,14 @@ const DistributionConfirmationDialog = ({
                     {item.targetName}
                   </strong>
                   <p
-                    className="col-start-1 row-start-2 min-w-0 truncate font-mono text-xs leading-5 text-muted-foreground"
+                    className="col-start-1 row-start-2 min-w-0 truncate font-mono text-xs leading-4 text-muted-foreground"
                     title={item.targetPath}
                   >
                     {item.targetPath}
                   </p>
                   <div
                     data-testid={`distribution-status-slot-${item.id}`}
-                    className="col-start-2 row-start-1 flex h-7 w-24 items-center justify-end gap-2"
+                    className="col-start-2 row-start-1 flex h-6 w-24 items-center justify-end gap-2"
                   >
                     {executionStatus ? (
                       <DistributionItemExecutionIcon
@@ -344,7 +344,7 @@ const DistributionConfirmationDialog = ({
                         status={executionStatus}
                       />
                     ) : (
-                      <span aria-hidden="true" className="size-7" />
+                      <span aria-hidden="true" className="size-6" />
                     )}
                     <Badge variant={getDistributionActionBadgeVariant(item.action)}>
                       {t(`skills.distribution.actions.${item.action}`)}
@@ -352,10 +352,10 @@ const DistributionConfirmationDialog = ({
                   </div>
                   <div
                     data-testid={`runtime-overwrite-slot-${item.id}`}
-                    className="col-start-2 row-start-2 flex h-6 w-24 items-center justify-end"
+                    className="col-start-2 row-start-2 flex h-5 w-24 items-center justify-end"
                   >
                     {showRuntimeOverwriteControl ? (
-                      <label className="flex h-6 cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs font-medium text-red-500">
+                      <label className="flex h-5 cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs font-medium text-red-500">
                         <Checkbox
                           checked={runtimeOverwriteResolutions[item.id] ?? false}
                           aria-label={t("skills.distribution.runtimeOverwriteAria", {
@@ -450,9 +450,9 @@ const DistributionItemExecutionIcon = ({
       <span
         role="status"
         aria-label={t("skills.distribution.itemDistributing", { name })}
-        className="flex size-7 items-center justify-center rounded-lg text-primary"
+        className="flex size-6 items-center justify-center rounded-md text-primary"
       >
-        <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
+        <LoaderCircle aria-hidden="true" className="size-3.5 animate-spin" />
       </span>
     );
   }
@@ -466,12 +466,12 @@ const DistributionItemExecutionIcon = ({
       tabIndex={isErrorResult ? 0 : undefined}
       aria-label={t(`skills.distribution.itemResults.${status.result}`, { name })}
       className={cn(
-        "flex size-7 items-center justify-center rounded-lg text-muted-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        "flex size-6 items-center justify-center rounded-md text-muted-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
         (status.result === "installed" || status.result === "updated") && "text-primary",
         isErrorResult && "text-destructive"
       )}
     >
-      <Icon aria-hidden="true" className="size-4" />
+      <Icon aria-hidden="true" className="size-3.5" />
     </span>
   );
 

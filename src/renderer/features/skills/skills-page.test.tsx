@@ -1369,18 +1369,25 @@ describe("SkillsPage", () => {
       "runtime-overwrite-slot-preview-item-1"
     );
 
-    expect(initialItem).toHaveClass("grid", "grid-cols-[minmax(0,1fr)_auto]", "gap-x-3", "gap-y-2");
+    expect(initialItem).toHaveClass(
+      "grid",
+      "grid-cols-[minmax(0,1fr)_auto]",
+      "gap-x-3",
+      "gap-y-1",
+      "px-3",
+      "py-2"
+    );
     expect(initialTargetName).toHaveClass("col-start-1", "row-start-1", "truncate", "leading-5");
-    expect(initialTargetPath).toHaveClass("col-start-1", "row-start-2", "truncate", "leading-5");
+    expect(initialTargetPath).toHaveClass("col-start-1", "row-start-2", "truncate", "leading-4");
     expect(initialTargetPath).toHaveAttribute(
       "title",
       "/Users/test/.codex/skills/skills-review-bot"
     );
     expect(initialStatusSlot.parentElement).toBe(initialItem);
-    expect(initialStatusSlot).toHaveClass("col-start-2", "row-start-1", "h-7", "w-24");
+    expect(initialStatusSlot).toHaveClass("col-start-2", "row-start-1", "h-6", "w-24");
     expect(initialStatusSlot.querySelector('[role="status"]')).toBeNull();
     expect(initialOverwriteSlot.parentElement).toBe(initialItem);
-    expect(initialOverwriteSlot).toHaveClass("col-start-2", "row-start-2", "h-6", "w-24");
+    expect(initialOverwriteSlot).toHaveClass("col-start-2", "row-start-2", "h-5", "w-24");
     expect(initialOverwriteSlot).toBeEmptyDOMElement();
     expect(initialReason.parentElement).toBe(initialItem);
     expect(initialReason).toHaveClass("col-span-2", "row-start-3");
@@ -1550,13 +1557,13 @@ describe("SkillsPage", () => {
     const overwriteControl = overwriteCheckbox.closest("label");
     const overwriteSlot = overwriteControl?.parentElement;
 
-    expect(statusSlot).toHaveClass("h-7");
+    expect(statusSlot).toHaveClass("h-6");
     expect(statusSlot).toContainElement(within(confirmDialog).getByLabelText("Codex 存在冲突"));
     expect(overwriteCheckbox).not.toBeChecked();
     expect(overwriteControl).not.toBeNull();
     expect(overwriteControl).not.toHaveClass("border", "border-destructive/40");
     expect(overwriteSlot).toHaveAttribute("data-testid", "runtime-overwrite-slot-preview-item-1");
-    expect(overwriteSlot).toHaveClass("col-start-2", "row-start-2", "h-6", "w-24");
+    expect(overwriteSlot).toHaveClass("col-start-2", "row-start-2", "h-5", "w-24");
 
     fireEvent.click(overwriteCheckbox);
     fireEvent.click(within(confirmDialog).getByRole("button", { name: "确定" }));
