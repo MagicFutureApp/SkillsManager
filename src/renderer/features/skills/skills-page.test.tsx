@@ -314,6 +314,22 @@ const selectOption = async (label: string, optionName: string) => {
   fireEvent.click(option);
 };
 
+const getSkillsPageHeader = () => {
+  const header = screen.getByText("技能分发", { selector: "h1" }).closest("header");
+
+  expect(header).not.toBeNull();
+
+  return header as HTMLElement;
+};
+
+const expectDistributionToast = (message: string) => {
+  const toast = screen.getByTestId("skills-distribution-toast");
+
+  expect(toast).toHaveClass("fixed", "z-[60]");
+  expect(toast).toHaveTextContent(message);
+  expect(within(getSkillsPageHeader()).queryByText(message)).not.toBeInTheDocument();
+};
+
 describe("SkillsPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
@@ -1301,9 +1317,7 @@ describe("SkillsPage", () => {
 
     const completedDialog = screen.getByRole("dialog", { name: "确认分发" });
     expect(within(completedDialog).getByRole("button", { name: "确定" })).toBeEnabled();
-    expect(
-      screen.getByText("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。")
-    ).toBeInTheDocument();
+    expectDistributionToast("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。");
 
     fireEvent.click(within(completedDialog).getByRole("button", { name: "确定" }));
     expect(screen.queryByRole("dialog", { name: "确认分发" })).not.toBeInTheDocument();
@@ -1340,6 +1354,36 @@ describe("SkillsPage", () => {
     );
 
     const confirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
+    const initialItem = within(confirmDialog).getByTestId(
+      "distribution-preview-item-preview-item-1"
+    );
+    const initialTargetName = within(initialItem).getByText("Codex");
+    const initialTargetPath = within(initialItem).getByText(
+      "/Users/test/.codex/skills/skills-review-bot"
+    );
+    const initialReason = within(initialItem).getByText("Skill is not installed on this target.");
+    const initialStatusSlot = within(initialItem).getByTestId(
+      "distribution-status-slot-preview-item-1"
+    );
+    const initialOverwriteSlot = within(confirmDialog).getByTestId(
+      "runtime-overwrite-slot-preview-item-1"
+    );
+
+    expect(initialItem).toHaveClass("grid", "grid-cols-[minmax(0,1fr)_auto]", "gap-x-3", "gap-y-2");
+    expect(initialTargetName).toHaveClass("col-start-1", "row-start-1", "truncate", "leading-5");
+    expect(initialTargetPath).toHaveClass("col-start-1", "row-start-2", "truncate", "leading-5");
+    expect(initialTargetPath).toHaveAttribute(
+      "title",
+      "/Users/test/.codex/skills/skills-review-bot"
+    );
+    expect(initialStatusSlot.parentElement).toBe(initialItem);
+    expect(initialStatusSlot).toHaveClass("col-start-2", "row-start-1", "h-7", "w-24");
+    expect(initialStatusSlot.querySelector('[role="status"]')).toBeNull();
+    expect(initialOverwriteSlot.parentElement).toBe(initialItem);
+    expect(initialOverwriteSlot).toHaveClass("col-start-2", "row-start-2", "h-6", "w-24");
+    expect(initialOverwriteSlot).toBeEmptyDOMElement();
+    expect(initialReason.parentElement).toBe(initialItem);
+    expect(initialReason).toHaveClass("col-span-2", "row-start-3");
 
     vi.useFakeTimers();
     fireEvent.click(within(confirmDialog).getByRole("button", { name: "确认分发" }));
@@ -1388,9 +1432,7 @@ describe("SkillsPage", () => {
     });
     expect(screen.getByRole("dialog", { name: "确认分发" })).toBeInTheDocument();
     expect(within(executingDialog).getByRole("button", { name: "确定" })).toBeEnabled();
-    expect(
-      screen.getByText("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。")
-    ).toBeInTheDocument();
+    expectDistributionToast("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。");
 
     fireEvent.click(within(executingDialog).getByRole("button", { name: "确定" }));
     expect(screen.queryByRole("dialog", { name: "确认分发" })).not.toBeInTheDocument();
@@ -1440,9 +1482,7 @@ describe("SkillsPage", () => {
     const failedIndicator = within(confirmDialog).getByLabelText("Codex 分发失败");
     expect(failedIndicator).toHaveClass("text-destructive");
     expect(within(confirmDialog).getByRole("button", { name: "确定" })).toBeEnabled();
-    expect(
-      screen.getByText("分发完成：安装 0，更新 0，跳过 0，冲突 0，阻止 0，失败 1。")
-    ).toBeInTheDocument();
+    expectDistributionToast("分发完成：安装 0，更新 0，跳过 0，冲突 0，阻止 0，失败 1。");
 
     vi.useRealTimers();
     fireEvent.pointerEnter(failedIndicator);
@@ -1505,14 +1545,18 @@ describe("SkillsPage", () => {
     });
 
     expect(within(confirmDialog).getByLabelText("Codex 存在冲突")).toBeInTheDocument();
+    const statusSlot = within(confirmDialog).getByTestId("distribution-status-slot-preview-item-1");
     const overwriteCheckbox = within(confirmDialog).getByLabelText("覆盖 Codex");
     const overwriteControl = overwriteCheckbox.closest("label");
+    const overwriteSlot = overwriteControl?.parentElement;
 
+    expect(statusSlot).toHaveClass("h-7");
+    expect(statusSlot).toContainElement(within(confirmDialog).getByLabelText("Codex 存在冲突"));
     expect(overwriteCheckbox).not.toBeChecked();
     expect(overwriteControl).not.toBeNull();
-    expect(overwriteControl).toHaveClass("mt-1");
     expect(overwriteControl).not.toHaveClass("border", "border-destructive/40");
-    expect(overwriteControl?.parentElement).toHaveClass("grid", "justify-items-end");
+    expect(overwriteSlot).toHaveAttribute("data-testid", "runtime-overwrite-slot-preview-item-1");
+    expect(overwriteSlot).toHaveClass("col-start-2", "row-start-2", "h-6", "w-24");
 
     fireEvent.click(overwriteCheckbox);
     fireEvent.click(within(confirmDialog).getByRole("button", { name: "确定" }));

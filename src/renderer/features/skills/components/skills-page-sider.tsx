@@ -317,46 +317,66 @@ const DistributionConfirmationDialog = ({
               const showRuntimeOverwriteControl = canOverwriteRuntimeConflict(executionStatus);
 
               return (
-                <div key={item.id} className="rounded-lg border border-border bg-background p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <strong className="min-w-0 truncate text-sm">{item.targetName}</strong>
-                    <div className="grid shrink-0 justify-items-end gap-1">
-                      <div className="flex items-center gap-2">
-                        {executionStatus ? (
-                          <DistributionItemExecutionIcon
-                            name={item.targetName}
-                            status={executionStatus}
-                          />
-                        ) : null}
-                        <Badge variant={getDistributionActionBadgeVariant(item.action)}>
-                          {t(`skills.distribution.actions.${item.action}`)}
-                        </Badge>
-                      </div>
-                      {showRuntimeOverwriteControl ? (
-                        <label className="mt-1 flex h-6 items-center gap-1.5 text-red-500 text-xs font-medium cursor-pointer">
-                          <Checkbox
-                            checked={runtimeOverwriteResolutions[item.id] ?? false}
-                            aria-label={t("skills.distribution.runtimeOverwriteAria", {
-                              name: item.targetName
-                            })}
-                            disabled={isExecuting}
-                            onCheckedChange={(nextChecked) =>
-                              onRuntimeOverwriteResolutionChange(item.id, nextChecked)
-                            }
-                          />
-                          {t("skills.distribution.runtimeOverwrite")}
-                        </label>
-                      ) : null}
-                    </div>
-                  </div>
-                  <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
+                <div
+                  key={item.id}
+                  data-testid={`distribution-preview-item-${item.id}`}
+                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 rounded-lg border border-border bg-background p-3"
+                >
+                  <strong
+                    className="col-start-1 row-start-1 block min-w-0 truncate text-sm leading-5"
+                    title={item.targetName}
+                  >
+                    {item.targetName}
+                  </strong>
+                  <p
+                    className="col-start-1 row-start-2 min-w-0 truncate font-mono text-xs leading-5 text-muted-foreground"
+                    title={item.targetPath}
+                  >
                     {item.targetPath}
                   </p>
+                  <div
+                    data-testid={`distribution-status-slot-${item.id}`}
+                    className="col-start-2 row-start-1 flex h-7 w-24 items-center justify-end gap-2"
+                  >
+                    {executionStatus ? (
+                      <DistributionItemExecutionIcon
+                        name={item.targetName}
+                        status={executionStatus}
+                      />
+                    ) : (
+                      <span aria-hidden="true" className="size-7" />
+                    )}
+                    <Badge variant={getDistributionActionBadgeVariant(item.action)}>
+                      {t(`skills.distribution.actions.${item.action}`)}
+                    </Badge>
+                  </div>
+                  <div
+                    data-testid={`runtime-overwrite-slot-${item.id}`}
+                    className="col-start-2 row-start-2 flex h-6 w-24 items-center justify-end"
+                  >
+                    {showRuntimeOverwriteControl ? (
+                      <label className="flex h-6 cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs font-medium text-red-500">
+                        <Checkbox
+                          checked={runtimeOverwriteResolutions[item.id] ?? false}
+                          aria-label={t("skills.distribution.runtimeOverwriteAria", {
+                            name: item.targetName
+                          })}
+                          disabled={isExecuting}
+                          onCheckedChange={(nextChecked) =>
+                            onRuntimeOverwriteResolutionChange(item.id, nextChecked)
+                          }
+                        />
+                        {t("skills.distribution.runtimeOverwrite")}
+                      </label>
+                    ) : null}
+                  </div>
                   {item.reason ? (
-                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.reason}</p>
+                    <p className="col-span-2 row-start-3 text-xs leading-5 text-muted-foreground">
+                      {item.reason}
+                    </p>
                   ) : null}
                   {item.action === "conflict" ? (
-                    <label className="mt-3 grid gap-1 text-xs font-semibold text-muted-foreground">
+                    <label className="col-span-2 grid gap-1 text-xs font-semibold text-muted-foreground">
                       {t("skills.distribution.conflictResolution")}
                       <select
                         aria-label={t("skills.distribution.conflictResolutionAria", {

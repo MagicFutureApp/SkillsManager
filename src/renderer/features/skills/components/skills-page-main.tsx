@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
 import React from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -59,6 +60,9 @@ export const SkillsPageMain = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <SkillsDistributionToast
+        message={page.distributionNoticeVisible ? distributionStatus : null}
+      />
       <header className="mb-6">
         <div className="flex items-center justify-between gap-4 max-[860px]:items-start">
           <div className="min-w-0">
@@ -79,11 +83,6 @@ export const SkillsPageMain = () => {
             </Button>
           </div>
         </div>
-        {page.distributionNoticeVisible ? (
-          <p role="status" className="mt-2 text-sm text-muted-foreground">
-            {distributionStatus}
-          </p>
-        ) : null}
       </header>
 
       <section
@@ -153,6 +152,23 @@ export const SkillsPageMain = () => {
         />
       </DataTableFixed>
     </div>
+  );
+};
+
+const SkillsDistributionToast = ({ message }: { message: string | null }) => {
+  if (!message || typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
+    <div
+      role="status"
+      data-testid="skills-distribution-toast"
+      className="pointer-events-none fixed right-6 top-16 z-[60] max-w-sm rounded-lg border border-border bg-card px-4 py-3 text-sm leading-5 text-card-foreground shadow-lg"
+    >
+      {message}
+    </div>,
+    document.body
   );
 };
 
