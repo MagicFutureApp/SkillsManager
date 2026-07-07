@@ -9,7 +9,7 @@ import { agentTargets, installInstances, skillTargetPreferences } from "../../db
 import { removeSkillTargetPreference } from "./skills";
 
 describe("skills IPC handlers", () => {
-  it("removes the preference and install record without deleting files when requested", async () => {
+  it("disables the preference without deleting files or install records by default", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-07-07T00:00:00.000Z");
     const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-target-keep-"));
@@ -24,6 +24,7 @@ describe("skills IPC handlers", () => {
       removeSkillTargetPreference(db, {
         agentTargetId: "target-codex",
         deleteInstalledFiles: false,
+        removeTargetPreference: false,
         skillUnitId: "skill-review"
       })
     ).resolves.toEqual({
@@ -42,10 +43,89 @@ describe("skills IPC handlers", () => {
         skillUnitId: "skill-review"
       }
     ]);
+    await expect(db.select().from(installInstances)).resolves.toMatchObject([
+      {
+        agentTargetId: "target-codex",
+        id: "install-review",
+        installedPath,
+        skillUnitId: "skill-review"
+      }
+    ]);
+  });
+
+  it("removes the preference record without deleting files or install records when requested", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-07-07T00:00:00.000Z");
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-target-preference-"));
+    const targetPath = path.join(workspace, "target");
+    const installedPath = path.join(targetPath, "review-bot");
+
+    await mkdir(installedPath, { recursive: true });
+    await writeFile(path.join(installedPath, "SKILL.md"), "# Review Bot\n", "utf8");
+    await seedInstalledSkillTarget(db, createdAt, { installedPath, targetPath });
+
+    await expect(
+      removeSkillTargetPreference(db, {
+        agentTargetId: "target-codex",
+        deleteInstalledFiles: false,
+        removeTargetPreference: true,
+        skillUnitId: "skill-review"
+      })
+    ).resolves.toEqual({
+      deletedInstalledPath: null,
+      success: true
+    });
+
+    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).resolves.toBe(
+      "# Review Bot\n"
+    );
+    await expect(db.select().from(skillTargetPreferences)).resolves.toEqual([]);
+    await expect(db.select().from(installInstances)).resolves.toMatchObject([
+      {
+        agentTargetId: "target-codex",
+        id: "install-review",
+        installedPath,
+        skillUnitId: "skill-review"
+      }
+    ]);
+  });
+
+  it("deletes installed skill files while keeping a disabled preference when requested", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-07-07T00:00:00.000Z");
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-target-files-"));
+    const targetPath = path.join(workspace, "target");
+    const installedPath = path.join(targetPath, "review-bot");
+
+    await mkdir(installedPath, { recursive: true });
+    await writeFile(path.join(installedPath, "SKILL.md"), "# Review Bot\n", "utf8");
+    await seedInstalledSkillTarget(db, createdAt, { installedPath, targetPath });
+
+    await expect(
+      removeSkillTargetPreference(db, {
+        agentTargetId: "target-codex",
+        deleteInstalledFiles: true,
+        removeTargetPreference: false,
+        skillUnitId: "skill-review"
+      })
+    ).resolves.toEqual({
+      deletedInstalledPath: installedPath,
+      success: true
+    });
+
+    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).rejects.toThrow();
+    await expect(db.select().from(skillTargetPreferences)).resolves.toMatchObject([
+      {
+        agentTargetId: "target-codex",
+        enabled: false,
+        id: "preference-review",
+        skillUnitId: "skill-review"
+      }
+    ]);
     await expect(db.select().from(installInstances)).resolves.toEqual([]);
   });
 
-  it("deletes only the exact installed skill directory and cleans matching database records", async () => {
+  it("deletes only the exact installed skill directory and requested preference record", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-07-07T00:00:00.000Z");
     const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-target-remove-"));
@@ -83,6 +163,7 @@ describe("skills IPC handlers", () => {
       removeSkillTargetPreference(db, {
         agentTargetId: " target-codex ",
         deleteInstalledFiles: true,
+        removeTargetPreference: true,
         skillUnitId: " skill-review "
       })
     ).resolves.toEqual({
@@ -94,22 +175,14 @@ describe("skills IPC handlers", () => {
     await expect(readFile(path.join(siblingPath, "SKILL.md"), "utf8")).resolves.toBe(
       "# Other Skill\n"
     );
-    await expect(db.select().from(skillTargetPreferences)).resolves.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          agentTargetId: "target-codex",
-          enabled: false,
-          id: "preference-review",
-          skillUnitId: "skill-review"
-        }),
-        expect.objectContaining({
-          agentTargetId: "target-codex",
-          enabled: true,
-          id: "preference-other",
-          skillUnitId: "skill-other"
-        })
-      ])
-    );
+    await expect(db.select().from(skillTargetPreferences)).resolves.toMatchObject([
+      {
+        agentTargetId: "target-codex",
+        enabled: true,
+        id: "preference-other",
+        skillUnitId: "skill-other"
+      }
+    ]);
     await expect(db.select().from(installInstances)).resolves.toMatchObject([
       {
         agentTargetId: "target-codex",
@@ -134,6 +207,7 @@ describe("skills IPC handlers", () => {
       removeSkillTargetPreference(db, {
         agentTargetId: "target-codex",
         deleteInstalledFiles: true,
+        removeTargetPreference: false,
         skillUnitId: "skill-review"
       })
     ).rejects.toThrow("Installed skill path is not safe to delete.");

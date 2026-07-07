@@ -391,7 +391,8 @@ export const useSkillsPageState = () => {
         skillName: skill.name,
         targetId,
         targetName: target.name,
-        targetPath: target.path
+        targetPath: target.path,
+        targetScope: target.scope
       });
       return;
     }
@@ -440,7 +441,13 @@ export const useSkillsPageState = () => {
     setPendingTargetRemoval(null);
   };
 
-  const confirmTargetRemoval = async (deleteInstalledFiles: boolean) => {
+  const confirmTargetRemoval = async ({
+    deleteInstalledFiles,
+    removeTargetPreference
+  }: {
+    deleteInstalledFiles: boolean;
+    removeTargetPreference: boolean;
+  }) => {
     if (!pendingTargetRemoval || isTargetRemovalExecuting) {
       return;
     }
@@ -460,9 +467,11 @@ export const useSkillsPageState = () => {
       await removeSkillTargetPreference({
         agentTargetId: pendingTargetRemoval.targetId,
         deleteInstalledFiles,
+        removeTargetPreference,
         skillUnitId: pendingTargetRemoval.skillId
       });
       removeSkillTargetLocally({
+        removeTargetPreference,
         skillId: pendingTargetRemoval.skillId,
         targetId: pendingTargetRemoval.targetId
       });
@@ -475,9 +484,11 @@ export const useSkillsPageState = () => {
   };
 
   const removeSkillTargetLocally = ({
+    removeTargetPreference,
     skillId,
     targetId
   }: {
+    removeTargetPreference: boolean;
     skillId: string;
     targetId: string;
   }) => {
@@ -502,9 +513,11 @@ export const useSkillsPageState = () => {
         return {
           ...target,
           selectedSkillIds: target.selectedSkillIds.filter((id) => id !== skillId),
-          skillPreferenceIds: target.skillPreferenceIds.includes(skillId)
-            ? target.skillPreferenceIds
-            : [...target.skillPreferenceIds, skillId]
+          skillPreferenceIds: removeTargetPreference
+            ? target.skillPreferenceIds.filter((id) => id !== skillId)
+            : target.skillPreferenceIds.includes(skillId)
+              ? target.skillPreferenceIds
+              : [...target.skillPreferenceIds, skillId]
         };
       });
     });
@@ -639,6 +652,7 @@ type PendingTargetRemoval = {
   targetId: string;
   targetName: string;
   targetPath: string;
+  targetScope: TargetOption["scope"];
 };
 
 type DistributionExecuteItemResult = DistributionExecuteResult["items"][number];

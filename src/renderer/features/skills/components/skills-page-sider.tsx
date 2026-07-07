@@ -169,10 +169,19 @@ const SkillTargetRemovalDialog = ({
 }: {
   isExecuting: boolean;
   onClose: () => void;
-  onConfirm: (deleteInstalledFiles: boolean) => void;
+  onConfirm: (input: { deleteInstalledFiles: boolean; removeTargetPreference: boolean }) => void;
   removal: SkillsPageState["pendingTargetRemoval"];
 }) => {
   const { t } = useTranslation();
+  const [removeTarget, setRemoveTarget] = React.useState(false);
+  const [deleteInstalledFiles, setDeleteInstalledFiles] = React.useState(false);
+
+  React.useEffect(() => {
+    if (removal) {
+      setRemoveTarget(false);
+      setDeleteInstalledFiles(false);
+    }
+  }, [removal]);
 
   if (!removal) {
     return null;
@@ -181,6 +190,7 @@ const SkillTargetRemovalDialog = ({
   const targetName = removal.targetName.startsWith("skills.")
     ? t(removal.targetName)
     : removal.targetName;
+  const canRemoveTargetPreference = removal.targetScope === "independent";
 
   return (
     <Dialog open={Boolean(removal)} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -190,7 +200,6 @@ const SkillTargetRemovalDialog = ({
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
               <DialogTitle>{t("skills.targetRemoval.title")}</DialogTitle>
-              <DialogDescription>{t("skills.targetRemoval.description")}</DialogDescription>
             </div>
             <DialogClose
               disabled={isExecuting}
@@ -200,55 +209,78 @@ const SkillTargetRemovalDialog = ({
             </DialogClose>
           </div>
 
-          <div className="grid gap-3 rounded-lg border border-border bg-background p-3">
+          <div className="grid gap-2 rounded-lg border border-border bg-background px-3 py-2.5">
             <div>
               <span className="text-xs font-semibold text-muted-foreground">
                 {t("skills.targetRemoval.skill")}
               </span>
-              <p className="mt-1 break-words text-sm font-medium">{removal.skillName}</p>
+              <p className="mt-0.5 break-words text-sm font-medium leading-5">
+                {removal.skillName}
+              </p>
             </div>
             <div>
               <span className="text-xs font-semibold text-muted-foreground">
                 {t("skills.targetRemoval.target")}
               </span>
-              <p className="mt-1 break-words text-sm font-medium">{targetName}</p>
-              <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
+              <p className="mt-0.5 break-words text-sm font-medium leading-5">{targetName}</p>
+              <p className="mt-0.5 break-all font-mono text-xs leading-5 text-muted-foreground">
                 {removal.targetPath}
               </p>
             </div>
           </div>
 
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            {t("skills.targetRemoval.deleteQuestion")}
-          </p>
-
-          <div className="mt-5 flex flex-wrap justify-end gap-2">
-            <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
-              {t("skills.targetRemoval.cancel")}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isExecuting}
-              onClick={() => onConfirm(false)}
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              role="group"
+              aria-label={t("skills.targetRemoval.options")}
+              className="flex flex-wrap items-center gap-x-4 gap-y-2"
             >
-              {t("skills.targetRemoval.keepFiles")}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isExecuting}
-              onClick={() => onConfirm(true)}
-            >
-              {isExecuting ? (
-                <>
-                  <LoaderCircle aria-hidden="true" className="animate-spin" />
-                  {t("skills.targetRemoval.removing")}
-                </>
-              ) : (
-                t("skills.targetRemoval.deleteFiles")
-              )}
-            </Button>
+              {canRemoveTargetPreference ? (
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Checkbox
+                    checked={removeTarget}
+                    disabled={isExecuting}
+                    aria-label={t("skills.targetRemoval.removeTarget")}
+                    onCheckedChange={(nextChecked) => setRemoveTarget(Boolean(nextChecked))}
+                  />
+                  <span>{t("skills.targetRemoval.removeTarget")}</span>
+                </div>
+              ) : null}
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Checkbox
+                  checked={deleteInstalledFiles}
+                  disabled={isExecuting}
+                  aria-label={t("skills.targetRemoval.deleteSkillFiles")}
+                  onCheckedChange={(nextChecked) => setDeleteInstalledFiles(Boolean(nextChecked))}
+                />
+                <span>{t("skills.targetRemoval.deleteSkillFiles")}</span>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
+                {t("skills.targetRemoval.cancel")}
+              </Button>
+              <Button
+                type="button"
+                className="sm:min-w-24"
+                disabled={isExecuting}
+                onClick={() =>
+                  onConfirm({
+                    deleteInstalledFiles,
+                    removeTargetPreference: canRemoveTargetPreference && removeTarget
+                  })
+                }
+              >
+                {isExecuting ? (
+                  <>
+                    <LoaderCircle aria-hidden="true" className="animate-spin" />
+                    {t("skills.targetRemoval.removing")}
+                  </>
+                ) : (
+                  t("skills.targetRemoval.confirm")
+                )}
+              </Button>
+            </div>
           </div>
         </DialogPopup>
       </DialogPortal>

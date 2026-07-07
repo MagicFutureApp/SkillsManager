@@ -13,6 +13,7 @@ export type UpdateSkillTargetPreferenceResult = {
 export type RemoveSkillTargetPreferenceInput = {
   agentTargetId: string;
   deleteInstalledFiles: boolean;
+  removeTargetPreference: boolean;
   skillUnitId: string;
 };
 

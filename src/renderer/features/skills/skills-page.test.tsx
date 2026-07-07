@@ -735,25 +735,46 @@ describe("SkillsPage", () => {
     expect(targetCheckbox).toBeChecked();
     expect(setSkillTargetPreference).not.toHaveBeenCalled();
     expect(removeSkillTargetPreference).not.toHaveBeenCalled();
-    const cancelDialog = await screen.findByRole("dialog", { name: "取消分发目标" });
+    const cancelDialog = await screen.findByRole("dialog", { name: "分发目标" });
 
     expect(within(cancelDialog).getByText("Review Bot")).toBeInTheDocument();
     expect(within(cancelDialog).getByText("Team workspace")).toBeInTheDocument();
     expect(within(cancelDialog).getByText("/Users/test/team/.codex/skills")).toBeInTheDocument();
-    fireEvent.click(within(cancelDialog).getByRole("button", { name: "取消" }));
+    expect(
+      within(cancelDialog).queryByText(
+        "取消勾选后会保留这个目标偏好，并清理这个 skill 的同步记录。"
+      )
+    ).not.toBeInTheDocument();
+    expect(
+      within(cancelDialog).queryByText("是否同时删除这个目标目录中由当前 skill 分发出来的文件？")
+    ).not.toBeInTheDocument();
+    const removalOptions = within(cancelDialog).getByRole("group", { name: "分发目标操作" });
+    expect(removalOptions).toHaveClass("flex", "flex-wrap");
+    expect(within(cancelDialog).queryByLabelText("删除此分发目标")).not.toBeInTheDocument();
+    expect(within(cancelDialog).getByLabelText("删除技能文件")).not.toBeChecked();
+    expect(
+      within(cancelDialog).queryByRole("button", { name: "仅取消勾选" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(cancelDialog).queryByRole("button", { name: "删除文件并取消" })
+    ).not.toBeInTheDocument();
+    expect(within(cancelDialog).getByRole("button", { name: "取消" })).toBeInTheDocument();
+    expect(within(cancelDialog).getByRole("button", { name: "确定" })).toBeEnabled();
+    fireEvent.click(within(cancelDialog).getByRole("button", { name: "关闭" }));
 
     expect(targetCheckbox).toBeChecked();
-    expect(screen.queryByRole("dialog", { name: "取消分发目标" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "分发目标" })).not.toBeInTheDocument();
 
     fireEvent.click(targetCheckbox);
-    const confirmDialog = await screen.findByRole("dialog", { name: "取消分发目标" });
+    const confirmDialog = await screen.findByRole("dialog", { name: "分发目标" });
 
-    fireEvent.click(within(confirmDialog).getByRole("button", { name: "仅取消勾选" }));
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确定" }));
 
     await waitFor(() =>
       expect(removeSkillTargetPreference).toHaveBeenCalledWith({
         agentTargetId: "target-team",
         deleteInstalledFiles: false,
+        removeTargetPreference: false,
         skillUnitId: "team-skills__skills-review-bot"
       })
     );
@@ -821,18 +842,96 @@ describe("SkillsPage", () => {
     );
 
     fireEvent.click(targetCheckbox);
-    const confirmDialog = await screen.findByRole("dialog", { name: "取消分发目标" });
+    const confirmDialog = await screen.findByRole("dialog", { name: "分发目标" });
 
-    fireEvent.click(within(confirmDialog).getByRole("button", { name: "删除文件并取消" }));
+    fireEvent.click(within(confirmDialog).getByLabelText("删除技能文件"));
+    expect(within(confirmDialog).queryByLabelText("删除此分发目标")).not.toBeInTheDocument();
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确定" }));
 
     await waitFor(() =>
       expect(removeSkillTargetPreference).toHaveBeenCalledWith({
         agentTargetId: "target-team",
         deleteInstalledFiles: true,
+        removeTargetPreference: false,
         skillUnitId: "team-skills__skills-review-bot"
       })
     );
     expect(targetCheckbox).not.toBeChecked();
+  });
+
+  it("keeps an independent target visible when only clearing the checked state", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: ["target-review"],
+        version: "8f2c91a"
+      }
+    ];
+    const targets: TargetsListResult = {
+      registeredTargets: [
+        {
+          createdAt: "2026-06-24T00:00:00.000Z",
+          enabled: true,
+          id: "target-review",
+          name: "review-skills",
+          normalizedPath: "/Users/test/review-skills",
+          path: "/Users/test/review-skills",
+          scanMessage: null,
+          selectedSkills: [
+            {
+              id: "team-skills__skills-review-bot",
+              name: "Review Bot",
+              repository: "Team skills repository"
+            }
+          ],
+          skillPreferences: [
+            {
+              enabled: true,
+              id: "team-skills__skills-review-bot",
+              name: "Review Bot",
+              repository: "Team skills repository"
+            }
+          ],
+          skillCount: 1,
+          scope: "independent",
+          status: "registered",
+          type: "custom-directory",
+          updatedAt: "2026-06-24T00:00:00.000Z"
+        }
+      ]
+    };
+    const { removeSkillTargetPreference } = await renderSkillsPage({ skills, targets });
+    await screen.findByRole("button", { name: "Review Bot" });
+
+    const targetCheckbox = screen.getByLabelText("选择 review-skills");
+
+    expect(targetCheckbox).toBeChecked();
+
+    fireEvent.click(targetCheckbox);
+    const confirmDialog = await screen.findByRole("dialog", { name: "分发目标" });
+
+    expect(within(confirmDialog).getByLabelText("删除此分发目标")).not.toBeChecked();
+    expect(within(confirmDialog).getByLabelText("删除技能文件")).not.toBeChecked();
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确定" }));
+
+    await waitFor(() =>
+      expect(removeSkillTargetPreference).toHaveBeenCalledWith({
+        agentTargetId: "target-review",
+        deleteInstalledFiles: false,
+        removeTargetPreference: false,
+        skillUnitId: "team-skills__skills-review-bot"
+      })
+    );
+    expect(screen.getByLabelText("选择 review-skills")).not.toBeChecked();
   });
 
   it("adds a selected directory as an independent checked target for the current skill", async () => {
@@ -934,18 +1033,20 @@ describe("SkillsPage", () => {
     fireEvent.click(addedTargetCheckbox);
 
     expect(addedTargetCheckbox).toBeChecked();
-    const confirmDialog = await screen.findByRole("dialog", { name: "取消分发目标" });
+    const confirmDialog = await screen.findByRole("dialog", { name: "分发目标" });
 
-    fireEvent.click(within(confirmDialog).getByRole("button", { name: "仅取消勾选" }));
+    fireEvent.click(within(confirmDialog).getByLabelText("删除此分发目标"));
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确定" }));
 
     await waitFor(() =>
       expect(removeSkillTargetPreference).toHaveBeenCalledWith({
         agentTargetId: "target-custom-users-test-review-skills-16b7af9b49af",
         deleteInstalledFiles: false,
+        removeTargetPreference: true,
         skillUnitId: "team-skills__skills-review-bot"
       })
     );
-    expect(addedTargetCheckbox).not.toBeChecked();
+    expect(screen.queryByLabelText("选择 review-skills")).not.toBeInTheDocument();
   });
 
   it("searches skills by name, repository, or description only", async () => {

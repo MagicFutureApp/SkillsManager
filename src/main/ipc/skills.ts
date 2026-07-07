@@ -69,31 +69,45 @@ export const removeSkillTargetPreference = async (
   }
 
   db.transaction((tx) => {
-    tx.insert(skillTargetPreferences)
-      .values({
-        agentTargetId: normalizedInput.agentTargetId,
-        createdAt: updatedAt,
-        enabled: false,
-        id: randomUUID(),
-        skillUnitId: normalizedInput.skillUnitId,
-        updatedAt
-      })
-      .onConflictDoUpdate({
-        target: [skillTargetPreferences.skillUnitId, skillTargetPreferences.agentTargetId],
-        set: {
-          enabled: false,
-          updatedAt
-        }
-      })
-      .run();
-    tx.delete(installInstances)
-      .where(
-        and(
-          eq(installInstances.skillUnitId, normalizedInput.skillUnitId),
-          eq(installInstances.agentTargetId, normalizedInput.agentTargetId)
+    if (normalizedInput.removeTargetPreference) {
+      tx.delete(skillTargetPreferences)
+        .where(
+          and(
+            eq(skillTargetPreferences.skillUnitId, normalizedInput.skillUnitId),
+            eq(skillTargetPreferences.agentTargetId, normalizedInput.agentTargetId)
+          )
         )
-      )
-      .run();
+        .run();
+    } else {
+      tx.insert(skillTargetPreferences)
+        .values({
+          agentTargetId: normalizedInput.agentTargetId,
+          createdAt: updatedAt,
+          enabled: false,
+          id: randomUUID(),
+          skillUnitId: normalizedInput.skillUnitId,
+          updatedAt
+        })
+        .onConflictDoUpdate({
+          target: [skillTargetPreferences.skillUnitId, skillTargetPreferences.agentTargetId],
+          set: {
+            enabled: false,
+            updatedAt
+          }
+        })
+        .run();
+    }
+
+    if (normalizedInput.deleteInstalledFiles) {
+      tx.delete(installInstances)
+        .where(
+          and(
+            eq(installInstances.skillUnitId, normalizedInput.skillUnitId),
+            eq(installInstances.agentTargetId, normalizedInput.agentTargetId)
+          )
+        )
+        .run();
+    }
   });
 
   return {
@@ -158,6 +172,7 @@ const normalizeRemoveSkillTargetPreferenceInput = (
   return {
     agentTargetId,
     deleteInstalledFiles: Boolean(input.deleteInstalledFiles),
+    removeTargetPreference: Boolean(input.removeTargetPreference),
     skillUnitId
   };
 };
