@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { LoaderCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, CircleMinus, LoaderCircle } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -172,6 +172,8 @@ const DistributionConfirmationDialog = ({
   open: boolean;
 }) => {
   const { t } = useTranslation();
+  const executionStarted = Object.keys(executionItemStatuses).length > 0;
+  const executionFinished = executionStarted && !isExecuting;
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -199,11 +201,6 @@ const DistributionConfirmationDialog = ({
                 conflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite";
               const allowedResolutions = item.allowedResolutions ?? ["overwrite", "skip"];
               const executionStatus = executionItemStatuses[item.id];
-              const itemIsExecuting = executionStatus === "loading";
-              const itemExecutionLabel =
-                executionStatus === "completed"
-                  ? t("skills.distribution.itemCompleted", { name: item.targetName })
-                  : t("skills.distribution.itemDistributing", { name: item.targetName });
 
               return (
                 <div key={item.id} className="rounded-lg border border-border bg-background p-3">
@@ -211,19 +208,10 @@ const DistributionConfirmationDialog = ({
                     <strong className="min-w-0 truncate text-sm">{item.targetName}</strong>
                     <div className="flex shrink-0 items-center gap-2">
                       {executionStatus ? (
-                        <span
-                          role="status"
-                          aria-label={itemExecutionLabel}
-                          className={cn(
-                            "flex size-7 items-center justify-center rounded-lg text-muted-foreground",
-                            itemIsExecuting && "text-primary"
-                          )}
-                        >
-                          <LoaderCircle
-                            aria-hidden="true"
-                            className={cn("size-4", itemIsExecuting && "animate-spin")}
-                          />
-                        </span>
+                        <DistributionItemExecutionIcon
+                          name={item.targetName}
+                          status={executionStatus}
+                        />
                       ) : null}
                       <Badge variant={getDistributionActionBadgeVariant(item.action)}>
                         {t(`skills.distribution.actions.${item.action}`)}
@@ -274,14 +262,151 @@ const DistributionConfirmationDialog = ({
             <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
               {t("skills.actions.cancel")}
             </Button>
-            <Button type="button" disabled={isExecuting} onClick={onConfirm}>
-              {t("skills.distribution.confirmAction")}
+            <Button
+              type="button"
+              disabled={isExecuting}
+              onClick={executionFinished ? onClose : onConfirm}
+            >
+              {isExecuting ? (
+                <>
+                  <LoaderCircle aria-hidden="true" className="animate-spin" />
+                  {t("skills.distribution.executingAction")}
+                </>
+              ) : executionFinished ? (
+                t("skills.distribution.doneAction")
+              ) : (
+                t("skills.distribution.confirmAction")
+              )}
             </Button>
           </div>
         </DialogPopup>
       </DialogPortal>
     </Dialog>
   );
+};
+
+const DistributionItemExecutionIcon = ({
+  name,
+  status
+}: {
+  name: string;
+  status: SkillsPageState["distributionExecutionItemStatuses"][string];
+}) => {
+  const { t } = useTranslation();
+
+  if (status.status === "loading") {
+    return (
+      <span
+        role="status"
+        aria-label={t("skills.distribution.itemDistributing", { name })}
+        className="flex size-7 items-center justify-center rounded-lg text-primary"
+      >
+        <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
+      </span>
+    );
+  }
+
+  const isErrorResult =
+    status.result === "blocked" || status.result === "conflict" || status.result === "failed";
+  const Icon = getDistributionResultIcon(status.result);
+  const statusElement = (
+    <span
+      role="status"
+      tabIndex={isErrorResult ? 0 : undefined}
+      aria-label={t(`skills.distribution.itemResults.${status.result}`, { name })}
+      className={cn(
+        "flex size-7 items-center justify-center rounded-lg text-muted-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        (status.result === "installed" || status.result === "updated") && "text-primary",
+        isErrorResult && "text-destructive"
+      )}
+    >
+      <Icon aria-hidden="true" className="size-4" />
+    </span>
+  );
+
+  if (!isErrorResult) {
+    return statusElement;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger render={statusElement} />
+      <TooltipContent side="left" align="center" className="max-w-sm whitespace-normal leading-5">
+        {toFriendlyDistributionErrorMessage(status.errorMessage, t)}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
+const getDistributionResultIcon = (
+  result: NonNullable<SkillsPageState["distributionExecutionItemStatuses"][string]["result"]>
+) => {
+  if (result === "installed" || result === "updated") {
+    return CheckCircle2;
+  }
+
+  if (result === "skipped") {
+    return CircleMinus;
+  }
+
+  return AlertCircle;
+};
+
+const toFriendlyDistributionErrorMessage = (
+  errorMessage: string | null,
+  t: ReturnType<typeof useTranslation>["t"]
+): string => {
+  const normalizedMessage = (errorMessage ?? "").toLowerCase();
+
+  if (!normalizedMessage) {
+    return t("skills.distribution.errors.generic");
+  }
+
+  if (
+    normalizedMessage.includes("eperm") ||
+    normalizedMessage.includes("eacces") ||
+    normalizedMessage.includes("operation not permitted") ||
+    normalizedMessage.includes("permission denied")
+  ) {
+    return t("skills.distribution.errors.permission");
+  }
+
+  if (
+    normalizedMessage.includes("enoent") ||
+    normalizedMessage.includes("no such file or directory") ||
+    normalizedMessage.includes("source skill directory is missing")
+  ) {
+    return t("skills.distribution.errors.missingPath");
+  }
+
+  if (
+    normalizedMessage.includes("enospc") ||
+    normalizedMessage.includes("no space left on device")
+  ) {
+    return t("skills.distribution.errors.noSpace");
+  }
+
+  if (normalizedMessage.includes("source and target paths are required")) {
+    return t("skills.distribution.errors.missingSourceOrTarget");
+  }
+
+  if (normalizedMessage.includes("target path cannot be the target root")) {
+    return t("skills.distribution.errors.targetRoot");
+  }
+
+  if (normalizedMessage.includes("source and target paths cannot contain each other")) {
+    return t("skills.distribution.errors.nestedPaths");
+  }
+
+  if (normalizedMessage.includes("duplicate target path")) {
+    return t("skills.distribution.errors.duplicateTarget");
+  }
+
+  if (normalizedMessage.includes("target path already exists and is not owned by this skill")) {
+    return t("skills.distribution.errors.unownedTarget");
+  }
+
+  return t("skills.distribution.errors.withMessage", { message: errorMessage });
 };
 
 const getDistributionActionBadgeVariant = (

@@ -4,6 +4,7 @@ import React from "react";
 import { I18nextProvider } from "react-i18next";
 
 import { PageLayout } from "@/components/layout/page-layout";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { SkillsPage } from "./skills-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import { skillApiRecordsFixture } from "@/test/api-fixtures";
@@ -202,6 +203,29 @@ const distributionExecuteFixture: DistributionExecuteResult = {
   }
 };
 
+const distributionFailedExecuteFixture: DistributionExecuteResult = {
+  items: [
+    {
+      action: "install",
+      agentTargetId: "codex",
+      errorMessage:
+        "EPERM: operation not permitted, copyfile '/Users/test/source' -> '/Users/test/.codex/skills/skills-review-bot'",
+      result: "failed",
+      skillUnitId: "team-skills__skills-review-bot",
+      targetPath: "/Users/test/.codex/skills/skills-review-bot"
+    }
+  ],
+  preview: distributionPreviewFixture,
+  summary: {
+    blocked: 0,
+    conflicts: 0,
+    failed: 1,
+    installed: 0,
+    skipped: 0,
+    updated: 0
+  }
+};
+
 const renderSkillsPage = async ({
   distributionExecute = distributionExecuteFixture,
   distributionPreview = distributionPreviewFixture,
@@ -241,7 +265,9 @@ const renderSkillsPage = async ({
   return {
     ...render(
       <I18nextProvider i18n={i18n}>
-        <SkillsPage />
+        <TooltipProvider>
+          <SkillsPage />
+        </TooltipProvider>
       </I18nextProvider>
     ),
     addSkillDirectoryTarget,
@@ -1155,16 +1181,20 @@ describe("SkillsPage", () => {
       vi.advanceTimersByTime(2000);
     });
 
+    const completedDialog = screen.getByRole("dialog", { name: "确认分发" });
+    expect(within(completedDialog).getByRole("button", { name: "确定" })).toBeEnabled();
+    expect(
+      screen.getByText("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。")
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(completedDialog).getByRole("button", { name: "确定" }));
     expect(screen.queryByRole("dialog", { name: "确认分发" })).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。"
-    );
     expect(
       within(skillDetail).queryByRole("heading", { name: "确认分发" })
     ).not.toBeInTheDocument();
   });
 
-  it("keeps distribution rows loading for one second and closes after two seconds", async () => {
+  it("keeps distribution rows loading for one second and enables manual close after two seconds", async () => {
     const skills: SkillApiRecord[] = [
       {
         description: "Reviews pull requests.",
@@ -1209,7 +1239,7 @@ describe("SkillsPage", () => {
     const executingDialog = screen.getByRole("dialog", { name: "确认分发" });
     const loadingIndicator = within(executingDialog).getByLabelText("Codex 分发中");
 
-    expect(within(executingDialog).getByRole("button", { name: "确认分发" })).toBeDisabled();
+    expect(within(executingDialog).getByRole("button", { name: "分发中" })).toBeDisabled();
     expect(loadingIndicator.querySelector("svg")).toHaveClass("animate-spin");
 
     act(() => {
@@ -1223,13 +1253,14 @@ describe("SkillsPage", () => {
       vi.advanceTimersByTime(1);
     });
     expect(
-      within(executingDialog).getByLabelText("Codex 完成").querySelector("svg")
+      within(executingDialog).getByLabelText("Codex 安装完成").querySelector("svg")
     ).not.toHaveClass("animate-spin");
 
     act(() => {
       vi.advanceTimersByTime(999);
     });
     expect(screen.getByRole("dialog", { name: "确认分发" })).toBeInTheDocument();
+    expect(within(executingDialog).getByRole("button", { name: "分发中" })).toBeDisabled();
     expect(
       screen.queryByText("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。")
     ).not.toBeInTheDocument();
@@ -1237,10 +1268,73 @@ describe("SkillsPage", () => {
     act(() => {
       vi.advanceTimersByTime(1);
     });
+    expect(screen.getByRole("dialog", { name: "确认分发" })).toBeInTheDocument();
+    expect(within(executingDialog).getByRole("button", { name: "确定" })).toBeEnabled();
+    expect(
+      screen.getByText("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。")
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(executingDialog).getByRole("button", { name: "确定" }));
     expect(screen.queryByRole("dialog", { name: "确认分发" })).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。"
+  });
+
+  it("shows failed distribution item details in an error tooltip", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Reviews pull requests.",
+        enabled: true,
+        entry: "skills/review-bot/SKILL.md",
+        id: "team-skills__skills-review-bot",
+        name: "Review Bot",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "skills-review-bot",
+        status: "ready",
+        tags: ["review"],
+        targets: ["codex"],
+        version: "8f2c91a"
+      }
+    ];
+    await renderSkillsPage({
+      distributionExecute: distributionFailedExecuteFixture,
+      skills
+    });
+
+    await screen.findByRole("button", { name: "Review Bot" });
+    fireEvent.click(
+      within(screen.getByLabelText("技能详情")).getByRole("button", {
+        name: "分发当前技能"
+      })
     );
+
+    const confirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
+
+    vi.useFakeTimers();
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确认分发" }));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    const failedIndicator = within(confirmDialog).getByLabelText("Codex 分发失败");
+    expect(failedIndicator).toHaveClass("text-destructive");
+    expect(within(confirmDialog).getByRole("button", { name: "确定" })).toBeEnabled();
+    expect(
+      screen.getByText("分发完成：安装 0，更新 0，跳过 0，冲突 0，阻止 0，失败 1。")
+    ).toBeInTheDocument();
+
+    vi.useRealTimers();
+    fireEvent.pointerEnter(failedIndicator);
+    fireEvent.pointerOver(failedIndicator);
+    fireEvent.mouseOver(failedIndicator);
+    fireEvent.focus(failedIndicator);
+
+    expect(
+      await screen.findByText("目标目录没有写入权限，请检查目录权限后重试。")
+    ).toBeInTheDocument();
   });
 
   it("defaults conflict distribution to overwrite and allows choosing skip", async () => {
@@ -1304,6 +1398,7 @@ describe("SkillsPage", () => {
     act(() => {
       vi.advanceTimersByTime(2000);
     });
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确定" }));
 
     fireEvent.click(
       within(screen.getByLabelText("技能详情")).getByRole("button", {
@@ -1343,5 +1438,6 @@ describe("SkillsPage", () => {
     act(() => {
       vi.advanceTimersByTime(2000);
     });
+    fireEvent.click(within(nextConfirmDialog).getByRole("button", { name: "确定" }));
   });
 });

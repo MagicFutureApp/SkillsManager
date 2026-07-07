@@ -259,6 +259,7 @@ export const useSkillsPageState = () => {
     }
 
     setDistributionConfirmDialogOpen(false);
+    setDistributionExecutionItemStatuses({});
   };
 
   const setDistributionConflictResolution = (
@@ -274,6 +275,10 @@ export const useSkillsPageState = () => {
   const executeCurrentDistribution = async () => {
     const executeDistribution = window.skillsManager?.executeDistribution;
 
+    if (isDistributionExecuting) {
+      return;
+    }
+
     if (!distributionPreview || !pendingDistribution || !executeDistribution) {
       showDistributionNotice("skills.actions.distributionUnavailableStatus");
       return;
@@ -284,10 +289,10 @@ export const useSkillsPageState = () => {
     clearDistributionExecutionTimers();
 
     const startedAt = Date.now();
-    const previewItemIds = distributionPreview.items.map((item) => item.id);
+    const previewItems = distributionPreview.items;
 
     setDistributionExecutionItemStatuses(
-      createDistributionExecutionItemStatuses(previewItemIds, "loading")
+      createLoadingDistributionExecutionItemStatuses(previewItems)
     );
 
     try {
@@ -307,45 +312,57 @@ export const useSkillsPageState = () => {
       });
 
       scheduleDistributionExecutionCompletion({
+        getResultStatuses: () =>
+          createResultDistributionExecutionItemStatuses(previewItems, result.items),
         onFinish: () => setDistributionExecuteResult(result),
-        previewItemIds,
+        previewItems,
         startedAt
       });
-    } catch {
+    } catch (error) {
       scheduleDistributionExecutionCompletion({
+        getResultStatuses: () =>
+          createFailedDistributionExecutionItemStatuses(
+            previewItems,
+            stringifyDistributionError(error)
+          ),
         onFinish: () => showDistributionNotice("skills.actions.distributionFailedStatus"),
-        previewItemIds,
+        previewItems,
         startedAt
       });
     }
   };
 
   const scheduleDistributionExecutionCompletion = ({
+    getResultStatuses,
     onFinish,
-    previewItemIds,
+    previewItems,
     startedAt
   }: {
+    getResultStatuses: () => Record<string, DistributionExecutionItemStatus>;
     onFinish: () => void;
-    previewItemIds: string[];
+    previewItems: DistributionPreviewResult["items"];
     startedAt: number;
   }) => {
     const elapsedMs = Date.now() - startedAt;
     const completeDelayMs = Math.max(0, MIN_DISTRIBUTION_ITEM_LOADING_MS - elapsedMs);
-    const closeDelayMs = Math.max(0, MIN_DISTRIBUTION_DIALOG_OPEN_MS - elapsedMs);
+    const finishDelayMs = Math.max(0, MIN_DISTRIBUTION_DIALOG_OPEN_MS - elapsedMs);
 
     const completeTimerId = window.setTimeout(() => {
-      setDistributionExecutionItemStatuses(
-        createDistributionExecutionItemStatuses(previewItemIds, "completed")
-      );
+      setDistributionExecutionItemStatuses(getResultStatuses());
     }, completeDelayMs);
-    const closeTimerId = window.setTimeout(() => {
-      onFinish();
-      setDistributionConfirmDialogOpen(false);
-      setIsDistributionExecuting(false);
-      setDistributionExecutionItemStatuses({});
-    }, closeDelayMs);
+    const finishTimerId = window.setTimeout(() => {
+      setDistributionExecutionItemStatuses((currentStatuses) => {
+        if (previewItems.every((item) => currentStatuses[item.id]?.status !== "loading")) {
+          return currentStatuses;
+        }
 
-    distributionExecutionTimerIdsRef.current.push(completeTimerId, closeTimerId);
+        return getResultStatuses();
+      });
+      onFinish();
+      setIsDistributionExecuting(false);
+    }, finishDelayMs);
+
+    distributionExecutionTimerIdsRef.current.push(completeTimerId, finishTimerId);
   };
 
   const toggleSkillTargetPreference = (skillId: string, targetId: string, enabled: boolean) => {
@@ -499,16 +516,107 @@ type PendingDistribution = {
   triggerSource: DistributionPreviewInput["triggerSource"];
 };
 
-type DistributionExecutionItemStatus = "completed" | "loading";
+type DistributionExecuteItemResult = DistributionExecuteResult["items"][number];
+
+type DistributionExecutionItemStatus =
+  | {
+      errorMessage: null;
+      result: null;
+      status: "loading";
+    }
+  | {
+      errorMessage: string | null;
+      result: DistributionExecuteItemResult["result"];
+      status: "result";
+    };
 
 const MIN_DISTRIBUTION_ITEM_LOADING_MS = 1000;
 const MIN_DISTRIBUTION_DIALOG_OPEN_MS = 2000;
 
-const createDistributionExecutionItemStatuses = (
-  itemIds: string[],
-  status: DistributionExecutionItemStatus
+const createLoadingDistributionExecutionItemStatuses = (
+  items: DistributionPreviewResult["items"]
 ): Record<string, DistributionExecutionItemStatus> => {
-  return Object.fromEntries(itemIds.map((itemId) => [itemId, status]));
+  return Object.fromEntries(
+    items.map((item) => [
+      item.id,
+      {
+        errorMessage: null,
+        result: null,
+        status: "loading"
+      }
+    ])
+  );
+};
+
+const createResultDistributionExecutionItemStatuses = (
+  previewItems: DistributionPreviewResult["items"],
+  resultItems: DistributionExecuteItemResult[]
+): Record<string, DistributionExecutionItemStatus> => {
+  const resultItemsByKey = new Map(
+    resultItems.map((item) => [createDistributionResultItemKey(item), item])
+  );
+
+  return Object.fromEntries(
+    previewItems.map((previewItem, index) => {
+      const resultItem =
+        resultItems[index] ?? resultItemsByKey.get(createDistributionResultItemKey(previewItem));
+
+      return [
+        previewItem.id,
+        resultItem
+          ? {
+              errorMessage: resultItem.errorMessage,
+              result: resultItem.result,
+              status: "result"
+            }
+          : {
+              errorMessage: "Distribution result is missing.",
+              result: "failed",
+              status: "result"
+            }
+      ];
+    })
+  );
+};
+
+const createFailedDistributionExecutionItemStatuses = (
+  previewItems: DistributionPreviewResult["items"],
+  errorMessage: string
+): Record<string, DistributionExecutionItemStatus> => {
+  return Object.fromEntries(
+    previewItems.map((item) => [
+      item.id,
+      {
+        errorMessage,
+        result: "failed",
+        status: "result"
+      }
+    ])
+  );
+};
+
+const createDistributionResultItemKey = ({
+  agentTargetId,
+  skillUnitId,
+  targetPath
+}: Pick<DistributionExecuteItemResult, "agentTargetId" | "skillUnitId" | "targetPath">): string => {
+  return `${skillUnitId}\u0000${agentTargetId}\u0000${targetPath}`;
+};
+
+const stringifyDistributionError = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Distribution failed.";
+  }
 };
 
 const createDefaultConflictResolutions = (

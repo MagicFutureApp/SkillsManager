@@ -108,10 +108,32 @@ export const resources = {
           confirmTitle: "确认分发",
           confirmDescription: "确认后会将 {{count}} 个项目 copy 到目标目录。",
           confirmAction: "确认分发",
+          executingAction: "分发中",
+          doneAction: "确定",
           conflictResolution: "冲突处理",
           conflictResolutionAria: "处理 {{skill}} 到 {{target}} 的冲突",
           itemDistributing: "{{name}} 分发中",
           itemCompleted: "{{name}} 完成",
+          itemResults: {
+            blocked: "{{name}} 分发被阻止",
+            conflict: "{{name}} 存在冲突",
+            failed: "{{name}} 分发失败",
+            installed: "{{name}} 安装完成",
+            skipped: "{{name}} 已跳过",
+            updated: "{{name}} 更新完成"
+          },
+          errors: {
+            duplicateTarget: "同一次分发中出现了重复的目标路径，请调整目标后重试。",
+            generic: "分发失败，请检查目标目录状态后重试。",
+            missingPath: "源或目标路径不存在，请同步来源并确认目标目录仍然存在。",
+            missingSourceOrTarget: "源目录或目标目录不完整，请重新同步来源并检查目标设置。",
+            nestedPaths: "源目录和目标目录不能互相包含，请选择独立的目标目录。",
+            noSpace: "磁盘空间不足，请释放空间后重试。",
+            permission: "目标目录没有写入权限，请检查目录权限后重试。",
+            targetRoot: "目标路径不能直接指向目标根目录，请选择具体的 skill 目录。",
+            unownedTarget: "目标路径已存在，且不是由当前 skill 管理。请清理该目录或选择覆盖。",
+            withMessage: "分发失败：{{message}}"
+          },
           actions: {
             blocked: "阻止",
             conflict: "冲突",
@@ -541,10 +563,35 @@ export const resources = {
           confirmTitle: "Confirm Distribution",
           confirmDescription: "Confirm to copy {{count}} item(s) to the target directories.",
           confirmAction: "Confirm Distribution",
+          executingAction: "Distributing",
+          doneAction: "OK",
           conflictResolution: "Conflict handling",
           conflictResolutionAria: "Handle conflict for {{skill}} to {{target}}",
           itemDistributing: "{{name}} distributing",
           itemCompleted: "{{name}} completed",
+          itemResults: {
+            blocked: "{{name}} blocked",
+            conflict: "{{name}} has a conflict",
+            failed: "{{name}} failed",
+            installed: "{{name}} installed",
+            skipped: "{{name}} skipped",
+            updated: "{{name}} updated"
+          },
+          errors: {
+            duplicateTarget: "This distribution includes the same target path more than once.",
+            generic: "Distribution failed. Check the target directory and try again.",
+            missingPath:
+              "The source or target path is missing. Sync the source and check the target.",
+            missingSourceOrTarget: "The source or target directory is incomplete.",
+            nestedPaths: "The source and target directories cannot contain each other.",
+            noSpace: "There is not enough disk space. Free space and try again.",
+            permission: "The target directory is not writable. Check permissions and try again.",
+            targetRoot:
+              "The target path cannot be the target root. Choose a specific skill directory.",
+            unownedTarget:
+              "The target path already exists and is not managed by this skill. Clean it up or choose overwrite.",
+            withMessage: "Distribution failed: {{message}}"
+          },
           actions: {
             blocked: "Blocked",
             conflict: "Conflict",
