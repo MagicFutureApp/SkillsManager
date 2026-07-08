@@ -111,8 +111,24 @@ describe("SettingsPage", () => {
       "href",
       "#settings-danger-zone"
     );
+    expect(within(settingsNavigation).getByRole("link", { name: "关于" })).toHaveAttribute(
+      "href",
+      "#settings-about"
+    );
     expect(screen.getByRole("heading", { name: "凭据状态" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "危险操作" })).toBeInTheDocument();
+  });
+
+  it("shows an about section with the logo and app version", async () => {
+    render(<SettingsPage />);
+
+    await screen.findByRole("main");
+    const aboutSection = screen.getByRole("region", { name: "关于" });
+
+    expect(aboutSection).toHaveClass("place-items-center", "text-center");
+    expect(within(aboutSection).getByRole("img", { name: "Skillport" })).toBeInTheDocument();
+    expect(await within(aboutSection).findByText("版本 0.1.0")).toBeInTheDocument();
+    expect(window.skillsManager?.getInfo).toHaveBeenCalled();
   });
 
   it("updates the selected internal settings navigation item after clicking it", async () => {
@@ -124,14 +140,21 @@ describe("SettingsPage", () => {
       name: "GitHub API token"
     });
     const dangerZoneLink = within(settingsNavigation).getByRole("link", { name: "危险操作" });
+    const aboutLink = within(settingsNavigation).getByRole("link", { name: "关于" });
 
     expect(githubTokenLink).toHaveAttribute("aria-current", "location");
     expect(dangerZoneLink).not.toHaveAttribute("aria-current");
+    expect(aboutLink).not.toHaveAttribute("aria-current");
 
     fireEvent.click(dangerZoneLink);
 
     expect(dangerZoneLink).toHaveAttribute("aria-current", "location");
     expect(githubTokenLink).not.toHaveAttribute("aria-current");
+
+    fireEvent.click(aboutLink);
+
+    expect(aboutLink).toHaveAttribute("aria-current", "location");
+    expect(dangerZoneLink).not.toHaveAttribute("aria-current");
   });
 
   it("opens the GitHub token creation page through the system browser", async () => {

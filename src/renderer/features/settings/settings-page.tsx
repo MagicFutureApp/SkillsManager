@@ -14,6 +14,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toErrorMessage } from "@/lib/errors";
+import skillportLogo from "@/assets/skillport-logo.svg";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -27,8 +28,8 @@ import {
   Save,
   Trash2
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import type { AppSettingsResult, AppStoragePathsResult } from "@/global";
+import React, { useEffect, useRef, useState } from "react";
+import type { AppInfo, AppSettingsResult, AppStoragePathsResult } from "@/global";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type StorageStatus = "loading" | "idle" | "resetting" | "reset" | "error";
@@ -39,7 +40,8 @@ const settingsNavigationItems = [
   { href: "#skill-distribution", label: "技能分发" },
   { href: "#local-storage", label: "本地存储" },
   { href: "#github-token-help", label: "如何创建 GitHub token" },
-  { href: "#settings-danger-zone", label: "危险操作" }
+  { href: "#settings-danger-zone", label: "危险操作" },
+  { href: "#settings-about", label: "关于" }
 ] as const;
 type SettingsNavigationHref = (typeof settingsNavigationItems)[number]["href"];
 
@@ -50,6 +52,15 @@ const getSettingsNavigationHrefFromHash = (hash: string): SettingsNavigationHref
   );
 };
 
+const resetSettingsWindowScroll = () => {
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+
+  if (!window.navigator.userAgent.includes("jsdom")) {
+    window.scrollTo({ left: 0, top: 0 });
+  }
+};
+
 export const SettingsPage = () => {
   const [settings, setSettings] = useState<AppSettingsResult>({
     distribution: { autoDistributeOnSync: false },
@@ -57,6 +68,7 @@ export const SettingsPage = () => {
   });
   const [distributionStatus, setDistributionStatus] = useState<SaveStatus>("idle");
   const [storagePaths, setStoragePaths] = useState<AppStoragePathsResult | null>(null);
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [githubToken, setGithubToken] = useState("");
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [storageStatus, setStorageStatus] = useState<StorageStatus>("loading");
@@ -65,6 +77,7 @@ export const SettingsPage = () => {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [activeSettingsNavigationHref, setActiveSettingsNavigationHref] =
     useState<SettingsNavigationHref>(settingsNavigationItems[0].href);
+  const settingsContentRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -98,6 +111,19 @@ export const SettingsPage = () => {
         }
       });
 
+    void window.skillsManager
+      ?.getInfo?.()
+      .then((nextAppInfo) => {
+        if (isCurrent) {
+          setAppInfo(nextAppInfo);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setAppInfo(null);
+        }
+      });
+
     return () => {
       isCurrent = false;
     };
@@ -110,11 +136,55 @@ export const SettingsPage = () => {
 
     syncActiveNavigationHref();
     window.addEventListener("hashchange", syncActiveNavigationHref);
+    window.addEventListener("popstate", syncActiveNavigationHref);
 
     return () => {
       window.removeEventListener("hashchange", syncActiveNavigationHref);
+      window.removeEventListener("popstate", syncActiveNavigationHref);
     };
   }, []);
+
+  const scrollSettingsSectionIntoView = (href: SettingsNavigationHref) => {
+    const contentElement = settingsContentRef.current;
+    const targetElement = document.getElementById(href.slice(1));
+
+    if (!contentElement || !targetElement) {
+      return;
+    }
+
+    const contentRect = contentElement.getBoundingClientRect();
+    const targetRect = targetElement.getBoundingClientRect();
+    const nextScrollTop = Math.max(
+      0,
+      contentElement.scrollTop + targetRect.top - contentRect.top - 24
+    );
+
+    resetSettingsWindowScroll();
+
+    if (typeof contentElement.scrollTo === "function") {
+      contentElement.scrollTo({ top: nextScrollTop });
+      return;
+    }
+
+    contentElement.scrollTop = nextScrollTop;
+  };
+
+  const navigateToSettingsSection = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    href: SettingsNavigationHref
+  ) => {
+    event.preventDefault();
+    setActiveSettingsNavigationHref(href);
+    window.history.pushState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}${href}`
+    );
+    scrollSettingsSectionIntoView(href);
+    window.setTimeout(() => {
+      resetSettingsWindowScroll();
+    }, 0);
+  };
 
   const saveToken = () => {
     const normalizedToken = githubToken.trim();
@@ -250,7 +320,7 @@ export const SettingsPage = () => {
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 ].join(" ")}
                 aria-current={isActive ? "location" : undefined}
-                onClick={() => setActiveSettingsNavigationHref(item.href)}
+                onClick={(event) => navigateToSettingsSection(event, item.href)}
               >
                 {item.label}
               </a>
@@ -278,6 +348,7 @@ export const SettingsPage = () => {
       </aside>
 
       <main
+        ref={settingsContentRef}
         className="h-[calc(100svh-44px)] min-w-0 overflow-y-auto p-7"
         aria-labelledby="settings-heading"
       >
@@ -466,6 +537,20 @@ export const SettingsPage = () => {
               <p className="text-sm text-muted-foreground">本地数据库已重建。</p>
             ) : null}
             {storageError ? <p className="text-sm text-destructive">{storageError}</p> : null}
+          </section>
+
+          <section
+            id="settings-about"
+            className="grid scroll-mt-6 place-items-center rounded-xl border border-border bg-card px-4 py-10 text-center"
+            aria-labelledby="settings-about-heading"
+          >
+            <h2 id="settings-about-heading" className="sr-only">
+              关于
+            </h2>
+            <img src={skillportLogo} alt="Skillport" className="h-16 w-auto" />
+            <p className="mt-4 text-sm font-medium text-muted-foreground">
+              版本 {appInfo?.version ?? "--"}
+            </p>
           </section>
         </div>
       </main>
