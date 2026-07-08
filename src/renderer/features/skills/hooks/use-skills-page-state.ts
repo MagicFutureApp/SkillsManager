@@ -76,7 +76,6 @@ export const useSkillsPageState = () => {
 
       setSkills(nextSkills);
       setTargetOptions(nextTargetOptions);
-      setSelectedSkillId((currentSkillId) => currentSkillId ?? nextSkills[0]?.id ?? null);
     });
 
     return () => {
@@ -142,7 +141,8 @@ export const useSkillsPageState = () => {
     setRepositoryFilter("all");
   }, [repositoryFilter, repositoryOptions]);
 
-  const selectedSkill = visibleSkills.find((skill) => skill.id === selectedSkillId) ?? null;
+  const selectedSkill =
+    visibleSkills.find((skill) => skill.id === selectedSkillId) ?? visibleSkills[0] ?? null;
   const selectedSkillTargetOptions = useMemo(() => {
     return getTargetOptionsForSkill(targetOptions, selectedSkill);
   }, [selectedSkill, targetOptions]);

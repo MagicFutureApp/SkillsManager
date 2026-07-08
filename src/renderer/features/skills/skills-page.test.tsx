@@ -404,6 +404,54 @@ describe("SkillsPage", () => {
     expect(screen.getByRole("heading", { name: "Select a skill" })).toBeInTheDocument();
   });
 
+  it("selects the first visible skill after applying the default sort", async () => {
+    const skills: SkillApiRecord[] = [
+      {
+        description: "Appears later once skills are sorted by name.",
+        enabled: true,
+        entry: "skills/zulu-helper/SKILL.md",
+        id: "team-skills__zulu-helper",
+        name: "Zulu Helper",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "zulu-helper",
+        status: "ready",
+        tags: ["review"],
+        targets: [],
+        version: "8f2c91a"
+      },
+      {
+        description: "Appears first once skills are sorted by name.",
+        enabled: true,
+        entry: "skills/alpha-helper/SKILL.md",
+        id: "team-skills__alpha-helper",
+        name: "Alpha Helper",
+        repository: "Team skills repository",
+        repositoryId: "team-skills",
+        skillId: "alpha-helper",
+        status: "ready",
+        tags: ["review"],
+        targets: [],
+        version: "8f2c91a"
+      }
+    ];
+
+    await renderSkillsPage({ skills });
+    await screen.findByRole("button", { name: "Alpha Helper" });
+
+    const skillsTable = within(screen.getByRole("main")).getByRole("table");
+    const skillsTableBody = skillsTable.querySelector("[data-slot='table-body']");
+    const firstSkillRow = skillsTableBody?.querySelector("tr");
+
+    expect(firstSkillRow).not.toBeNull();
+    expect(
+      within(firstSkillRow as HTMLElement).getByRole("button", { name: "Alpha Helper" })
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("技能详情")).getByRole("heading", { name: "Alpha Helper" })
+    ).toBeInTheDocument();
+  });
+
   it("renders indexed skills returned by the Electron API", async () => {
     await renderSkillsPage({ skills: skillApiRecordsFixture });
 
@@ -618,6 +666,8 @@ describe("SkillsPage", () => {
 
     await renderSkillsPage({ skills, targets });
     await screen.findByRole("button", { name: "Review Bot" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Review Bot" }));
 
     expect(screen.getByText("0 / 1")).toBeInTheDocument();
     expect(screen.getByLabelText("选择 Team workspace")).not.toBeChecked();
@@ -1158,7 +1208,8 @@ describe("SkillsPage", () => {
     await renderSkillsPage({ skills: interactiveSkillRecordsFixture });
     await screen.findByRole("button", { name: "Review Bot" });
 
-    fireEvent.click(screen.getByText("Design lab prompts"));
+    fireEvent.click(screen.getByRole("button", { name: "Review Bot" }));
+    fireEvent.click(within(screen.getByRole("main")).getByText("Design lab prompts"));
 
     expect(
       within(screen.getByLabelText("技能详情")).getByText("Design Helper")
@@ -1384,6 +1435,7 @@ describe("SkillsPage", () => {
     expect(reviewRowDistributeButton).toBeDisabled();
     expect(reviewRowDistributeButton).toHaveAttribute("title", "请先添加分发目标");
 
+    fireEvent.click(screen.getByRole("button", { name: "Review Bot" }));
     const detailDistributeButton = within(screen.getByLabelText("技能详情")).getByRole("button", {
       name: "分发当前技能"
     });
