@@ -8,7 +8,7 @@ import {
   type TargetViewModel
 } from "../components/targets-page-data";
 import type { RegisteredTargetRecord } from "../../../../core/targets/target-api";
-import type { TargetDirectoryAgentOption } from "@/global";
+import type { TargetDirectoryAgentOption, TargetsListResult } from "@/global";
 import {
   clampPageNumber,
   createPaginationState,
@@ -16,35 +16,25 @@ import {
   getPagedItems,
   type PaginationState
 } from "@/lib/pagination";
+import {
+  createEditableTargetAgentDirectory,
+  customTargetAgentType,
+  deriveTargetNameFromPath,
+  joinTargetPathSegments,
+  normalizeCustomTargetAgentDirectoryName,
+  useTargetAddDialogState,
+  type PendingTargetAgentDirectory
+} from "./use-target-add-dialog-state";
 
 type TargetsResultLike = {
   registeredTargets?: RegisteredTargetRecord[];
   scanIssues?: TargetIssue[];
 };
 
-type PendingTargetAgentDirectory = {
-  basePath: string;
-  options: TargetDirectoryAgentOption[];
-};
-
-type TargetPathEditor = "add" | "edit";
-
 const minimumRescanLoadingMs = 2000;
-const customTargetAgentType = "custom";
-const editableTargetAgentDirectoryDefinitions = [
-  { directoryName: ".codex", name: "Codex", type: "codex" },
-  { directoryName: ".claude", name: "Claude Code", type: "claude-code" },
-  { directoryName: ".gemini", name: "Gemini CLI", type: "gemini-cli" }
-] satisfies Array<Omit<TargetDirectoryAgentOption, "targetPath">>;
 
 export const useTargetsPageState = () => {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
-  const [addTargetError, setAddTargetError] = useState("");
-  const [addTargetName, setAddTargetName] = useState("");
-  const [addTargetPath, setAddTargetPath] = useState("");
-  const [isAddTargetDialogOpen, setIsAddTargetDialogOpen] = useState(false);
-  const [isSavingTarget, setIsSavingTarget] = useState(false);
-  const [isTargetNameDirty, setIsTargetNameDirty] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [editTargetError, setEditTargetError] = useState("");
   const [editTargetId, setEditTargetId] = useState<string | null>(null);
@@ -105,6 +95,26 @@ export const useTargetsPageState = () => {
     );
   };
 
+  const addTargetDialog = useTargetAddDialogState<TargetsListResult>({
+    isSaveAvailable: () => Boolean(window.skillsManager?.addCustomDirectoryTarget),
+    onSaved: (result, input) => {
+      const addedTarget = result?.registeredTargets.find(
+        (target) => target.path === input.targetPath
+      );
+
+      applyTargetsResult(result, addedTarget?.id);
+    },
+    saveTarget: async (input) => {
+      const addCustomDirectoryTarget = window.skillsManager?.addCustomDirectoryTarget;
+
+      if (!addCustomDirectoryTarget) {
+        throw new Error("unavailable");
+      }
+
+      return addCustomDirectoryTarget(input);
+    }
+  });
+
   const refreshTargets = async () => {
     if (isRefreshingTargets) {
       return;
@@ -128,74 +138,15 @@ export const useTargetsPageState = () => {
     }
   };
 
-  const openAddTargetDialog = () => {
-    setAddTargetError("");
-    setAddTargetName("");
-    setAddTargetPath("");
-    setIsTargetNameDirty(false);
-    setCustomTargetAgentDirectoryNameValue("");
-    setPendingTargetAgentDirectory(null);
-    setSelectedTargetAgentType(null);
-    setIsAddTargetDialogOpen(true);
-  };
-
-  const closeAddTargetDialog = () => {
-    if (isSavingTarget) {
-      return;
-    }
-
-    setAddTargetError("");
-    setIsAddTargetDialogOpen(false);
-  };
-
-  const setPendingTargetName = (name: string) => {
-    setIsTargetNameDirty(true);
-    setAddTargetName(name);
-  };
-
   const setPendingEditTargetName = (name: string) => {
     setEditTargetName(name);
   };
 
-  const isTargetNameDirtyForEditor = (editor: TargetPathEditor) => {
-    return editor === "add" ? isTargetNameDirty : true;
-  };
-
-  const setTargetError = (editor: TargetPathEditor, error: string) => {
-    if (editor === "add") {
-      setAddTargetError(error);
-      return;
-    }
-
-    setEditTargetError(error);
-  };
-
-  const setTargetPath = (editor: TargetPathEditor, targetPath: string) => {
-    if (editor === "add") {
-      setAddTargetPath(targetPath);
-      return;
-    }
-
+  const applyResolvedEditTargetPath = (targetPath: string) => {
     setEditTargetPath(targetPath);
-  };
-
-  const setTargetName = (
-    editor: TargetPathEditor,
-    getNextName: (currentName: string) => string
-  ) => {
-    if (editor === "add") {
-      setAddTargetName(getNextName);
-      return;
-    }
-
-    setEditTargetName(getNextName);
-  };
-
-  const applyResolvedTargetPath = (editor: TargetPathEditor, targetPath: string) => {
-    setTargetPath(editor, targetPath);
-    setTargetError(editor, "");
-    setTargetName(editor, (currentName) => {
-      if (isTargetNameDirtyForEditor(editor) && currentName.trim()) {
+    setEditTargetError("");
+    setEditTargetName((currentName) => {
+      if (currentName.trim()) {
         return currentName;
       }
 
@@ -203,8 +154,7 @@ export const useTargetsPageState = () => {
     });
   };
 
-  const applyCustomTargetAgentDirectoryName = (
-    editor: TargetPathEditor,
+  const applyEditCustomTargetAgentDirectoryName = (
     directoryName: string,
     pendingDirectory: PendingTargetAgentDirectory | null = pendingTargetAgentDirectory
   ) => {
@@ -214,41 +164,24 @@ export const useTargetsPageState = () => {
 
     const normalizedDirectoryName = normalizeCustomTargetAgentDirectoryName(directoryName);
 
-    setTargetError(editor, "");
+    setEditTargetError("");
 
     if (!normalizedDirectoryName) {
-      setTargetPath(editor, pendingDirectory.basePath);
+      setEditTargetPath(pendingDirectory.basePath);
       return;
     }
 
-    applyResolvedTargetPath(
-      editor,
+    applyResolvedEditTargetPath(
       joinTargetPathSegments(pendingDirectory.basePath, normalizedDirectoryName, "skills")
     );
   };
 
-  const selectCustomTargetAgentDirectoryOption = () => {
-    selectCustomTargetAgentDirectoryOptionForEditor("add");
-  };
-
   const selectEditCustomTargetAgentDirectoryOption = () => {
-    selectCustomTargetAgentDirectoryOptionForEditor("edit");
-  };
-
-  const selectCustomTargetAgentDirectoryOptionForEditor = (editor: TargetPathEditor) => {
     setSelectedTargetAgentType(customTargetAgentType);
-    applyCustomTargetAgentDirectoryName(editor, customTargetAgentDirectoryName);
-  };
-
-  const selectTargetPath = async () => {
-    await selectTargetPathForEditor("add");
+    applyEditCustomTargetAgentDirectoryName(customTargetAgentDirectoryName);
   };
 
   const selectEditTargetPath = async () => {
-    await selectTargetPathForEditor("edit");
-  };
-
-  const selectTargetPathForEditor = async (editor: TargetPathEditor) => {
     const selectedPath = await window.skillsManager?.selectTargetDirectory?.();
 
     if (!selectedPath) {
@@ -259,7 +192,7 @@ export const useTargetsPageState = () => {
       setPendingTargetAgentDirectory(null);
       setSelectedTargetAgentType(null);
       setCustomTargetAgentDirectoryNameValue("");
-      applyResolvedTargetPath(editor, selectedPath);
+      applyResolvedEditTargetPath(selectedPath);
       return;
     }
 
@@ -269,7 +202,7 @@ export const useTargetsPageState = () => {
       setPendingTargetAgentDirectory(null);
       setSelectedTargetAgentType(null);
       setCustomTargetAgentDirectoryNameValue("");
-      applyResolvedTargetPath(editor, resolution.targetPath);
+      applyResolvedEditTargetPath(resolution.targetPath);
       return;
     }
 
@@ -279,10 +212,10 @@ export const useTargetsPageState = () => {
     });
     setSelectedTargetAgentType(resolution.selectedAgentType ?? null);
     setCustomTargetAgentDirectoryNameValue(resolution.customDirectoryName ?? "");
-    setTargetPath(editor, resolution.targetPath ?? resolution.basePath);
-    setTargetError(editor, "");
-    setTargetName(editor, (currentName) => {
-      if (isTargetNameDirtyForEditor(editor) && currentName.trim()) {
+    setEditTargetPath(resolution.targetPath ?? resolution.basePath);
+    setEditTargetError("");
+    setEditTargetName((currentName) => {
+      if (currentName.trim()) {
         return currentName;
       }
 
@@ -292,84 +225,15 @@ export const useTargetsPageState = () => {
     });
   };
 
-  const selectTargetAgentDirectoryOption = (option: TargetDirectoryAgentOption) => {
-    selectTargetAgentDirectoryOptionForEditor("add", option);
-  };
-
   const selectEditTargetAgentDirectoryOption = (option: TargetDirectoryAgentOption) => {
-    selectTargetAgentDirectoryOptionForEditor("edit", option);
-  };
-
-  const selectTargetAgentDirectoryOptionForEditor = (
-    editor: TargetPathEditor,
-    option: TargetDirectoryAgentOption
-  ) => {
     setSelectedTargetAgentType(option.type);
-    applyResolvedTargetPath(editor, option.targetPath);
-  };
-
-  const setCustomTargetAgentDirectoryName = (directoryName: string) => {
-    setCustomTargetAgentDirectoryNameForEditor("add", directoryName);
+    applyResolvedEditTargetPath(option.targetPath);
   };
 
   const setEditCustomTargetAgentDirectoryName = (directoryName: string) => {
-    setCustomTargetAgentDirectoryNameForEditor("edit", directoryName);
-  };
-
-  const setCustomTargetAgentDirectoryNameForEditor = (
-    editor: TargetPathEditor,
-    directoryName: string
-  ) => {
     setCustomTargetAgentDirectoryNameValue(directoryName);
     setSelectedTargetAgentType(customTargetAgentType);
-    applyCustomTargetAgentDirectoryName(editor, directoryName);
-  };
-
-  const saveAddTarget = async () => {
-    const name = addTargetName.trim();
-    const targetPath = addTargetPath.trim();
-
-    if (
-      selectedTargetAgentType === customTargetAgentType &&
-      !normalizeCustomTargetAgentDirectoryName(customTargetAgentDirectoryName)
-    ) {
-      setAddTargetError("customAgentDirectoryRequired");
-      return;
-    }
-
-    if (!name || !targetPath) {
-      setAddTargetError("required");
-      return;
-    }
-
-    if (!window.skillsManager?.addCustomDirectoryTarget) {
-      setAddTargetError("unavailable");
-      return;
-    }
-
-    setAddTargetError("");
-    setIsSavingTarget(true);
-
-    try {
-      const result = await window.skillsManager.addCustomDirectoryTarget({
-        name,
-        targetPath
-      });
-      const addedTarget = result?.registeredTargets.find((target) => target.path === targetPath);
-
-      applyTargetsResult(result, addedTarget?.id);
-      setIsAddTargetDialogOpen(false);
-      setAddTargetName("");
-      setAddTargetPath("");
-      setIsTargetNameDirty(false);
-      setCustomTargetAgentDirectoryNameValue("");
-      setPendingTargetAgentDirectory(null);
-      setSelectedTargetAgentType(null);
-    } catch (error) {
-      setAddTargetError(error instanceof Error ? error.message : "failed");
-    } finally {
-      setIsSavingTarget(false);
-    }
+    applyEditCustomTargetAgentDirectoryName(directoryName);
   };
 
   const toggleTargetChecked = (targetId: string, checked: boolean) => {
@@ -637,9 +501,7 @@ export const useTargetsPageState = () => {
   };
 
   return {
-    addTargetError,
-    addTargetName,
-    addTargetPath,
+    addTargetDialog,
     checkedCount,
     checkedIds,
     deleteError,
@@ -650,11 +512,9 @@ export const useTargetsPageState = () => {
     isDeleteDialogOpen,
     isDeletingTargets,
     isEditTargetDialogOpen,
-    isAddTargetDialogOpen,
     isCustomTargetAgentDirectorySelected: selectedTargetAgentType === customTargetAgentType,
     isRefreshingTargets,
     isSavingEditTarget,
-    isSavingTarget,
     customTargetAgentDirectoryName,
     pendingTargetAgentDirectory,
     pendingDeleteTargets,
@@ -669,31 +529,24 @@ export const useTargetsPageState = () => {
     visibleAllChecked,
     visibleTargets,
     visibleSomeChecked,
-    closeAddTargetDialog,
     closeDeleteDialog,
     closeEditTargetDialog,
     copySelectedTargetPath,
     confirmDeleteTargets,
-    openAddTargetDialog,
+    openAddTargetDialog: addTargetDialog.openAddTargetDialog,
     openCheckedDeleteDialog,
     openDeleteDialog,
     openEditTargetDialog,
     refreshTargets,
-    saveAddTarget,
     saveEditTarget,
     selectAllVisibleDeletable,
-    selectCustomTargetAgentDirectoryOption,
     selectEditCustomTargetAgentDirectoryOption,
     selectEditTargetAgentDirectoryOption,
     selectEditTargetPath,
-    selectTargetAgentDirectoryOption,
-    selectTargetPath,
     setTargetsPage,
-    setCustomTargetAgentDirectoryName,
     setEditCustomTargetAgentDirectoryName,
     setEditTargetName: setPendingEditTargetName,
     setScanIssues,
-    setPendingTargetName,
     setQuery,
     setSelectedTargetId,
     setSort,
@@ -715,66 +568,4 @@ const waitForMinimumElapsedTime = async (startedAt: number, minimumMs: number): 
 
 const normalizeTargetIds = (targetIds: string[]): string[] => {
   return Array.from(new Set(targetIds.map((targetId) => targetId.trim()).filter(Boolean)));
-};
-
-const deriveTargetNameFromPath = (targetPath: string): string => {
-  const normalizedPath = targetPath.trim().replace(/[\\/]+$/g, "");
-  const segments = normalizedPath.split(/[\\/]+/).filter(Boolean);
-
-  return segments.at(-3) ?? segments.at(-1) ?? targetPath.trim();
-};
-
-const createEditableTargetAgentDirectory = (targetPath: string) => {
-  const normalizedPath = targetPath.trim().replace(/[\\/]+$/g, "");
-  const lastSegment = getLastPathSegment(normalizedPath);
-  const agentDirectoryPath =
-    lastSegment === "skills" ? getPathDirname(normalizedPath) : normalizedPath;
-  const agentDirectoryName = getLastPathSegment(agentDirectoryPath);
-  const basePath = getPathDirname(agentDirectoryPath) || normalizedPath;
-  const knownDefinition = editableTargetAgentDirectoryDefinitions.find(
-    (definition) => definition.directoryName === agentDirectoryName
-  );
-
-  return {
-    basePath,
-    customDirectoryName: knownDefinition ? "" : agentDirectoryName,
-    options: editableTargetAgentDirectoryDefinitions.map((definition) => ({
-      ...definition,
-      targetPath: joinTargetPathSegments(basePath, definition.directoryName, "skills")
-    })),
-    selectedAgentType: knownDefinition?.type ?? customTargetAgentType
-  };
-};
-
-const normalizeCustomTargetAgentDirectoryName = (directoryName: string): string => {
-  return directoryName.trim().replace(/[\\/]+/g, "");
-};
-
-const getLastPathSegment = (targetPath: string): string => {
-  return (
-    targetPath
-      .replace(/[\\/]+$/g, "")
-      .split(/[\\/]+/)
-      .filter(Boolean)
-      .at(-1) ?? ""
-  );
-};
-
-const getPathDirname = (targetPath: string): string => {
-  const normalizedPath = targetPath.replace(/[\\/]+$/g, "");
-  const dirnameMatch = normalizedPath.match(/^(.*)[\\/][^\\/]+$/);
-
-  if (!dirnameMatch) {
-    return "";
-  }
-
-  return dirnameMatch[1] || (normalizedPath.startsWith("/") ? "/" : "");
-};
-
-const joinTargetPathSegments = (basePath: string, ...segments: string[]): string => {
-  const separator = /^[A-Za-z]:[\\/]/.test(basePath) && basePath.includes("\\") ? "\\" : "/";
-  const normalizedBasePath = basePath.trim().replace(/[\\/]+$/g, "");
-  const normalizedSegments = segments.map((segment) => segment.replace(/^[\\/]+|[\\/]+$/g, ""));
-
-  return [normalizedBasePath, ...normalizedSegments].filter(Boolean).join(separator);
 };

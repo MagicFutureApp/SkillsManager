@@ -260,6 +260,67 @@ describe("target IPC handlers", () => {
     ]);
   });
 
+  it("adds an independent skill directory target with the submitted display name", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+
+    await db.insert(repositories).values({
+      configJson: "{}",
+      createdAt,
+      id: "team-skills",
+      localCachePath: "/tmp/team-skills",
+      name: "Team skills repository",
+      providerId: "local",
+      remoteUrl: "/tmp/team-skills",
+      updatedAt: createdAt
+    });
+    await db.insert(skillUnits).values({
+      createdAt,
+      description: "Reviews pull requests.",
+      discoveryMethod: "manifest",
+      entryPath: "skills/review-bot/SKILL.md",
+      id: "team-skills__skills-review-bot",
+      name: "Review Bot",
+      repositoryId: "team-skills",
+      rootPath: "skills/review-bot",
+      status: "ready",
+      updatedAt: createdAt
+    });
+
+    await expect(
+      addSkillDirectoryTarget(
+        db,
+        {
+          name: "Review workspace",
+          skillUnitId: "team-skills__skills-review-bot",
+          targetPath: "/Users/test/review-skills"
+        },
+        {
+          now: () => createdAt
+        }
+      )
+    ).resolves.toMatchObject({
+      registeredTargets: [
+        {
+          id: "target-custom-users-test-review-skills-16b7af9b49af",
+          name: "Review workspace",
+          normalizedPath: "/Users/test/review-skills",
+          path: "/Users/test/review-skills",
+          scope: "independent",
+          selectedSkills: [
+            {
+              id: "team-skills__skills-review-bot",
+              name: "Review Bot",
+              repository: "Team skills repository"
+            }
+          ],
+          status: "registered",
+          type: "custom-directory"
+        }
+      ]
+    });
+  });
+
   it("deletes selected custom directory targets and returns refreshed targets", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-24T00:00:00.000Z");

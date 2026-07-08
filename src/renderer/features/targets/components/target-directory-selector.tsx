@@ -6,10 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-import type { TargetsPageState } from "../hooks/use-targets-page-state";
-
-type PendingTargetAgentDirectory = TargetsPageState["pendingTargetAgentDirectory"];
-type TargetDirectoryAgentOption = NonNullable<PendingTargetAgentDirectory>["options"][number];
+import type { TargetDirectoryAgentOption } from "@/global";
+import type { PendingTargetAgentDirectory } from "../hooks/use-target-add-dialog-state";
 
 type TargetDirectorySelectorProps = {
   customAgentDirectoryName: string;
@@ -21,7 +19,7 @@ type TargetDirectorySelectorProps = {
   onSelectCustomAgentDirectoryOption: () => void;
   path: string;
   pathLabel: string;
-  pendingDirectory: PendingTargetAgentDirectory;
+  pendingDirectory: PendingTargetAgentDirectory | null;
   selectedAgentType: string | null;
   showBrowse?: boolean;
 };

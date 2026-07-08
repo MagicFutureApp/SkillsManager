@@ -33,6 +33,7 @@ export type TargetsRescanResult = TargetsListResult & {
 };
 
 export type AddSkillDirectoryTargetInput = {
+  name?: string;
   skillUnitId: string;
   targetPath: string;
 };
@@ -238,9 +239,10 @@ export const addSkillDirectoryTarget = async (
   }
 ): Promise<TargetsListResult> => {
   const skillUnitId = input.skillUnitId.trim();
+  const name = input.name?.trim() || deriveCustomDirectoryTargetName(input.targetPath);
   const targetPath = input.targetPath.trim();
 
-  if (!skillUnitId || !targetPath) {
+  if (!skillUnitId || !name || !targetPath) {
     throw new Error("Skill and target directory are required.");
   }
 
@@ -250,7 +252,7 @@ export const addSkillDirectoryTarget = async (
   await targetRepository.registerIndependentDirectoryTargetForSkill(
     {
       id: buildCustomDirectoryTargetId(normalizedPath),
-      name: deriveCustomDirectoryTargetName(targetPath),
+      name,
       normalizedPath,
       path: targetPath
     },

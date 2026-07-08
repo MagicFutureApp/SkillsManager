@@ -1,137 +1,18 @@
-import { Form } from "@base-ui/react/form";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogClose,
-  DialogDescription,
-  DialogPopup,
-  DialogPortal,
-  DialogTitle
-} from "@/components/ui/dialog";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { TargetDirectorySelector } from "./target-directory-selector";
+import { TargetAddDialog } from "./target-add-dialog";
 import { useTargetsPageContext } from "./targets-page-context";
 
 export const TargetsPageModal = () => {
   const { t } = useTranslation();
   const page = useTargetsPageContext();
 
-  if (!page.isAddTargetDialogOpen) {
-    return null;
-  }
-
-  const submitForm = () => {
-    void page.saveAddTarget();
-  };
-
-  const errorMessage = getAddTargetErrorMessage(page.addTargetError, {
-    customAgentDirectoryRequired: t("targets.modal.customAgentFolderRequiredError"),
-    failed: t("targets.modal.saveError"),
-    required: t("targets.modal.requiredError"),
-    unavailable: t("targets.actions.addTargetUnavailable")
-  });
-
   return (
-    <Dialog
-      open={page.isAddTargetDialogOpen}
-      onOpenChange={(nextOpen) => !nextOpen && page.closeAddTargetDialog()}
-    >
-      <DialogPortal>
-        <DialogBackdrop />
-        <DialogPopup>
-          <Form onFormSubmit={submitForm}>
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <DialogTitle>{t("targets.modal.title")}</DialogTitle>
-                <DialogDescription>{t("targets.modal.description")}</DialogDescription>
-              </div>
-              <DialogClose
-                render={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={page.isSavingTarget}
-                  />
-                }
-              >
-                {t("targets.modal.close")}
-              </DialogClose>
-            </div>
-
-            <div className="grid gap-3">
-              <TargetDirectorySelector
-                customAgentDirectoryName={page.customTargetAgentDirectoryName}
-                disabled={page.isSavingTarget}
-                isCustomAgentDirectorySelected={page.isCustomTargetAgentDirectorySelected}
-                onBrowse={() => void page.selectTargetPath()}
-                onCustomAgentDirectoryNameChange={page.setCustomTargetAgentDirectoryName}
-                onSelectAgentDirectoryOption={page.selectTargetAgentDirectoryOption}
-                onSelectCustomAgentDirectoryOption={page.selectCustomTargetAgentDirectoryOption}
-                path={page.addTargetPath}
-                pathLabel={t("targets.modal.path")}
-                pendingDirectory={page.pendingTargetAgentDirectory}
-                selectedAgentType={page.selectedTargetAgentType}
-              />
-
-              <Field>
-                <FieldLabel>{t("targets.modal.name")}</FieldLabel>
-                <Input
-                  disabled={page.isSavingTarget}
-                  value={page.addTargetName}
-                  onValueChange={page.setPendingTargetName}
-                />
-              </Field>
-            </div>
-
-            {errorMessage ? <p className="mt-3 text-sm text-destructive">{errorMessage}</p> : null}
-
-            <div className="mt-4 flex justify-end gap-2">
-              <DialogClose
-                render={<Button type="button" variant="outline" disabled={page.isSavingTarget} />}
-              >
-                {t("targets.modal.cancel")}
-              </DialogClose>
-              <Button type="submit" disabled={page.isSavingTarget}>
-                {t("targets.modal.save")}
-              </Button>
-            </div>
-          </Form>
-        </DialogPopup>
-      </DialogPortal>
-    </Dialog>
+    <TargetAddDialog
+      description={t("targets.modal.description")}
+      state={page.addTargetDialog}
+      title={t("targets.modal.title")}
+    />
   );
-};
-
-const getAddTargetErrorMessage = (
-  error: string,
-  messages: {
-    customAgentDirectoryRequired: string;
-    failed: string;
-    required: string;
-    unavailable: string;
-  }
-): string => {
-  if (error === "customAgentDirectoryRequired") {
-    return messages.customAgentDirectoryRequired;
-  }
-
-  if (error === "required") {
-    return messages.required;
-  }
-
-  if (error === "unavailable") {
-    return messages.unavailable;
-  }
-
-  if (error === "failed") {
-    return messages.failed;
-  }
-
-  return error;
 };

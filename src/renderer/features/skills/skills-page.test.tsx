@@ -270,6 +270,10 @@ const renderSkillsPage = async ({
   const addSkillDirectoryTarget = vi.fn().mockResolvedValue(targets);
   const executeDistribution = vi.fn().mockResolvedValue(distributionExecute);
   const previewDistribution = vi.fn().mockResolvedValue(distributionPreview);
+  const resolveSelectedTargetDirectory = vi.fn().mockResolvedValue({
+    status: "resolved",
+    targetPath: "/Users/test/review-skills"
+  });
   const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/review-skills");
 
   window.skillsManager = {
@@ -284,6 +288,7 @@ const renderSkillsPage = async ({
     executeDistribution,
     previewDistribution,
     removeSkillTargetPreference,
+    resolveSelectedTargetDirectory,
     selectTargetDirectory,
     setSkillTargetPreference,
     platform: "darwin"
@@ -301,6 +306,7 @@ const renderSkillsPage = async ({
     executeDistribution,
     previewDistribution,
     removeSkillTargetPreference,
+    resolveSelectedTargetDirectory,
     selectTargetDirectory,
     setSkillTargetPreference
   };
@@ -934,7 +940,7 @@ describe("SkillsPage", () => {
     expect(screen.getByLabelText("选择 review-skills")).not.toBeChecked();
   });
 
-  it("adds a selected directory as an independent checked target for the current skill", async () => {
+  it("adds an independent checked target with the same modal flow as target management", async () => {
     const skills: SkillApiRecord[] = [
       {
         description: "Reviews pull requests.",
@@ -979,10 +985,10 @@ describe("SkillsPage", () => {
         {
           createdAt: "2026-06-24T00:00:00.000Z",
           enabled: true,
-          id: "target-custom-users-test-review-skills-16b7af9b49af",
-          name: "review-skills",
-          normalizedPath: "/Users/test/review-skills",
-          path: "/Users/test/review-skills",
+          id: "target-custom-users-test-project-claude-skills-77ce27877bf8",
+          name: "Review workspace",
+          normalizedPath: "/Users/test/project/.claude/skills",
+          path: "/Users/test/project/.claude/skills",
           scanMessage: null,
           selectedSkills: [
             {
@@ -1007,27 +1013,78 @@ describe("SkillsPage", () => {
         }
       ]
     };
-    const { addSkillDirectoryTarget, removeSkillTargetPreference, selectTargetDirectory } =
-      await renderSkillsPage({ skills, targets: { registeredTargets: [] } });
+    const {
+      addSkillDirectoryTarget,
+      removeSkillTargetPreference,
+      resolveSelectedTargetDirectory,
+      selectTargetDirectory
+    } = await renderSkillsPage({ skills, targets: { registeredTargets: [] } });
 
     addSkillDirectoryTarget.mockResolvedValueOnce(addedTargets);
+    selectTargetDirectory.mockResolvedValueOnce("/Users/test/project");
+    resolveSelectedTargetDirectory.mockResolvedValueOnce({
+      basePath: "/Users/test/project",
+      options: [
+        {
+          directoryName: ".codex",
+          name: "Codex",
+          targetPath: "/Users/test/project/.codex/skills",
+          type: "codex"
+        },
+        {
+          directoryName: ".claude",
+          name: "Claude Code",
+          targetPath: "/Users/test/project/.claude/skills",
+          type: "claude-code"
+        }
+      ],
+      selectedAgentType: "claude-code",
+      status: "requires-agent-type",
+      targetPath: "/Users/test/project/.claude/skills"
+    });
     await screen.findByRole("button", { name: "Review Bot" });
 
     fireEvent.click(screen.getByRole("button", { name: "新增分发目标" }));
 
-    expect(selectTargetDirectory).toHaveBeenCalledOnce();
+    const addDialog = screen.getByRole("dialog", { name: "新增目标" });
+
+    expect(selectTargetDirectory).not.toHaveBeenCalled();
+    expect(within(addDialog).getByLabelText("本机路径")).toHaveAttribute("readonly");
+
+    fireEvent.click(within(addDialog).getByRole("button", { name: "浏览" }));
+
+    await waitFor(() => {
+      expect(selectTargetDirectory).toHaveBeenCalledOnce();
+      expect(resolveSelectedTargetDirectory).toHaveBeenCalledWith("/Users/test/project");
+      expect(within(addDialog).getByText("确认 agent 类型")).toBeInTheDocument();
+      expect(within(addDialog).getByRole("radio", { name: "Claude Code" })).toHaveAttribute(
+        "aria-checked",
+        "true"
+      );
+      expect(within(addDialog).getByLabelText("本机路径")).toHaveValue(
+        "/Users/test/project/.claude/skills"
+      );
+      expect(within(addDialog).getByLabelText("名称")).toHaveValue("project");
+    });
+
+    fireEvent.change(within(addDialog).getByLabelText("名称"), {
+      target: { value: "Review workspace" }
+    });
+    fireEvent.click(within(addDialog).getByRole("button", { name: "保存" }));
+
     await waitFor(() =>
       expect(addSkillDirectoryTarget).toHaveBeenCalledWith({
+        name: "Review workspace",
         skillUnitId: "team-skills__skills-review-bot",
-        targetPath: "/Users/test/review-skills"
+        targetPath: "/Users/test/project/.claude/skills"
       })
     );
 
-    const addedTargetCheckbox = await screen.findByLabelText("选择 review-skills");
+    const addedTargetCheckbox = await screen.findByLabelText("选择 Review workspace");
 
     expect(addedTargetCheckbox).toBeChecked();
     expect(screen.getByLabelText("选择 review-disabled")).not.toBeChecked();
-    expect(screen.getByText("/Users/test/review-skills")).toBeInTheDocument();
+    expect(screen.getByText("/Users/test/project/.claude/skills")).toBeInTheDocument();
     expect(screen.getByText("1 / 2")).toBeInTheDocument();
 
     fireEvent.click(addedTargetCheckbox);
@@ -1040,13 +1097,13 @@ describe("SkillsPage", () => {
 
     await waitFor(() =>
       expect(removeSkillTargetPreference).toHaveBeenCalledWith({
-        agentTargetId: "target-custom-users-test-review-skills-16b7af9b49af",
+        agentTargetId: "target-custom-users-test-project-claude-skills-77ce27877bf8",
         deleteInstalledFiles: false,
         removeTargetPreference: true,
         skillUnitId: "team-skills__skills-review-bot"
       })
     );
-    expect(screen.queryByLabelText("选择 review-skills")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("选择 Review workspace")).not.toBeInTheDocument();
   });
 
   it("searches skills by name, repository, or description only", async () => {

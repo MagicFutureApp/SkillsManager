@@ -106,6 +106,9 @@ export const resources = {
         targets: {
           customDirectory: "Custom directory"
         },
+        addTargetModal: {
+          description: "选择本机目录并命名为当前 skill 的分发目标。"
+        },
         targetRemoval: {
           cancel: "取消",
           confirm: "确定",
@@ -580,6 +583,10 @@ export const resources = {
         },
         targets: {
           customDirectory: "Custom directory"
+        },
+        addTargetModal: {
+          description:
+            "Choose a local directory and name it as a distribution target for the current skill."
         },
         targetRemoval: {
           cancel: "Cancel",

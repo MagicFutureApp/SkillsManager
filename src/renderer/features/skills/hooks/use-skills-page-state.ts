@@ -4,7 +4,8 @@ import type {
   DistributionExecuteInput,
   DistributionExecuteResult,
   DistributionPreviewInput,
-  DistributionPreviewResult
+  DistributionPreviewResult,
+  TargetsListResult
 } from "@/global";
 import {
   clampPageNumber,
@@ -25,6 +26,7 @@ import {
   type SkillSort,
   type TargetOption
 } from "../components/skills-page-data";
+import { useTargetAddDialogState } from "../../targets/hooks/use-target-add-dialog-state";
 
 export const useSkillsPageState = () => {
   const distributionExecutionTimerIdsRef = useRef<number[]>([]);
@@ -144,6 +146,33 @@ export const useSkillsPageState = () => {
   const selectedSkillTargetOptions = useMemo(() => {
     return getTargetOptionsForSkill(targetOptions, selectedSkill);
   }, [selectedSkill, targetOptions]);
+  const addTargetDialog = useTargetAddDialogState<TargetsListResult>({
+    isSaveAvailable: () =>
+      Boolean(selectedSkill) && Boolean(window.skillsManager?.addSkillDirectoryTarget),
+    onSaved: (result) => {
+      if (!selectedSkill) {
+        return;
+      }
+
+      applySkillTargetsResult(result, {
+        existingTargetIds: selectedSkill.targets,
+        skillId: selectedSkill.id
+      });
+    },
+    saveTarget: async (input) => {
+      const addSkillDirectoryTarget = window.skillsManager?.addSkillDirectoryTarget;
+
+      if (!selectedSkill || !addSkillDirectoryTarget) {
+        throw new Error("unavailable");
+      }
+
+      return addSkillDirectoryTarget({
+        name: input.name,
+        skillUnitId: selectedSkill.id,
+        targetPath: input.targetPath
+      });
+    }
+  });
   const visibleIds = visibleSkills.map((skill) => skill.id);
   const checkedSkills = skills.filter((skill) => checkedIds.has(skill.id));
   const visibleCheckedCount = visibleIds.filter((id) => checkedIds.has(id)).length;
@@ -523,38 +552,33 @@ export const useSkillsPageState = () => {
     });
   };
 
-  const addSyncTargetForSelectedSkill = async () => {
-    if (!selectedSkill) {
-      return;
+  const applySkillTargetsResult = (
+    result: TargetsListResult,
+    {
+      existingTargetIds,
+      skillId
+    }: {
+      existingTargetIds: string[];
+      skillId: string;
     }
-
-    const selectedPath = await window.skillsManager?.selectTargetDirectory?.();
-
-    if (!selectedPath) {
-      return;
-    }
-
-    const result = await window.skillsManager?.addSkillDirectoryTarget?.({
-      skillUnitId: selectedSkill.id,
-      targetPath: selectedPath
-    });
-    const nextTargets = (result?.registeredTargets ?? [])
+  ) => {
+    const nextTargets = (result.registeredTargets ?? [])
       .filter((target) => target.enabled)
       .map(adaptTargetOption);
     const nextSelectedSkillTargets = nextTargets
       .filter((target) => {
         if (target.scope === "global") {
-          return selectedSkill.targets.includes(target.id);
+          return existingTargetIds.includes(target.id);
         }
 
-        return target.selectedSkillIds.includes(selectedSkill.id);
+        return target.selectedSkillIds.includes(skillId);
       })
       .map((target) => target.id);
 
     setTargetOptions(nextTargets);
     setSkills((currentSkills) => {
       return currentSkills.map((skill) => {
-        if (skill.id !== selectedSkill.id) {
+        if (skill.id !== skillId) {
           return skill;
         }
 
@@ -566,10 +590,19 @@ export const useSkillsPageState = () => {
     });
   };
 
+  const addSyncTargetForSelectedSkill = () => {
+    if (!selectedSkill) {
+      return;
+    }
+
+    addTargetDialog.openAddTargetDialog();
+  };
+
   return {
     checkedDistributionState,
     checkedCount,
     checkedIds,
+    addTargetDialog,
     distributionConflictResolutions,
     distributionConfirmDialogOpen,
     distributionExecutionItemStatuses,
