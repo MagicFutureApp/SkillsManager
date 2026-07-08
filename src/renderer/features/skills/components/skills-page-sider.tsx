@@ -200,6 +200,7 @@ const SkillTargetRemovalDialog = ({
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
               <DialogTitle>{t("skills.targetRemoval.title")}</DialogTitle>
+              <DialogDescription>{t("skills.targetRemoval.description")}</DialogDescription>
             </div>
             <DialogClose
               disabled={isExecuting}
@@ -262,7 +263,6 @@ const SkillTargetRemovalDialog = ({
               </Button>
               <Button
                 type="button"
-                className="sm:min-w-24"
                 disabled={isExecuting}
                 onClick={() =>
                   onConfirm({

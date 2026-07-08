@@ -115,7 +115,8 @@ export const resources = {
           deleteFiles: "删除文件并取消",
           deleteQuestion: "是否同时删除这个目标目录中由当前 skill 分发出来的文件？",
           deleteSkillFiles: "删除技能文件",
-          description: "取消勾选后会保留这个目标偏好，并清理这个 skill 的同步记录。",
+          description:
+            "确定后会解除此 Skill 与目标的分发关系；也可同时删除目标或已分发的 Skill 文件。",
           keepFiles: "仅取消勾选",
           options: "分发目标操作",
           removeTarget: "删除此分发目标",
@@ -596,7 +597,7 @@ export const resources = {
             "Also delete the files distributed by this skill from the target directory?",
           deleteSkillFiles: "Delete skill files",
           description:
-            "Removing the check keeps this target preference and clears this skill's sync record.",
+            "Confirming removes this Skill's target link; you can also delete the target or distributed Skill files.",
           keepFiles: "Remove only",
           options: "Distribution target actions",
           removeTarget: "Remove this distribution target",

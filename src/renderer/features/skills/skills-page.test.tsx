@@ -925,9 +925,17 @@ describe("SkillsPage", () => {
     fireEvent.click(targetCheckbox);
     const confirmDialog = await screen.findByRole("dialog", { name: "分发目标" });
 
+    expect(
+      within(confirmDialog).getByText(
+        "确定后会解除此 Skill 与目标的分发关系；也可同时删除目标或已分发的 Skill 文件。"
+      )
+    ).toBeInTheDocument();
     expect(within(confirmDialog).getByLabelText("删除此分发目标")).not.toBeChecked();
     expect(within(confirmDialog).getByLabelText("删除技能文件")).not.toBeChecked();
-    fireEvent.click(within(confirmDialog).getByRole("button", { name: "确定" }));
+    const confirmButton = within(confirmDialog).getByRole("button", { name: "确定" });
+
+    expect(confirmButton).not.toHaveClass("sm:min-w-24");
+    fireEvent.click(confirmButton);
 
     await waitFor(() =>
       expect(removeSkillTargetPreference).toHaveBeenCalledWith({
