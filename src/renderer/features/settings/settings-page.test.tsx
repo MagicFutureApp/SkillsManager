@@ -9,6 +9,7 @@ describe("SettingsPage", () => {
 
   beforeEach(() => {
     writeText.mockClear();
+    window.history.replaceState(null, "", "/settings");
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
@@ -75,19 +76,62 @@ describe("SettingsPage", () => {
     expect(window.skillsManager?.getAppSettings).toHaveBeenCalled();
   });
 
-  it("uses the standard app split layout with a settings support sidebar", async () => {
+  it("uses the standard app layout with an internal settings navigation", async () => {
     render(<SettingsPage />);
 
-    expect(await screen.findByRole("main")).toHaveAttribute("aria-labelledby", "settings-heading");
+    const main = await screen.findByRole("main");
     const pageHeading = screen.getByRole("heading", { name: "配置本地应用偏好" });
     const pageHeader = pageHeading.closest("header");
+    const settingsSidebar = screen.getByRole("complementary", { name: "设置页面侧边栏" });
+    const settingsNavigation = screen.getByRole("navigation", { name: "设置页面导航" });
+    const settingsLayout = main.parentElement;
 
+    expect(main).toHaveAttribute("aria-labelledby", "settings-heading");
+    expect(main).toHaveClass("h-[calc(100svh-44px)]", "overflow-y-auto");
+    expect(settingsLayout).toHaveClass("h-full", "overflow-hidden");
     expect(pageHeading).toHaveAttribute("id", "settings-heading");
     expect(pageHeader).not.toBeNull();
     expect(within(pageHeader as HTMLElement).queryByText("Settings")).not.toBeInTheDocument();
-    expect(screen.getByRole("complementary", { name: "设置辅助信息" })).toBeInTheDocument();
+    expect(settingsSidebar).toHaveClass("sticky", "h-[calc(100svh-44px)]");
+    expect(
+      within(settingsNavigation).getByRole("link", { name: "GitHub API token" })
+    ).toHaveAttribute("href", "#github-token");
+    expect(within(settingsNavigation).getByRole("link", { name: "技能分发" })).toHaveAttribute(
+      "href",
+      "#skill-distribution"
+    );
+    expect(within(settingsNavigation).getByRole("link", { name: "本地存储" })).toHaveAttribute(
+      "href",
+      "#local-storage"
+    );
+    expect(
+      within(settingsNavigation).getByRole("link", { name: "如何创建 GitHub token" })
+    ).toHaveAttribute("href", "#github-token-help");
+    expect(within(settingsNavigation).getByRole("link", { name: "危险操作" })).toHaveAttribute(
+      "href",
+      "#settings-danger-zone"
+    );
     expect(screen.getByRole("heading", { name: "凭据状态" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "危险操作" })).toBeInTheDocument();
+  });
+
+  it("updates the selected internal settings navigation item after clicking it", async () => {
+    render(<SettingsPage />);
+
+    await screen.findByRole("main");
+    const settingsNavigation = screen.getByRole("navigation", { name: "设置页面导航" });
+    const githubTokenLink = within(settingsNavigation).getByRole("link", {
+      name: "GitHub API token"
+    });
+    const dangerZoneLink = within(settingsNavigation).getByRole("link", { name: "危险操作" });
+
+    expect(githubTokenLink).toHaveAttribute("aria-current", "location");
+    expect(dangerZoneLink).not.toHaveAttribute("aria-current");
+
+    fireEvent.click(dangerZoneLink);
+
+    expect(dangerZoneLink).toHaveAttribute("aria-current", "location");
+    expect(githubTokenLink).not.toHaveAttribute("aria-current");
   });
 
   it("opens the GitHub token creation page through the system browser", async () => {
