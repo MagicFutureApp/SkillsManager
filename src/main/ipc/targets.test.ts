@@ -1,8 +1,17 @@
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 import type { SystemTargetRecord, TargetScanRecord } from "../../core/targets/target-api";
 import { createDbClient } from "../../db/client";
-import { agentTargets, repositories, skillTargetPreferences, skillUnits } from "../../db/schema";
+import {
+  agentTargets,
+  installInstances,
+  repositories,
+  skillTargetPreferences,
+  skillUnits
+} from "../../db/schema";
 import {
   addSkillDirectoryTarget,
   addCustomDirectoryTarget,
@@ -368,6 +377,57 @@ describe("target IPC handlers", () => {
         }
       ]
     });
+  });
+
+  it("deletes installed skill files and install records when requested during target deletion", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-24T00:00:00.000Z");
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-target-delete-"));
+    const targetPath = path.join(workspace, "target");
+    const installedPath = path.join(targetPath, "review-bot");
+    const siblingPath = path.join(targetPath, "other-skill");
+
+    await mkdir(installedPath, { recursive: true });
+    await mkdir(siblingPath, { recursive: true });
+    await writeFile(path.join(installedPath, "SKILL.md"), "# Review Bot\n", "utf8");
+    await writeFile(path.join(siblingPath, "SKILL.md"), "# Other Skill\n", "utf8");
+    await db.insert(agentTargets).values({
+      createdAt,
+      enabled: true,
+      id: "target-project",
+      name: "Project target",
+      normalizedPath: targetPath,
+      path: targetPath,
+      type: "custom-directory",
+      updatedAt: createdAt
+    });
+    await db.insert(installInstances).values({
+      agentTargetId: "target-project",
+      id: "install-review",
+      installedAt: createdAt,
+      installedCommitSha: "abcdef123456",
+      installedPath,
+      skillUnitId: "skill-review",
+      skillVersionId: "version-review",
+      status: "installed",
+      targetSnapshotJson: '{"name":"Project target"}',
+      updatedAt: createdAt
+    });
+
+    await expect(
+      deleteTargets(db, {
+        deleteInstalledFiles: true,
+        targetIds: ["target-project"]
+      } as Parameters<typeof deleteTargets>[1])
+    ).resolves.toEqual({
+      registeredTargets: []
+    });
+
+    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).rejects.toThrow();
+    await expect(readFile(path.join(siblingPath, "SKILL.md"), "utf8")).resolves.toBe(
+      "# Other Skill\n"
+    );
+    await expect(db.select().from(installInstances)).resolves.toEqual([]);
   });
 
   it("rejects target deletion when no target ids are provided", async () => {

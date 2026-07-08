@@ -29,3 +29,25 @@ export const isSameOrChildPath = (candidate: string, parent: string): boolean =>
     normalizedCandidate.startsWith(`${normalizedParent}${path.sep}`)
   );
 };
+
+export const resolveSafeInstalledPath = ({
+  installedPath,
+  targetPath
+}: {
+  installedPath: string;
+  targetPath: string;
+}): string => {
+  const resolvedInstalledPath = expandHomePath(installedPath);
+  const resolvedTargetPath = expandHomePath(targetPath);
+  const normalizedInstalledPath = normalizeFilesystemPath(resolvedInstalledPath);
+  const normalizedTargetPath = normalizeFilesystemPath(resolvedTargetPath);
+
+  if (
+    normalizedInstalledPath === normalizedTargetPath ||
+    !isSameOrChildPath(normalizedInstalledPath, normalizedTargetPath)
+  ) {
+    throw new Error("Installed skill path is not safe to delete.");
+  }
+
+  return resolvedInstalledPath;
+};

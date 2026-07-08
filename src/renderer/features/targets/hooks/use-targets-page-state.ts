@@ -389,7 +389,11 @@ export const useTargetsPageState = () => {
     }
   };
 
-  const confirmDeleteTargets = async () => {
+  const confirmDeleteTargets = async ({
+    deleteInstalledFiles
+  }: {
+    deleteInstalledFiles: boolean;
+  }) => {
     const targetIds = normalizeTargetIds(pendingDeleteTargetIds);
 
     if (!targetIds.length) {
@@ -405,7 +409,7 @@ export const useTargetsPageState = () => {
         throw new Error("删除目标接口不可用。");
       }
 
-      const result = await window.skillsManager.deleteTargets({ targetIds });
+      const result = await window.skillsManager.deleteTargets({ deleteInstalledFiles, targetIds });
 
       applyTargetsResult(result);
       setCheckedIds((currentIds) => {

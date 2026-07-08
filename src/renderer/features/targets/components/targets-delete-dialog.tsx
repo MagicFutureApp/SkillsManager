@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -16,6 +17,13 @@ import { useTargetsPageContext } from "./targets-page-context";
 export const TargetsDeleteDialog = () => {
   const { t } = useTranslation();
   const page = useTargetsPageContext();
+  const [deleteInstalledFiles, setDeleteInstalledFiles] = React.useState(false);
+
+  React.useEffect(() => {
+    if (page.isDeleteDialogOpen) {
+      setDeleteInstalledFiles(false);
+    }
+  }, [page.isDeleteDialogOpen]);
 
   if (!page.isDeleteDialogOpen) {
     return null;
@@ -56,6 +64,22 @@ export const TargetsDeleteDialog = () => {
             </ul>
           ) : null}
 
+          <div
+            role="group"
+            aria-label={t("targets.deleteDialog.options")}
+            className="flex flex-wrap items-center gap-x-4 gap-y-2"
+          >
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Checkbox
+                checked={deleteInstalledFiles}
+                disabled={page.isDeletingTargets}
+                aria-label={t("targets.deleteDialog.deleteSkillFiles")}
+                onCheckedChange={(nextChecked) => setDeleteInstalledFiles(Boolean(nextChecked))}
+              />
+              <span>{t("targets.deleteDialog.deleteSkillFiles")}</span>
+            </div>
+          </div>
+
           {page.deleteError ? <p className="text-sm text-destructive">{page.deleteError}</p> : null}
         </div>
 
@@ -66,7 +90,7 @@ export const TargetsDeleteDialog = () => {
           <AlertDialogAction
             variant="destructive"
             disabled={page.isDeletingTargets}
-            onClick={page.confirmDeleteTargets}
+            onClick={() => page.confirmDeleteTargets({ deleteInstalledFiles })}
           >
             {t("targets.deleteDialog.confirm")}
           </AlertDialogAction>

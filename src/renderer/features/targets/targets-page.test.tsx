@@ -545,18 +545,38 @@ describe("TargetsPage", () => {
       "/Users/test/project/.codex/skills"
     );
     expect(
-      within(dialog).getByText("目标目录里的 Skills 文件不会被删除。如有需要，请删除后手动清理。")
+      within(dialog).getByText("默认只删除目标记录。勾选后会同时删除目标目录中对应的 Skills 文件。")
     ).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("删除技能文件")).not.toBeChecked();
 
     fireEvent.click(within(dialog).getByRole("button", { name: "确认删除" }));
 
     await waitFor(() => {
       expect(window.skillsManager?.deleteTargets).toHaveBeenCalledWith({
+        deleteInstalledFiles: false,
         targetIds: ["target-project"]
       });
     });
     expect(screen.queryByRole("button", { name: "Local project" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Design scratch" })).toBeInTheDocument();
+  });
+
+  it("passes delete installed files when the target delete option is checked", async () => {
+    await renderTargetsPage();
+    await screen.findByRole("button", { name: "Local project" });
+
+    fireEvent.click(screen.getByRole("button", { name: "删除 Local project" }));
+
+    const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
+    fireEvent.click(within(dialog).getByLabelText("删除技能文件"));
+    fireEvent.click(within(dialog).getByRole("button", { name: "确认删除" }));
+
+    await waitFor(() => {
+      expect(window.skillsManager?.deleteTargets).toHaveBeenCalledWith({
+        deleteInstalledFiles: true,
+        targetIds: ["target-project"]
+      });
+    });
   });
 
   it("opens the delete confirmation dialog from the target detail header", async () => {
@@ -766,6 +786,7 @@ describe("TargetsPage", () => {
 
     await waitFor(() => {
       expect(window.skillsManager?.deleteTargets).toHaveBeenCalledWith({
+        deleteInstalledFiles: false,
         targetIds: ["target-project", "target-design-only"]
       });
     });

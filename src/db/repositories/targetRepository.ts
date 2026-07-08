@@ -13,7 +13,13 @@ import type {
   TargetSkillSelection
 } from "../../core/targets/target-api";
 import type { createDbClient } from "../client";
-import { agentTargets, repositories, skillTargetPreferences, skillUnits } from "../schema";
+import {
+  agentTargets,
+  installInstances,
+  repositories,
+  skillTargetPreferences,
+  skillUnits
+} from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
 
@@ -30,6 +36,11 @@ type UpdateCustomDirectoryTargetInput = {
   path: string;
 };
 type AgentTargetInsert = typeof agentTargets.$inferInsert;
+export type TargetInstalledSkillFile = {
+  agentTargetId: string;
+  installedPath: string;
+  targetPath: string;
+};
 
 export const createTargetRepository = (db: DbClient) => {
   return {
@@ -118,7 +129,49 @@ export const createTargetRepository = (db: DbClient) => {
       }));
     },
 
-    async deleteTargets(targetIds: string[]): Promise<void> {
+    async listInstalledSkillFilesForTargets(
+      targetIds: string[]
+    ): Promise<TargetInstalledSkillFile[]> {
+      const normalizedTargetIds = normalizeTargetIds(targetIds);
+
+      if (!normalizedTargetIds.length) {
+        return [];
+      }
+
+      const targetRows = await db
+        .select({
+          id: agentTargets.id,
+          path: agentTargets.path,
+          type: agentTargets.type
+        })
+        .from(agentTargets)
+        .where(inArray(agentTargets.id, normalizedTargetIds));
+
+      if (targetRows.some((target) => isBuiltInTargetType(target.type))) {
+        throw new Error("System built-in targets cannot be deleted.");
+      }
+
+      const deletableTargetIds = targetRows.map((target) => target.id);
+
+      if (!deletableTargetIds.length) {
+        return [];
+      }
+
+      return db
+        .select({
+          agentTargetId: installInstances.agentTargetId,
+          installedPath: installInstances.installedPath,
+          targetPath: agentTargets.path
+        })
+        .from(installInstances)
+        .innerJoin(agentTargets, eq(agentTargets.id, installInstances.agentTargetId))
+        .where(inArray(installInstances.agentTargetId, deletableTargetIds));
+    },
+
+    async deleteTargets(
+      targetIds: string[],
+      options: { deleteInstallInstances?: boolean } = {}
+    ): Promise<void> {
       const normalizedTargetIds = normalizeTargetIds(targetIds);
 
       if (!normalizedTargetIds.length) {
@@ -144,6 +197,11 @@ export const createTargetRepository = (db: DbClient) => {
       }
 
       db.transaction((tx) => {
+        if (options.deleteInstallInstances) {
+          tx.delete(installInstances)
+            .where(inArray(installInstances.agentTargetId, deletableTargetIds))
+            .run();
+        }
         tx.delete(skillTargetPreferences)
           .where(inArray(skillTargetPreferences.agentTargetId, deletableTargetIds))
           .run();

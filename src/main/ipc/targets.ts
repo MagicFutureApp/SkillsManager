@@ -1,4 +1,4 @@
-import { readdir, stat } from "node:fs/promises";
+import { readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { dialog, ipcMain } from "electron";
 
@@ -23,6 +23,7 @@ import {
 } from "../../core/targets/target-utils.js";
 import { createTargetRepository } from "../../db/repositories/targetRepository.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
+import { resolveSafeInstalledPath } from "../path-utils.js";
 
 export type TargetsListResult = {
   registeredTargets: RegisteredTargetRecord[];
@@ -46,6 +47,7 @@ export type AddCustomDirectoryTargetInput =
     };
 
 export type DeleteTargetsInput = {
+  deleteInstalledFiles?: boolean;
   targetIds: string[];
 };
 
@@ -268,6 +270,7 @@ export const deleteTargets = async (
   input: DeleteTargetsInput
 ): Promise<TargetsListResult> => {
   const targetIds = normalizeTargetIds(input.targetIds);
+  const deleteInstalledFiles = Boolean(input.deleteInstalledFiles);
 
   if (!targetIds.length) {
     throw new Error("At least one target is required.");
@@ -275,7 +278,23 @@ export const deleteTargets = async (
 
   const targetRepository = createTargetRepository(db);
 
-  await targetRepository.deleteTargets(targetIds);
+  if (deleteInstalledFiles) {
+    const installedFiles = await targetRepository.listInstalledSkillFilesForTargets(targetIds);
+    const installedPaths = installedFiles.map((file) =>
+      resolveSafeInstalledPath({
+        installedPath: file.installedPath,
+        targetPath: file.targetPath
+      })
+    );
+
+    await Promise.all(
+      installedPaths.map((installedPath) => rm(installedPath, { force: true, recursive: true }))
+    );
+  }
+
+  await targetRepository.deleteTargets(targetIds, {
+    deleteInstallInstances: deleteInstalledFiles
+  });
 
   return getTargets(db);
 };

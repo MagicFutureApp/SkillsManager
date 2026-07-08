@@ -13,7 +13,7 @@ import type {
 import { createSkillRepository } from "../../db/repositories/skillRepository.js";
 import { agentTargets, installInstances, skillTargetPreferences } from "../../db/schema.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
-import { expandHomePath, isSameOrChildPath, normalizeFilesystemPath } from "../path-utils.js";
+import { resolveSafeInstalledPath } from "../path-utils.js";
 
 export type SkillsListResult = {
   skills: SkillApiRecord[];
@@ -207,26 +207,4 @@ const getAgentTarget = async (db: DbClient, targetId: string) => {
     .limit(1);
 
   return rows[0] ?? null;
-};
-
-const resolveSafeInstalledPath = ({
-  installedPath,
-  targetPath
-}: {
-  installedPath: string;
-  targetPath: string;
-}): string => {
-  const resolvedInstalledPath = expandHomePath(installedPath);
-  const resolvedTargetPath = expandHomePath(targetPath);
-  const normalizedInstalledPath = normalizeFilesystemPath(resolvedInstalledPath);
-  const normalizedTargetPath = normalizeFilesystemPath(resolvedTargetPath);
-
-  if (
-    normalizedInstalledPath === normalizedTargetPath ||
-    !isSameOrChildPath(normalizedInstalledPath, normalizedTargetPath)
-  ) {
-    throw new Error("Installed skill path is not safe to delete.");
-  }
-
-  return resolvedInstalledPath;
 };
