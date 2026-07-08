@@ -538,7 +538,9 @@ describe("TargetsPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "删除 Local project" }));
 
-    const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
+    const dialog = screen.getByRole("dialog", { name: "删除目标" });
+    expect(within(dialog).getByRole("button", { name: "关闭" })).toBeInTheDocument();
+    expect(within(dialog).getByText("目标")).toBeInTheDocument();
     expect(within(dialog).getByText("Local project")).toHaveAttribute("title", "Local project");
     expect(within(dialog).getByText("/Users/test/project/.codex/skills")).toHaveAttribute(
       "title",
@@ -567,7 +569,7 @@ describe("TargetsPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "删除 Local project" }));
 
-    const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
+    const dialog = screen.getByRole("dialog", { name: "删除目标" });
     fireEvent.click(within(dialog).getByLabelText("删除技能文件"));
     fireEvent.click(within(dialog).getByRole("button", { name: "确认删除" }));
 
@@ -587,7 +589,7 @@ describe("TargetsPage", () => {
 
     fireEvent.click(within(detail).getByRole("button", { name: "删除" }));
 
-    const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
+    const dialog = screen.getByRole("dialog", { name: "删除目标" });
     expect(within(dialog).getByText("Local project")).toHaveAttribute("title", "Local project");
     expect(within(dialog).getByText("/Users/test/project/.codex/skills")).toHaveAttribute(
       "title",
@@ -779,7 +781,7 @@ describe("TargetsPage", () => {
 
     fireEvent.click(batchDeleteButton);
 
-    const dialog = screen.getByRole("alertdialog", { name: "删除目标" });
+    const dialog = screen.getByRole("dialog", { name: "删除目标" });
     expect(within(dialog).getByText("将删除 2 个目标。")).toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole("button", { name: "确认删除" }));

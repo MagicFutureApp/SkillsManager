@@ -259,10 +259,12 @@ export const resources = {
         deleteDialog: {
           batchSummary: "将删除 {{count}} 个目标。",
           cancel: "取消",
+          close: "关闭",
           confirm: "确认删除",
           deleteSkillFiles: "删除技能文件",
           description: "默认只删除目标记录。勾选后会同时删除目标目录中对应的 Skills 文件。",
           options: "删除目标选项",
+          target: "目标",
           title: "删除目标"
         },
         editDialog: {
@@ -748,11 +750,13 @@ export const resources = {
         deleteDialog: {
           batchSummary: "{{count}} targets will be deleted.",
           cancel: "Cancel",
+          close: "Close",
           confirm: "Delete",
           deleteSkillFiles: "Delete skill files",
           description:
             "By default, only target records are deleted. Check the option to also delete matching Skills files in the target folders.",
           options: "Target deletion options",
+          target: "Target",
           title: "Delete target"
         },
         editDialog: {
