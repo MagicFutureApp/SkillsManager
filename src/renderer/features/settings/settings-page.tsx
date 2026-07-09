@@ -76,7 +76,7 @@ export const SettingsPage = () => {
   const [storageError, setStorageError] = useState("");
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [activeSettingsNavigationHref, setActiveSettingsNavigationHref] =
-    useState<SettingsNavigationHref>(settingsNavigationItems[0].href);
+    useState<SettingsNavigationHref>(() => getSettingsNavigationHrefFromHash(window.location.hash));
   const settingsContentRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -144,29 +144,21 @@ export const SettingsPage = () => {
     };
   }, []);
 
-  const scrollSettingsSectionIntoView = (href: SettingsNavigationHref) => {
+  const resetSettingsContentScroll = () => {
     const contentElement = settingsContentRef.current;
-    const targetElement = document.getElementById(href.slice(1));
-
-    if (!contentElement || !targetElement) {
-      return;
-    }
-
-    const contentRect = contentElement.getBoundingClientRect();
-    const targetRect = targetElement.getBoundingClientRect();
-    const nextScrollTop = Math.max(
-      0,
-      contentElement.scrollTop + targetRect.top - contentRect.top - 24
-    );
 
     resetSettingsWindowScroll();
 
-    if (typeof contentElement.scrollTo === "function") {
-      contentElement.scrollTo({ top: nextScrollTop });
+    if (!contentElement) {
       return;
     }
 
-    contentElement.scrollTop = nextScrollTop;
+    if (typeof contentElement.scrollTo === "function") {
+      contentElement.scrollTo({ left: 0, top: 0 });
+      return;
+    }
+
+    contentElement.scrollTop = 0;
   };
 
   const navigateToSettingsSection = (
@@ -180,9 +172,9 @@ export const SettingsPage = () => {
       "",
       `${window.location.pathname}${window.location.search}${href}`
     );
-    scrollSettingsSectionIntoView(href);
+    resetSettingsContentScroll();
     window.setTimeout(() => {
-      resetSettingsWindowScroll();
+      resetSettingsContentScroll();
     }, 0);
   };
 
@@ -294,6 +286,215 @@ export const SettingsPage = () => {
   const isResetting = storageStatus === "resetting";
   const tokenStatusLabel = settings.github.hasToken ? "已配置" : "未配置";
   const autoDistributeOnSync = settings.distribution.autoDistributeOnSync;
+  const activeSettingsNavigationLabel =
+    settingsNavigationItems.find((item) => item.href === activeSettingsNavigationHref)?.label ??
+    settingsNavigationItems[0].label;
+  const activeSettingsSection = (() => {
+    switch (activeSettingsNavigationHref) {
+      case "#github-token":
+        return (
+          <SettingsPanel
+            id="github-token"
+            icon={<KeyRound aria-hidden="true" />}
+            title="GitHub API token"
+            description="用于解析 GitHub repo metadata 和 tree API，避免未认证请求的低频率限制。"
+            action={
+              <Badge variant={settings.github.hasToken ? "secondary" : "outline"}>
+                {tokenStatusLabel}
+              </Badge>
+            }
+          >
+            <div className="grid max-w-2xl gap-4">
+              <Field>
+                <FieldLabel>GitHub token</FieldLabel>
+                <Input
+                  type="password"
+                  value={githubToken}
+                  placeholder="github_pat_..."
+                  disabled={isSaving}
+                  onValueChange={setGithubToken}
+                />
+                <FieldDescription>
+                  {settings.github.hasToken
+                    ? "当前 token 不会回显，输入新 token 后保存即可替换。"
+                    : "建议使用 fine-grained token，并授予 Metadata read 与 Contents read。"}
+                </FieldDescription>
+              </Field>
+
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" disabled={isSaving} onClick={saveToken}>
+                  <Save aria-hidden="true" />
+                  保存 GitHub token
+                </Button>
+                <Button type="button" variant="outline" disabled={isSaving} onClick={clearToken}>
+                  <Trash2 aria-hidden="true" />
+                  清除 GitHub token
+                </Button>
+              </div>
+
+              {status === "saved" ? (
+                <p className="text-sm text-muted-foreground">已保存 GitHub token。</p>
+              ) : null}
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            </div>
+          </SettingsPanel>
+        );
+      case "#skill-distribution":
+        return (
+          <SettingsPanel
+            id="skill-distribution"
+            icon={<PackageCheck aria-hidden="true" />}
+            title="技能分发"
+            description="控制来源同步完成后，是否自动 copy 到已经在 Skills/Targets 中设置的目标目录。"
+            action={
+              <Badge variant={autoDistributeOnSync ? "secondary" : "outline"}>
+                {autoDistributeOnSync ? "已开启" : "已关闭"}
+              </Badge>
+            }
+          >
+            <div className="grid max-w-2xl gap-3">
+              <label className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-border bg-muted/40 p-3">
+                <span className="min-w-0">
+                  <span
+                    id="skill-distribution-auto-label"
+                    className="block text-sm font-semibold text-foreground"
+                  >
+                    同步后自动分发到已设置目标
+                  </span>
+                  <span className="mt-1 block text-sm leading-6 text-muted-foreground">
+                    关闭时，同步完成后只显示可手动分发的数量；开启后，会自动 copy
+                    到已选择的目标目录。
+                  </span>
+                </span>
+                <Switch
+                  aria-labelledby="skill-distribution-auto-label"
+                  checked={autoDistributeOnSync}
+                  disabled={isSavingDistribution}
+                  onCheckedChange={updateAutoDistributeOnSync}
+                />
+              </label>
+              {distributionStatus === "saved" ? (
+                <p className="text-sm text-muted-foreground">已保存分发设置。</p>
+              ) : null}
+            </div>
+          </SettingsPanel>
+        );
+      case "#local-storage":
+        return (
+          <SettingsPanel
+            id="local-storage"
+            icon={<Database aria-hidden="true" />}
+            title="本地存储"
+            description="查看 Skills Manager 的本地缓存根目录和 SQLite 数据库文件路径。重建数据库会清空本地索引，不会删除缓存目录或 agent 目标目录中的文件。"
+          >
+            <div className="grid gap-3">
+              <StoragePathRow
+                icon={<FolderOpen aria-hidden="true" />}
+                label="本地缓存总路径"
+                value={
+                  storagePaths?.localCachePath ?? (storageStatus === "loading" ? "读取中..." : "--")
+                }
+                copyLabel="复制路径"
+                disabled={!storagePaths?.localCachePath}
+                onCopy={() => storagePaths?.localCachePath && copyPath(storagePaths.localCachePath)}
+              />
+              <StoragePathRow
+                icon={<Database aria-hidden="true" />}
+                label="本地数据库路径"
+                value={
+                  storagePaths?.databasePath ?? (storageStatus === "loading" ? "读取中..." : "--")
+                }
+                copyLabel="复制路径"
+                disabled={!storagePaths?.databasePath}
+                onCopy={() => storagePaths?.databasePath && copyPath(storagePaths.databasePath)}
+              />
+            </div>
+          </SettingsPanel>
+        );
+      case "#github-token-help":
+        return (
+          <section
+            className="grid scroll-mt-6 gap-4 rounded-xl border border-border bg-card p-4"
+            aria-labelledby="github-token-help"
+          >
+            <div>
+              <h2 id="github-token-help" className="scroll-mt-6 font-semibold">
+                如何创建 GitHub token
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                请选择 Fine-grained personal access token。它可以限制资源 owner、仓库范围和权限，比
+                classic token 更适合这里的只读访问。
+              </p>
+            </div>
+
+            <ol className="grid gap-2 text-sm leading-6 text-muted-foreground">
+              <li>1. 打开 GitHub 的 Fine-grained tokens 创建页，填写 token 名称和过期时间。</li>
+              <li>2. Repository access 选择只需要扫描的仓库。</li>
+              <li>
+                3. Repository permissions 至少确认 <strong>Contents: Read-only</strong> 和{" "}
+                <strong>Metadata: Read-only</strong>。
+              </li>
+              <li>4. 生成后复制 token，回到本页粘贴并保存。</li>
+            </ol>
+
+            <Button type="button" variant="outline" onClick={openGitHubTokenCreationPage}>
+              <ExternalLink aria-hidden="true" />
+              打开 GitHub token 创建页面
+            </Button>
+          </section>
+        );
+      case "#settings-danger-zone":
+        return (
+          <section
+            className="grid scroll-mt-6 gap-4 rounded-xl border border-destructive/25 bg-destructive/5 p-4"
+            aria-labelledby="settings-danger-zone"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="size-4 text-destructive" aria-hidden="true" />
+                <h2 id="settings-danger-zone" className="scroll-mt-6 font-semibold">
+                  危险操作
+                </h2>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                重建数据库会清空本地索引、来源、Skills 和应用设置。已安装到 agent
+                目标目录的文件不会被删除。
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isResetting}
+              onClick={() => setIsResetDialogOpen(true)}
+            >
+              <RotateCcw aria-hidden="true" />
+              重建本地数据库
+            </Button>
+            {storageStatus === "reset" ? (
+              <p className="text-sm text-muted-foreground">本地数据库已重建。</p>
+            ) : null}
+            {storageError ? <p className="text-sm text-destructive">{storageError}</p> : null}
+          </section>
+        );
+      case "#settings-about":
+        return (
+          <section
+            id="settings-about"
+            className="grid scroll-mt-6 place-items-center rounded-xl border border-border bg-card px-4 py-10 text-center"
+            aria-labelledby="settings-about-heading"
+          >
+            <h2 id="settings-about-heading" className="sr-only">
+              关于
+            </h2>
+            <img src={skillportLogo} alt="Skillport" className="h-16 w-auto" />
+            <p className="mt-4 text-sm font-medium text-muted-foreground">
+              版本 {appInfo?.version ?? "--"}
+            </p>
+          </section>
+        );
+    }
+  })();
 
   return (
     <div className="grid h-full grid-cols-[248px_minmax(0,1fr)] overflow-hidden bg-background">
@@ -354,205 +555,11 @@ export const SettingsPage = () => {
       >
         <header className="mb-6 max-w-4xl">
           <h1 id="settings-heading" className="text-[28px] font-semibold leading-tight">
-            配置本地应用偏好
+            {activeSettingsNavigationLabel}
           </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            管理 GitHub API 访问凭据和本地扫描相关设置。GitHub token
-            仅保存在本机设置中，不会回显到界面。
-          </p>
         </header>
 
-        <div className="grid max-w-4xl gap-5">
-          <SettingsPanel
-            id="github-token"
-            icon={<KeyRound aria-hidden="true" />}
-            title="GitHub API token"
-            description="用于解析 GitHub repo metadata 和 tree API，避免未认证请求的低频率限制。"
-            action={
-              <Badge variant={settings.github.hasToken ? "secondary" : "outline"}>
-                {tokenStatusLabel}
-              </Badge>
-            }
-          >
-            <div className="grid max-w-2xl gap-4">
-              <Field>
-                <FieldLabel>GitHub token</FieldLabel>
-                <Input
-                  type="password"
-                  value={githubToken}
-                  placeholder="github_pat_..."
-                  disabled={isSaving}
-                  onValueChange={setGithubToken}
-                />
-                <FieldDescription>
-                  {settings.github.hasToken
-                    ? "当前 token 不会回显，输入新 token 后保存即可替换。"
-                    : "建议使用 fine-grained token，并授予 Metadata read 与 Contents read。"}
-                </FieldDescription>
-              </Field>
-
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" disabled={isSaving} onClick={saveToken}>
-                  <Save aria-hidden="true" />
-                  保存 GitHub token
-                </Button>
-                <Button type="button" variant="outline" disabled={isSaving} onClick={clearToken}>
-                  <Trash2 aria-hidden="true" />
-                  清除 GitHub token
-                </Button>
-              </div>
-
-              {status === "saved" ? (
-                <p className="text-sm text-muted-foreground">已保存 GitHub token。</p>
-              ) : null}
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-            </div>
-          </SettingsPanel>
-
-          <SettingsPanel
-            id="skill-distribution"
-            icon={<PackageCheck aria-hidden="true" />}
-            title="技能分发"
-            description="控制来源同步完成后，是否自动 copy 到已经在 Skills/Targets 中设置的目标目录。"
-            action={
-              <Badge variant={autoDistributeOnSync ? "secondary" : "outline"}>
-                {autoDistributeOnSync ? "已开启" : "已关闭"}
-              </Badge>
-            }
-          >
-            <div className="grid max-w-2xl gap-3">
-              <label className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-lg border border-border bg-muted/40 p-3">
-                <span className="min-w-0">
-                  <span
-                    id="skill-distribution-auto-label"
-                    className="block text-sm font-semibold text-foreground"
-                  >
-                    同步后自动分发到已设置目标
-                  </span>
-                  <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                    关闭时，同步完成后只显示可手动分发的数量；开启后，会自动 copy
-                    到已选择的目标目录。
-                  </span>
-                </span>
-                <Switch
-                  aria-labelledby="skill-distribution-auto-label"
-                  checked={autoDistributeOnSync}
-                  disabled={isSavingDistribution}
-                  onCheckedChange={updateAutoDistributeOnSync}
-                />
-              </label>
-              {distributionStatus === "saved" ? (
-                <p className="text-sm text-muted-foreground">已保存分发设置。</p>
-              ) : null}
-            </div>
-          </SettingsPanel>
-
-          <SettingsPanel
-            id="local-storage"
-            icon={<Database aria-hidden="true" />}
-            title="本地存储"
-            description="查看 Skills Manager 的本地缓存根目录和 SQLite 数据库文件路径。重建数据库会清空本地索引，不会删除缓存目录或 agent 目标目录中的文件。"
-          >
-            <div className="grid gap-3">
-              <StoragePathRow
-                icon={<FolderOpen aria-hidden="true" />}
-                label="本地缓存总路径"
-                value={
-                  storagePaths?.localCachePath ?? (storageStatus === "loading" ? "读取中..." : "--")
-                }
-                copyLabel="复制路径"
-                disabled={!storagePaths?.localCachePath}
-                onCopy={() => storagePaths?.localCachePath && copyPath(storagePaths.localCachePath)}
-              />
-              <StoragePathRow
-                icon={<Database aria-hidden="true" />}
-                label="本地数据库路径"
-                value={
-                  storagePaths?.databasePath ?? (storageStatus === "loading" ? "读取中..." : "--")
-                }
-                copyLabel="复制路径"
-                disabled={!storagePaths?.databasePath}
-                onCopy={() => storagePaths?.databasePath && copyPath(storagePaths.databasePath)}
-              />
-            </div>
-          </SettingsPanel>
-
-          <section
-            className="grid scroll-mt-6 gap-4 rounded-xl border border-border bg-card p-4"
-            aria-labelledby="github-token-help"
-          >
-            <div>
-              <h2 id="github-token-help" className="scroll-mt-6 font-semibold">
-                如何创建 GitHub token
-              </h2>
-              <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                请选择 Fine-grained personal access token。它可以限制资源 owner、仓库范围和权限，比
-                classic token 更适合这里的只读访问。
-              </p>
-            </div>
-
-            <ol className="grid gap-2 text-sm leading-6 text-muted-foreground">
-              <li>1. 打开 GitHub 的 Fine-grained tokens 创建页，填写 token 名称和过期时间。</li>
-              <li>2. Repository access 选择只需要扫描的仓库。</li>
-              <li>
-                3. Repository permissions 至少确认 <strong>Contents: Read-only</strong> 和{" "}
-                <strong>Metadata: Read-only</strong>。
-              </li>
-              <li>4. 生成后复制 token，回到本页粘贴并保存。</li>
-            </ol>
-
-            <Button type="button" variant="outline" onClick={openGitHubTokenCreationPage}>
-              <ExternalLink aria-hidden="true" />
-              打开 GitHub token 创建页面
-            </Button>
-          </section>
-
-          <section
-            className="grid scroll-mt-6 gap-4 rounded-xl border border-destructive/25 bg-destructive/5 p-4"
-            aria-labelledby="settings-danger-zone"
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="size-4 text-destructive" aria-hidden="true" />
-                <h2 id="settings-danger-zone" className="scroll-mt-6 font-semibold">
-                  危险操作
-                </h2>
-              </div>
-              <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                重建数据库会清空本地索引、来源、Skills 和应用设置。已安装到 agent
-                目标目录的文件不会被删除。
-              </p>
-            </div>
-
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isResetting}
-              onClick={() => setIsResetDialogOpen(true)}
-            >
-              <RotateCcw aria-hidden="true" />
-              重建本地数据库
-            </Button>
-            {storageStatus === "reset" ? (
-              <p className="text-sm text-muted-foreground">本地数据库已重建。</p>
-            ) : null}
-            {storageError ? <p className="text-sm text-destructive">{storageError}</p> : null}
-          </section>
-
-          <section
-            id="settings-about"
-            className="grid scroll-mt-6 place-items-center rounded-xl border border-border bg-card px-4 py-10 text-center"
-            aria-labelledby="settings-about-heading"
-          >
-            <h2 id="settings-about-heading" className="sr-only">
-              关于
-            </h2>
-            <img src={skillportLogo} alt="Skillport" className="h-16 w-auto" />
-            <p className="mt-4 text-sm font-medium text-muted-foreground">
-              版本 {appInfo?.version ?? "--"}
-            </p>
-          </section>
-        </div>
+        <div className="grid max-w-4xl gap-5">{activeSettingsSection}</div>
       </main>
 
       <AlertDialog
