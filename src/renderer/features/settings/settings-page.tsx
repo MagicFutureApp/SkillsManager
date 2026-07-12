@@ -14,7 +14,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toErrorMessage } from "@/lib/errors";
-import skillportLogo from "@/assets/skillport-logo.svg";
+import skillportMark from "@/assets/skillport-mark.svg";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -286,9 +286,6 @@ export const SettingsPage = () => {
   const isResetting = storageStatus === "resetting";
   const tokenStatusLabel = settings.github.hasToken ? "已配置" : "未配置";
   const autoDistributeOnSync = settings.distribution.autoDistributeOnSync;
-  const activeSettingsNavigationLabel =
-    settingsNavigationItems.find((item) => item.href === activeSettingsNavigationHref)?.label ??
-    settingsNavigationItems[0].label;
   const activeSettingsSection = (() => {
     switch (activeSettingsNavigationHref) {
       case "#github-token":
@@ -481,16 +478,24 @@ export const SettingsPage = () => {
         return (
           <section
             id="settings-about"
-            className="grid scroll-mt-6 place-items-center rounded-xl border border-border bg-card px-4 py-10 text-center"
+            className="flex min-h-[calc(100svh-100px)] scroll-mt-6 items-center justify-center text-center"
             aria-labelledby="settings-about-heading"
           >
             <h2 id="settings-about-heading" className="sr-only">
               关于
             </h2>
-            <img src={skillportLogo} alt="Skillport" className="h-16 w-auto" />
-            <p className="mt-4 text-sm font-medium text-muted-foreground">
-              版本 {appInfo?.version ?? "--"}
-            </p>
+            <div className="flex flex-col items-center justify-center">
+              <img src={skillportMark} alt="Skillport logo" className="size-16" />
+              <div className="mt-4 text-center">
+                <p className="text-lg font-semibold text-foreground">Skillport</p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
+                  Sync and distribute agent skills
+                </p>
+              </div>
+              <p className="mt-5 text-sm font-medium text-muted-foreground">
+                版本 {appInfo?.version ?? "--"}
+              </p>
+            </div>
           </section>
         );
     }
@@ -551,14 +556,8 @@ export const SettingsPage = () => {
       <main
         ref={settingsContentRef}
         className="h-[calc(100svh-44px)] min-w-0 overflow-y-auto p-7"
-        aria-labelledby="settings-heading"
+        aria-label="设置内容"
       >
-        <header className="mb-6 max-w-4xl">
-          <h1 id="settings-heading" className="text-[28px] font-semibold leading-tight">
-            {activeSettingsNavigationLabel}
-          </h1>
-        </header>
-
         <div className="grid max-w-4xl gap-5">{activeSettingsSection}</div>
       </main>
 

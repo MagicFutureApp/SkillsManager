@@ -95,20 +95,19 @@ describe("SettingsPage", () => {
     render(<SettingsPage />);
 
     const main = await screen.findByRole("main");
-    const pageHeading = screen.getByRole("heading", { name: "GitHub API token", level: 1 });
-    const pageHeader = pageHeading.closest("header");
     const settingsSidebar = screen.getByRole("complementary", { name: "设置页面侧边栏" });
     const settingsNavigation = screen.getByRole("navigation", { name: "设置页面导航" });
     const settingsLayout = main.parentElement;
 
-    expect(main).toHaveAttribute("aria-labelledby", "settings-heading");
+    expect(main).toHaveAttribute("aria-label", "设置内容");
+    expect(main).not.toHaveAttribute("aria-labelledby");
     expect(main).toHaveClass("h-[calc(100svh-44px)]", "overflow-y-auto");
     expect(settingsLayout).toHaveClass("h-full", "overflow-hidden");
-    expect(pageHeading).toHaveAttribute("id", "settings-heading");
-    expect(pageHeader).not.toBeNull();
-    expect(within(pageHeader as HTMLElement).queryByText("Settings")).not.toBeInTheDocument();
     expect(
-      within(pageHeader as HTMLElement).queryByText(
+      screen.queryByRole("heading", { name: "GitHub API token", level: 1 })
+    ).not.toBeInTheDocument();
+    expect(
+      within(main).queryByText(
         "管理 GitHub API 访问凭据和本地扫描相关设置。GitHub token 仅保存在本机设置中，不会回显到界面。"
       )
     ).not.toBeInTheDocument();
@@ -143,10 +142,7 @@ describe("SettingsPage", () => {
 
     clickSettingsNavigationLink("关于");
 
-    expect(screen.getByRole("heading", { name: "关于", level: 1 })).toHaveAttribute(
-      "id",
-      "settings-heading"
-    );
+    expect(screen.queryByRole("heading", { name: "关于", level: 1 })).not.toBeInTheDocument();
   });
 
   it("shows an about section with the logo and app version", async () => {
@@ -156,8 +152,19 @@ describe("SettingsPage", () => {
     await screen.findByRole("main");
     const aboutSection = screen.getByRole("region", { name: "关于" });
 
-    expect(aboutSection).toHaveClass("place-items-center", "text-center");
-    expect(within(aboutSection).getByRole("img", { name: "Skillport" })).toBeInTheDocument();
+    expect(aboutSection).toHaveClass(
+      "flex",
+      "min-h-[calc(100svh-100px)]",
+      "items-center",
+      "justify-center",
+      "text-center"
+    );
+    expect(aboutSection).not.toHaveClass("rounded-xl", "border", "border-border", "bg-card");
+    const skillportMark = within(aboutSection).getByRole("img", { name: "Skillport logo" });
+
+    expect(skillportMark).toHaveClass("size-16");
+    expect(within(aboutSection).getByText("Skillport")).toBeInTheDocument();
+    expect(within(aboutSection).getByText("Sync and distribute agent skills")).toBeInTheDocument();
     expect(await within(aboutSection).findByText("版本 0.1.0")).toBeInTheDocument();
     expect(window.skillsManager?.getInfo).toHaveBeenCalled();
   });
