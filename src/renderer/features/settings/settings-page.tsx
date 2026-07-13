@@ -14,6 +14,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toErrorMessage } from "@/lib/errors";
+import skillportMark from "@/assets/skillport-mark.svg";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -27,13 +28,38 @@ import {
   Save,
   Trash2
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import type { AppSettingsResult, AppStoragePathsResult } from "@/global";
+import React, { useEffect, useRef, useState } from "react";
+import type { AppInfo, AppSettingsResult, AppStoragePathsResult } from "@/global";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type StorageStatus = "loading" | "idle" | "resetting" | "reset" | "error";
 const GITHUB_TOKEN_CREATION_URL =
   "https://github.com/settings/personal-access-tokens/new?name=Skills+Manager&description=Read+repository+metadata+and+SKILL.md+files&contents=read";
+const settingsNavigationItems = [
+  { href: "#github-token", label: "GitHub API token" },
+  { href: "#skill-distribution", label: "技能分发" },
+  { href: "#local-storage", label: "本地存储" },
+  { href: "#github-token-help", label: "如何创建 GitHub token" },
+  { href: "#settings-danger-zone", label: "危险操作" },
+  { href: "#settings-about", label: "关于" }
+] as const;
+type SettingsNavigationHref = (typeof settingsNavigationItems)[number]["href"];
+
+const getSettingsNavigationHrefFromHash = (hash: string): SettingsNavigationHref => {
+  return (
+    settingsNavigationItems.find((item) => item.href === hash)?.href ??
+    settingsNavigationItems[0].href
+  );
+};
+
+const resetSettingsWindowScroll = () => {
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+
+  if (!window.navigator.userAgent.includes("jsdom")) {
+    window.scrollTo({ left: 0, top: 0 });
+  }
+};
 
 export const SettingsPage = () => {
   const [settings, setSettings] = useState<AppSettingsResult>({
@@ -42,12 +68,16 @@ export const SettingsPage = () => {
   });
   const [distributionStatus, setDistributionStatus] = useState<SaveStatus>("idle");
   const [storagePaths, setStoragePaths] = useState<AppStoragePathsResult | null>(null);
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [githubToken, setGithubToken] = useState("");
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [storageStatus, setStorageStatus] = useState<StorageStatus>("loading");
   const [error, setError] = useState("");
   const [storageError, setStorageError] = useState("");
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [activeSettingsNavigationHref, setActiveSettingsNavigationHref] =
+    useState<SettingsNavigationHref>(() => getSettingsNavigationHrefFromHash(window.location.hash));
+  const settingsContentRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -81,10 +111,72 @@ export const SettingsPage = () => {
         }
       });
 
+    void window.skillsManager
+      ?.getInfo?.()
+      .then((nextAppInfo) => {
+        if (isCurrent) {
+          setAppInfo(nextAppInfo);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setAppInfo(null);
+        }
+      });
+
     return () => {
       isCurrent = false;
     };
   }, []);
+
+  useEffect(() => {
+    const syncActiveNavigationHref = () => {
+      setActiveSettingsNavigationHref(getSettingsNavigationHrefFromHash(window.location.hash));
+    };
+
+    syncActiveNavigationHref();
+    window.addEventListener("hashchange", syncActiveNavigationHref);
+    window.addEventListener("popstate", syncActiveNavigationHref);
+
+    return () => {
+      window.removeEventListener("hashchange", syncActiveNavigationHref);
+      window.removeEventListener("popstate", syncActiveNavigationHref);
+    };
+  }, []);
+
+  const resetSettingsContentScroll = () => {
+    const contentElement = settingsContentRef.current;
+
+    resetSettingsWindowScroll();
+
+    if (!contentElement) {
+      return;
+    }
+
+    if (typeof contentElement.scrollTo === "function") {
+      contentElement.scrollTo({ left: 0, top: 0 });
+      return;
+    }
+
+    contentElement.scrollTop = 0;
+  };
+
+  const navigateToSettingsSection = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    href: SettingsNavigationHref
+  ) => {
+    event.preventDefault();
+    setActiveSettingsNavigationHref(href);
+    window.history.pushState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}${href}`
+    );
+    resetSettingsContentScroll();
+    window.setTimeout(() => {
+      resetSettingsContentScroll();
+    }, 0);
+  };
 
   const saveToken = () => {
     const normalizedToken = githubToken.trim();
@@ -194,21 +286,10 @@ export const SettingsPage = () => {
   const isResetting = storageStatus === "resetting";
   const tokenStatusLabel = settings.github.hasToken ? "已配置" : "未配置";
   const autoDistributeOnSync = settings.distribution.autoDistributeOnSync;
-
-  return (
-    <div className="grid min-h-full grid-cols-[minmax(620px,1fr)_360px] bg-background">
-      <main className="min-w-0 p-7" aria-labelledby="settings-heading">
-        <header className="mb-6">
-          <h1 id="settings-heading" className="text-[28px] font-semibold leading-tight">
-            配置本地应用偏好
-          </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            管理 GitHub API 访问凭据和本地扫描相关设置。GitHub token
-            仅保存在本机设置中，不会回显到界面。
-          </p>
-        </header>
-
-        <div className="grid gap-5">
+  const activeSettingsSection = (() => {
+    switch (activeSettingsNavigationHref) {
+      case "#github-token":
+        return (
           <SettingsPanel
             id="github-token"
             icon={<KeyRound aria-hidden="true" />}
@@ -254,7 +335,9 @@ export const SettingsPage = () => {
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
             </div>
           </SettingsPanel>
-
+        );
+      case "#skill-distribution":
+        return (
           <SettingsPanel
             id="skill-distribution"
             icon={<PackageCheck aria-hidden="true" />}
@@ -292,7 +375,9 @@ export const SettingsPage = () => {
               ) : null}
             </div>
           </SettingsPanel>
-
+        );
+      case "#local-storage":
+        return (
           <SettingsPanel
             id="local-storage"
             icon={<Database aria-hidden="true" />}
@@ -322,19 +407,139 @@ export const SettingsPage = () => {
               />
             </div>
           </SettingsPanel>
-        </div>
-      </main>
+        );
+      case "#github-token-help":
+        return (
+          <section
+            className="grid scroll-mt-6 gap-4 rounded-xl border border-border bg-card p-4"
+            aria-labelledby="github-token-help"
+          >
+            <div>
+              <h2 id="github-token-help" className="scroll-mt-6 font-semibold">
+                如何创建 GitHub token
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                请选择 Fine-grained personal access token。它可以限制资源 owner、仓库范围和权限，比
+                classic token 更适合这里的只读访问。
+              </p>
+            </div>
 
+            <ol className="grid gap-2 text-sm leading-6 text-muted-foreground">
+              <li>1. 打开 GitHub 的 Fine-grained tokens 创建页，填写 token 名称和过期时间。</li>
+              <li>2. Repository access 选择只需要扫描的仓库。</li>
+              <li>
+                3. Repository permissions 至少确认 <strong>Contents: Read-only</strong> 和{" "}
+                <strong>Metadata: Read-only</strong>。
+              </li>
+              <li>4. 生成后复制 token，回到本页粘贴并保存。</li>
+            </ol>
+
+            <Button type="button" variant="outline" onClick={openGitHubTokenCreationPage}>
+              <ExternalLink aria-hidden="true" />
+              打开 GitHub token 创建页面
+            </Button>
+          </section>
+        );
+      case "#settings-danger-zone":
+        return (
+          <section
+            className="grid scroll-mt-6 gap-4 rounded-xl border border-destructive/25 bg-destructive/5 p-4"
+            aria-labelledby="settings-danger-zone"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="size-4 text-destructive" aria-hidden="true" />
+                <h2 id="settings-danger-zone" className="scroll-mt-6 font-semibold">
+                  危险操作
+                </h2>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                重建数据库会清空本地索引、来源、Skills 和应用设置。已安装到 agent
+                目标目录的文件不会被删除。
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isResetting}
+              onClick={() => setIsResetDialogOpen(true)}
+            >
+              <RotateCcw aria-hidden="true" />
+              重建本地数据库
+            </Button>
+            {storageStatus === "reset" ? (
+              <p className="text-sm text-muted-foreground">本地数据库已重建。</p>
+            ) : null}
+            {storageError ? <p className="text-sm text-destructive">{storageError}</p> : null}
+          </section>
+        );
+      case "#settings-about":
+        return (
+          <section
+            id="settings-about"
+            className="flex min-h-[calc(100svh-100px)] scroll-mt-6 items-center justify-center text-center"
+            aria-labelledby="settings-about-heading"
+          >
+            <h2 id="settings-about-heading" className="sr-only">
+              关于
+            </h2>
+            <div className="flex flex-col items-center justify-center">
+              <img src={skillportMark} alt="Skillport logo" className="size-16" />
+              <div className="mt-4 text-center">
+                <p className="text-lg font-semibold text-foreground">Skillport</p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
+                  Sync and distribute agent skills
+                </p>
+              </div>
+              <p className="mt-5 text-sm font-medium text-muted-foreground">
+                版本 {appInfo?.version ?? "--"}
+              </p>
+            </div>
+          </section>
+        );
+    }
+  })();
+
+  return (
+    <div className="grid h-full grid-cols-[248px_minmax(0,1fr)] overflow-hidden bg-background">
       <aside
-        className="grid content-start gap-3 border-l border-border bg-card px-5 py-6"
-        aria-label="设置辅助信息"
+        className="sticky top-0 flex h-[calc(100svh-44px)] flex-col overflow-y-auto border-r border-border bg-card px-4 py-5"
+        aria-label="设置页面侧边栏"
       >
-        <section className="rounded-xl border border-border bg-background p-4">
+        <div className="mb-5">
+          <h2 className="text-lg font-semibold text-foreground">设置</h2>
+        </div>
+
+        <nav className="grid gap-1" aria-label="设置页面导航">
+          {settingsNavigationItems.map((item) => {
+            const isActive = activeSettingsNavigationHref === item.href;
+
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={[
+                  "rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ].join(" ")}
+                aria-current={isActive ? "location" : undefined}
+                onClick={(event) => navigateToSettingsSection(event, item.href)}
+              >
+                {item.label}
+              </a>
+            );
+          })}
+        </nav>
+
+        <section className="mt-auto rounded-lg border border-border bg-background p-3">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="size-4 text-muted-foreground" aria-hidden="true" />
             <h2 className="font-semibold">凭据状态</h2>
           </div>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
             {settings.github.hasToken
               ? "GitHub token 已保存在本机设置中。替换时只需要输入新 token 并保存。"
               : "尚未保存 GitHub token。公共仓库仍可扫描，但请求频率限制更低。"}
@@ -346,69 +551,15 @@ export const SettingsPage = () => {
             </p>
           </div>
         </section>
-
-        <section
-          className="grid gap-4 rounded-xl border border-border bg-background p-4"
-          aria-labelledby="github-token-help"
-        >
-          <div>
-            <h2 id="github-token-help" className="font-semibold">
-              如何创建 GitHub token
-            </h2>
-            <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              请选择 Fine-grained personal access token。它可以限制资源 owner、仓库范围和权限，比
-              classic token 更适合这里的只读访问。
-            </p>
-          </div>
-
-          <ol className="grid gap-2 text-sm leading-6 text-muted-foreground">
-            <li>1. 打开 GitHub 的 Fine-grained tokens 创建页，填写 token 名称和过期时间。</li>
-            <li>2. Repository access 选择只需要扫描的仓库。</li>
-            <li>
-              3. Repository permissions 至少确认 <strong>Contents: Read-only</strong> 和{" "}
-              <strong>Metadata: Read-only</strong>。
-            </li>
-            <li>4. 生成后复制 token，回到本页粘贴并保存。</li>
-          </ol>
-
-          <Button type="button" variant="outline" onClick={openGitHubTokenCreationPage}>
-            <ExternalLink aria-hidden="true" />
-            打开 GitHub token 创建页面
-          </Button>
-        </section>
-
-        <section
-          className="grid gap-4 rounded-xl border border-destructive/25 bg-destructive/5 p-4"
-          aria-labelledby="settings-danger-zone"
-        >
-          <div>
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="size-4 text-destructive" aria-hidden="true" />
-              <h2 id="settings-danger-zone" className="font-semibold">
-                危险操作
-              </h2>
-            </div>
-            <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              重建数据库会清空本地索引、来源、Skills 和应用设置。已安装到 agent
-              目标目录的文件不会被删除。
-            </p>
-          </div>
-
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={isResetting}
-            onClick={() => setIsResetDialogOpen(true)}
-          >
-            <RotateCcw aria-hidden="true" />
-            重建本地数据库
-          </Button>
-          {storageStatus === "reset" ? (
-            <p className="text-sm text-muted-foreground">本地数据库已重建。</p>
-          ) : null}
-          {storageError ? <p className="text-sm text-destructive">{storageError}</p> : null}
-        </section>
       </aside>
+
+      <main
+        ref={settingsContentRef}
+        className="h-[calc(100svh-44px)] min-w-0 overflow-y-auto p-7"
+        aria-label="设置内容"
+      >
+        <div className="grid max-w-4xl gap-5">{activeSettingsSection}</div>
+      </main>
 
       <AlertDialog
         open={isResetDialogOpen}
@@ -466,7 +617,7 @@ const SettingsPanel = ({
             <span className="inline-flex size-4 items-center justify-center text-muted-foreground [&_svg]:size-4">
               {icon}
             </span>
-            <h2 id={id} className="text-base font-semibold text-foreground">
+            <h2 id={id} className="scroll-mt-6 text-base font-semibold text-foreground">
               {title}
             </h2>
           </div>

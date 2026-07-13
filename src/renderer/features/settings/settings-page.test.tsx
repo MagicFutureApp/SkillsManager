@@ -7,8 +7,14 @@ import { SettingsPage } from "./settings-page";
 describe("SettingsPage", () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
 
+  const clickSettingsNavigationLink = (name: string) => {
+    const settingsNavigation = screen.getByRole("navigation", { name: "设置页面导航" });
+    fireEvent.click(within(settingsNavigation).getByRole("link", { name }));
+  };
+
   beforeEach(() => {
     writeText.mockClear();
+    window.history.replaceState(null, "", "/settings");
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
@@ -65,34 +71,161 @@ describe("SettingsPage", () => {
     expect(
       screen.getByText("当前 token 不会回显，输入新 token 后保存即可替换。")
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "如何创建 GitHub token" })).toBeInTheDocument();
+    expect(window.skillsManager?.getAppSettings).toHaveBeenCalled();
+  });
+
+  it("shows GitHub token creation help from the internal settings navigation", async () => {
+    render(<SettingsPage />);
+
+    await screen.findByRole("main");
+    clickSettingsNavigationLink("如何创建 GitHub token");
+
+    expect(
+      screen.getByRole("heading", { name: "如何创建 GitHub token", level: 2 })
+    ).toBeInTheDocument();
     expect(screen.getByText(/Fine-grained personal access token/)).toBeInTheDocument();
     expect(screen.getByText("Contents: Read-only")).toBeInTheDocument();
     expect(screen.getByText("Metadata: Read-only")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: "打开 GitHub token 创建页面" })
     ).not.toBeInTheDocument();
-    expect(window.skillsManager?.getAppSettings).toHaveBeenCalled();
   });
 
-  it("uses the standard app split layout with a settings support sidebar", async () => {
+  it("uses the standard app layout with an internal settings navigation", async () => {
     render(<SettingsPage />);
 
-    expect(await screen.findByRole("main")).toHaveAttribute("aria-labelledby", "settings-heading");
-    const pageHeading = screen.getByRole("heading", { name: "配置本地应用偏好" });
-    const pageHeader = pageHeading.closest("header");
+    const main = await screen.findByRole("main");
+    const settingsSidebar = screen.getByRole("complementary", { name: "设置页面侧边栏" });
+    const settingsNavigation = screen.getByRole("navigation", { name: "设置页面导航" });
+    const settingsLayout = main.parentElement;
 
-    expect(pageHeading).toHaveAttribute("id", "settings-heading");
-    expect(pageHeader).not.toBeNull();
-    expect(within(pageHeader as HTMLElement).queryByText("Settings")).not.toBeInTheDocument();
-    expect(screen.getByRole("complementary", { name: "设置辅助信息" })).toBeInTheDocument();
+    expect(main).toHaveAttribute("aria-label", "设置内容");
+    expect(main).not.toHaveAttribute("aria-labelledby");
+    expect(main).toHaveClass("h-[calc(100svh-44px)]", "overflow-y-auto");
+    expect(settingsLayout).toHaveClass("h-full", "overflow-hidden");
+    expect(
+      screen.queryByRole("heading", { name: "GitHub API token", level: 1 })
+    ).not.toBeInTheDocument();
+    expect(
+      within(main).queryByText(
+        "管理 GitHub API 访问凭据和本地扫描相关设置。GitHub token 仅保存在本机设置中，不会回显到界面。"
+      )
+    ).not.toBeInTheDocument();
+    expect(settingsSidebar).toHaveClass("sticky", "h-[calc(100svh-44px)]");
+    expect(
+      within(settingsNavigation).getByRole("link", { name: "GitHub API token" })
+    ).toHaveAttribute("href", "#github-token");
+    expect(within(settingsNavigation).getByRole("link", { name: "技能分发" })).toHaveAttribute(
+      "href",
+      "#skill-distribution"
+    );
+    expect(within(settingsNavigation).getByRole("link", { name: "本地存储" })).toHaveAttribute(
+      "href",
+      "#local-storage"
+    );
+    expect(
+      within(settingsNavigation).getByRole("link", { name: "如何创建 GitHub token" })
+    ).toHaveAttribute("href", "#github-token-help");
+    expect(within(settingsNavigation).getByRole("link", { name: "危险操作" })).toHaveAttribute(
+      "href",
+      "#settings-danger-zone"
+    );
+    expect(within(settingsNavigation).getByRole("link", { name: "关于" })).toHaveAttribute(
+      "href",
+      "#settings-about"
+    );
     expect(screen.getByRole("heading", { name: "凭据状态" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "危险操作" })).toBeInTheDocument();
+    expect(
+      within(main).getByRole("heading", { name: "GitHub API token", level: 2 })
+    ).toBeInTheDocument();
+    expect(within(main).queryByRole("heading", { name: "危险操作" })).not.toBeInTheDocument();
+
+    clickSettingsNavigationLink("关于");
+
+    expect(screen.queryByRole("heading", { name: "关于", level: 1 })).not.toBeInTheDocument();
+  });
+
+  it("shows an about section with the logo and app version", async () => {
+    window.history.replaceState(null, "", "/settings#settings-about");
+    render(<SettingsPage />);
+
+    await screen.findByRole("main");
+    const aboutSection = screen.getByRole("region", { name: "关于" });
+
+    expect(aboutSection).toHaveClass(
+      "flex",
+      "min-h-[calc(100svh-100px)]",
+      "items-center",
+      "justify-center",
+      "text-center"
+    );
+    expect(aboutSection).not.toHaveClass("rounded-xl", "border", "border-border", "bg-card");
+    const skillportMark = within(aboutSection).getByRole("img", { name: "Skillport logo" });
+
+    expect(skillportMark).toHaveClass("size-16");
+    expect(within(aboutSection).getByText("Skillport")).toBeInTheDocument();
+    expect(within(aboutSection).getByText("Sync and distribute agent skills")).toBeInTheDocument();
+    expect(await within(aboutSection).findByText("版本 0.1.0")).toBeInTheDocument();
+    expect(window.skillsManager?.getInfo).toHaveBeenCalled();
+  });
+
+  it("updates the selected internal settings navigation item after clicking it", async () => {
+    render(<SettingsPage />);
+
+    await screen.findByRole("main");
+    const settingsNavigation = screen.getByRole("navigation", { name: "设置页面导航" });
+    const githubTokenLink = within(settingsNavigation).getByRole("link", {
+      name: "GitHub API token"
+    });
+    const dangerZoneLink = within(settingsNavigation).getByRole("link", { name: "危险操作" });
+    const aboutLink = within(settingsNavigation).getByRole("link", { name: "关于" });
+
+    expect(githubTokenLink).toHaveAttribute("aria-current", "location");
+    expect(dangerZoneLink).not.toHaveAttribute("aria-current");
+    expect(aboutLink).not.toHaveAttribute("aria-current");
+
+    fireEvent.click(dangerZoneLink);
+
+    expect(dangerZoneLink).toHaveAttribute("aria-current", "location");
+    expect(githubTokenLink).not.toHaveAttribute("aria-current");
+
+    fireEvent.click(aboutLink);
+
+    expect(aboutLink).toHaveAttribute("aria-current", "location");
+    expect(dangerZoneLink).not.toHaveAttribute("aria-current");
+  });
+
+  it("only renders the currently selected internal settings section", async () => {
+    render(<SettingsPage />);
+
+    const main = await screen.findByRole("main");
+    const settingsNavigation = screen.getByRole("navigation", { name: "设置页面导航" });
+
+    expect(
+      within(main).getByRole("heading", { name: "GitHub API token", level: 2 })
+    ).toBeInTheDocument();
+    expect(within(main).queryByRole("heading", { name: "技能分发" })).not.toBeInTheDocument();
+    expect(within(main).queryByRole("region", { name: "关于" })).not.toBeInTheDocument();
+
+    fireEvent.click(within(settingsNavigation).getByRole("link", { name: "关于" }));
+
+    expect(within(main).getByRole("region", { name: "关于" })).toBeInTheDocument();
+    expect(
+      within(main).queryByRole("heading", { name: "GitHub API token" })
+    ).not.toBeInTheDocument();
+    expect(within(main).queryByRole("heading", { name: "危险操作" })).not.toBeInTheDocument();
+
+    fireEvent.click(within(settingsNavigation).getByRole("link", { name: "危险操作" }));
+
+    expect(within(main).getByRole("heading", { name: "危险操作", level: 2 })).toBeInTheDocument();
+    expect(within(main).queryByRole("region", { name: "关于" })).not.toBeInTheDocument();
   });
 
   it("opens the GitHub token creation page through the system browser", async () => {
     render(<SettingsPage />);
 
+    await screen.findByRole("main");
+    clickSettingsNavigationLink("如何创建 GitHub token");
     fireEvent.click(await screen.findByRole("button", { name: "打开 GitHub token 创建页面" }));
 
     expect(window.skillsManager?.openExternalUrl).toHaveBeenCalledWith(
@@ -126,6 +259,9 @@ describe("SettingsPage", () => {
   it("shows copyable local cache and database paths", async () => {
     render(<SettingsPage />);
 
+    await screen.findByRole("main");
+    clickSettingsNavigationLink("本地存储");
+
     expect(await screen.findByText("/Users/andrew/.skills-manager/cache")).toBeInTheDocument();
     expect(
       screen.getByText("/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite")
@@ -147,6 +283,9 @@ describe("SettingsPage", () => {
   it("shows automatic distribution disabled by default and saves switch changes", async () => {
     render(<SettingsPage />);
 
+    await screen.findByRole("main");
+    clickSettingsNavigationLink("技能分发");
+
     const automaticDistributionSwitch = await screen.findByRole("switch", {
       name: "同步后自动分发到已设置目标"
     });
@@ -166,6 +305,8 @@ describe("SettingsPage", () => {
   it("requires confirmation before rebuilding the local database", async () => {
     render(<SettingsPage />);
 
+    await screen.findByRole("main");
+    clickSettingsNavigationLink("危险操作");
     fireEvent.click(await screen.findByRole("button", { name: "重建本地数据库" }));
 
     const dialog = await screen.findByRole("alertdialog", { name: "重建本地数据库？" });
@@ -178,6 +319,7 @@ describe("SettingsPage", () => {
 
     await waitFor(() => expect(window.skillsManager?.resetLocalDatabase).toHaveBeenCalled());
     expect(screen.getByText("本地数据库已重建。")).toBeInTheDocument();
+    clickSettingsNavigationLink("GitHub API token");
     expect(screen.getByText("未配置")).toBeInTheDocument();
   });
 });
