@@ -136,14 +136,18 @@ describe("app icon paths", () => {
 
   it("uses the full-size mark asset for the window icon", () => {
     const mainDirname = path.join("dist", "main", "main");
-    const expectedIconPath = path.normalize(path.join("dist", "renderer", "skillport-mark.png"));
+    const expectedIconPath = path.normalize(
+      path.join("dist", "renderer", "skills-manager-mark.png")
+    );
 
     expect(getAppIconPath(mainDirname)).toBe(expectedIconPath);
   });
 
   it("uses the mark asset path directly for non-macOS tray icons", () => {
     const mainDirname = path.join("dist", "main", "main");
-    const expectedIconPath = path.normalize(path.join("dist", "renderer", "skillport-mark.png"));
+    const expectedIconPath = path.normalize(
+      path.join("dist", "renderer", "skills-manager-mark.png")
+    );
 
     expect(getTrayIconPath(mainDirname)).toBe(expectedIconPath);
     expect(createTrayIconImage(mainDirname, "win32")).toBe(expectedIconPath);
@@ -180,7 +184,7 @@ describe("app icon paths", () => {
 
   it("keeps the Windows app icon corners transparent", () => {
     const assetDirectory = path.resolve(__dirname, "../renderer/assets");
-    const icon = readPngRgbaPixels(path.join(assetDirectory, "skillport-mark.png"));
+    const icon = readPngRgbaPixels(path.join(assetDirectory, "skills-manager-mark.png"));
 
     expect([
       icon.getAlphaAt(0, 0),

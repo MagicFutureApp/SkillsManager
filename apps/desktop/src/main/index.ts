@@ -128,7 +128,7 @@ void app
     });
   })
   .catch((error: unknown) => {
-    console.error("Failed to start Skillport.", error);
+    console.error("Failed to start Skills Manager.", error);
   });
 
 app.on("window-all-closed", () => {

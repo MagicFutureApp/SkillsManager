@@ -4,17 +4,17 @@
   "private": true,
   "description": "Skills Manager monorepo.",
   "scripts": {
-    "dev": "pnpm --filter @skillport/desktop run dev",
-    "electron:version": "pnpm --filter @skillport/desktop run electron:version",
-    "build:main": "pnpm --filter @skillport/desktop run build:main",
-    "build:renderer": "pnpm --filter @skillport/desktop run build:renderer",
-    "build": "pnpm --filter @skillport/desktop run build",
-    "check": "pnpm --filter @skillport/desktop run check",
-    "test": "pnpm --filter @skillport/desktop test",
-    "db:generate": "pnpm --filter @skillport/desktop run db:generate",
-    "db:check": "pnpm --filter @skillport/desktop run db:check",
-    "format": "pnpm --filter @skillport/desktop run format",
-    "format:check": "pnpm --filter @skillport/desktop run format:check"
+    "dev": "pnpm --filter @skills-manager/desktop run dev",
+    "electron:version": "pnpm --filter @skills-manager/desktop run electron:version",
+    "build:main": "pnpm --filter @skills-manager/desktop run build:main",
+    "build:renderer": "pnpm --filter @skills-manager/desktop run build:renderer",
+    "build": "pnpm --filter @skills-manager/desktop run build",
+    "check": "pnpm --filter @skills-manager/desktop run check",
+    "test": "pnpm --filter @skills-manager/desktop test",
+    "db:generate": "pnpm --filter @skills-manager/desktop run db:generate",
+    "db:check": "pnpm --filter @skills-manager/desktop run db:check",
+    "format": "pnpm --filter @skills-manager/desktop run format",
+    "format:check": "pnpm --filter @skills-manager/desktop run format:check"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

@@ -5,7 +5,7 @@ import { useShellStore } from "@/stores/shell-store";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 
-import skillportMark from "../../assets/skillport-mark.svg";
+import skillsManagerMark from "../../assets/skills-manager-mark.svg";
 import { AppSidebar } from "./app-sidebar";
 import { APP_META } from "../../../core/app-constants";
 import type { ShellNavigationBadgeCounts } from "./shell-navigation";
@@ -68,7 +68,7 @@ export const AppShell = ({ children }: AppShellProps) => {
         style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
       >
         <div className="flex min-w-0 items-center gap-2">
-          <img src={skillportMark} alt={APP_META.title} className="size-5 rounded-md" />
+          <img src={skillsManagerMark} alt={APP_META.title} className="size-5 rounded-md" />
           <span className="truncate text-sm font-semibold">{APP_META.title}</span>
         </div>
       </div>

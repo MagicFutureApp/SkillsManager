@@ -78,7 +78,7 @@ describe("AppSidebar", () => {
     expect(badges).toEqual(["5", "37", "4", "8"]);
     expect(screen.getByRole("button", { name: "技能" })).not.toHaveAttribute("title");
     expect(
-      sidebar.querySelector('[data-slot="tooltip-trigger"][aria-label="Skillport"]')
+      sidebar.querySelector('[data-slot="tooltip-trigger"][aria-label="Skills Manager"]')
     ).toBeTruthy();
   });
 

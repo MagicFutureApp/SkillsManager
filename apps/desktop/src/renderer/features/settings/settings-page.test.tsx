@@ -28,7 +28,7 @@ describe("SettingsPage", () => {
         github: { hasToken: false }
       }),
       getAppStoragePaths: vi.fn().mockResolvedValue({
-        databasePath: "/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite",
+        databasePath: "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
         localCachePath: "/Users/andrew/.skills-manager/cache"
       }),
       getAppSettings: vi.fn().mockResolvedValue({
@@ -48,7 +48,7 @@ describe("SettingsPage", () => {
           github: { hasToken: false }
         },
         storage: {
-          databasePath: "/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite",
+          databasePath: "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
           localCachePath: "/Users/andrew/.skills-manager/cache"
         }
       }),
@@ -160,10 +160,12 @@ describe("SettingsPage", () => {
       "text-center"
     );
     expect(aboutSection).not.toHaveClass("rounded-xl", "border", "border-border", "bg-card");
-    const skillportMark = within(aboutSection).getByRole("img", { name: "Skillport logo" });
+    const skillsManagerMark = within(aboutSection).getByRole("img", {
+      name: "Skills Manager logo"
+    });
 
-    expect(skillportMark).toHaveClass("size-16");
-    expect(within(aboutSection).getByText("Skillport")).toBeInTheDocument();
+    expect(skillsManagerMark).toHaveClass("size-16");
+    expect(within(aboutSection).getByText("Skills Manager")).toBeInTheDocument();
     expect(within(aboutSection).getByText("Sync and distribute agent skills")).toBeInTheDocument();
     expect(await within(aboutSection).findByText("版本 0.1.0")).toBeInTheDocument();
     expect(window.skillsManager?.getInfo).toHaveBeenCalled();
@@ -264,7 +266,9 @@ describe("SettingsPage", () => {
 
     expect(await screen.findByText("/Users/andrew/.skills-manager/cache")).toBeInTheDocument();
     expect(
-      screen.getByText("/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite")
+      screen.getByText(
+        "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite"
+      )
     ).toBeInTheDocument();
 
     const copyPathButtons = screen.getAllByRole("button", { name: "复制路径" });
@@ -276,7 +280,7 @@ describe("SettingsPage", () => {
 
     fireEvent.click(copyPathButtons[1]);
     expect(writeText).toHaveBeenCalledWith(
-      "/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite"
+      "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite"
     );
   });
 

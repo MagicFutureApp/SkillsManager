@@ -559,7 +559,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories,
@@ -596,7 +596,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
@@ -635,7 +635,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories,
@@ -660,7 +660,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories: vi.fn().mockResolvedValue({
@@ -698,7 +698,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
@@ -760,7 +760,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories,
@@ -886,7 +886,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
@@ -973,7 +973,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
@@ -1031,7 +1031,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
@@ -1064,7 +1064,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
@@ -1111,7 +1111,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
@@ -1170,7 +1170,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories,
@@ -1260,7 +1260,7 @@ describe("RepositoriesPage", () => {
       ...(window.skillsManager ?? {}),
       createRepository,
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories,
@@ -1370,7 +1370,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
       listRepositories,
@@ -1455,7 +1455,7 @@ describe("RepositoriesPage", () => {
       ...(window.skillsManager ?? {}),
       deleteRepository,
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       getRepositoryDeletePreview,
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
@@ -1513,7 +1513,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       inspectRepositorySource,
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
@@ -1551,7 +1551,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       inspectRepositorySource,
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
@@ -1610,7 +1610,7 @@ describe("RepositoriesPage", () => {
       ...(window.skillsManager ?? {}),
       createRepository,
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       inspectRepositorySource,
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
@@ -1651,7 +1651,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       inspectRepositorySource,
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
@@ -1677,7 +1677,7 @@ describe("RepositoriesPage", () => {
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-      getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       inspectRepositorySource,
       listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),

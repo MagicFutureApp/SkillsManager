@@ -325,7 +325,7 @@ const renderTargetsPage = async ({
 
   window.skillsManager = {
     getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
-    getInfo: vi.fn().mockResolvedValue({ name: "Skillport", version: "0.1.0" }),
+    getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
     getLocale: vi.fn().mockResolvedValue(locale),
     listProviders: vi.fn().mockResolvedValue({ providers: [] }),
     listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),

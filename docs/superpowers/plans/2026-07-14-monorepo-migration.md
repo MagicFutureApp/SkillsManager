@@ -25,7 +25,7 @@ Set `pnpm-workspace.yaml` to discover `apps/*` while preserving `nodeLinker: hoi
 
 - [x] **Step 2: Convert the root package into an orchestrator**
 
-Keep the root package private and expose the existing developer commands by forwarding them to `@skillport/desktop` with `pnpm --filter`.
+Keep the root package private and expose the existing developer commands by forwarding them to `@skills-manager/desktop` with `pnpm --filter`.
 
 - [x] **Step 3: Add tracked application placeholders**
 
@@ -46,7 +46,7 @@ Use Git-aware moves so file history remains visible. Keep repository-wide docume
 
 - [x] **Step 2: Create the desktop package manifest**
 
-Move the existing dependencies and scripts into `apps/desktop/package.json`, rename the package to `@skillport/desktop`, and keep all paths package-relative.
+Move the existing dependencies and scripts into `apps/desktop/package.json`, rename the package to `@skills-manager/desktop`, and keep all paths package-relative.
 
 - [x] **Step 3: Update configuration references**
 

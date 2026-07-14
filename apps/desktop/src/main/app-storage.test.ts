@@ -11,12 +11,12 @@ describe("app storage runtime", () => {
   it("builds the displayed local storage paths from app data and home directories", () => {
     expect(
       buildAppStoragePaths({
-        dataDirectory: "/Users/andrew/Library/Application Support/Skillport",
+        dataDirectory: "/Users/andrew/Library/Application Support/Skills Manager",
         homeDirectory: "/Users/andrew"
       })
     ).toEqual({
-      dataDirectory: "/Users/andrew/Library/Application Support/Skillport",
-      databasePath: "/Users/andrew/Library/Application Support/Skillport/skills-manager.sqlite",
+      dataDirectory: "/Users/andrew/Library/Application Support/Skills Manager",
+      databasePath: "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
       repositoryCachePath: "/Users/andrew/.skills-manager/cache"
     });
   });

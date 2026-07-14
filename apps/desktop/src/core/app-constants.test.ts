@@ -17,7 +17,7 @@ describe("app constants", () => {
 
   it("defines shared app metadata", () => {
     expect(APP_META).toEqual({
-      title: "Skillport",
+      title: "Skills Manager",
       description: "Sync and Distribute Skills"
     });
   });

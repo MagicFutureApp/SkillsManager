@@ -10,13 +10,13 @@ type MainMessages = {
 const mainMessages: Record<SupportedLocale, MainMessages> = {
   "zh-CN": {
     tray: {
-      show: "显示 Skillport",
+      show: "显示 Skills Manager",
       quit: "退出"
     }
   },
   "en-US": {
     tray: {
-      show: "Show Skillport",
+      show: "Show Skills Manager",
       quit: "Quit"
     }
   }

@@ -1,7 +1,7 @@
 import { nativeImage, type NativeImage } from "electron";
 import path from "node:path";
 
-const APP_ICON_FILE = "skillport-mark.png";
+const APP_ICON_FILE = "skills-manager-mark.png";
 const MACOS_TRAY_ICON_FILE = path.join("macOS", "32.png");
 export const MACOS_TRAY_ICON_SIZE = 22;
 

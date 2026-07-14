@@ -5,6 +5,6 @@ export const SIDEBAR_AUTO_COLLAPSE_WIDTH = MAIN_MINI_WIDTH + SIDEBAR_EXPAND_WIDT
 export const WINDOW_MIN_WIDTH = MAIN_MINI_WIDTH + SIDEBAR_COLLAPSE_WIDTH + 16; // todo windows mac Linux 16px margin
 
 export const APP_META = {
-  title: "Skillport",
+  title: "Skills Manager",
   description: "Sync and Distribute Skills"
 } as const;

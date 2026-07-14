@@ -1,5 +1,6 @@
 {
-  "name": "@skillport/desktop",
+  "name": "@skills-manager/desktop",
+  "productName": "Skills Manager",
   "version": "0.1.0",
   "private": true,
   "description": "Electron React TypeScript SQLite based Skills Manager App.",

@@ -14,7 +14,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toErrorMessage } from "@/lib/errors";
-import skillportMark from "@/assets/skillport-mark.svg";
+import skillsManagerMark from "@/assets/skills-manager-mark.svg";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -485,9 +485,9 @@ export const SettingsPage = () => {
               关于
             </h2>
             <div className="flex flex-col items-center justify-center">
-              <img src={skillportMark} alt="Skillport logo" className="size-16" />
+              <img src={skillsManagerMark} alt="Skills Manager logo" className="size-16" />
               <div className="mt-4 text-center">
-                <p className="text-lg font-semibold text-foreground">Skillport</p>
+                <p className="text-lg font-semibold text-foreground">Skills Manager</p>
                 <p className="mt-1 text-xs font-medium text-muted-foreground">
                   Sync and distribute agent skills
                 </p>

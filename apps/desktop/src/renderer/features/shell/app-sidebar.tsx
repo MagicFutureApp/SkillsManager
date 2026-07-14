@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import skillportMark from "../../assets/skillport-mark.svg";
+import skillsManagerMark from "../../assets/skills-manager-mark.svg";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -39,7 +39,7 @@ export const AppSidebar = ({
 
   const logoContent = (
     <>
-      <img src={skillportMark} alt="" className="size-8 rounded-lg" aria-hidden="true" />
+      <img src={skillsManagerMark} alt="" className="size-8 rounded-lg" aria-hidden="true" />
       {!isCollapsed ? (
         <div className="min-w-0">
           <p className="truncate text-base font-semibold">{APP_META.title}</p>

@@ -140,8 +140,8 @@ describe("AppShell", () => {
     expect(titlebar).toHaveClass("border-b", "pl-4", "pr-[138px]");
     expect(titlebar).not.toHaveClass("justify-center", "px-[138px]");
     expect(screen.queryByTestId("app-titlebar-border")).not.toBeInTheDocument();
-    expect(within(titlebar).getByRole("img", { name: "Skillport" })).toBeInTheDocument();
-    expect(within(titlebar).getByText("Skillport")).toBeInTheDocument();
+    expect(within(titlebar).getByRole("img", { name: "Skills Manager" })).toBeInTheDocument();
+    expect(within(titlebar).getByText("Skills Manager")).toBeInTheDocument();
   });
 
   it("centers the app identity in the macOS custom title bar", async () => {
