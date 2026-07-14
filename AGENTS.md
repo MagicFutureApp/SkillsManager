@@ -6,12 +6,15 @@
 
 Skills Manager 是一个本地优先的桌面应用，用于管理 agent 技能。产品目标是从 Git 提供商和技能市场聚合 `skill unit`，在本地建立索引，并把选中的技能分发到 Codex、Claude Code、Gemini CLI 或自定义目录等 agent 目标。
 
-当前实现和技术栈以 `package.json` 与 `src/` 为准：
+当前仓库使用 pnpm monorepo。根 `package.json` 负责编排命令，应用依赖和真实版本以各应用的 `package.json` 为准。当前目录包括：
 
-- Electron main/preload：`src/main`
-- React renderer：`src/renderer`
-- 可移植业务逻辑：`src/core`
-- SQLite/Drizzle 数据层：`src/db`
+- Electron 桌面应用：`apps/desktop`
+- Landing 页面占位：`apps/landing`
+- Cloudflare Hono cache manager 占位：`apps/cache-manager`
+- Electron main/preload：`apps/desktop/src/main`
+- React renderer：`apps/desktop/src/renderer`
+- 可移植业务逻辑：`apps/desktop/src/core`
+- SQLite/Drizzle 数据层：`apps/desktop/src/db`
 - 构建与验证：TypeScript 6、Vite 8、Vitest、Prettier、pnpm
 - 数据库访问：Drizzle ORM、`better-sqlite3`、`drizzle-kit`
 - 系统 Git：由 main process 调用，认证委托给用户系统 Git 环境
@@ -40,15 +43,16 @@ pnpm run format:check
 - TypeScript 类型或 IPC/API 变更：运行 `pnpm run check`。
 - Main process 变更：运行 `pnpm run build:main`，并补充相关 `pnpm test <path>`。
 - Renderer 页面或交互变更：运行相关 Vitest 页面测试；涉及真实桌面行为时使用 Electron 应用验证，不要只启动独立 Vite 网站。
-- 数据库 schema 或 repository 变更：运行相关 `src/db/repositories/*.test.ts`，必要时运行 `pnpm run db:generate` 或 `pnpm run db:check`。
-- 收尾前如改了 `src/` 或配置文件，运行最窄但足够证明结果的检查；不要为了小改动盲目跑全量慢命令。
+- 数据库 schema 或 repository 变更：运行相关 `apps/desktop/src/db/repositories/*.test.ts`，必要时运行 `pnpm run db:generate` 或 `pnpm run db:check`。
+- 收尾前如改了 `apps/*/src/` 或配置文件，运行最窄但足够证明结果的检查；不要为了小改动盲目跑全量慢命令。
 
 ## 信息来源
 
 做架构、范围或实现顺序决策前，优先阅读：
 
 - `README.md`：项目简述和本地 native dependency 注意事项。
-- `package.json`：当前脚本、依赖和真实版本。
+- 根 `package.json` 和 `pnpm-workspace.yaml`：workspace 范围和统一命令入口。
+- `apps/desktop/package.json`：桌面应用脚本、依赖和真实版本。
 - `docs/superpowers/specs/2026-07-02-copy-only-distribution-design.md`：copy-only 分发、最近一次同步状态、旧 dry-run/sync history 移除后的当前设计。分发相关内容以此为准。
 - `docs/superpowers/specs/2026-04-28-skills-manager-design.md`：产品范围、架构和 v1 排除项。若分发章节与 2026-07-02 文档冲突，以 2026-07-02 文档为准。
 - `docs/superpowers/specs/2026-04-28-skills-manager-data-model-explanation.md`：实体意图和数据模型边界。若仍出现旧 `distribution_plans`、`distribution_plan_items` 或 `sync_runs` 表述，以当前 code 和 copy-only 文档为准。
@@ -77,11 +81,11 @@ pnpm run format:check
 
 - Renderer 代码不得直接访问 Git、SQLite、Node 文件系统或操作系统命令。
 - 会改变状态的操作必须经过类型化 preload/IPC 边界。
-- Electron 专属代码保留在 `src/main`，包括窗口生命周期、系统 Git、文件复制、路径安全检查、SQLite 写入和外部 URL/目录打开。
-- Renderer 页面和状态逻辑放在 `src/renderer`，通过 `window.skillsManager` 调用类型化 API。
-- 可移植业务逻辑尽量放在 `src/core`，避免依赖 Electron。
-- 数据库 schema、client、migration 和 query/repository helper 放在 `src/db`。
-- Drizzle schema 是 SQLite 结构的 TypeScript 单一事实来源；如果改 schema，同时检查 `src/db/client.ts` 的 bootstrap SQL、repository 测试和 migration。
+- Electron 专属代码保留在 `apps/desktop/src/main`，包括窗口生命周期、系统 Git、文件复制、路径安全检查、SQLite 写入和外部 URL/目录打开。
+- Renderer 页面和状态逻辑放在 `apps/desktop/src/renderer`，通过 `window.skillsManager` 调用类型化 API。
+- 可移植业务逻辑尽量放在 `apps/desktop/src/core`，避免依赖 Electron。
+- 数据库 schema、client、migration 和 query/repository helper 放在 `apps/desktop/src/db`。
+- Drizzle schema 是 SQLite 结构的 TypeScript 单一事实来源；如果改 schema，同时检查 `apps/desktop/src/db/client.ts` 的 bootstrap SQL、repository 测试和 migration。
 - Main IPC 层负责把 renderer 意图转成受控的文件系统、Git 和数据库操作；renderer 不能绕过 IPC 自己执行。
 - Good：renderer 调用 `window.skillsManager.previewDistribution(...)`。
 - Bad：renderer 里 `import fs from "node:fs"` 或直接打开 SQLite。
@@ -119,19 +123,19 @@ pnpm run format:check
 
 ## 当前代码结构
 
-- `src/main/index.ts`：Electron app 生命周期和 IPC 注册入口。
-- `src/main/preload.ts`：暴露给 renderer 的类型化桥。
-- `src/main/ipc/*`：main process IPC handlers。
-- `src/core/skills/*`：skill 扫描和 key 生成。
-- `src/core/repositories/*`：repository API、source inspection 和路径/配置工具。
-- `src/core/distribution/*`：copy-only 分发预览和执行类型。
-- `src/core/targets/*`：agent target 扫描和工具函数。
-- `src/db/schema.ts`：Drizzle schema。
-- `src/db/client.ts`：SQLite client 和新项目 schema bootstrap。
-- `src/db/repositories/*`：数据库 repository/query 层。
-- `src/renderer/app/*`：路由配置。
-- `src/renderer/features/*`：按页面划分的 UI、state hooks 和组件。
-- `src/renderer/components/ui/*`：本地 UI 基础组件。
+- `apps/desktop/src/main/index.ts`：Electron app 生命周期和 IPC 注册入口。
+- `apps/desktop/src/main/preload.ts`：暴露给 renderer 的类型化桥。
+- `apps/desktop/src/main/ipc/*`：main process IPC handlers。
+- `apps/desktop/src/core/skills/*`：skill 扫描和 key 生成。
+- `apps/desktop/src/core/repositories/*`：repository API、source inspection 和路径/配置工具。
+- `apps/desktop/src/core/distribution/*`：copy-only 分发预览和执行类型。
+- `apps/desktop/src/core/targets/*`：agent target 扫描和工具函数。
+- `apps/desktop/src/db/schema.ts`：Drizzle schema。
+- `apps/desktop/src/db/client.ts`：SQLite client 和新项目 schema bootstrap。
+- `apps/desktop/src/db/repositories/*`：数据库 repository/query 层。
+- `apps/desktop/src/renderer/app/*`：路由配置。
+- `apps/desktop/src/renderer/features/*`：按页面划分的 UI、state hooks 和组件。
+- `apps/desktop/src/renderer/components/ui/*`：本地 UI 基础组件。
 - `docs/superpowers/specs/*` 和 `docs/superpowers/plans/*`：产品设计与实施计划。
 
 ## 实现流程
@@ -155,9 +159,9 @@ pnpm run format:check
 ## 测试与验证
 
 - 单元和集成测试使用 Vitest，测试文件通常与实现文件同区域并以 `.test.ts` 或 `.test.tsx` 结尾。
-- 数据层变更优先跑对应 `src/db/repositories/*.test.ts`。
-- IPC 变更优先跑对应 `src/main/ipc/*.test.ts`。
-- Renderer 状态和页面变更优先跑对应 `src/renderer/features/**/*.test.tsx`。
+- 数据层变更优先跑对应 `apps/desktop/src/db/repositories/*.test.ts`。
+- IPC 变更优先跑对应 `apps/desktop/src/main/ipc/*.test.ts`。
+- Renderer 状态和页面变更优先跑对应 `apps/desktop/src/renderer/features/**/*.test.tsx`。
 - 跨层类型变更跑 `pnpm run check`。
 - main process 构建问题跑 `pnpm run build:main`。
 - UI 或端到端行为需要真实 Electron 验证时，使用 `pnpm run dev` 启动 Electron 应用，不要用独立 Vite 页面替代。
@@ -167,7 +171,7 @@ pnpm run format:check
 
 - 构建桌面工具界面，而不是营销页面。
 - 优先支持信息密度、可读性和重复操作效率。
-- v1 主要区域是 `Sources`、`Repositories`、`Skills`、`Targets`、`Settings`；当前路由以 `src/renderer/app/route-config.ts` 为准。
+- v1 主要区域是 `Sources`、`Repositories`、`Skills`、`Targets`、`Settings`；当前路由以 `apps/desktop/src/renderer/app/route-config.ts` 为准。
 - 视觉风格保持克制，符合本地工作工具定位。
 - 所有用到的组件，先去 shadcn/base-ui 找一找，尽量使用现成组件，必要时稍微调整样式，但不要大幅改动结构或交互。参考：https://base-ui.com/llms.txt
 - 样式中的数字单位尽量使用 shadcn/Tailwind v4 的主题化格式，例如 `w-23`、`gap-3`、`rounded-xl`；只有在需要精确像素、外部规格对齐或主题格式无法表达时，才使用 `w-[92px]` 这类 arbitrary value。
