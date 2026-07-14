@@ -1,0 +1,6 @@
+{
+  "name": "Skills Manager",
+  "description": "An elegant, interactive landing page for Skills Manager—a modern solution to track, organize, and develop personal and team skills.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
