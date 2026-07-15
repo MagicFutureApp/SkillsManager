@@ -1,20 +1,24 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Skills Manager Landing
 
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/c1af4fc3-9aa9-4169-bd13-eabc4b0f763b
+Skills Manager 的 TanStack Start landing 应用。页面使用 TanStack Router 文件路由，现有 landing 内容位于根路由 `src/routes/index.tsx`。
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+在仓库根目录安装依赖：
 
+```bash
+pnpm install
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+启动 landing：
+
+```bash
+pnpm --filter @skills-manager/landing run dev
+```
+
+## Validation
+
+```bash
+pnpm --filter @skills-manager/landing run check
+pnpm --filter @skills-manager/landing run build
+```

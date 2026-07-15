@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Skill, SkillCategory, SkillLevel, GeneratedRoadmap } from '../types';
-import { CATEGORIES, INITIAL_SKILLS, SAMPLE_ROADMAPS } from '../initialData';
+import { CATEGORIES, INITIAL_SKILLS, SAMPLE_ROADMAPS } from '../initial-data';
 
 export default function InteractiveSandbox() {
   // State for user-managed skills
@@ -126,7 +126,7 @@ export default function InteractiveSandbox() {
       const y = cy + labelRadius * Math.sin(angle);
       
       // Fine-tune alignments based on direction
-      let textAnchor = 'middle';
+      let textAnchor: 'middle' | 'start' | 'end' = 'middle';
       if (Math.cos(angle) > 0.1) textAnchor = 'start';
       else if (Math.cos(angle) < -0.1) textAnchor = 'end';
 

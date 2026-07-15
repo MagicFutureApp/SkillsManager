@@ -1,6 +1,7 @@
 import React from 'react';
 import { Compass, BookOpen, Group, Award, Sparkles, LayoutGrid } from 'lucide-react';
 import { motion } from 'motion/react';
+import type { Variants } from 'motion/react';
 
 export default function Features() {
   const cards = [
@@ -34,7 +35,7 @@ export default function Features() {
     }
   ];
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: {},
     visible: {
       transition: {
@@ -43,7 +44,7 @@ export default function Features() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 

@@ -1,10 +1,10 @@
 import React from 'react';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import Features from './components/Features';
-import InteractiveSandbox from './components/InteractiveSandbox';
-import Pricing from './components/Pricing';
-import Footer from './components/Footer';
+import Header from './components/header';
+import Hero from './components/hero';
+import Features from './components/features';
+import InteractiveSandbox from './components/interactive-sandbox';
+import Pricing from './components/pricing';
+import Footer from './components/footer';
 
 export default function App() {
   // Navigation scrolling logic
