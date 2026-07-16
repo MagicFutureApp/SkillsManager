@@ -1,126 +1,88 @@
-import React, { useState } from 'react';
-import { Target, Menu, X, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
+
+import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png";
 
 interface HeaderProps {
   onScrollTo: (sectionId: string) => void;
 }
 
+const navItems = [
+  { label: "产品能力", id: "features" },
+  { label: "产品界面", id: "product" },
+  { label: "工作方式", id: "workflow" }
+] as const;
+
 export default function Header({ onScrollTo }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const navItems = [
-    { label: 'Features', id: 'features' },
-    { label: 'Interactive Demo', id: 'sandbox' },
-    { label: 'Pricing', id: 'pricing' }
-  ];
-
-  const handleNavClick = (id: string) => {
+  const navigate = (id: string) => {
     onScrollTo(id);
     setIsOpen(false);
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-zinc-200/80 bg-zinc-50/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand Logo */}
-        <div 
-          onClick={() => handleNavClick('hero')} 
-          className="flex cursor-pointer items-center gap-2.5 text-zinc-900 transition-opacity hover:opacity-90"
-          id="nav-logo"
+    <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
+        <button
+          type="button"
+          className="flex items-center gap-2.5"
+          onClick={() => navigate("hero")}
+          aria-label="返回首页顶部"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-zinc-50 shadow-md">
-            <Target className="h-5 w-5" />
-          </div>
-          <span className="font-display text-lg font-bold tracking-tight">Skills Manager</span>
-        </div>
+          <img src={skillsManagerMark} alt="" className="size-8" />
+          <span className="text-[15px] font-semibold text-zinc-950">Skills Manager</span>
+        </button>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden items-center gap-7 md:flex" aria-label="主导航">
           {navItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900 cursor-pointer"
-              id={`nav-link-${item.id}`}
+              type="button"
+              className="text-[13px] font-medium text-zinc-500 transition-colors hover:text-zinc-950"
+              onClick={() => navigate(item.id)}
             >
               {item.label}
             </button>
           ))}
         </nav>
 
-        {/* Desktop Call to Actions */}
-        <div className="hidden md:flex items-center gap-4">
-          <button 
-            onClick={() => handleNavClick('sandbox')} 
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
-            id="nav-btn-demo"
-          >
-            Try Sandbox
-          </button>
-          <button 
-            onClick={() => handleNavClick('pricing')}
-            className="group flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-50 shadow-sm transition-all hover:bg-zinc-800 hover:shadow"
-            id="nav-btn-cta"
-          >
-            <span>Get Started</span>
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </button>
-        </div>
-
-        {/* Mobile menu button */}
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="rounded-lg p-1.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 md:hidden cursor-pointer"
-          aria-label="Toggle Menu"
-          id="nav-mobile-toggle"
+          type="button"
+          className="hidden h-9 items-center rounded-md bg-zinc-950 px-4 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-800 md:inline-flex"
+          onClick={() => navigate("product")}
         >
-          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          查看产品界面
+        </button>
+
+        <button
+          type="button"
+          className="inline-flex size-9 items-center justify-center text-zinc-700 md:hidden"
+          onClick={() => setIsOpen((open) => !open)}
+          aria-label={isOpen ? "关闭菜单" : "打开菜单"}
+          aria-expanded={isOpen}
+        >
+          {isOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
 
-      {/* Mobile menu container */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.15 }}
-            className="border-b border-zinc-200 bg-zinc-50 md:hidden"
-            id="mobile-menu"
-          >
-            <div className="space-y-1.5 px-4 pt-2 pb-5">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  className="block w-full text-left rounded-lg py-2.5 px-3 text-base font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
-                  id={`mobile-nav-link-${item.id}`}
-                >
-                  {item.label}
-                </button>
-              ))}
-              <div className="mt-4 border-t border-zinc-200 pt-4 space-y-2.5">
-                <button
-                  onClick={() => handleNavClick('sandbox')}
-                  className="block w-full text-center rounded-lg py-2.5 px-3 text-base font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
-                  id="mobile-nav-btn-demo"
-                >
-                  Try Sandbox
-                </button>
-                <button
-                  onClick={() => handleNavClick('pricing')}
-                  className="block w-full text-center rounded-lg bg-zinc-900 py-2.5 px-3 text-base font-medium text-zinc-50 shadow-sm hover:bg-zinc-800 cursor-pointer"
-                  id="mobile-nav-btn-cta"
-                >
-                  Get Started
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isOpen ? (
+        <nav
+          className="border-t border-zinc-200 bg-white px-5 py-3 md:hidden"
+          aria-label="移动端导航"
+        >
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="block w-full py-3 text-left text-sm font-medium text-zinc-700"
+              onClick={() => navigate(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      ) : null}
     </header>
   );
 }

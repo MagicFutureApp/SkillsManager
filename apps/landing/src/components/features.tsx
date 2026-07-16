@@ -1,120 +1,62 @@
-import React from 'react';
-import { Compass, BookOpen, Group, Award, Sparkles, LayoutGrid } from 'lucide-react';
-import { motion } from 'motion/react';
-import type { Variants } from 'motion/react';
+import { Boxes, CopyCheck, GitPullRequestArrow, HardDrive } from "lucide-react";
+
+const features = [
+  {
+    icon: GitPullRequestArrow,
+    title: "统一管理技能来源",
+    description:
+      "检查提供方连接，登记远程 Git、本地 Git 和技能市场来源，手动控制同步时机，并保留分支、commit 与扫描状态。"
+  },
+  {
+    icon: Boxes,
+    title: "以 skill unit 为中心",
+    description:
+      "一个仓库可以发现多个技能。扫描器从 SKILL.md 建立统一的 skill unit 模型，而不是把整个 repository 当作一个技能。"
+  },
+  {
+    icon: CopyCheck,
+    title: "可预览的 copy 分发",
+    description:
+      "分发前查看 install、update、skip 与 conflict；确认后由 Electron main process 做路径检查、文件复制和事实记录。"
+  },
+  {
+    icon: HardDrive,
+    title: "本地优先，凭据留在本机",
+    description:
+      "索引与安装状态保存在本地 SQLite。系统 Git 负责认证，renderer 不直接接触文件系统、命令或数据库。"
+  }
+] as const;
 
 export default function Features() {
-  const cards = [
-    {
-      icon: Compass,
-      title: 'Multidimensional Radar Mapping',
-      description: 'See the absolute landscape of your career capabilities. Go beyond standard lists and visualize how your engineering, design, and management skills balance together.',
-      badge: 'Interactive Viz',
-      gridSpan: 'md:col-span-2'
-    },
-    {
-      icon: BookOpen,
-      title: 'Actionable Learning Roadmaps',
-      description: 'Generate step-by-step pathways to scale your proficiency. Turn broad goals like "Learn Rust" into week-by-week technical topics and hand-picked reading lists.',
-      badge: 'Structured',
-      gridSpan: 'md:col-span-1'
-    },
-    {
-      icon: Group,
-      title: 'Domain and Team Alignment',
-      description: 'Group skills into custom domain blocks. Perfect for aligning individual growth goals directly with organizational team objectives and quarter-by-quarter OKRs.',
-      badge: 'Collaborative',
-      gridSpan: 'md:col-span-1'
-    },
-    {
-      icon: Award,
-      title: 'Verified Competency Tiers',
-      description: 'Document your evidence. Back up your Skill Levels with direct notes, milestone checkpoints, completed projects, and peer reviews that render in visual detail.',
-      badge: 'Robust evidence',
-      gridSpan: 'md:col-span-2'
-    }
-  ];
-
-  const containerVariants: Variants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.5, ease: 'easeOut' }
-    }
-  };
-
   return (
-    <section className="bg-white py-20 sm:py-28 border-t border-zinc-200" id="features">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800">
-            <LayoutGrid className="h-3.5 w-3.5" />
-            <span>Product Highlights</span>
+    <section
+      id="features"
+      className="scroll-mt-16 border-b border-zinc-200 bg-zinc-50 py-20 sm:py-28"
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
+          <div>
+            <h2 className="max-w-lg text-3xl font-semibold leading-tight text-zinc-950 sm:text-4xl">
+              管理的是技能，不只是仓库。
+            </h2>
+            <p className="mt-5 max-w-md text-sm leading-7 text-zinc-500">
+              Skills Manager 把来源发现、版本解析、目标偏好和安装结果拆成清楚的本地工作流。
+            </p>
           </div>
-          <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
-            Architect your knowledge graph.
-          </h2>
-          <p className="mt-4 text-lg text-zinc-600">
-            Skills Manager transforms career growth from an ambiguous guess into a scientific, visual, and highly gamified system.
-          </p>
+
+          <div className="grid border-t border-zinc-300 sm:grid-cols-2">
+            {features.map(({ icon: Icon, title, description }) => (
+              <article
+                key={title}
+                className="border-b border-zinc-300 py-7 sm:px-6 sm:odd:border-r"
+              >
+                <Icon className="size-5 text-zinc-900" strokeWidth={1.75} aria-hidden="true" />
+                <h3 className="mt-7 text-base font-semibold text-zinc-900">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-zinc-500">{description}</p>
+              </article>
+            ))}
+          </div>
         </div>
-
-        {/* Bento Grid */}
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-100px' }}
-          className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3"
-          id="features-bento-grid"
-        >
-          {cards.map((card, i) => (
-            <motion.div
-              key={i}
-              variants={itemVariants}
-              className={`group flex flex-col justify-between rounded-2xl border border-zinc-200/80 bg-zinc-50 p-6 shadow-sm transition-all hover:bg-white hover:shadow-md ${card.gridSpan}`}
-              id={`feature-card-${i}`}
-            >
-              <div>
-                {/* Header Row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-zinc-200 text-zinc-900 shadow-sm group-hover:bg-zinc-900 group-hover:text-zinc-50 transition-colors">
-                    <card.icon className="h-5 w-5" />
-                  </div>
-                  <span className="rounded-full bg-zinc-200/50 px-2.5 py-0.5 font-mono text-[10px] font-semibold tracking-wider text-zinc-600 uppercase">
-                    {card.badge}
-                  </span>
-                </div>
-
-                {/* Content */}
-                <h3 className="mt-6 font-display text-lg font-bold text-zinc-900 group-hover:text-zinc-950">
-                  {card.title}
-                </h3>
-                <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-                  {card.description}
-                </p>
-              </div>
-
-              {/* Aesthetic Footer Detail */}
-              <div className="mt-8 border-t border-zinc-100 pt-4 flex items-center gap-1.5 text-xs font-semibold text-zinc-900 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Learn how it works</span>
-                <span className="transition-transform group-hover:translate-x-0.5">→</span>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
       </div>
     </section>
   );

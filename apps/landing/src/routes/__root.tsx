@@ -1,29 +1,33 @@
-import {HeadContent, Scripts, createRootRoute} from '@tanstack/react-router';
-import type {ReactNode} from 'react';
-import appCss from '../index.css?url';
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import appCss from "../index.css?url";
+import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png?url";
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
-      {charSet: 'utf-8'},
+      { charSet: "utf-8" },
       {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
+        name: "viewport",
+        content: "width=device-width, initial-scale=1"
       },
-      {title: 'Skills Manager'},
+      { title: "Skills Manager - 本地优先的 agent skill 管理工具" },
       {
-        name: 'description',
-        content: 'Map, track, and develop professional skills with Skills Manager.',
-      },
+        name: "description",
+        content: "统一管理技能来源、版本和安装目标，把 agent skills 可靠地分发到本机工具。"
+      }
     ],
-    links: [{rel: 'stylesheet', href: appCss}],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", href: skillsManagerMark }
+    ]
   }),
-  shellComponent: RootDocument,
+  shellComponent: RootDocument
 });
 
-function RootDocument({children}: {children: ReactNode}) {
+function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <head>
         <HeadContent />
       </head>
