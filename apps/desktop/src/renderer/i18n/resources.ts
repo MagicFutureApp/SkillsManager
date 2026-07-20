@@ -49,8 +49,8 @@ export const resources = {
           cancel: "取消",
           close: "关闭",
           editSkill: "编辑",
-          addSyncTarget: "新增分发目标",
-          addSyncTargetUnavailable: "新增分发目标暂不可用",
+          addSyncTarget: "新增目标",
+          addSyncTargetUnavailable: "新增目标暂不可用",
           preview: "预览"
         },
         filters: {
@@ -532,8 +532,8 @@ export const resources = {
           cancel: "Cancel",
           close: "Close",
           editSkill: "Edit skill",
-          addSyncTarget: "Add distribution target",
-          addSyncTargetUnavailable: "Adding distribution targets is unavailable",
+          addSyncTarget: "Add target",
+          addSyncTargetUnavailable: "Adding targets is unavailable",
           preview: "Preview"
         },
         filters: {

@@ -14,7 +14,7 @@ export const Route = createRootRoute({
       { title: "Skills Manager - 本地优先的 agent skill 管理工具" },
       {
         name: "description",
-        content: "统一管理技能来源、版本和安装目标，把 agent skills 可靠地分发到本机工具。"
+        content: "统一管理技能来源、版本和安装目标，把 agent skills 可靠分发到本机工具。"
       }
     ],
     links: [

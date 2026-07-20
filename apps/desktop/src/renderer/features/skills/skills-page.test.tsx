@@ -488,8 +488,16 @@ describe("SkillsPage", () => {
         "Reviews pull requests with concise, actionable feedback."
       )
     ).toHaveClass("mt-3");
-    expect(screen.getByText("分发目标")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "新增分发目标" })).toBeInTheDocument();
+    const syncTargetsTitle = screen.getByText("分发目标");
+    expect(syncTargetsTitle).toBeInTheDocument();
+    expect(syncTargetsTitle.parentElement).toHaveClass("flex", "items-center", "justify-between");
+    expect(screen.getByRole("button", { name: "新增目标" })).toBeInTheDocument();
+    expect(screen.queryByText("0 / 2")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "选择默认分发范围；点击分发后会直接按确认弹窗中的选择 copy 到目标目录。"
+      )
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("同步目标")).not.toBeInTheDocument();
     const skillDetail = screen.getByLabelText("技能详情");
     const distributeButton = within(skillDetail).getByRole("button", { name: "分发当前技能" });
@@ -669,13 +677,13 @@ describe("SkillsPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Review Bot" }));
 
-    expect(screen.getByText("0 / 1")).toBeInTheDocument();
+    expect(screen.queryByText("0 / 1")).not.toBeInTheDocument();
     expect(screen.getByLabelText("选择 Team workspace")).not.toBeChecked();
     expect(screen.queryByLabelText("选择 Design scratch")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Design Helper" }));
 
-    expect(screen.getByText("1 / 2")).toBeInTheDocument();
+    expect(screen.queryByText("1 / 2")).not.toBeInTheDocument();
     expect(screen.getByLabelText("选择 Team workspace")).not.toBeChecked();
     expect(screen.getByLabelText("选择 Design scratch")).toBeChecked();
   });
@@ -835,7 +843,7 @@ describe("SkillsPage", () => {
       })
     );
     expect(targetCheckbox).not.toBeChecked();
-    expect(screen.getByText("0 / 1")).toBeInTheDocument();
+    expect(screen.queryByText("0 / 1")).not.toBeInTheDocument();
     expect(setSkillTargetPreference).not.toHaveBeenCalled();
   });
 
@@ -1102,7 +1110,7 @@ describe("SkillsPage", () => {
     });
     await screen.findByRole("button", { name: "Review Bot" });
 
-    fireEvent.click(screen.getByRole("button", { name: "新增分发目标" }));
+    fireEvent.click(screen.getByRole("button", { name: "新增目标" }));
 
     const addDialog = screen.getByRole("dialog", { name: "新增目标" });
 
@@ -1143,7 +1151,7 @@ describe("SkillsPage", () => {
     expect(addedTargetCheckbox).toBeChecked();
     expect(screen.getByLabelText("选择 review-disabled")).not.toBeChecked();
     expect(screen.getByText("/Users/test/project/.claude/skills")).toBeInTheDocument();
-    expect(screen.getByText("1 / 2")).toBeInTheDocument();
+    expect(screen.queryByText("1 / 2")).not.toBeInTheDocument();
 
     fireEvent.click(addedTargetCheckbox);
 

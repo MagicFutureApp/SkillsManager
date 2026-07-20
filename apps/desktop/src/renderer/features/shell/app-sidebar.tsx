@@ -36,6 +36,8 @@ export const AppSidebar = ({
     : appVersion
       ? t("shell.navigationDescriptions.versionLabel", { version: appVersion })
       : null;
+  const shouldShowActiveNavigationDescription =
+    activeRouteId === "settings" && Boolean(activeNavigationDescription);
 
   const logoContent = (
     <>
@@ -145,11 +147,9 @@ export const AppSidebar = ({
         ))}
       </div>
 
-      {!isCollapsed ? (
+      {!isCollapsed && shouldShowActiveNavigationDescription ? (
         <div className="mt-auto rounded-lg border border-border bg-muted/40 p-3">
-          {activeNavigationDescription ? (
-            <p className="text-xs leading-5 text-muted-foreground">{activeNavigationDescription}</p>
-          ) : null}
+          <p className="text-xs leading-5 text-muted-foreground">{activeNavigationDescription}</p>
         </div>
       ) : null}
     </aside>

@@ -106,10 +106,10 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("button", { name: /设置/ })).toBeInTheDocument();
   });
 
-  it("shows the active navigation item description at the bottom of the expanded sidebar", async () => {
+  it("hides the active navigation item description outside settings", async () => {
     await renderSidebar({ activeRouteId: "skills" });
 
-    expect(screen.getByText("浏览 skill unit，选择目标并执行 copy 分发。")).toBeInTheDocument();
+    expect(screen.queryByText("浏览 skill unit，选择目标并执行 copy 分发。")).not.toBeInTheDocument();
   });
 
   it("does not repeat the active navigation label in the sidebar footer", async () => {

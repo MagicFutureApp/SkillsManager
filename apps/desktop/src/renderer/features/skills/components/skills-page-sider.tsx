@@ -61,28 +61,18 @@ export const SkillsPageSider = () => {
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="font-semibold">{t("skills.detail.syncTargets")}</h3>
-            <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              {t("skills.detail.syncTargetsDescription")}
-            </p>
-          </div>
-          <div className="grid justify-items-end gap-2">
-            <span className="font-mono text-xs text-muted-foreground">
-              {selectedSkill.targets.length} / {targetOptions.length}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!canAddSyncTarget}
-              title={canAddSyncTarget ? undefined : t("skills.actions.addSyncTargetUnavailable")}
-              onClick={page.addSyncTargetForSelectedSkill}
-            >
-              {t("skills.actions.addSyncTarget")}
-            </Button>
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-semibold">{t("skills.detail.syncTargets")}</h3>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!canAddSyncTarget}
+            title={canAddSyncTarget ? undefined : t("skills.actions.addSyncTargetUnavailable")}
+            onClick={page.addSyncTargetForSelectedSkill}
+          >
+            {t("skills.actions.addSyncTarget")}
+          </Button>
         </div>
 
         <div className="mt-3 grid gap-2">
