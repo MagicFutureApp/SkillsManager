@@ -7,7 +7,8 @@ import {
   Target,
   PackageCheck,
   Search,
-  CircleDot
+  CircleDot,
+  ArrowDown
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -65,13 +66,31 @@ export default function Hero({ onScrollToSandbox }: HeroProps) {
             transition={{ duration: 0.6, delay: 0.45 }}
             className="mt-10 flex flex-wrap justify-center gap-4"
           >
-            <button
+            {/*<button
               onClick={onScrollToSandbox}
               className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-6 py-3.5 text-sm font-semibold text-zinc-50 shadow-sm transition-all  bg-zinc-900 hover:bg-zinc-800 hover:shadow-lg active:scale-95 cursor-pointer"
               id="hero-btn"
             >
               <span>查看分发预览</span>
               <Play className="h-4 w-4 fill-current text-zinc-50" />
+            </button>*/}
+            <button
+              type="button"
+              onClick={onScrollToSandbox}
+              className="inline-flex h-11 items-center gap-2 rounded-md border border-zinc-300 bg-white px-5 text-sm font-semibold text-zinc-800 transition-colors hover:bg-zinc-100"
+            >
+              查看分发预览
+            </button>
+            <button
+              type="button"
+              onClick={onScrollToSandbox}
+              className="inline-flex h-11 items-center rounded-md bg-zinc-950 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+            >
+              下载
+              <ArrowDown
+                className="size-4 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </button>
           </motion.div>
         </div>
@@ -84,7 +103,7 @@ export default function Hero({ onScrollToSandbox }: HeroProps) {
           id="hero-mockup"
         >
           <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 overflow-hidden">
-            <img src={skillsPreview}  alt={'skills manager app screen shot'}/>
+            <img src={skillsPreview} alt={"skills manager app screen shot"} />
           </div>
         </motion.div>
       </div>

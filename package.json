@@ -2,6 +2,7 @@
   "name": "skills-manager",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.23.0",
   "description": "Skills Manager monorepo.",
   "scripts": {
     "dev": "pnpm --filter @skills-manager/desktop run dev",
@@ -9,6 +10,9 @@
     "build:main": "pnpm --filter @skills-manager/desktop run build:main",
     "build:renderer": "pnpm --filter @skills-manager/desktop run build:renderer",
     "build": "pnpm --filter @skills-manager/desktop run build",
+    "package:win": "pnpm run build && electron-builder --win nsis --x64",
+    "package:mac": "pnpm run build && electron-builder --mac dmg --arm64",
+    "package:linux": "pnpm run build && electron-builder --linux deb --x64",
     "check": "pnpm --filter @skills-manager/desktop run check",
     "test": "pnpm --filter @skills-manager/desktop test",
     "db:generate": "pnpm --filter @skills-manager/desktop run db:generate",
@@ -25,5 +29,8 @@
       "msw",
       "protobufjs"
     ]
+  },
+  "devDependencies": {
+    "electron-builder": "26.15.3"
   }
 }

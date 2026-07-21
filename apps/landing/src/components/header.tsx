@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight, ArrowDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png";
 
@@ -56,7 +56,7 @@ export default function Header({ onScrollTo }: HeaderProps) {
             id="nav-btn-cta"
           >
             <span>下载</span>
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            <ArrowDown className="size-4 transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
 
@@ -66,7 +66,7 @@ export default function Header({ onScrollTo }: HeaderProps) {
           aria-label={isOpen ? "关闭菜单" : "打开菜单"}
           id="nav-mobile-toggle"
         >
-          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {isOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
 

@@ -49,13 +49,13 @@ export default function Features() {
   return (
     <section className="bg-white py-20 sm:py-28 border-t border-zinc-200" id="features">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl">
+        <div className="text-center">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800">
             <LayoutGrid className="h-3.5 w-3.5" />
             <span>产品能力</span>
           </div>
           <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
-            管理的是仓库，更是技能。
+            统一管理来源，统一分发技能。
           </h2>
           <p className="mt-4 text-lg text-zinc-600">
             Skills Manager 把来源发现、技能拆分、目标偏好和实际安装拆成清楚的本地工作流。

@@ -18,10 +18,31 @@ Run commands from the repository root. Root scripts forward to `@skills-manager/
 ```bash
 pnpm run dev
 pnpm run build
+pnpm run package:win
+pnpm run package:mac
+pnpm run package:linux
 pnpm run check
 pnpm test
 pnpm run format:check
 ```
+
+## Build installable desktop apps
+
+The packaging commands build exactly one supported architecture per platform:
+
+- `pnpm run package:win`: Windows 11 compatible x64 NSIS installer (`.exe`).
+- `pnpm run package:mac`: macOS arm64 disk image (`.dmg`).
+- `pnpm run package:linux`: Ubuntu x64 Debian package (`.deb`).
+
+Run each command on its matching operating system. Output is written to
+`apps/desktop/release/`.
+
+The GitHub Actions workflow `.github/workflows/build-desktop-installers.yml` runs the three
+native builds in parallel. It can be started manually from the Actions tab and also runs when a
+tag matching `v*` is pushed. The installers are uploaded as workflow artifacts for 14 days.
+
+The current packages are unsigned. Windows SmartScreen and macOS Gatekeeper may therefore show a
+warning until code-signing credentials are configured in GitHub Actions.
 
 To run a desktop command directly:
 
