@@ -43,6 +43,7 @@ linux:
   category: Development
   executableName: skills-manager
   maintainer: yimity
+  syncDesktopName: true
 
 deb:
   packageCategory: devel
