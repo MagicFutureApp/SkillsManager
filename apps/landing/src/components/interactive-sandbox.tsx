@@ -326,7 +326,7 @@ export default function InteractiveSandbox() {
                       const ready = skill.status === "ready" && targetCount > 0;
                       return (
                         <motion.div key={skill.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedSkillId(skill.id)} className={`grid cursor-pointer grid-cols-[32px_minmax(0,1.2fr)_minmax(130px,1fr)_58px_74px] items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-50 ${selectedSkillId === skill.id ? "bg-violet-50/60" : ""}`}>
-                          <input type="checkbox" aria-label={`选择 ${skill.name}`} checked={checked} onChange={() => toggleChecked(skill.id)} onClick={(event) => event.stopPropagation()} className="h-4 w-4 accent-violet-600" />
+                          <input type="checkbox" aria-label={`选择 ${skill.name}`} checked={checked} onChange={() => toggleChecked(skill.id)} onClick={(event) => event.stopPropagation()} className="h-4 w-4 accent-zinc-900" />
                           <div className="min-w-0"><strong className="block truncate text-sm text-zinc-900">{skill.name}</strong></div>
                           <span className="truncate text-xs text-zinc-600">{skill.repository}</span>
                           <span className="font-mono text-xs text-zinc-500">{targetCount}</span>
@@ -351,7 +351,7 @@ export default function InteractiveSandbox() {
                 <section className="rounded-xl border border-zinc-200 bg-white p-4">
                   <h4 className="font-semibold text-zinc-900">分发目标</h4>
                   <div className="mt-3 grid gap-2">
-                    {DEMO_TARGETS.map((target) => { const checked = targetPreferences[selectedSkill.id]?.includes(target.id); return <label key={target.id} className={`grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border p-3 transition ${checked ? "border-violet-300 bg-violet-50/60" : "border-zinc-200 bg-white hover:bg-zinc-50"}`}><span className="min-w-0"><strong className="block text-sm text-zinc-800">{target.name}</strong><span className="mt-0.5 block truncate font-mono text-[11px] text-zinc-500">{target.path}</span></span><input type="checkbox" checked={Boolean(checked)} onChange={() => toggleTarget(target.id)} className="h-4 w-4 accent-violet-600" aria-label={`选择 ${target.name}`} /></label>; })}
+                    {DEMO_TARGETS.map((target) => { const checked = targetPreferences[selectedSkill.id]?.includes(target.id); return <label key={target.id} className={`grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border p-3 transition ${checked ? "border-zinc-400 bg-zinc-50" : "border-zinc-200 bg-white hover:bg-zinc-50"}`}><span className="min-w-0"><strong className="block text-sm text-zinc-800">{target.name}</strong><span className="mt-0.5 block truncate font-mono text-[11px] text-zinc-500">{target.path}</span></span><input type="checkbox" checked={Boolean(checked)} onChange={() => toggleTarget(target.id)} className="h-4 w-4 accent-zinc-900" aria-label={`选择 ${target.name}`} /></label>; })}
                   </div>
                 </section>
               </> : null}
