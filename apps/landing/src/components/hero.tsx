@@ -8,7 +8,8 @@ import {
   PackageCheck,
   Search,
   CircleDot,
-  ArrowDown
+  ArrowDown,
+  ArrowRight
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -64,7 +65,7 @@ export default function Hero({ onScrollToSandbox }: HeroProps) {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.45 }}
-            className="mt-10 flex flex-wrap justify-center gap-4"
+            className="mt-10 flex flex-wrap justify-center gap-8"
           >
             {/*<button
               onClick={onScrollToSandbox}
@@ -77,14 +78,18 @@ export default function Hero({ onScrollToSandbox }: HeroProps) {
             <button
               type="button"
               onClick={onScrollToSandbox}
-              className="inline-flex h-11 items-center gap-2 rounded-md border border-zinc-300 bg-white px-5 text-sm font-semibold text-zinc-800 transition-colors hover:bg-zinc-100"
+              className="inline-flex h-11 items-center gap-1 rounded-md border border-zinc-300 bg-white px-5 text-sm font-semibold text-zinc-800 transition-colors hover:bg-zinc-100"
             >
               查看分发预览
+              <ArrowRight
+                className="size-4 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </button>
             <button
               type="button"
               onClick={onScrollToSandbox}
-              className="inline-flex h-11 items-center rounded-md bg-zinc-950 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+              className="inline-flex h-11 items-center gap-1 rounded-md border border bg-zinc-950 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
             >
               下载
               <ArrowDown
