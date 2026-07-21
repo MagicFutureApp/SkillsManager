@@ -1,6 +1,7 @@
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
-import { buildMainWindowOptions, disableWindowMenuBar } from "./window-menu";
+import { buildMainWindowOptions, disableWindowMenuBar, getMainWindowHtmlPath } from "./window-menu";
 
 describe("main window menu bar", () => {
   it("creates the main window with the menu bar hidden", () => {
@@ -18,6 +19,12 @@ describe("main window menu bar", () => {
         height: 44
       }
     });
+  });
+
+  it("resolves the packaged renderer entry from the compiled main directory", () => {
+    expect(getMainWindowHtmlPath(path.join("dist", "main", "main"))).toBe(
+      path.normalize(path.join("dist", "renderer", "index.html"))
+    );
   });
 
   it("removes the menu from an existing browser window", () => {

@@ -4,6 +4,9 @@ import path from "node:path";
 import { APP_META, WINDOW_MIN_WIDTH } from "../core/app-constants.js";
 import { getAppIconPath } from "./tray-icon.js";
 
+export const getMainWindowHtmlPath = (mainDirname: string): string =>
+  path.join(mainDirname, "..", "..", "renderer", "index.html");
+
 export const buildMainWindowOptions = (mainDirname: string): BrowserWindowConstructorOptions => ({
   width: 1180,
   height: 760,
