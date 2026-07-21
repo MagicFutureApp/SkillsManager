@@ -1,5 +1,4 @@
 import { app, BrowserWindow, Menu, Tray } from "electron";
-import path from "node:path";
 import { createAppDbRuntime, type AppDbRuntime } from "./app-storage.js";
 import { registerAppInfoIpc } from "./ipc/app-info.js";
 import { registerDistributionIpc } from "./ipc/distribution.js";
@@ -14,7 +13,11 @@ import { registerTargetsIpc } from "./ipc/targets.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
 import { createTrayIconImage } from "./tray-icon.js";
-import { buildMainWindowOptions, disableWindowMenuBar } from "./window-menu.js";
+import {
+  buildMainWindowOptions,
+  disableWindowMenuBar,
+  getMainWindowHtmlPath
+} from "./window-menu.js";
 import { APP_META } from "../core/app-constants.js";
 import { createRepositoryRepository } from "../db/repositories/repositoryRepository.js";
 
@@ -30,7 +33,7 @@ const loadMainWindow = async (window: BrowserWindow): Promise<void> => {
     return;
   }
 
-  await window.loadFile(path.join(__dirname, "../renderer/index.html"));
+  await window.loadFile(getMainWindowHtmlPath(__dirname));
 };
 
 const createMainWindow = async (): Promise<void> => {
