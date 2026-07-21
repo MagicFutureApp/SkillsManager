@@ -39,7 +39,18 @@ Run each command on its matching operating system. Output is written to
 
 The GitHub Actions workflow `.github/workflows/build-desktop-installers.yml` runs the three
 native builds in parallel. It can be started manually from the Actions tab and also runs when a
-tag matching `v*` is pushed. The installers are uploaded as workflow artifacts for 14 days.
+tag matching `v*` is pushed. Manual builds upload the installers as workflow artifacts for 14
+days. Tag builds also create or update the matching GitHub Release and attach the Windows,
+macOS, and Ubuntu installers together with `SHA256SUMS.txt`. The Release job uses the built-in
+`GITHUB_TOKEN`; no Personal Access Token is required.
+
+Before pushing a release tag, make sure it matches the desktop package version. For example, the
+version `0.1.0` in `apps/desktop/package.json` should be released with:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
 
 The current packages are unsigned. Windows SmartScreen and macOS Gatekeeper may therefore show a
 warning until code-signing credentials are configured in GitHub Actions.
