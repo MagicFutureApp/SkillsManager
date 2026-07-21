@@ -1,4 +1,4 @@
-appId: com.skillsmanager.desktop
+appId: app.magicfuture.skillsmanager
 productName: Skills Manager
 
 directories:
@@ -11,7 +11,6 @@ files:
 
 asar: true
 npmRebuild: true
-artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 
 win:
   target:
@@ -19,6 +18,7 @@ win:
       arch:
         - x64
   icon: apps/desktop/src/renderer/assets/macOS/1024.png
+  artifactName: skills-manager-${version}-win-${arch}-setup.${ext}
 
 nsis:
   oneClick: false
@@ -33,6 +33,7 @@ mac:
   icon: apps/desktop/src/renderer/assets/macOS/1024.png
   category: public.app-category.developer-tools
   identity: null
+  artifactName: skills-manager-${version}-mac-${arch}.${ext}
 
 linux:
   target:
@@ -44,6 +45,7 @@ linux:
   executableName: skills-manager
   maintainer: yimity
   syncDesktopName: true
+  artifactName: skills-manager-${version}-ubuntu-${arch}.${ext}
 
 deb:
   packageCategory: devel
