@@ -2,11 +2,16 @@
 
 > **给 agentic workers：** 必须使用子技能：推荐使用 superpowers:subagent-driven-development，也可以使用 superpowers:executing-plans，逐个任务执行本计划。步骤使用 checkbox（`- [ ]`）语法跟踪。
 
+> 归档说明：本计划记录早期初始化阶段。分发相关后续实现已改为
+> `docs/superpowers/specs/2026-07-02-copy-only-distribution-design.md`
+> 和 `docs/superpowers/plans/2026-07-02-copy-only-distribution-implementation.md`
+> 中定义的 copy-only 流程；不要再按本计划中的旧分发字段扩展 schema。
+
 **目标：** 以小步确认的方式构建 Skills Manager 桌面应用基础，从现有 Electron 壳开始，直到具备类型化 React/Vite renderer，以及第一版 SQLite/Drizzle 数据层骨架。
 
 **架构：** 应用将 Electron main/preload 代码与 React renderer 分离。Renderer 只通过类型化 IPC 与 main 通信。SQLite 和 Drizzle 隐藏在 `src/db` 与 `src/main` 边界之后，renderer 永远不直接打开数据库。
 
-**技术栈：** Electron 42.2.0、Node.js 24.11.1、React、TypeScript 6.0.3、Vite、SQLite、Drizzle ORM、`better-sqlite3`、`drizzle-kit`、Prettier、pnpm with `nodeLinker: hoisted`。
+**技术栈：** Electron 40.10.3、Node.js 24.11.1、React、TypeScript 6.0.3、Vite、SQLite、Drizzle ORM、`better-sqlite3`、`drizzle-kit`、Prettier、pnpm with `nodeLinker: hoisted`。
 
 ---
 
@@ -34,7 +39,7 @@ pnpm run electron:version
 ```text
 All matched files use Prettier code style!
 tsc exits with code 0
-v42.2.0
+v40.10.3
 ```
 
 ## 确认规则
@@ -129,7 +134,7 @@ pnpm run electron:version
 format:check passes
 check passes
 build:main passes
-electron:version prints v42.2.0
+electron:version prints v40.10.3
 ```
 
 - [x] **步骤 5：提交**

@@ -2,6 +2,11 @@
 
 日期：2026-04-28
 
+> 归档说明：本文保留早期产品背景和 v1 范围讨论。分发相关模型已在
+> `docs/superpowers/specs/2026-07-02-copy-only-distribution-design.md`
+> 中更新为 copy-only、即时预览、无持久化分发计划、无独立同步历史页面；
+> 后续实现分发能力时以 2026-07-02 设计和当前代码为准。
+
 ## 1. 目标
 
 构建一个以桌面端优先的个人技能管理器，用于：
@@ -172,41 +177,52 @@ v1 的 manifest 支持从每个技能根目录一个 manifest 文件开始。
 ### 6.2 实体意图
 
 `providers`
+
 - 标识 provider 类型和配置
 
 `repositories`
+
 - 记录仓库来源、本地缓存路径、分支元数据和最后扫描的 commit
 
 `skill_units`
+
 - 表示仓库中的一个可分发技能
 
 `skill_versions`
+
 - 表示已解析的可安装版本；v1 将安装解析到 commit sha
 
 `agent_targets`
+
 - 存储目标类型、目标路径/配置和默认安装策略
 - 表示全局目标注册表；从某个 Skill 详情新增目标时，系统应按目标身份去重后 create-or-reuse
 - 目标身份至少应包含 `type` 和规范化后的目标路径；数据库模型应提供对应唯一约束，避免 Targets 列表出现重复目标
 
 `skill_target_preferences`
+
 - 记录用户希望某个 skill unit 默认同步到哪些目标；用于恢复 UI 勾选状态，不代表已经安装成功
 - 表示 skill unit 到 agent target 的选择关系；在 Skill 详情移除同步目标时，只删除或禁用当前 skill unit 的这条选择关系，不删除全局目标
 
 `install_instances`
+
 - 记录哪个技能版本以何种方式安装到了哪个目标和位置
 - 保留执行时的目标快照；即使后续删除 `agent_targets`，历史安装事实仍可用于审计和诊断
 
 `distribution_plans`
+
 - 存储一次从 Skills 工作流触发的安装、更新或卸载执行计划
 - v1 不作为独立用户页面展示；用于支撑 Skills 页 dry-run、执行确认、失败恢复和后续历史日志
 
 `distribution_plan_items`
+
 - 存储计划中的每一个 skill-target 可执行条目
 
 `sync_runs`
+
 - 存储仓库同步和扫描操作的执行历史
 
 `app_settings`
+
 - 存储本地配置，以及为未来预留的 profile/policy 控制项
 
 ## 7. 来源处理
@@ -379,9 +395,11 @@ Drizzle 被选为 v1 的 ORM/query layer，因为它足够轻量，贴近 SQL，
 ### 14.1 仓库多样性
 
 风险：
+
 - 非标准仓库布局会产生嘈杂的扫描结果
 
 缓解：
+
 - 双发现模型
 - 显式歧义标记
 - 标准化内部模型
@@ -389,9 +407,11 @@ Drizzle 被选为 v1 的 ORM/query layer，因为它足够轻量，贴近 SQL，
 ### 14.2 凭据差异
 
 风险：
+
 - 系统 Git 认证在不同机器上表现不同
 
 缓解：
+
 - 将认证委托给现有环境
 - 保持诊断信息可操作
 - v1 不承担登录问题
@@ -399,9 +419,11 @@ Drizzle 被选为 v1 的 ORM/query layer，因为它足够轻量，贴近 SQL，
 ### 14.3 目标路径安全
 
 风险：
+
 - 错误的安装路径或覆盖行为可能损坏本地 agent 配置
 
 缓解：
+
 - 计划优先执行
 - dry-run 预览
 - 安装策略可见
@@ -410,9 +432,11 @@ Drizzle 被选为 v1 的 ORM/query layer，因为它足够轻量，贴近 SQL，
 ### 14.4 范围膨胀
 
 风险：
+
 - 团队平台诉求渗入 v1，延迟交付
 
 缓解：
+
 - 本地优先的产品定位
 - 明确的 v1 排除项
 - 可扩展但默认休眠的团队导向 schema 字段

@@ -1,0 +1,1108 @@
+import { and, asc, count, eq, inArray } from "drizzle-orm";
+
+import type {
+  CreateRepositoryInput,
+  DeleteRepositoryResult,
+  RepositoryApiRecord,
+  RepositoryConfig,
+  RepositoryDeletePreview,
+  RepositoryLastSync,
+  RepositoryLastSyncStatus,
+  RepositoryProviderName,
+  RepositoryScanStatus,
+  RepositoryScanSummary,
+  RepositorySyncAddedSkill,
+  RepositorySyncChangedSkill,
+  RepositorySyncDistributionSummary,
+  RepositorySyncFailure,
+  RepositorySyncRemovedSkill,
+  RepositorySyncResultItem,
+  RepositorySyncScanDetail,
+  RepositorySyncSummary,
+  UpdateRepositoryInput
+} from "../../core/repositories/repository-api";
+import type { DiscoveredSkill } from "../../core/skills/skill-scanner";
+import type { ProviderType } from "../../core/providers/provider-api";
+import type { createDbClient } from "../client";
+import {
+  buildRepositoryCachePath,
+  normalizeDiscoveryEntries,
+  normalizeRepositoryScanSummary,
+  parseRepositoryScanSummaryJson,
+  slugifyRepositoryName
+} from "../../core/repositories/repository-utils";
+import { parseSkillMetadataSnapshot, toSkillKey } from "../../core/skills/skill-utils";
+import {
+  installInstances,
+  agentTargets,
+  providers,
+  repositories,
+  skillTargetPreferences,
+  skillUnits,
+  skillVersions
+} from "../schema";
+
+type DbClient = ReturnType<typeof createDbClient>;
+const DEFAULT_DISCOVERY_ENTRY = "skills/*/SKILL.md";
+
+export type RepositorySyncRecordInput = {
+  commitSha: string;
+  discoveredSkills: DiscoveredSkill[];
+  repositoryId: string;
+  startedAt: Date;
+  syncRunId?: string;
+};
+
+export type RepositorySyncRecordResult = {
+  commitSha: string;
+  distribution: RepositorySyncDistributionSummary;
+  repositoryId: string;
+  scan: RepositoryScanSummary;
+  skillUnits: number;
+  status: RepositoryScanStatus;
+};
+
+export type RepositorySyncFailureRecordInput = {
+  error: RepositorySyncFailure;
+  repositoryId: string;
+  startedAt: Date;
+  syncRunId?: string;
+};
+
+export type RepositorySyncRunStartInput = {
+  repositoryId: string;
+  startedAt: Date;
+};
+
+export const createRepositoryRepository = (db: DbClient) => {
+  return {
+    async create(input: CreateRepositoryInput): Promise<RepositoryApiRecord> {
+      const now = new Date();
+      const id = buildRepositoryId(input.name, now);
+      const providerId = providerIdByName[input.provider];
+      const config = buildCreatedRepositoryConfig(input);
+
+      await ensureProvider({
+        db,
+        now,
+        providerId,
+        providerName: input.provider
+      });
+
+      await db.insert(repositories).values({
+        configJson: JSON.stringify(config),
+        createdAt: now,
+        defaultBranch: normalizeRepositoryBranch(input),
+        id,
+        lastScannedCommitSha: null,
+        localCachePath: buildRepositoryCachePath(input.name),
+        name: input.name,
+        providerId,
+        remoteUrl: input.remoteUrl,
+        updatedAt: now
+      });
+
+      return {
+        branch: normalizeRepositoryBranch(input),
+        configJson: JSON.stringify(config),
+        id,
+        lastSync: null,
+        lastScannedCommitSha: null,
+        localCachePath: buildRepositoryCachePath(input.name),
+        name: input.name,
+        providerId,
+        remoteUrl: input.remoteUrl,
+        updatedAt: now.toISOString()
+      };
+    },
+
+    async update(repositoryId: string, input: UpdateRepositoryInput): Promise<RepositoryApiRecord> {
+      const now = new Date();
+      const repositoryRows = await db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.id, repositoryId))
+        .limit(1);
+      const repository = repositoryRows[0];
+
+      if (!repository) {
+        throw new Error("Repository source not found.");
+      }
+
+      const providerId = providerIdByName[input.provider];
+      const branch = normalizeRepositoryBranch(input);
+      const config = mergeUpdatedRepositoryConfig({
+        configJson: repository.configJson,
+        input,
+        providerName: input.provider,
+        repositoryId: repository.id,
+        wasScanned: Boolean(repository.lastScannedCommitSha)
+      });
+
+      await ensureProvider({
+        db,
+        now,
+        providerId,
+        providerName: input.provider
+      });
+
+      await db
+        .update(repositories)
+        .set({
+          configJson: JSON.stringify(config),
+          defaultBranch: branch,
+          name: input.name,
+          providerId,
+          remoteUrl: input.remoteUrl,
+          updatedAt: now
+        })
+        .where(eq(repositories.id, repositoryId));
+
+      return {
+        branch,
+        configJson: JSON.stringify(config),
+        id: repository.id,
+        lastSync: null,
+        lastScannedCommitSha: repository.lastScannedCommitSha,
+        localCachePath: repository.localCachePath,
+        name: input.name,
+        providerId,
+        remoteUrl: input.remoteUrl,
+        updatedAt: now.toISOString()
+      };
+    },
+
+    async delete(repositoryId: string): Promise<DeleteRepositoryResult> {
+      const preview = await getDeletePreview(db, repositoryId);
+      const skillUnitIds = preview.skills.map((skill) => skill.id);
+      const versionRows = skillUnitIds.length
+        ? await db
+            .select({ id: skillVersions.id })
+            .from(skillVersions)
+            .where(inArray(skillVersions.skillUnitId, skillUnitIds))
+        : [];
+      const skillVersionIds = versionRows.map((version) => version.id);
+
+      if (skillVersionIds.length) {
+        await db
+          .delete(installInstances)
+          .where(inArray(installInstances.skillVersionId, skillVersionIds));
+        await db.delete(skillVersions).where(inArray(skillVersions.id, skillVersionIds));
+      }
+
+      if (skillUnitIds.length) {
+        await db
+          .delete(skillTargetPreferences)
+          .where(inArray(skillTargetPreferences.skillUnitId, skillUnitIds));
+        await db.delete(skillUnits).where(inArray(skillUnits.id, skillUnitIds));
+      }
+
+      await db.delete(repositories).where(eq(repositories.id, repositoryId));
+
+      return {
+        deletedRepositoryId: repositoryId,
+        deletedSkillUnitIds: skillUnitIds,
+        localCachePath: preview.localCachePath
+      };
+    },
+
+    async getDeletePreview(repositoryId: string): Promise<RepositoryDeletePreview> {
+      return getDeletePreview(db, repositoryId);
+    },
+
+    async count(): Promise<number> {
+      const rows = await db.select({ value: count() }).from(repositories);
+
+      return rows[0]?.value ?? 0;
+    },
+
+    async markInterruptedSyncRuns(): Promise<number> {
+      const runningRows = await db
+        .select({ id: repositories.id })
+        .from(repositories)
+        .where(eq(repositories.lastSyncStatus, "running"));
+
+      if (!runningRows.length) {
+        return 0;
+      }
+
+      await db
+        .update(repositories)
+        .set({
+          lastSyncErrorMessage: "上次同步被中断，可能是应用异常退出。",
+          lastSyncFinishedAt: new Date(),
+          lastSyncStatus: "interrupted",
+          lastSyncSummaryJson: JSON.stringify({
+            category: "interrupted",
+            message: "上次同步被中断，可能是应用异常退出。"
+          }),
+          updatedAt: new Date()
+        })
+        .where(eq(repositories.lastSyncStatus, "running"));
+
+      return runningRows.length;
+    },
+
+    async recordSyncFailure(
+      input: RepositorySyncFailureRecordInput
+    ): Promise<RepositorySyncResultItem> {
+      const now = new Date();
+      const repositoryRows = await db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.id, input.repositoryId))
+        .limit(1);
+      const repository = repositoryRows[0];
+
+      if (!repository) {
+        throw new Error("Repository source not found.");
+      }
+
+      const scan: RepositoryScanSummary = { added: 0, changed: 0, removed: 0, warnings: 1 };
+      const existingSkillRows = await db
+        .select({ id: skillUnits.id })
+        .from(skillUnits)
+        .where(eq(skillUnits.repositoryId, input.repositoryId));
+      const summary: RepositorySyncSummary = {
+        distribution: createEmptyDistributionSummary(false),
+        scan: {
+          added: [],
+          changed: [],
+          counts: scan,
+          removed: [],
+          warnings: [input.error.message]
+        }
+      };
+
+      await db
+        .update(repositories)
+        .set({
+          configJson: JSON.stringify(
+            mergeFailedRepositoryConfig({
+              configJson: repository.configJson,
+              providerName: providerNameFor(undefined, repository.remoteUrl),
+              repositoryId: repository.id,
+              scan,
+              skillUnits: existingSkillRows.length
+            })
+          ),
+          lastSyncEndCommitSha: null,
+          lastSyncErrorMessage: input.error.message,
+          lastSyncFinishedAt: now,
+          lastSyncLogPath: input.error.logPath,
+          lastSyncStartedAt: input.startedAt,
+          lastSyncStartCommitSha: repository.lastScannedCommitSha,
+          lastSyncStatus: "failed",
+          lastSyncSummaryJson: JSON.stringify({
+            category: input.error.category,
+            ...summary
+          }),
+          updatedAt: now
+        })
+        .where(eq(repositories.id, input.repositoryId));
+
+      return {
+        distribution: summary.distribution,
+        error: input.error,
+        repositoryId: input.repositoryId,
+        scan,
+        skillUnits: 0,
+        status: "failed"
+      };
+    },
+
+    async recordSyncResult(input: RepositorySyncRecordInput): Promise<RepositorySyncRecordResult> {
+      const now = new Date();
+      const repositoryRows = await db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.id, input.repositoryId))
+        .limit(1);
+      const repository = repositoryRows[0];
+
+      if (!repository) {
+        throw new Error("Repository source not found.");
+      }
+
+      const previousSkillRows = await db
+        .select({
+          id: skillUnits.id,
+          name: skillUnits.name,
+          rootPath: skillUnits.rootPath
+        })
+        .from(skillUnits)
+        .where(eq(skillUnits.repositoryId, input.repositoryId));
+      const previousSkillIds = previousSkillRows.map((skill) => skill.id);
+      const previousVersionsBySkillId = await getLatestSkillVersionsBySkillId(db, previousSkillIds);
+      const previousSkillsById = new Map(previousSkillRows.map((skill) => [skill.id, skill]));
+      const nextSkills = input.discoveredSkills.map((skill) => ({
+        ...skill,
+        skillUnitId: buildSkillUnitId(input.repositoryId, skill.skillKey)
+      }));
+      const nextSkillIds = nextSkills.map((skill) => skill.skillUnitId);
+      const previousSkillIdSet = new Set(previousSkillIds);
+      const nextSkillIdSet = new Set(nextSkillIds);
+      const removedSkillIds = previousSkillIds.filter((id) => !nextSkillIdSet.has(id));
+      const addedDetails: RepositorySyncAddedSkill[] = nextSkills
+        .filter((skill) => !previousSkillIdSet.has(skill.skillUnitId))
+        .map((skill) => ({
+          commitSha: input.commitSha,
+          name: skill.name,
+          skillKey: skill.skillKey,
+          skillUnitId: skill.skillUnitId
+        }));
+      const changedDetails: RepositorySyncChangedSkill[] = nextSkills
+        .filter((skill) => {
+          const previousVersion = previousVersionsBySkillId.get(skill.skillUnitId);
+
+          return (
+            previousSkillIdSet.has(skill.skillUnitId) &&
+            previousVersion?.commitSha !== input.commitSha
+          );
+        })
+        .map((skill) => ({
+          commitSha: input.commitSha,
+          name: skill.name,
+          previousCommitSha: previousVersionsBySkillId.get(skill.skillUnitId)?.commitSha ?? null,
+          skillKey: skill.skillKey,
+          skillUnitId: skill.skillUnitId
+        }));
+      const removedDetails: RepositorySyncRemovedSkill[] = removedSkillIds.map((skillUnitId) => {
+        const skill = previousSkillsById.get(skillUnitId);
+        const previousVersion = previousVersionsBySkillId.get(skillUnitId);
+
+        return {
+          name: skill?.name ?? skillUnitId,
+          previousCommitSha: previousVersion?.commitSha ?? null,
+          skillKey: resolvePreviousSkillKey({
+            metadataSnapshotJson: previousVersion?.metadataSnapshotJson,
+            rootPath: skill?.rootPath
+          }),
+          skillUnitId
+        };
+      });
+      const scan: RepositoryScanSummary = {
+        added: addedDetails.length,
+        changed: changedDetails.length,
+        removed: removedDetails.length,
+        warnings: 0
+      };
+      const scanDetail: RepositorySyncScanDetail = {
+        added: addedDetails,
+        changed: changedDetails,
+        counts: scan,
+        removed: removedDetails,
+        warnings: []
+      };
+      const status: RepositoryScanStatus = scan.warnings > 0 ? "review" : "ready";
+
+      if (removedSkillIds.length) {
+        const removedVersionRows = await db
+          .select({ id: skillVersions.id })
+          .from(skillVersions)
+          .where(inArray(skillVersions.skillUnitId, removedSkillIds));
+        const removedVersionIds = removedVersionRows.map((version) => version.id);
+
+        if (removedVersionIds.length) {
+          await db
+            .delete(installInstances)
+            .where(inArray(installInstances.skillVersionId, removedVersionIds));
+          await db.delete(skillVersions).where(inArray(skillVersions.id, removedVersionIds));
+        }
+
+        await db
+          .delete(skillTargetPreferences)
+          .where(inArray(skillTargetPreferences.skillUnitId, removedSkillIds));
+        await db.delete(skillUnits).where(inArray(skillUnits.id, removedSkillIds));
+      }
+
+      for (const skill of nextSkills) {
+        await db
+          .insert(skillUnits)
+          .values({
+            createdAt: now,
+            description: skill.description,
+            discoveryMethod: skill.discoveryMethod,
+            entryPath: skill.entryPath,
+            id: skill.skillUnitId,
+            license: skill.license,
+            name: skill.name,
+            repositoryId: input.repositoryId,
+            rootPath: skill.rootPath,
+            status: skill.status,
+            updatedAt: now
+          })
+          .onConflictDoUpdate({
+            target: skillUnits.id,
+            set: {
+              description: skill.description,
+              discoveryMethod: skill.discoveryMethod,
+              entryPath: skill.entryPath,
+              license: skill.license,
+              name: skill.name,
+              rootPath: skill.rootPath,
+              status: skill.status,
+              updatedAt: now
+            }
+          });
+
+        await db
+          .insert(skillVersions)
+          .values({
+            commitSha: input.commitSha,
+            createdAt: now,
+            id: `${skill.skillUnitId}__${input.commitSha}`,
+            metadataSnapshotJson: JSON.stringify({
+              description: skill.description,
+              discoveryMethod: skill.discoveryMethod,
+              entryPath: skill.entryPath,
+              license: skill.license,
+              rootPath: skill.rootPath,
+              skillKey: skill.skillKey,
+              tags: skill.tags
+            }),
+            skillUnitId: skill.skillUnitId
+          })
+          .onConflictDoNothing();
+      }
+
+      const distribution = createEmptyDistributionSummary(false);
+      distribution.eligible = await countEnabledTargetPreferences(db, nextSkillIds);
+      const summary: RepositorySyncSummary = {
+        distribution,
+        scan: scanDetail
+      };
+
+      await db
+        .update(repositories)
+        .set({
+          configJson: JSON.stringify(
+            mergeSyncedRepositoryConfig({
+              configJson: repository.configJson,
+              providerName: providerNameFor(undefined, repository.remoteUrl),
+              repositoryId: repository.id,
+              scan,
+              skillUnits: input.discoveredSkills.length,
+              status
+            })
+          ),
+          lastSyncEndCommitSha: input.commitSha,
+          lastSyncErrorMessage: null,
+          lastSyncFinishedAt: now,
+          lastSyncLogPath: null,
+          lastSyncStartedAt: input.startedAt,
+          lastSyncStartCommitSha: repository.lastScannedCommitSha,
+          lastSyncStatus: "success",
+          lastSyncSummaryJson: JSON.stringify(summary),
+          lastScannedCommitSha: input.commitSha,
+          updatedAt: now
+        })
+        .where(eq(repositories.id, input.repositoryId));
+
+      return {
+        commitSha: input.commitSha,
+        distribution: summary.distribution,
+        repositoryId: input.repositoryId,
+        scan,
+        skillUnits: input.discoveredSkills.length,
+        status
+      };
+    },
+
+    async startSyncRun(input: RepositorySyncRunStartInput): Promise<string> {
+      return startSyncRun({
+        db,
+        repositoryId: input.repositoryId,
+        startedAt: input.startedAt
+      });
+    },
+
+    async updateLastSyncDistributionSummary(
+      repositoryId: string,
+      distribution: RepositorySyncDistributionSummary
+    ): Promise<void> {
+      const repositoryRows = await db
+        .select({
+          lastSyncSummaryJson: repositories.lastSyncSummaryJson
+        })
+        .from(repositories)
+        .where(eq(repositories.id, repositoryId))
+        .limit(1);
+      const repository = repositoryRows[0];
+
+      if (!repository) {
+        throw new Error("Repository source not found.");
+      }
+
+      const summary = parseRepositorySyncSummary(repository.lastSyncSummaryJson);
+
+      await db
+        .update(repositories)
+        .set({
+          lastSyncSummaryJson: JSON.stringify({
+            ...summary,
+            distribution
+          }),
+          updatedAt: new Date()
+        })
+        .where(eq(repositories.id, repositoryId));
+    },
+
+    async list(): Promise<RepositoryApiRecord[]> {
+      const repositoryRows = await db.select().from(repositories).orderBy(asc(repositories.id));
+      const providerRows = await db.select().from(providers);
+      const skillUnitRows = await db.select().from(skillUnits);
+      const providersById = new Map(providerRows.map((provider) => [provider.id, provider]));
+      const skillUnitCounts = countSkillUnitsByRepository(skillUnitRows);
+
+      return repositoryRows.map((repository, index) => {
+        const provider = providersById.get(repository.providerId);
+        const providerName = providerNameFor(provider?.type, repository.remoteUrl);
+        const skillUnitCount = skillUnitCounts.get(repository.id) ?? 0;
+        const lastSync = repositoryLastSyncFromRow(repository);
+        const config = mergeRepositoryConfig({
+          configJson: repository.configJson,
+          index,
+          providerName,
+          repositoryId: repository.id,
+          skillUnitCount,
+          wasScanned: Boolean(repository.lastScannedCommitSha)
+        });
+        const displayedConfig = lastSync
+          ? {
+              ...config,
+              scan: parseRepositoryScanSummaryJson(lastSync.summaryJson)
+            }
+          : config;
+
+        return {
+          branch: repository.defaultBranch ?? "main",
+          configJson: JSON.stringify(displayedConfig),
+          id: repository.id,
+          lastSync,
+          lastScannedCommitSha: repository.lastScannedCommitSha,
+          localCachePath: repository.localCachePath,
+          name: repository.name || deriveRepositoryName(repository.remoteUrl, repository.id),
+          providerId: repository.providerId,
+          remoteUrl: repository.remoteUrl,
+          updatedAt: repository.updatedAt.toISOString()
+        };
+      });
+    }
+  };
+};
+
+const startSyncRun = async ({
+  db,
+  repositoryId,
+  startedAt
+}: {
+  db: DbClient;
+  repositoryId: string;
+  startedAt: Date;
+}): Promise<string> => {
+  const repositoryRows = await db
+    .select()
+    .from(repositories)
+    .where(eq(repositories.id, repositoryId))
+    .limit(1);
+  const repository = repositoryRows[0];
+
+  if (!repository) {
+    throw new Error("Repository source not found.");
+  }
+
+  const syncRunId = `sync-${repositoryId}-${startedAt.getTime()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+
+  await db
+    .update(repositories)
+    .set({
+      lastSyncEndCommitSha: null,
+      lastSyncErrorMessage: null,
+      lastSyncFinishedAt: null,
+      lastSyncLogPath: null,
+      lastSyncStartedAt: startedAt,
+      lastSyncStartCommitSha: repository.lastScannedCommitSha,
+      lastSyncStatus: "running",
+      lastSyncSummaryJson: "{}",
+      updatedAt: startedAt
+    })
+    .where(eq(repositories.id, repositoryId));
+
+  return syncRunId;
+};
+
+const getDeletePreview = async (
+  db: DbClient,
+  repositoryId: string
+): Promise<RepositoryDeletePreview> => {
+  const repositoryRows = await db
+    .select()
+    .from(repositories)
+    .where(eq(repositories.id, repositoryId))
+    .limit(1);
+  const repository = repositoryRows[0];
+
+  if (!repository) {
+    throw new Error("Repository source not found.");
+  }
+
+  const skills = await db
+    .select({
+      entryPath: skillUnits.entryPath,
+      id: skillUnits.id,
+      name: skillUnits.name
+    })
+    .from(skillUnits)
+    .where(eq(skillUnits.repositoryId, repositoryId))
+    .orderBy(asc(skillUnits.name));
+
+  return {
+    localCachePath: repository.localCachePath,
+    repositoryId: repository.id,
+    repositoryName: repository.name,
+    skills
+  };
+};
+
+const ensureProvider = async ({
+  db,
+  now,
+  providerId,
+  providerName
+}: {
+  db: DbClient;
+  now: Date;
+  providerId: string;
+  providerName: RepositoryProviderName;
+}): Promise<void> => {
+  const existingProviders = await db.select().from(providers);
+
+  if (existingProviders.some((provider) => provider.id === providerId)) {
+    return;
+  }
+
+  await db.insert(providers).values({
+    configJson: "{}",
+    createdAt: now,
+    id: providerId,
+    name: providerName,
+    type: providerTypeByName[providerName],
+    updatedAt: now
+  });
+};
+
+const countSkillUnitsByRepository = (
+  rows: Array<typeof skillUnits.$inferSelect>
+): Map<string, number> => {
+  const counts = new Map<string, number>();
+
+  rows.forEach((row) => {
+    counts.set(row.repositoryId, (counts.get(row.repositoryId) ?? 0) + 1);
+  });
+
+  return counts;
+};
+
+const repositoryLastSyncFromRow = (
+  repository: typeof repositories.$inferSelect
+): RepositoryLastSync | null => {
+  if (repository.lastSyncStatus === "idle" || !repository.lastSyncStartedAt) {
+    return null;
+  }
+
+  return {
+    endCommitSha: repository.lastSyncEndCommitSha,
+    errorMessage: repository.lastSyncErrorMessage,
+    finishedAt: repository.lastSyncFinishedAt?.toISOString() ?? null,
+    logPath: repository.lastSyncLogPath,
+    startedAt: repository.lastSyncStartedAt.toISOString(),
+    startCommitSha: repository.lastSyncStartCommitSha,
+    status: normalizeLastSyncStatus(repository.lastSyncStatus),
+    summaryJson: repository.lastSyncSummaryJson
+  };
+};
+
+const getLatestSkillVersionsBySkillId = async (
+  db: DbClient,
+  skillUnitIds: string[]
+): Promise<
+  Map<string, Pick<typeof skillVersions.$inferSelect, "commitSha" | "metadataSnapshotJson">>
+> => {
+  if (!skillUnitIds.length) {
+    return new Map();
+  }
+
+  const rows = await db
+    .select({
+      commitSha: skillVersions.commitSha,
+      createdAt: skillVersions.createdAt,
+      metadataSnapshotJson: skillVersions.metadataSnapshotJson,
+      skillUnitId: skillVersions.skillUnitId
+    })
+    .from(skillVersions)
+    .where(inArray(skillVersions.skillUnitId, skillUnitIds))
+    .orderBy(asc(skillVersions.createdAt));
+  const latestBySkillId = new Map<
+    string,
+    Pick<typeof skillVersions.$inferSelect, "commitSha" | "metadataSnapshotJson">
+  >();
+
+  rows.forEach((row) => {
+    latestBySkillId.set(row.skillUnitId, {
+      commitSha: row.commitSha,
+      metadataSnapshotJson: row.metadataSnapshotJson
+    });
+  });
+
+  return latestBySkillId;
+};
+
+const resolvePreviousSkillKey = ({
+  metadataSnapshotJson,
+  rootPath
+}: {
+  metadataSnapshotJson: string | undefined;
+  rootPath: string | undefined;
+}): string => {
+  if (metadataSnapshotJson) {
+    const metadata = parseSkillMetadataSnapshot(metadataSnapshotJson);
+
+    if (metadata.skillKey) {
+      return metadata.skillKey;
+    }
+  }
+
+  return rootPath ? toSkillKey(rootPath) : "";
+};
+
+const createEmptyDistributionSummary = (
+  autoDistributionEnabled: boolean
+): RepositorySyncDistributionSummary => {
+  return {
+    autoDistributionEnabled,
+    blocked: 0,
+    conflicts: 0,
+    eligible: 0,
+    failed: 0,
+    installed: 0,
+    skipped: 0,
+    updated: 0
+  };
+};
+
+const parseRepositorySyncSummary = (summaryJson: string): Partial<RepositorySyncSummary> => {
+  try {
+    const parsed = JSON.parse(summaryJson) as Partial<RepositorySyncSummary>;
+
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const countEnabledTargetPreferences = async (
+  db: DbClient,
+  skillUnitIds: string[]
+): Promise<number> => {
+  if (!skillUnitIds.length) {
+    return 0;
+  }
+
+  const rows = await db
+    .select({ value: count() })
+    .from(skillTargetPreferences)
+    .innerJoin(agentTargets, eq(agentTargets.id, skillTargetPreferences.agentTargetId))
+    .where(
+      and(
+        inArray(skillTargetPreferences.skillUnitId, skillUnitIds),
+        eq(skillTargetPreferences.enabled, true),
+        eq(agentTargets.enabled, true)
+      )
+    );
+
+  return rows[0]?.value ?? 0;
+};
+
+const normalizeLastSyncStatus = (status: string): RepositoryLastSyncStatus => {
+  if (
+    status === "failed" ||
+    status === "interrupted" ||
+    status === "running" ||
+    status === "success"
+  ) {
+    return status;
+  }
+
+  return "failed";
+};
+
+const mergeRepositoryConfig = ({
+  configJson,
+  index,
+  providerName,
+  repositoryId,
+  skillUnitCount,
+  wasScanned
+}: {
+  configJson: string;
+  index: number;
+  providerName: RepositoryProviderName;
+  repositoryId: string;
+  skillUnitCount: number;
+  wasScanned: boolean;
+}): RepositoryConfig => {
+  const savedConfig = parseRepositoryConfig(configJson);
+
+  return {
+    enabled: savedConfig.enabled ?? true,
+    lastScanLabel: savedConfig.lastScanLabel ?? (wasScanned ? "已扫描" : "未执行"),
+    note: savedConfig.note ?? `真实来源记录 ${repositoryId}，等待手动同步扫描。`,
+    patterns: savedConfig.patterns ?? [DEFAULT_DISCOVERY_ENTRY],
+    priority: savedConfig.priority ?? index + 1,
+    providerName: savedConfig.providerName ?? providerName,
+    scan: savedConfig.scan ?? { added: 0, changed: 0, removed: 0, warnings: 0 },
+    skillUnits: skillUnitCount,
+    status: savedConfig.status ?? (wasScanned ? "ready" : "review")
+  };
+};
+
+const buildCreatedRepositoryConfig = (input: CreateRepositoryInput): RepositoryConfig => {
+  return {
+    enabled: true,
+    lastScanLabel: "未执行",
+    note: input.note || (input.provider === "Local" ? "" : "用户新增的来源，等待第一次同步扫描。"),
+    patterns: normalizeDiscoveryEntries(input.patterns),
+    priority: 99,
+    providerName: input.provider,
+    scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
+    skillUnits: 0,
+    status: "review"
+  };
+};
+
+const mergeUpdatedRepositoryConfig = ({
+  configJson,
+  input,
+  providerName,
+  repositoryId,
+  wasScanned
+}: {
+  configJson: string;
+  input: UpdateRepositoryInput;
+  providerName: RepositoryProviderName;
+  repositoryId: string;
+  wasScanned: boolean;
+}): RepositoryConfig => {
+  const savedConfig = mergeRepositoryConfig({
+    configJson,
+    index: 98,
+    providerName,
+    repositoryId,
+    skillUnitCount: 0,
+    wasScanned
+  });
+
+  return {
+    ...savedConfig,
+    enabled: input.enabled ?? savedConfig.enabled,
+    note: input.note,
+    patterns: normalizeDiscoveryEntries(input.patterns),
+    providerName
+  };
+};
+
+const normalizeRepositoryBranch = (input: CreateRepositoryInput): string => {
+  if (input.provider === "Local") {
+    return input.branch;
+  }
+
+  return input.branch;
+};
+
+const mergeSyncedRepositoryConfig = ({
+  configJson,
+  providerName,
+  repositoryId,
+  scan,
+  skillUnits,
+  status
+}: {
+  configJson: string;
+  providerName: RepositoryProviderName;
+  repositoryId: string;
+  scan: RepositoryScanSummary;
+  skillUnits: number;
+  status: RepositoryScanStatus;
+}): RepositoryConfig => {
+  const savedConfig = mergeRepositoryConfig({
+    configJson,
+    index: 98,
+    providerName,
+    repositoryId,
+    skillUnitCount: skillUnits,
+    wasScanned: true
+  });
+
+  return {
+    ...savedConfig,
+    lastScanLabel: "刚刚同步",
+    scan,
+    skillUnits,
+    status
+  };
+};
+
+const mergeFailedRepositoryConfig = ({
+  configJson,
+  providerName,
+  repositoryId,
+  scan,
+  skillUnits
+}: {
+  configJson: string;
+  providerName: RepositoryProviderName;
+  repositoryId: string;
+  scan: RepositoryScanSummary;
+  skillUnits: number;
+}): RepositoryConfig => {
+  const savedConfig = mergeRepositoryConfig({
+    configJson,
+    index: 98,
+    providerName,
+    repositoryId,
+    skillUnitCount: skillUnits,
+    wasScanned: true
+  });
+
+  return {
+    ...savedConfig,
+    lastScanLabel: "同步失败",
+    scan,
+    status: "failed"
+  };
+};
+
+const buildSkillUnitId = (repositoryId: string, skillKey: string): string => {
+  return `${repositoryId}__${skillKey}`;
+};
+
+const providerNameFor = (
+  providerType: string | undefined,
+  remoteUrl: string
+): RepositoryProviderName => {
+  const normalizedProviderType = normalizeProviderType(providerType);
+
+  if (normalizedProviderType) {
+    return providerNamesByType[normalizedProviderType];
+  }
+
+  if (isLocalPath(remoteUrl)) {
+    return "Local";
+  }
+
+  return "GitHub";
+};
+
+const providerNamesByType: Record<ProviderType, RepositoryProviderName> = {
+  bitbucket: "Bitbucket",
+  gitea: "Gitea",
+  github: "GitHub",
+  gitlab: "GitLab",
+  local_git: "Local",
+  skills_sh: "skills.sh"
+};
+
+const providerIdByName: Record<RepositoryProviderName, string> = {
+  Bitbucket: "bitbucket",
+  Gitea: "gitea",
+  GitHub: "github",
+  GitLab: "gitlab",
+  Local: "local-git",
+  "skills.sh": "skills-sh"
+};
+
+const providerTypeByName: Record<RepositoryProviderName, ProviderType> = {
+  Bitbucket: "bitbucket",
+  Gitea: "gitea",
+  GitHub: "github",
+  GitLab: "gitlab",
+  Local: "local_git",
+  "skills.sh": "skills_sh"
+};
+
+const normalizeProviderType = (value: string | undefined): ProviderType | null => {
+  if (
+    value === "github" ||
+    value === "gitlab" ||
+    value === "gitea" ||
+    value === "bitbucket" ||
+    value === "local_git" ||
+    value === "skills_sh"
+  ) {
+    return value;
+  }
+
+  return null;
+};
+
+const deriveRepositoryName = (remoteUrl: string, fallbackId: string): string => {
+  const trimmedRemote = remoteUrl
+    .trim()
+    .replace(/[\\/]+$/, "")
+    .replace(/\.git$/i, "");
+  const lastSegment = trimmedRemote
+    .split(/[\\/:]/)
+    .filter(Boolean)
+    .pop();
+
+  return lastSegment || fallbackId;
+};
+
+const buildRepositoryId = (name: string, now: Date): string => {
+  return `repo-${slugifyRepositoryName(name) || "source"}-${now.getTime()}`;
+};
+
+const parseRepositoryConfig = (configJson: string): Partial<RepositoryConfig> => {
+  try {
+    const parsed = JSON.parse(configJson) as Partial<RepositoryConfig>;
+
+    return {
+      enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : undefined,
+      lastScanLabel: typeof parsed.lastScanLabel === "string" ? parsed.lastScanLabel : undefined,
+      note: typeof parsed.note === "string" ? parsed.note : undefined,
+      patterns: Array.isArray(parsed.patterns)
+        ? parsed.patterns.filter((pattern): pattern is string => typeof pattern === "string")
+        : undefined,
+      priority: typeof parsed.priority === "number" ? parsed.priority : undefined,
+      providerName: isProviderName(parsed.providerName) ? parsed.providerName : undefined,
+      scan: normalizeRepositoryScanSummary(parsed.scan),
+      status: isScanStatus(parsed.status) ? parsed.status : undefined
+    };
+  } catch {
+    return {};
+  }
+};
+
+const isProviderName = (value: unknown): value is RepositoryProviderName => {
+  return (
+    value === "Bitbucket" ||
+    value === "Gitea" ||
+    value === "GitHub" ||
+    value === "GitLab" ||
+    value === "Local" ||
+    value === "skills.sh"
+  );
+};
+
+const isScanStatus = (value: unknown): value is RepositoryConfig["status"] => {
+  return value === "ready" || value === "review" || value === "failed";
+};
+
+const isLocalPath = (remoteUrl: string): boolean => {
+  return (
+    /^[A-Za-z]:[\\/]/.test(remoteUrl) || remoteUrl.startsWith("/") || remoteUrl.startsWith(".")
+  );
+};

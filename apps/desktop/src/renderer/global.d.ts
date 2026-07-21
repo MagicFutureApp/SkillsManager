@@ -1,0 +1,148 @@
+import type { AppHealth as MainAppHealth } from "../main/ipc/health";
+import type { AppInfo as MainAppInfo } from "../main/ipc/app-info";
+import type {
+  DistributionExecuteInput as MainDistributionExecuteInput,
+  DistributionExecuteResult as MainDistributionExecuteResult,
+  DistributionPreviewInput as MainDistributionPreviewInput,
+  DistributionPreviewResult as MainDistributionPreviewResult
+} from "../main/ipc/distribution";
+import type { NavigationBadgeCountsResult as MainNavigationBadgeCountsResult } from "../main/ipc/navigation-badges";
+import type { ProvidersListResult as MainProvidersListResult } from "../main/ipc/providers";
+import type {
+  RepositoriesListResult as MainRepositoriesListResult,
+  RepositoriesSyncProgressEvent as MainRepositoriesSyncProgressEvent,
+  RepositoriesSyncResult as MainRepositoriesSyncResult
+} from "../main/ipc/repositories";
+import type {
+  AppSettingsResult as MainAppSettingsResult,
+  AppStoragePathsResult as MainAppStoragePathsResult,
+  DistributionSettings as MainDistributionSettings,
+  ResetLocalDatabaseResult as MainResetLocalDatabaseResult
+} from "../main/ipc/settings";
+import type {
+  RemoveSkillTargetPreferenceInput as MainRemoveSkillTargetPreferenceInput,
+  RemoveSkillTargetPreferenceResult as MainRemoveSkillTargetPreferenceResult,
+  SkillsListResult as MainSkillsListResult,
+  UpdateSkillTargetPreferenceInput as MainUpdateSkillTargetPreferenceInput,
+  UpdateSkillTargetPreferenceResult as MainUpdateSkillTargetPreferenceResult
+} from "../main/ipc/skills";
+import type {
+  AddCustomDirectoryTargetInput as MainAddCustomDirectoryTargetInput,
+  AddSkillDirectoryTargetInput as MainAddSkillDirectoryTargetInput,
+  DeleteTargetsInput as MainDeleteTargetsInput,
+  SelectedTargetDirectoryResolution as MainSelectedTargetDirectoryResolution,
+  TargetDirectoryAgentOption as MainTargetDirectoryAgentOption,
+  UpdateCustomDirectoryTargetInput as MainUpdateCustomDirectoryTargetInput,
+  TargetsListResult as MainTargetsListResult,
+  TargetsRescanResult as MainTargetsRescanResult
+} from "../main/ipc/targets";
+import type {
+  CreateRepositoryInput as CoreCreateRepositoryInput,
+  DeleteRepositoryResult as CoreDeleteRepositoryResult,
+  RepositoryApiRecord as CoreRepositoryApiRecord,
+  RepositoryDeletePreview as CoreRepositoryDeletePreview,
+  UpdateRepositoryInput as CoreUpdateRepositoryInput
+} from "../core/repositories/repository-api";
+import type { RepositorySourceInspection as CoreRepositorySourceInspection } from "../core/repositories/source-inspection";
+import type { SupportedLocale as CoreSupportedLocale } from "../core/i18n/locale";
+import type { RuntimePlatform as RendererRuntimePlatform } from "./platform-font";
+
+export type AppHealth = MainAppHealth;
+export type AppInfo = MainAppInfo;
+export type DistributionExecuteInput = MainDistributionExecuteInput;
+export type DistributionExecuteResult = MainDistributionExecuteResult;
+export type DistributionPreviewInput = MainDistributionPreviewInput;
+export type DistributionPreviewResult = MainDistributionPreviewResult;
+export type NavigationBadgeCountsResult = MainNavigationBadgeCountsResult;
+export type AppSettingsResult = MainAppSettingsResult;
+export type AppStoragePathsResult = MainAppStoragePathsResult;
+export type DistributionSettings = MainDistributionSettings;
+export type ResetLocalDatabaseResult = MainResetLocalDatabaseResult;
+export type ProvidersListResult = MainProvidersListResult;
+export type RepositoriesListResult = MainRepositoriesListResult;
+export type RepositoriesSyncProgressEvent = MainRepositoriesSyncProgressEvent;
+export type RepositoriesSyncResult = MainRepositoriesSyncResult;
+export type SkillsListResult = MainSkillsListResult;
+export type RemoveSkillTargetPreferenceInput = MainRemoveSkillTargetPreferenceInput;
+export type RemoveSkillTargetPreferenceResult = MainRemoveSkillTargetPreferenceResult;
+export type UpdateSkillTargetPreferenceInput = MainUpdateSkillTargetPreferenceInput;
+export type UpdateSkillTargetPreferenceResult = MainUpdateSkillTargetPreferenceResult;
+export type AddSkillDirectoryTargetInput = MainAddSkillDirectoryTargetInput;
+export type AddCustomDirectoryTargetInput = MainAddCustomDirectoryTargetInput;
+export type DeleteTargetsInput = MainDeleteTargetsInput;
+export type SelectedTargetDirectoryResolution = MainSelectedTargetDirectoryResolution;
+export type TargetDirectoryAgentOption = MainTargetDirectoryAgentOption;
+export type UpdateCustomDirectoryTargetInput = MainUpdateCustomDirectoryTargetInput;
+export type TargetsListResult = MainTargetsListResult;
+export type TargetsRescanResult = MainTargetsRescanResult;
+export type CreateRepositoryInput = CoreCreateRepositoryInput;
+export type UpdateRepositoryInput = CoreUpdateRepositoryInput;
+export type DeleteRepositoryResult = CoreDeleteRepositoryResult;
+export type RepositoryApiRecord = CoreRepositoryApiRecord;
+export type RepositoryDeletePreview = CoreRepositoryDeletePreview;
+export type RepositorySourceInspection = CoreRepositorySourceInspection;
+export type RuntimePlatform = RendererRuntimePlatform;
+export type SupportedLocale = CoreSupportedLocale;
+
+declare global {
+  interface Window {
+    skillsManager?: {
+      clearGitHubToken?: () => Promise<AppSettingsResult>;
+      createRepository?: (input: CreateRepositoryInput) => Promise<RepositoryApiRecord>;
+      updateRepository?: (
+        repositoryId: string,
+        input: UpdateRepositoryInput
+      ) => Promise<RepositoryApiRecord>;
+      deleteRepository?: (repositoryId: string) => Promise<DeleteRepositoryResult>;
+      getHealth: () => Promise<AppHealth>;
+      getInfo: () => Promise<AppInfo>;
+      getLocale: () => Promise<SupportedLocale>;
+      getNavigationBadgeCounts?: () => Promise<NavigationBadgeCountsResult>;
+      getAppStoragePaths?: () => Promise<AppStoragePathsResult>;
+      getAppSettings?: () => Promise<AppSettingsResult>;
+      getRepositoryDeletePreview?: (repositoryId: string) => Promise<RepositoryDeletePreview>;
+      inspectRepositorySource?: (remoteUrl: string) => Promise<RepositorySourceInspection>;
+      listProviders: () => Promise<ProvidersListResult>;
+      previewDistribution?: (input: DistributionPreviewInput) => Promise<DistributionPreviewResult>;
+      executeDistribution?: (input: DistributionExecuteInput) => Promise<DistributionExecuteResult>;
+      listRepositories: () => Promise<RepositoriesListResult>;
+      listSkills?: () => Promise<SkillsListResult>;
+      setSkillTargetPreference?: (
+        input: UpdateSkillTargetPreferenceInput
+      ) => Promise<UpdateSkillTargetPreferenceResult>;
+      removeSkillTargetPreference?: (
+        input: RemoveSkillTargetPreferenceInput
+      ) => Promise<RemoveSkillTargetPreferenceResult>;
+      listTargets?: () => Promise<TargetsListResult>;
+      addCustomDirectoryTarget?: (
+        input: AddCustomDirectoryTargetInput
+      ) => Promise<TargetsListResult>;
+      addSkillDirectoryTarget?: (input: AddSkillDirectoryTargetInput) => Promise<TargetsListResult>;
+      updateCustomDirectoryTarget?: (
+        input: UpdateCustomDirectoryTargetInput
+      ) => Promise<TargetsListResult>;
+      deleteTargets?: (input: DeleteTargetsInput) => Promise<TargetsListResult>;
+      rescanTargets?: () => Promise<TargetsRescanResult>;
+      openExternalUrl?: (url: string) => Promise<void>;
+      openRepositoryLocation?: (location: string) => Promise<void>;
+      onRepositorySyncProgress?: (
+        callback: (event: RepositoriesSyncProgressEvent) => void
+      ) => () => void;
+      resetLocalDatabase?: () => Promise<ResetLocalDatabaseResult>;
+      resolveRepositoryCachePath?: (cachePath: string) => Promise<string>;
+      saveGitHubToken?: (token: string) => Promise<AppSettingsResult>;
+      updateDistributionSettings?: (
+        settings: Partial<DistributionSettings>
+      ) => Promise<AppSettingsResult>;
+      selectLocalRepositoryPath?: () => Promise<string | null>;
+      selectTargetDirectory?: () => Promise<string | null>;
+      resolveSelectedTargetDirectory?: (
+        selectedPath: string
+      ) => Promise<SelectedTargetDirectoryResolution>;
+      syncRepositories?: (repositoryIds: string[]) => Promise<RepositoriesSyncResult>;
+      platform: RuntimePlatform;
+    };
+  }
+}
+
+export {};
