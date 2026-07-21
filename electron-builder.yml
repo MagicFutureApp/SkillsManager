@@ -1,0 +1,48 @@
+appId: com.skillsmanager.desktop
+productName: Skills Manager
+
+directories:
+  app: apps/desktop
+  output: apps/desktop/release
+
+files:
+  - dist/**/*
+  - package.json
+
+asar: true
+npmRebuild: true
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: apps/desktop/src/renderer/assets/macOS/1024.png
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - arm64
+  icon: apps/desktop/src/renderer/assets/macOS/1024.png
+  category: public.app-category.developer-tools
+  identity: null
+
+linux:
+  target:
+    - target: deb
+      arch:
+        - x64
+  icon: apps/desktop/src/renderer/assets/macOS
+  category: Development
+  executableName: skills-manager
+  maintainer: yimity
+
+deb:
+  packageCategory: devel

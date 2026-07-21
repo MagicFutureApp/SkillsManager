@@ -368,9 +368,10 @@ describe("SkillsPage", () => {
     expect(screen.getByLabelText("技能筛选")).toHaveClass(
       "grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]"
     );
+    expect(screen.getByText("来源", { selector: "label" })).toBeInTheDocument();
     const skillsTable = within(screen.getByRole("main")).getByRole("table");
     expect(within(skillsTable).getByRole("columnheader", { name: "技能" })).toBeInTheDocument();
-    expect(within(skillsTable).getByRole("columnheader", { name: "仓库" })).toBeInTheDocument();
+    expect(within(skillsTable).getByRole("columnheader", { name: "来源" })).toBeInTheDocument();
     expect(within(skillsTable).getByRole("columnheader", { name: "目标" })).toBeInTheDocument();
     expect(
       within(skillsTable).queryByRole("columnheader", { name: "启用" })
@@ -401,6 +402,8 @@ describe("SkillsPage", () => {
     expect(screen.queryByRole("button", { name: "Add skill" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Distribute selected skills" })).toBeInTheDocument();
     expect(screen.getByLabelText("Skill filters")).toBeInTheDocument();
+    expect(screen.getByText("Source", { selector: "label" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Source" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Select a skill" })).toBeInTheDocument();
   });
 
@@ -463,14 +466,16 @@ describe("SkillsPage", () => {
     const skillBodyCells = within(firstSkillRow as HTMLElement).getAllByRole("cell");
 
     expect(skillButton).toBeInTheDocument();
-    expect(skillHeaderCells[0]).toHaveClass("w-10");
-    expect(skillBodyCells[0]).toHaveClass("w-10");
-    expect(skillHeaderCells[2]).toHaveClass("w-[24%]");
-    expect(skillBodyCells[2]).toHaveClass("w-[24%]");
-    expect(skillHeaderCells[3]).toHaveClass("w-14");
-    expect(skillBodyCells[3]).toHaveClass("w-14");
-    expect(skillHeaderCells[4]).toHaveClass("w-18");
-    expect(skillBodyCells[4]).toHaveClass("w-18");
+    expect(skillHeaderCells[0]).toHaveClass("w-10", "text-center");
+    expect(skillBodyCells[0]).toHaveClass("w-10", "text-center");
+    expect(skillHeaderCells[1]).toHaveClass("text-left");
+    expect(skillBodyCells[1]).toHaveClass("text-left");
+    expect(skillHeaderCells[2]).toHaveClass("w-[24%]", "text-left");
+    expect(skillBodyCells[2]).toHaveClass("w-[24%]", "text-left");
+    expect(skillHeaderCells[3]).toHaveClass("w-14", "text-center");
+    expect(skillBodyCells[3]).toHaveClass("w-14", "text-center");
+    expect(skillHeaderCells[4]).toHaveClass("w-18", "text-center");
+    expect(skillBodyCells[4]).toHaveClass("w-18", "text-center");
     expect(skillButton.textContent).toBe("Review Bot");
     expect(
       within(skillsTableBody as HTMLElement).queryByText("skills-review-bot")
@@ -1207,7 +1212,7 @@ describe("SkillsPage", () => {
     await screen.findByRole("button", { name: "Review Bot" });
     expect(screen.queryByLabelText("状态")).not.toBeInTheDocument();
 
-    await selectOption("仓库", "Design lab prompts");
+    await selectOption("来源", "Design lab prompts");
     expect(screen.getByRole("button", { name: "Design Helper" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Review Bot" })).not.toBeInTheDocument();
   });
@@ -1319,7 +1324,7 @@ describe("SkillsPage", () => {
     expect(screen.getByRole("button", { name: "Paged Skill 21" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Paged Skill 16" })).not.toBeInTheDocument();
 
-    await selectOption("仓库", "A catalog");
+    await selectOption("来源", "A catalog");
 
     expect(await screen.findByText("1-5 / 5")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Paged Skill 25" })).toBeInTheDocument();

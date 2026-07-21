@@ -28,10 +28,11 @@ import { Field } from "./skills-page-controls";
 import { useSkillsPageContext } from "./skills-page-context";
 
 const skillTableColumns = {
-  actions: "w-18",
-  repository: "w-[24%]",
-  select: "w-10",
-  targets: "w-14"
+  actions: "w-18 text-center",
+  repository: "w-[24%] text-left",
+  select: "w-10 text-center",
+  skill: "text-left",
+  targets: "w-14 text-center"
 };
 
 export const SkillsPageMain = () => {
@@ -123,7 +124,9 @@ export const SkillsPageMain = () => {
                 />
               </span>
             </DataTableHead>
-            <DataTableHead>{t("skills.table.skill")}</DataTableHead>
+            <DataTableHead className={skillTableColumns.skill}>
+              {t("skills.table.skill")}
+            </DataTableHead>
             <DataTableHead className={skillTableColumns.repository}>
               {t("skills.table.repository")}
             </DataTableHead>
@@ -201,7 +204,7 @@ const SkillTableRow = ({ skill }: { skill: Skill }) => {
           />
         </span>
       </DataTableCell>
-      <DataTableCell className="min-w-0">
+      <DataTableCell className={`${skillTableColumns.skill} min-w-0`}>
         <Button
           type="button"
           variant="ghost"

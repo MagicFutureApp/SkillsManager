@@ -248,20 +248,26 @@ export default function InteractiveSandbox() {
             <span>交互演示</span>
           </div>
           <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
-            体验 desktop 的技能分发流程
+            体验技能分发流程
           </h2>
           <p className="mt-4 text-base text-zinc-600">
-            按照 desktop App 的 Skills 页面操作：筛选 skill、设置分发目标、预览 copy-only 操作，再确认执行。
+            体验 App 的 Skills 页面操作：筛选 skill、设置分发目标、预览操作，再确认执行。
           </p>
         </div>
 
-        <div className="mt-12 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl" id="sandbox-workspace">
+        <div
+          className="mt-12 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl"
+          id="sandbox-workspace"
+        >
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 bg-zinc-50 px-6 py-4">
             <div className="flex items-center gap-2.5">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <span className="font-display text-sm font-bold text-zinc-800">Skills Manager</span>
             </div>
-            <button onClick={resetDemo} className="text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900">
+            <button
+              onClick={resetDemo}
+              className="text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
+            >
               重置演示
             </button>
           </div>
@@ -277,24 +283,43 @@ export default function InteractiveSandbox() {
                   disabled={!canBulkDistribute}
                   onClick={() => selectedCheckedSkills[0] && startPreview(selectedCheckedSkills[0])}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-400"
-                  title={!selectedCheckedSkills.length ? "请先选择要分发的技能" : !canBulkDistribute ? "选中的技能没有分发目标" : "准备分发"}
+                  title={
+                    !selectedCheckedSkills.length
+                      ? "请先选择要分发的技能"
+                      : !canBulkDistribute
+                        ? "选中的技能没有分发目标"
+                        : "准备分发"
+                  }
                 >
                   分发
                 </button>
               </header>
 
-              <section className="grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(150px,1fr))]" aria-label="技能筛选">
+              <section
+                className="grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(150px,1fr))]"
+                aria-label="技能筛选"
+              >
                 <label className="grid gap-1.5 text-xs font-semibold text-zinc-600">
                   搜索
                   <span className="relative">
                     <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
-                    <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索名称、来源或说明" className="h-9 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm font-normal text-zinc-800 outline-none transition focus:border-zinc-400" />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="搜索名称、来源或说明"
+                      className="h-9 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm font-normal text-zinc-800 outline-none transition focus:border-zinc-400"
+                    />
                   </span>
                 </label>
                 <label className="grid gap-1.5 text-xs font-semibold text-zinc-600">
                   排序
                   <span className="relative">
-                    <select value={sort} onChange={(event) => setSort(event.target.value as "name" | "repository")} className="h-9 w-full appearance-none rounded-lg border border-zinc-200 bg-white px-3 pr-8 text-sm font-normal text-zinc-800 outline-none focus:border-zinc-400">
+                    <select
+                      value={sort}
+                      onChange={(event) => setSort(event.target.value as "name" | "repository")}
+                      className="h-9 w-full appearance-none rounded-lg border border-zinc-200 bg-white px-3 pr-8 text-sm font-normal text-zinc-800 outline-none focus:border-zinc-400"
+                    >
                       <option value="name">名称</option>
                       <option value="repository">来源</option>
                     </select>
@@ -304,8 +329,16 @@ export default function InteractiveSandbox() {
                 <label className="grid gap-1.5 text-xs font-semibold text-zinc-600">
                   来源
                   <span className="relative">
-                    <select value={repository} onChange={(event) => setRepository(event.target.value)} className="h-9 w-full appearance-none rounded-lg border border-zinc-200 bg-white px-3 pr-8 text-sm font-normal text-zinc-800 outline-none focus:border-zinc-400">
-                      {repositories.map((item) => <option key={item} value={item}>{item === "all" ? "全部来源" : item}</option>)}
+                    <select
+                      value={repository}
+                      onChange={(event) => setRepository(event.target.value)}
+                      className="h-9 w-full appearance-none rounded-lg border border-zinc-200 bg-white px-3 pr-8 text-sm font-normal text-zinc-800 outline-none focus:border-zinc-400"
+                    >
+                      {repositories.map((item) => (
+                        <option key={item} value={item}>
+                          {item === "all" ? "全部来源" : item}
+                        </option>
+                      ))}
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-4 w-4 text-zinc-400" />
                   </span>
@@ -314,50 +347,141 @@ export default function InteractiveSandbox() {
 
               <div className="mt-5 max-w-full overflow-x-auto rounded-xl border border-zinc-200">
                 <div className="min-w-[620px]">
-                <div className="grid grid-cols-[32px_minmax(0,1.2fr)_minmax(130px,1fr)_58px_74px] gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-zinc-500">
-                  <span aria-hidden="true" />
-                  <span>技能</span><span>来源</span><span>目标</span><span>操作</span>
-                </div>
-                <div className="divide-y divide-zinc-100">
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {visibleSkills.length ? visibleSkills.map((skill) => {
-                      const targetCount = targetPreferences[skill.id]?.length ?? 0;
-                      const checked = checkedIds.includes(skill.id);
-                      const ready = skill.status === "ready" && targetCount > 0;
-                      return (
-                        <motion.div key={skill.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedSkillId(skill.id)} className={`grid cursor-pointer grid-cols-[32px_minmax(0,1.2fr)_minmax(130px,1fr)_58px_74px] items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-50 ${selectedSkillId === skill.id ? "bg-violet-50/60" : ""}`}>
-                          <input type="checkbox" aria-label={`选择 ${skill.name}`} checked={checked} onChange={() => toggleChecked(skill.id)} onClick={(event) => event.stopPropagation()} className="h-4 w-4 accent-zinc-900" />
-                          <div className="min-w-0"><strong className="block truncate text-sm text-zinc-900">{skill.name}</strong></div>
-                          <span className="truncate text-xs text-zinc-600">{skill.repository}</span>
-                          <span className="font-mono text-xs text-zinc-500">{targetCount}</span>
-                          <button type="button" disabled={!ready} onClick={(event) => { event.stopPropagation(); startPreview(skill); }} className={distributionButtonClassName} title={!targetCount ? "请先添加分发目标" : skill.status !== "ready" ? "当前技能需要复核" : "准备分发"}>分发</button>
-                        </motion.div>
-                      );
-                    }) : <div className="p-10 text-center text-sm text-zinc-500">没有匹配的技能。调整搜索或筛选条件。</div>}
-                  </AnimatePresence>
-                </div>
-                <div className="border-t border-zinc-200 px-4 py-3 text-xs text-zinc-400">{visibleSkills.length}/{DEMO_SKILLS.length}</div>
+                  <div className="grid grid-cols-[32px_minmax(0,1.2fr)_minmax(130px,1fr)_58px_74px] gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-zinc-500">
+                    <span aria-hidden="true" />
+                    <span>技能</span>
+                    <span>来源</span>
+                    <span>目标</span>
+                    <span>操作</span>
+                  </div>
+                  <div className="divide-y divide-zinc-100">
+                    <AnimatePresence initial={false} mode="popLayout">
+                      {visibleSkills.length ? (
+                        visibleSkills.map((skill) => {
+                          const targetCount = targetPreferences[skill.id]?.length ?? 0;
+                          const checked = checkedIds.includes(skill.id);
+                          const ready = skill.status === "ready" && targetCount > 0;
+                          return (
+                            <motion.div
+                              key={skill.id}
+                              layout
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              onClick={() => setSelectedSkillId(skill.id)}
+                              className={`grid cursor-pointer grid-cols-[32px_minmax(0,1.2fr)_minmax(130px,1fr)_58px_74px] items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-50 ${selectedSkillId === skill.id ? "bg-violet-50/60" : ""}`}
+                            >
+                              <input
+                                type="checkbox"
+                                aria-label={`选择 ${skill.name}`}
+                                checked={checked}
+                                onChange={() => toggleChecked(skill.id)}
+                                onClick={(event) => event.stopPropagation()}
+                                className="h-4 w-4 accent-zinc-900"
+                              />
+                              <div className="min-w-0">
+                                <strong className="block truncate text-sm text-zinc-900">
+                                  {skill.name}
+                                </strong>
+                              </div>
+                              <span className="truncate text-xs text-zinc-600">
+                                {skill.repository}
+                              </span>
+                              <span className="font-mono text-xs text-zinc-500">{targetCount}</span>
+                              <button
+                                type="button"
+                                disabled={!ready}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  startPreview(skill);
+                                }}
+                                className={distributionButtonClassName}
+                                title={
+                                  !targetCount
+                                    ? "请先添加分发目标"
+                                    : skill.status !== "ready"
+                                      ? "当前技能需要复核"
+                                      : "准备分发"
+                                }
+                              >
+                                分发
+                              </button>
+                            </motion.div>
+                          );
+                        })
+                      ) : (
+                        <div className="p-10 text-center text-sm text-zinc-500">
+                          没有匹配的技能。调整搜索或筛选条件。
+                        </div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="border-t border-zinc-200 px-4 py-3 text-xs text-zinc-400">
+                    {visibleSkills.length}/{DEMO_SKILLS.length}
+                  </div>
                 </div>
               </div>
             </main>
 
-            <aside className="grid content-start gap-3 bg-zinc-50/40 p-5 lg:p-6" aria-label="技能分发设置">
-              {selectedSkill ? <>
-                <section className="rounded-xl border border-zinc-200 bg-white p-4">
-                  <div><h3 className="text-xl font-semibold text-zinc-900">{selectedSkill.name}</h3><p className="mt-2 text-sm leading-5 text-zinc-500">{selectedSkill.description}</p></div>
-                  <button type="button" disabled={selectedSkill.status !== "ready" || selectedTargets.length === 0 || isPreviewing} onClick={() => startPreview()} className={`mt-4 ${distributionButtonClassName}`}>分发</button>
-                </section>
+            <aside
+              className="grid content-start gap-3 bg-zinc-50/40 p-5 lg:p-6"
+              aria-label="技能分发设置"
+            >
+              {selectedSkill ? (
+                <>
+                  <section className="rounded-xl border border-zinc-200 bg-white p-4">
+                    <div>
+                      <h3 className="text-xl font-semibold text-zinc-900">{selectedSkill.name}</h3>
+                      <p className="mt-2 text-sm leading-5 text-zinc-500">
+                        {selectedSkill.description}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={
+                        selectedSkill.status !== "ready" ||
+                        selectedTargets.length === 0 ||
+                        isPreviewing
+                      }
+                      onClick={() => startPreview()}
+                      className={`mt-4 ${distributionButtonClassName}`}
+                    >
+                      分发
+                    </button>
+                  </section>
 
-                <section className="rounded-xl border border-zinc-200 bg-white p-4">
-                  <h4 className="font-semibold text-zinc-900">分发目标</h4>
-                  <div className="mt-3 grid gap-2">
-                    {DEMO_TARGETS.map((target) => { const checked = targetPreferences[selectedSkill.id]?.includes(target.id); return <label key={target.id} className={`grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border p-3 transition ${checked ? "border-zinc-400 bg-zinc-50" : "border-zinc-200 bg-white hover:bg-zinc-50"}`}><span className="min-w-0"><strong className="block text-sm text-zinc-800">{target.name}</strong><span className="mt-0.5 block truncate font-mono text-[11px] text-zinc-500">{target.path}</span></span><input type="checkbox" checked={Boolean(checked)} onChange={() => toggleTarget(target.id)} className="h-4 w-4 accent-zinc-900" aria-label={`选择 ${target.name}`} /></label>; })}
-                  </div>
-                </section>
-              </> : null}
+                  <section className="rounded-xl border border-zinc-200 bg-white p-4">
+                    <h4 className="font-semibold text-zinc-900">分发目标</h4>
+                    <div className="mt-3 grid gap-2">
+                      {DEMO_TARGETS.map((target) => {
+                        const checked = targetPreferences[selectedSkill.id]?.includes(target.id);
+                        return (
+                          <label
+                            key={target.id}
+                            className={`grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border p-3 transition ${checked ? "border-zinc-400 bg-zinc-50" : "border-zinc-200 bg-white hover:bg-zinc-50"}`}
+                          >
+                            <span className="min-w-0">
+                              <strong className="block text-sm text-zinc-800">{target.name}</strong>
+                              <span className="mt-0.5 block truncate font-mono text-[11px] text-zinc-500">
+                                {target.path}
+                              </span>
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(checked)}
+                              onChange={() => toggleTarget(target.id)}
+                              className="h-4 w-4 accent-zinc-900"
+                              aria-label={`选择 ${target.name}`}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+                </>
+              ) : null}
             </aside>
           </div>
-
         </div>
 
         <DistributionConfirmationDialog
@@ -389,8 +513,6 @@ export default function InteractiveSandbox() {
             </motion.div>
           ) : null}
         </AnimatePresence>
-
-        <p className="mx-auto mt-4 flex max-w-2xl items-center justify-center gap-1.5 text-center text-xs text-zinc-500"><ExternalLink className="h-3.5 w-3.5" />演示数据对应 desktop 的 Skills 页面结构；实际应用通过类型化 preload / IPC 访问 Git、SQLite 和文件系统。</p>
       </div>
     </section>
   );

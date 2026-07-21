@@ -60,7 +60,7 @@ export const resources = {
           sort: "排序",
           sortName: "名称",
           sortRepository: "仓库",
-          repository: "仓库",
+          repository: "来源",
           allRepositories: "全部仓库",
           status: "状态",
           allStatuses: "全部状态"
@@ -82,7 +82,7 @@ export const resources = {
         table: {
           selectAll: "选择全部可见技能",
           skill: "技能",
-          repository: "仓库",
+          repository: "来源",
           version: "版本",
           status: "状态",
           targets: "目标",
@@ -127,7 +127,7 @@ export const resources = {
         },
         distribution: {
           confirmTitle: "确认分发",
-          confirmDescription: "确认后会将 {{count}} 个项目 copy 到目标目录。",
+          confirmDescription: "确认后会将 {{count}} 个项目分发到目标目录。",
           confirmAction: "确认分发",
           executingAction: "分发中",
           doneAction: "确定",
@@ -543,7 +543,7 @@ export const resources = {
           sort: "Sort",
           sortName: "Name",
           sortRepository: "Repository",
-          repository: "Repository",
+          repository: "Source",
           allRepositories: "All repositories",
           status: "Status",
           allStatuses: "All statuses"
@@ -565,7 +565,7 @@ export const resources = {
         table: {
           selectAll: "Select all visible skills",
           skill: "Skill",
-          repository: "Repository",
+          repository: "Source",
           version: "Version",
           status: "Status",
           targets: "Targets",
