@@ -147,3 +147,13 @@ vite.config.ts.timestamp-*
 
 # JetBrains local data sources
 .idea/dataSources.xml
+/apps/landing/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/b52b1dc208406ee37d9ed16d922b0f0761e763c80ec08b74655a057e8d6052d4.sqlite
+/apps/landing/.wrangler/state/v3/kv/REPLACE_WITH_RELEASE_MANIFEST_KV_NAMESPACE_ID/blobs/bb8c9095c7985c7b2107a49f6759b3fff7f26dd5c22cbabc9b50f711543767e40000019f88774bce
+/apps/landing/.wrangler/deploy/config.json
+/apps/landing/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/f1adba58b286f8df3b65d2ddd6978e06fab4233341cc59249feb51c7a99a92d0.sqlite
+/apps/landing/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite
+/apps/landing/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite
+/apps/landing/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-shm
+/apps/landing/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-shm
+/apps/landing/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-wal
+/apps/landing/.wrangler/state/v3/kv/miniflare-KVNamespaceObject/metadata.sqlite-wal
