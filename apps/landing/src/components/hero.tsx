@@ -17,10 +17,10 @@ import skillsPreview from "../../assets/skills.png";
 
 interface HeroProps {
   onScrollToSandbox: () => void;
-  onDownload: () => void;
+  downloadUrl: string;
 }
 
-export default function Hero({ onScrollToSandbox, onDownload }: HeroProps) {
+export default function Hero({ onScrollToSandbox, downloadUrl }: HeroProps) {
   return (
     <section
       className="relative overflow-hidden bg-zinc-50 pt-20 pb-16 lg:pt-32 lg:pb-24"
@@ -78,7 +78,7 @@ export default function Hero({ onScrollToSandbox, onDownload }: HeroProps) {
             </button>*/}
             <button
               type="button"
-              onClick={onDownload}
+              onClick={onScrollToSandbox}
               className="inline-flex h-11 items-center gap-1 rounded-md border border-zinc-300 bg-white px-5 text-sm font-semibold text-zinc-800 transition-colors hover:bg-zinc-100"
             >
               查看分发预览
@@ -87,9 +87,8 @@ export default function Hero({ onScrollToSandbox, onDownload }: HeroProps) {
                 aria-hidden="true"
               />
             </button>
-            <button
-              type="button"
-              onClick={onScrollToSandbox}
+            <a
+              href={downloadUrl}
               className="inline-flex h-11 items-center gap-1 rounded-md border border bg-zinc-950 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
             >
               下载最新版
@@ -97,7 +96,7 @@ export default function Hero({ onScrollToSandbox, onDownload }: HeroProps) {
                 className="size-4 transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
               />
-            </button>
+            </a>
           </motion.div>
         </div>
 

@@ -7,10 +7,10 @@ import type { ReleaseManifestState } from "../hooks/use-release-manifest";
 interface HeaderProps {
   onScrollTo: (sectionId: string) => void;
   release: ReleaseManifestState;
-  onDownload: () => void;
+  downloadUrl: string;
 }
 
-export default function Header({ onScrollTo, release, onDownload }: HeaderProps) {
+export default function Header({ onScrollTo, release, downloadUrl }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
@@ -50,8 +50,8 @@ export default function Header({ onScrollTo, release, onDownload }: HeaderProps)
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
-          <button
-            onClick={onDownload}
+          <a
+            href={downloadUrl}
             className="group flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-50 shadow-sm transition-all hover:bg-zinc-800 hover:shadow"
             id="nav-btn-cta"
           >
@@ -59,7 +59,7 @@ export default function Header({ onScrollTo, release, onDownload }: HeaderProps)
               {release.loading ? "下载" : `下载 v${release.manifest?.version ?? "最新版"}`}
             </span>
             <ArrowDown className="size-4 transition-transform group-hover:translate-x-0.5" />
-          </button>
+          </a>
         </div>
 
         <button
@@ -94,13 +94,13 @@ export default function Header({ onScrollTo, release, onDownload }: HeaderProps)
                 </button>
               ))}
               <div className="mt-4 border-t border-zinc-200 pt-4 space-y-2.5">
-                <button
-                  onClick={onDownload}
+                <a
+                  href={downloadUrl}
                   className="block w-full text-center rounded-lg bg-zinc-900 py-2.5 px-3 text-base font-medium text-zinc-50 shadow-sm hover:bg-zinc-800 cursor-pointer"
                   id="mobile-nav-btn-cta"
                 >
                   下载
-                </button>
+                </a>
               </div>
             </div>
           </motion.div>

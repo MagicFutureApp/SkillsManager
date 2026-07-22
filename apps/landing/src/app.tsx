@@ -10,6 +10,7 @@ import { getReleaseDownloadUrl } from "./lib/release-manifest";
 
 export default function App() {
   const release = useReleaseManifest();
+  const downloadUrl = getReleaseDownloadUrl(release.manifest);
 
   // Navigation scrolling logic
   const handleScrollToSection = (id: string) => {
@@ -26,17 +27,13 @@ export default function App() {
   return (
     <div className="min-h-screen bg-zinc-50 font-sans selection:bg-zinc-900 selection:text-zinc-50">
       {/* Dynamic Header */}
-      <Header
-        onScrollTo={handleScrollToSection}
-        release={release}
-        onDownload={() => window.location.assign(getReleaseDownloadUrl(release.manifest))}
-      />
+      <Header onScrollTo={handleScrollToSection} release={release} downloadUrl={downloadUrl} />
 
       <main>
         {/* Hero Section */}
         <Hero
           onScrollToSandbox={() => handleScrollToSection("sandbox")}
-          onDownload={() => window.location.assign(getReleaseDownloadUrl(release.manifest))}
+          downloadUrl={downloadUrl}
         />
 
         {/* Bento Grid Feature Highlight */}
