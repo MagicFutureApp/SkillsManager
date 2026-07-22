@@ -2,7 +2,7 @@
   "name": "@skills-manager/desktop",
   "productName": "Skills Manager",
   "desktopName": "skills-manager.desktop",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "description": "Electron React TypeScript SQLite based Skills Manager App.",
   "author": "yimity",
