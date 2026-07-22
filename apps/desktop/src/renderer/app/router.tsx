@@ -1,9 +1,10 @@
-import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react-router";
 import React from "react";
 
 import { routeTree } from "./routes";
 
 export const router = createRouter({
+  history: createHashHistory(),
   routeTree
 });
 
