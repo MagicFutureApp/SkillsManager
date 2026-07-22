@@ -27,6 +27,7 @@ const copyAppIcons = (): Plugin => ({
 });
 
 export default defineConfig({
+  base: "./",
   plugins: [react(), tailwindcss(), copyAppIcons()],
   root: "src/renderer",
   resolve: {
