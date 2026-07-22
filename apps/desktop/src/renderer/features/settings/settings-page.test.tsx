@@ -14,7 +14,7 @@ describe("SettingsPage", () => {
 
   beforeEach(() => {
     writeText.mockClear();
-    window.history.replaceState(null, "", "/settings");
+    window.history.replaceState(null, "", "/#/settings");
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
@@ -28,7 +28,8 @@ describe("SettingsPage", () => {
         github: { hasToken: false }
       }),
       getAppStoragePaths: vi.fn().mockResolvedValue({
-        databasePath: "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
+        databasePath:
+          "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
         localCachePath: "/Users/andrew/.skills-manager/cache"
       }),
       getAppSettings: vi.fn().mockResolvedValue({
@@ -48,7 +49,8 @@ describe("SettingsPage", () => {
           github: { hasToken: false }
         },
         storage: {
-          databasePath: "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
+          databasePath:
+            "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
           localCachePath: "/Users/andrew/.skills-manager/cache"
         }
       }),
@@ -114,25 +116,25 @@ describe("SettingsPage", () => {
     expect(settingsSidebar).toHaveClass("sticky", "h-[calc(100svh-44px)]");
     expect(
       within(settingsNavigation).getByRole("link", { name: "GitHub API token" })
-    ).toHaveAttribute("href", "#github-token");
+    ).toHaveAttribute("href", "#/settings#github-token");
     expect(within(settingsNavigation).getByRole("link", { name: "技能分发" })).toHaveAttribute(
       "href",
-      "#skill-distribution"
+      "#/settings#skill-distribution"
     );
     expect(within(settingsNavigation).getByRole("link", { name: "本地存储" })).toHaveAttribute(
       "href",
-      "#local-storage"
+      "#/settings#local-storage"
     );
     expect(
       within(settingsNavigation).getByRole("link", { name: "如何创建 GitHub token" })
-    ).toHaveAttribute("href", "#github-token-help");
+    ).toHaveAttribute("href", "#/settings#github-token-help");
     expect(within(settingsNavigation).getByRole("link", { name: "危险操作" })).toHaveAttribute(
       "href",
-      "#settings-danger-zone"
+      "#/settings#settings-danger-zone"
     );
     expect(within(settingsNavigation).getByRole("link", { name: "关于" })).toHaveAttribute(
       "href",
-      "#settings-about"
+      "#/settings#settings-about"
     );
     expect(screen.getByRole("heading", { name: "凭据状态" })).toBeInTheDocument();
     expect(
@@ -146,7 +148,7 @@ describe("SettingsPage", () => {
   });
 
   it("shows an about section with the logo and app version", async () => {
-    window.history.replaceState(null, "", "/settings#settings-about");
+    window.history.replaceState(null, "", "/#/settings#settings-about");
     render(<SettingsPage />);
 
     await screen.findByRole("main");
@@ -195,6 +197,7 @@ describe("SettingsPage", () => {
 
     expect(aboutLink).toHaveAttribute("aria-current", "location");
     expect(dangerZoneLink).not.toHaveAttribute("aria-current");
+    expect(window.location.hash).toBe("#/settings#settings-about");
   });
 
   it("only renders the currently selected internal settings section", async () => {

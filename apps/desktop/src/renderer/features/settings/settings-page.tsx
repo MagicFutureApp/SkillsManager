@@ -45,11 +45,33 @@ const settingsNavigationItems = [
 ] as const;
 type SettingsNavigationHref = (typeof settingsNavigationItems)[number]["href"];
 
+const splitHashHistoryLocationHash = (hash: string) => {
+  const nestedHashIndex = hash.indexOf("#", 1);
+
+  if (nestedHashIndex < 0) {
+    return hash.startsWith("#/")
+      ? { routeHash: hash, settingsNavigationHref: "" }
+      : { routeHash: "", settingsNavigationHref: hash };
+  }
+
+  return {
+    routeHash: hash.slice(0, nestedHashIndex),
+    settingsNavigationHref: hash.slice(nestedHashIndex)
+  };
+};
+
 const getSettingsNavigationHrefFromHash = (hash: string): SettingsNavigationHref => {
+  const { settingsNavigationHref } = splitHashHistoryLocationHash(hash);
+
   return (
-    settingsNavigationItems.find((item) => item.href === hash)?.href ??
+    settingsNavigationItems.find((item) => item.href === settingsNavigationHref)?.href ??
     settingsNavigationItems[0].href
   );
+};
+
+const getSettingsNavigationLinkHref = (hash: string, href: SettingsNavigationHref) => {
+  const { routeHash } = splitHashHistoryLocationHash(hash);
+  return routeHash ? `${routeHash}${href}` : href;
 };
 
 const resetSettingsWindowScroll = () => {
@@ -170,7 +192,7 @@ export const SettingsPage = () => {
     window.history.pushState(
       null,
       "",
-      `${window.location.pathname}${window.location.search}${href}`
+      `${window.location.pathname}${window.location.search}${getSettingsNavigationLinkHref(window.location.hash, href)}`
     );
     resetSettingsContentScroll();
     window.setTimeout(() => {
@@ -518,7 +540,7 @@ export const SettingsPage = () => {
             return (
               <a
                 key={item.href}
-                href={item.href}
+                href={getSettingsNavigationLinkHref(window.location.hash, item.href)}
                 className={[
                   "rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
                   isActive
