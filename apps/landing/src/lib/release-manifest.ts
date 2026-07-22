@@ -3,7 +3,7 @@ export const SKILLS_MANAGER_RELEASE_PAGE_URL =
   "https://github.com/yimity/SkillsManager-Releases/releases/latest";
 
 export type ReleasePlatform = "windows" | "macos" | "linux";
-const RELEASE_PLATFORMS: ReleasePlatform[] = ["windows", "macos", "linux"];
+export const RELEASE_PLATFORMS: ReleasePlatform[] = ["windows", "macos", "linux"];
 
 export interface ReleaseAsset {
   name: string;
@@ -63,9 +63,12 @@ export function getBrowserPlatform(): ReleasePlatform {
   return "windows";
 }
 
-export function getReleaseDownloadUrl(manifest: ReleaseManifest | null): string {
+export function getReleaseDownloadUrl(
+  manifest: ReleaseManifest | null,
+  platform: ReleasePlatform = getBrowserPlatform()
+): string {
   return (
-    getReleaseAsset(manifest, getBrowserPlatform())?.url ??
+    getReleaseAsset(manifest, platform)?.url ??
     manifest?.releaseUrl ??
     SKILLS_MANAGER_RELEASE_PAGE_URL
   );

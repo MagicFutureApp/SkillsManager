@@ -1,16 +1,24 @@
 import React, { useState } from "react";
-import { Menu, X, ArrowRight, ArrowDown } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png";
 import type { ReleaseManifestState } from "../hooks/use-release-manifest";
+import type { ReleasePlatform } from "../lib/release-manifest";
+import DownloadButtonGroup from "./download-button-group";
 
 interface HeaderProps {
   onScrollTo: (sectionId: string) => void;
   release: ReleaseManifestState;
-  downloadUrl: string;
+  downloadPlatform: ReleasePlatform;
+  onDownloadPlatformChange: (platform: ReleasePlatform) => void;
 }
 
-export default function Header({ onScrollTo, release, downloadUrl }: HeaderProps) {
+export default function Header({
+  onScrollTo,
+  release,
+  downloadPlatform,
+  onDownloadPlatformChange
+}: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
@@ -50,16 +58,12 @@ export default function Header({ onScrollTo, release, downloadUrl }: HeaderProps
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
-          <a
-            href={downloadUrl}
-            className="group flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-50 shadow-sm transition-all hover:bg-zinc-800 hover:shadow"
-            id="nav-btn-cta"
-          >
-            <span>
-              {release.loading ? "下载" : `下载 v${release.manifest?.version ?? "最新版"}`}
-            </span>
-            <ArrowDown className="size-4 transition-transform group-hover:translate-x-0.5" />
-          </a>
+          <DownloadButtonGroup
+            platform={downloadPlatform}
+            onPlatformChange={onDownloadPlatformChange}
+            release={release}
+            size="compact"
+          />
         </div>
 
         <button
@@ -93,14 +97,13 @@ export default function Header({ onScrollTo, release, downloadUrl }: HeaderProps
                   {item.label}
                 </button>
               ))}
-              <div className="mt-4 border-t border-zinc-200 pt-4 space-y-2.5">
-                <a
-                  href={downloadUrl}
-                  className="block w-full text-center rounded-lg bg-zinc-900 py-2.5 px-3 text-base font-medium text-zinc-50 shadow-sm hover:bg-zinc-800 cursor-pointer"
-                  id="mobile-nav-btn-cta"
-                >
-                  下载
-                </a>
+              <div className="mt-4 border-t border-zinc-200 pt-4">
+                <DownloadButtonGroup
+                  platform={downloadPlatform}
+                  onPlatformChange={onDownloadPlatformChange}
+                  release={release}
+                  fullWidth
+                />
               </div>
             </div>
           </motion.div>

@@ -1,26 +1,25 @@
 import React from "react";
-import {
-  Play,
-  Sparkles,
-  FolderGit2,
-  Boxes,
-  Target,
-  PackageCheck,
-  Search,
-  CircleDot,
-  ArrowDown,
-  ArrowRight
-} from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
 import skillsPreview from "../../assets/skills.png";
+import type { ReleaseManifestState } from "../hooks/use-release-manifest";
+import type { ReleasePlatform } from "../lib/release-manifest";
+import DownloadButtonGroup from "./download-button-group";
 
 interface HeroProps {
   onScrollToSandbox: () => void;
-  downloadUrl: string;
+  release: ReleaseManifestState;
+  downloadPlatform: ReleasePlatform;
+  onDownloadPlatformChange: (platform: ReleasePlatform) => void;
 }
 
-export default function Hero({ onScrollToSandbox, downloadUrl }: HeroProps) {
+export default function Hero({
+  onScrollToSandbox,
+  release,
+  downloadPlatform,
+  onDownloadPlatformChange
+}: HeroProps) {
   return (
     <section
       className="relative overflow-hidden bg-zinc-50 pt-20 pb-16 lg:pt-32 lg:pb-24"
@@ -87,16 +86,11 @@ export default function Hero({ onScrollToSandbox, downloadUrl }: HeroProps) {
                 aria-hidden="true"
               />
             </button>
-            <a
-              href={downloadUrl}
-              className="inline-flex h-11 items-center gap-1 rounded-md border border bg-zinc-950 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
-            >
-              下载最新版
-              <ArrowDown
-                className="size-4 transition-transform group-hover:translate-x-0.5"
-                aria-hidden="true"
-              />
-            </a>
+            <DownloadButtonGroup
+              platform={downloadPlatform}
+              onPlatformChange={onDownloadPlatformChange}
+              release={release}
+            />
           </motion.div>
         </div>
 

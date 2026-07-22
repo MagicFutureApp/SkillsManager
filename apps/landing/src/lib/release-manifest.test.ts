@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { getReleaseAsset, isReleaseManifest } from "./release-manifest";
+import {
+  getReleaseAsset,
+  getReleaseDownloadUrl,
+  SKILLS_MANAGER_RELEASE_PAGE_URL,
+  isReleaseManifest
+} from "./release-manifest";
 
 const manifest = {
   schemaVersion: 1 as const,
@@ -43,5 +48,14 @@ describe("release manifest", () => {
   it("returns the requested platform asset", () => {
     expect(getReleaseAsset(manifest, "macos")?.name).toContain("mac-arm64");
     expect(getReleaseAsset(null, "windows")).toBeNull();
+  });
+
+  it("resolves the download URL from the explicitly selected platform", () => {
+    expect(getReleaseDownloadUrl(manifest, "linux")).toBe("https://example.com/linux.deb");
+    expect(getReleaseDownloadUrl(manifest, "windows")).toBe("https://example.com/win.exe");
+  });
+
+  it("falls back to the public release page when release metadata is unavailable", () => {
+    expect(getReleaseDownloadUrl(null, "macos")).toBe(SKILLS_MANAGER_RELEASE_PAGE_URL);
   });
 });
