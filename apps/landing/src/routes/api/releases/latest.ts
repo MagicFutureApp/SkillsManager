@@ -1,13 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from "cloudflare:workers";
 
-import { isReleaseManifest, RELEASE_MANIFEST_KEY } from "../../../lib/release-manifest";
+import {
+  isReleaseManifest,
+  SKILLS_MANAGER_RELEASE_MANIFEST_KEY
+} from "@/lib/release-manifest.ts";
 
 export const Route = createFileRoute("/api/releases/latest")({
   server: {
     handlers: {
       GET: async () => {
-        const manifest = await env.RELEASE_MANIFEST.get(RELEASE_MANIFEST_KEY, "json");
+        const manifest = await env.SKILLS_MANAGER_RELEASE_MANIFEST.get(
+          SKILLS_MANAGER_RELEASE_MANIFEST_KEY,
+          "json"
+        );
 
         if (!isReleaseManifest(manifest)) {
           return Response.json(

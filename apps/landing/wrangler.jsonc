@@ -6,8 +6,8 @@
   "main": "@tanstack/react-start/server-entry",
   "kv_namespaces": [
     {
-      "binding": "RELEASE_MANIFEST",
-      "id": "REPLACE_WITH_RELEASE_MANIFEST_KV_NAMESPACE_ID"
+      "binding": "SKILLS_MANAGER_RELEASE_MANIFEST",
+      "id": "c10e0405c51b4efdaef90a26e74acd87"
     }
   ]
 }

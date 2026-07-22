@@ -26,16 +26,16 @@ pnpm --filter @skills-manager/landing run build
 ## Cloudflare Workers
 
 Landing 使用 `@cloudflare/vite-plugin` 部署到 Cloudflare Workers，并通过
-`RELEASE_MANIFEST` KV binding 读取最新桌面版本信息。Worker 暴露
+`SKILLS_MANAGER_RELEASE_MANIFEST` KV binding 读取最新桌面版本信息。Worker 暴露
 `GET /api/releases/latest`，成功响应缓存 5 分钟；KV 中不存在有效 manifest 时返回 404。
 
 首次部署前创建 KV namespace：
 
 ```bash
-pnpm --filter @skills-manager/landing exec wrangler kv namespace create RELEASE_MANIFEST
+pnpm --filter @skills-manager/landing exec wrangler kv namespace create SKILLS_MANAGER_RELEASE_MANIFEST
 ```
 
-把命令返回的 namespace ID 写入 `wrangler.jsonc` 的 `RELEASE_MANIFEST.id`，然后生成类型并部署：
+把命令返回的 namespace ID 写入 `wrangler.jsonc` 的 `SKILLS_MANAGER_RELEASE_MANIFEST.id`，然后生成类型并部署：
 
 ```bash
 pnpm --filter @skills-manager/landing run cf-typegen
@@ -60,4 +60,4 @@ pnpm --filter @skills-manager/landing run deploy
 - `PUBLIC_RELEASE_TOKEN`：写入 `yimity/SkillsManager-Releases`；
 - `CLOUDFLARE_API_TOKEN`：至少具有目标 namespace 的 Workers KV Storage Write 权限；
 - `CLOUDFLARE_ACCOUNT_ID`：Cloudflare account ID；
-- `CLOUDFLARE_RELEASE_KV_NAMESPACE_ID`：`RELEASE_MANIFEST` namespace ID。
+- `CLOUDFLARE_RELEASE_KV_NAMESPACE_ID`：`SKILLS_MANAGER_RELEASE_MANIFEST` namespace ID。
