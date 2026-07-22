@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter @skills-manager/desktop run dev",
     "electron:version": "pnpm --filter @skills-manager/desktop run electron:version",
+    "rebuild:better-sqlite3": "pnpm --filter @skills-manager/desktop run rebuild:better-sqlite3",
     "build:main": "pnpm --filter @skills-manager/desktop run build:main",
     "build:renderer": "pnpm --filter @skills-manager/desktop run build:renderer",
     "build": "pnpm --filter @skills-manager/desktop run build",

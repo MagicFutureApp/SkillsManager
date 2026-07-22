@@ -12,6 +12,7 @@
     "dev": "pnpm run build:main && concurrently -k \"pnpm run dev:renderer\" \"cross-env VITE_DEV_SERVER_URL=http://localhost:3700 electron .\"",
     "dev:renderer": "vite",
     "electron:version": "electron --version",
+    "rebuild:better-sqlite3": "node scripts/rebuild-better-sqlite3-for-electron.ts",
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "vite build",
     "build": "pnpm run build:main && pnpm run build:renderer",
@@ -19,8 +20,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
-    "format": "prettier --write package.json tsconfig.json tsconfig.main.json tsconfig.renderer.json vite.config.ts vitest.config.ts drizzle.config.ts components.json src",
-    "format:check": "prettier --check package.json tsconfig.json tsconfig.main.json tsconfig.renderer.json vite.config.ts vitest.config.ts drizzle.config.ts components.json src"
+    "format": "prettier --write package.json tsconfig.json tsconfig.main.json tsconfig.renderer.json vite.config.ts vitest.config.ts drizzle.config.ts components.json scripts src",
+    "format:check": "prettier --check package.json tsconfig.json tsconfig.main.json tsconfig.renderer.json vite.config.ts vitest.config.ts drizzle.config.ts components.json scripts src"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.0",

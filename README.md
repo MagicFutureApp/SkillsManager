@@ -67,14 +67,9 @@ pnpm --filter @skills-manager/desktop run build
 
 ## Rebuild better-sqlite3 for Electron
 
-Windows PowerShell:
+The rebuild script reads the currently installed Electron version and configures the native build
+for that runtime automatically:
 
-```powershell
-$env:npm_config_runtime="electron"; $env:npm_config_target="41.7.1"; $env:npm_config_disturl="https://electronjs.org/headers"; pnpm --filter @skills-manager/desktop rebuild better-sqlite3
-```
-
-Bash / macOS / Linux:
-
-```bash
-npm_config_runtime=electron npm_config_target="41.7.1" npm_config_disturl=https://electronjs.org/headers pnpm --filter @skills-manager/desktop rebuild better-sqlite3
+```shell
+pnpm run rebuild:better-sqlite3
 ```
