@@ -55,6 +55,18 @@ jobs:
       - name: Check TypeScript
         run: pnpm run check
 
+      - name: Verify tag version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          package_version="$(node -p "require('./apps/desktop/package.json').version")"
+
+          if [ "$tag_version" != "$package_version" ]; then
+            echo "Tag version $tag_version does not match apps/desktop/package.json version $package_version"
+            exit 1
+          fi
+
       - name: Build installer
         run: pnpm run ${{ matrix.command }}
         env:
@@ -99,3 +111,122 @@ jobs:
               --title "Skills Manager $TAG_NAME" \
               --generate-notes
           fi
+
+      - name: Generate release manifest
+        env:
+          GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
+          GH_REPO: yimity/SkillsManager-Releases
+          TAG_NAME: ${{ github.ref_name }}
+        working-directory: release-assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          release_json="$(gh release view "$TAG_NAME" --json tagName,publishedAt,url,assets)"
+          version="${TAG_NAME#v}"
+          release_url="$(jq -r '.url' <<<"$release_json")"
+          published_at="$(jq -r '.publishedAt // empty' <<<"$release_json")"
+          published_at="${published_at:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+
+          asset_name() {
+            local suffix="$1"
+            jq -r --arg suffix "$suffix" '[.assets[] | select(.name | endswith($suffix))][0].name // empty' <<<"$release_json"
+          }
+
+          asset_url() {
+            local name="$1"
+            jq -r --arg name "$name" '.assets[] | select(.name == $name) | .url' <<<"$release_json"
+          }
+
+          asset_sha256() {
+            local name="$1"
+            awk -v name="$name" '$2 == name { print $1 }' SHA256SUMS.txt
+          }
+
+          windows_name="$(asset_name .exe)"
+          macos_name="$(asset_name .dmg)"
+          linux_name="$(asset_name .deb)"
+
+          for name in "$windows_name" "$macos_name" "$linux_name"; do
+            if [ -z "$name" ] || [ ! -f "$name" ]; then
+              echo "Missing release asset: $name"
+              exit 1
+            fi
+          done
+
+          windows_sha256="$(asset_sha256 "$windows_name")"
+          macos_sha256="$(asset_sha256 "$macos_name")"
+          linux_sha256="$(asset_sha256 "$linux_name")"
+
+          for checksum in "$windows_sha256" "$macos_sha256" "$linux_sha256"; do
+            if [ -z "$checksum" ]; then
+              echo "Missing release asset checksum"
+              exit 1
+            fi
+          done
+
+          jq -n \
+            --arg version "$version" \
+            --arg tag "$TAG_NAME" \
+            --arg publishedAt "$published_at" \
+            --arg releaseUrl "$release_url" \
+            --arg windowsName "$windows_name" \
+            --arg windowsUrl "$(asset_url "$windows_name")" \
+            --arg windowsSha256 "$windows_sha256" \
+            --arg macosName "$macos_name" \
+            --arg macosUrl "$(asset_url "$macos_name")" \
+            --arg macosSha256 "$macos_sha256" \
+            --arg linuxName "$linux_name" \
+            --arg linuxUrl "$(asset_url "$linux_name")" \
+            --arg linuxSha256 "$linux_sha256" \
+            '{
+              schemaVersion: 1,
+              version: $version,
+              tag: $tag,
+              publishedAt: $publishedAt,
+              releaseUrl: $releaseUrl,
+              downloads: {
+                windows: {name: $windowsName, url: $windowsUrl, sha256: $windowsSha256},
+                macos: {name: $macosName, url: $macosUrl, sha256: $macosSha256},
+                linux: {name: $linuxName, url: $linuxUrl, sha256: $linuxSha256}
+              }
+            }' > latest.json
+
+      - name: Upload release manifest asset
+        env:
+          GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
+          GH_REPO: yimity/SkillsManager-Releases
+          TAG_NAME: ${{ github.ref_name }}
+        run: gh release upload "$TAG_NAME" release-assets/latest.json --clobber
+
+      - name: Publish release manifest to Cloudflare KV
+        env:
+          GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
+          GH_REPO: yimity/SkillsManager-Releases
+          TAG_NAME: ${{ github.ref_name }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_RELEASE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_RELEASE_KV_NAMESPACE_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          latest_tag="$(gh api "repos/${GH_REPO}/releases/latest" --jq .tag_name)"
+          if [ "$latest_tag" != "$TAG_NAME" ]; then
+            echo "Skipping KV update because $TAG_NAME is not the latest public release ($latest_tag)"
+            exit 0
+          fi
+
+          for variable in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_RELEASE_KV_NAMESPACE_ID; do
+            if [ -z "${!variable}" ]; then
+              echo "Missing required GitHub secret: $variable"
+              exit 1
+            fi
+          done
+
+          curl --fail-with-body --retry 3 \
+            -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/storage/kv/namespaces/${CLOUDFLARE_RELEASE_KV_NAMESPACE_ID}/values/latest" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data-binary @release-assets/latest.json

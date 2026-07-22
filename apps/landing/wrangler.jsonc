@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "skills-manager-landing",
+  "compatibility_date": "2026-07-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "kv_namespaces": [
+    {
+      "binding": "RELEASE_MANIFEST",
+      "id": "REPLACE_WITH_RELEASE_MANIFEST_KV_NAMESPACE_ID"
+    }
+  ]
+}

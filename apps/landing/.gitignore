@@ -4,6 +4,7 @@ dist-ssr/
 .nitro/
 .output/
 .tanstack/
+.wrangler/
 .vinxi/
 coverage/
 .DS_Store

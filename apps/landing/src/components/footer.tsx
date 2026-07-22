@@ -1,53 +1,14 @@
 import React, { useState } from "react";
 import { ArrowUp, Send, Heart } from "lucide-react";
 import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png";
+import type { ReleaseManifestState } from "../hooks/use-release-manifest";
 
 interface FooterProps {
   onScrollToTop: () => void;
+  release: ReleaseManifestState;
 }
 
-export default function Footer({ onScrollToTop }: FooterProps) {
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!email.trim()) return;
-    setSubscribed(true);
-    setEmail("");
-    setTimeout(() => setSubscribed(false), 3000);
-  };
-
-  const linkGroups = [
-    {
-      title: "产品",
-      links: [
-        { label: "交互工作台", href: "#sandbox" },
-        { label: "产品能力", href: "#features" },
-        { label: "分发预览", href: "#sandbox" },
-        { label: "版本范围", href: "#pricing" }
-      ]
-    },
-    {
-      title: "工作流",
-      links: [
-        { label: "提供方诊断", href: "#sandbox" },
-        { label: "来源同步", href: "#sandbox" },
-        { label: "Skill 索引", href: "#sandbox" },
-        { label: "目标分发", href: "#sandbox" }
-      ]
-    },
-    {
-      title: "本地边界",
-      links: [
-        { label: "系统 Git 认证", href: "#features" },
-        { label: "SQLite 索引", href: "#features" },
-        { label: "copy-only 分发", href: "#features" },
-        { label: "路径安全检查", href: "#features" }
-      ]
-    }
-  ];
-
+export default function Footer({ onScrollToTop, release }: FooterProps) {
   return (
     <footer className="bg-zinc-950 text-zinc-400 border-t border-zinc-900" id="footer">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
@@ -70,7 +31,13 @@ export default function Footer({ onScrollToTop }: FooterProps) {
               <span>返回顶部</span>
               <ArrowUp className="h-3.5 w-3.5" />
             </button>
-            <span className="text-[10px] text-zinc-500 mt-4 font-mono select-none">v0.1.0</span>
+            <span className="text-[10px] text-zinc-500 mt-4 font-mono select-none">
+              {release.loading
+                ? "检查最新版本"
+                : release.manifest
+                  ? `v${release.manifest.version}`
+                  : "版本信息暂不可用"}
+            </span>
           </div>
         </div>
 

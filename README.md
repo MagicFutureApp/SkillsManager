@@ -5,11 +5,11 @@ A local-first Skills Manager monorepo.
 ## Workspace layout
 
 - `apps/desktop`: Electron, React, TypeScript, and SQLite desktop application.
-- `apps/landing`: reserved for the landing page.
+- `apps/landing`: TanStack Start landing page deployed to Cloudflare Workers.
 - `apps/cache-manager`: reserved for the Cloudflare Hono cache manager.
 
-The landing and cache-manager workspaces currently contain only tracked placeholders. They do
-not have framework or runtime dependencies yet.
+The cache-manager workspace remains a tracked placeholder. Release metadata for the landing page
+is currently served by the landing Worker itself from a Cloudflare KV binding.
 
 ## Commands
 
@@ -40,9 +40,13 @@ Run each command on its matching operating system. Output is written to
 The GitHub Actions workflow `.github/workflows/build-desktop-installers.yml` runs the three
 native builds in parallel. It can be started manually from the Actions tab and also runs when a
 tag matching `v*` is pushed. Manual builds upload the installers as workflow artifacts for 14
-days. Tag builds also create or update the matching GitHub Release and attach the Windows,
-macOS, and Ubuntu installers together with `SHA256SUMS.txt`. The Release job uses the built-in
-`GITHUB_TOKEN`; no Personal Access Token is required.
+days. Tag builds also create or update the matching public GitHub Release and attach the Windows,
+macOS, and Ubuntu installers together with `SHA256SUMS.txt` and `latest.json`. The Release job uses
+`PUBLIC_RELEASE_TOKEN` to publish to `yimity/SkillsManager-Releases`, then writes the same manifest
+to the Cloudflare KV namespace configured for the landing Worker.
+
+The source repository must define `PUBLIC_RELEASE_TOKEN`, `CLOUDFLARE_API_TOKEN`,
+`CLOUDFLARE_ACCOUNT_ID`, and `CLOUDFLARE_RELEASE_KV_NAMESPACE_ID` as GitHub Actions secrets.
 
 Before pushing a release tag, make sure it matches the desktop package version. For example, the
 version `0.1.0` in `apps/desktop/package.json` should be released with:

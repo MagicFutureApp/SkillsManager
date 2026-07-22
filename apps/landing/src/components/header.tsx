@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import { Menu, X, ArrowRight, ArrowDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png";
+import type { ReleaseManifestState } from "../hooks/use-release-manifest";
 
 interface HeaderProps {
   onScrollTo: (sectionId: string) => void;
+  release: ReleaseManifestState;
+  onDownload: () => void;
 }
 
-export default function Header({ onScrollTo }: HeaderProps) {
+export default function Header({ onScrollTo, release, onDownload }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
@@ -19,9 +22,6 @@ export default function Header({ onScrollTo }: HeaderProps) {
   const handleNavClick = (id: string) => {
     onScrollTo(id);
     setIsOpen(false);
-  };
-
-  const handleDownload = () => {
   };
 
   return (
@@ -51,11 +51,13 @@ export default function Header({ onScrollTo }: HeaderProps) {
 
         <div className="hidden md:flex items-center gap-4">
           <button
-            onClick={() => handleDownload()}
+            onClick={onDownload}
             className="group flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-50 shadow-sm transition-all hover:bg-zinc-800 hover:shadow"
             id="nav-btn-cta"
           >
-            <span>下载</span>
+            <span>
+              {release.loading ? "下载" : `下载 v${release.manifest?.version ?? "最新版"}`}
+            </span>
             <ArrowDown className="size-4 transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
@@ -93,7 +95,7 @@ export default function Header({ onScrollTo }: HeaderProps) {
               ))}
               <div className="mt-4 border-t border-zinc-200 pt-4 space-y-2.5">
                 <button
-                  onClick={() => handleDownload()}
+                  onClick={onDownload}
                   className="block w-full text-center rounded-lg bg-zinc-900 py-2.5 px-3 text-base font-medium text-zinc-50 shadow-sm hover:bg-zinc-800 cursor-pointer"
                   id="mobile-nav-btn-cta"
                 >
