@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { ArrowUpRight, Coffee, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 
 export default function Pricing() {
@@ -23,11 +23,19 @@ export default function Pricing() {
             className="mt-10 flex flex-wrap justify-center gap-4"
           >
             <button
+              type="button"
               onClick={byMeACoffee}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-6 py-3.5 text-sm font-semibold text-zinc-50 shadow-sm transition-all  bg-zinc-900 hover:bg-zinc-800 hover:shadow-lg active:scale-95 cursor-pointer"
+              className="group inline-flex h-13 w-50 items-center gap-3 rounded-lg bg-zinc-950 py-1 pr-1 pl-5 text-sm font-semibold text-white shadow-sm transition-[background-color,box-shadow,transform] hover:bg-zinc-800 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 active:scale-[0.98]"
               id="price-btn"
             >
-              <span>请我喝杯咖啡</span>
+              <Coffee className="size-4.5" aria-hidden="true" />
+              <span className="flex-1 text-center">请我喝杯咖啡</span>
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-white/10 transition-colors group-hover:text-zinc-950">
+                <ArrowUpRight
+                  className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </span>
             </button>
           </motion.div>
         </div>
