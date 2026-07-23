@@ -25,12 +25,12 @@ export default function Pricing() {
             <button
               type="button"
               onClick={byMeACoffee}
-              className="group inline-flex h-13 w-50 items-center gap-3 rounded-lg bg-zinc-950 py-1 pr-1 pl-5 text-sm font-semibold text-white shadow-sm transition-[background-color,box-shadow,transform] hover:bg-zinc-800 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 active:scale-[0.98]"
+              className="group inline-flex h-13 w-50 items-center gap-3 rounded-lg bg-zinc-950 py-1 pr-1 pl-5 text-sm font-semibold text-white shadow-sm transition-[background-color,box-shadow,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 active:scale-[0.98]"
               id="price-btn"
             >
               <Coffee className="size-4.5" aria-hidden="true" />
               <span className="flex-1 text-center">请我喝杯咖啡</span>
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-white/10 transition-colors group-hover:text-zinc-950">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-transparent">
                 <ArrowUpRight
                   className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                   aria-hidden="true"
