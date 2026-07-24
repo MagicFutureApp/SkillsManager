@@ -10,36 +10,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toErrorMessage } from "@/lib/errors";
 import skillsManagerMark from "@/assets/skills-manager-mark.svg";
 import {
   AlertTriangle,
-  CheckCircle2,
+  CircleHelpIcon,
   Copy,
   Database,
-  ExternalLink,
   FolderOpen,
+  GitBranch,
   KeyRound,
   PackageCheck,
-  RotateCcw,
-  Save,
-  Trash2
+  RotateCcw
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import type { AppInfo, AppSettingsResult, AppStoragePathsResult } from "@/global";
+import { GITHUB_TOKEN_HELP_URL } from "../../../core/app-constants";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type StorageStatus = "loading" | "idle" | "resetting" | "reset" | "error";
-const GITHUB_TOKEN_CREATION_URL =
-  "https://github.com/settings/personal-access-tokens/new?name=Skills+Manager&description=Read+repository+metadata+and+SKILL.md+files&contents=read";
 const settingsNavigationItems = [
-  { href: "#github-token", label: "GitHub API token" },
+  { href: "#github-token", label: "凭证管理" },
   { href: "#skill-distribution", label: "技能分发" },
   { href: "#local-storage", label: "本地存储" },
-  { href: "#github-token-help", label: "如何创建 GitHub token" },
   { href: "#settings-danger-zone", label: "危险操作" },
   { href: "#settings-about", label: "关于" }
 ] as const;
@@ -262,17 +259,23 @@ export const SettingsPage = () => {
       });
   };
 
-  const openGitHubTokenCreationPage = () => {
-    void window.skillsManager
-      ?.openExternalUrl?.(GITHUB_TOKEN_CREATION_URL)
-      .catch((unknownError: unknown) => {
-        setError(toErrorMessage(unknownError) || "无法打开 GitHub token 创建页面。");
-        setStatus("error");
-      });
-  };
-
   const copyPath = (value: string) => {
     void navigator.clipboard?.writeText(value);
+  };
+
+  const openGitHubTokenHelp = () => {
+    if (!window.skillsManager?.openExternalUrl) {
+      setError("打开 GitHub token 帮助的接口不可用。");
+      setStatus("error");
+      return;
+    }
+
+    void window.skillsManager
+      .openExternalUrl(GITHUB_TOKEN_HELP_URL)
+      .catch((unknownError: unknown) => {
+        setError(toErrorMessage(unknownError) || "无法打开 GitHub token 帮助页面。");
+        setStatus("error");
+      });
   };
 
   const confirmResetLocalDatabase = () => {
@@ -306,7 +309,6 @@ export const SettingsPage = () => {
   const isSaving = status === "saving";
   const isSavingDistribution = distributionStatus === "saving";
   const isResetting = storageStatus === "resetting";
-  const tokenStatusLabel = settings.github.hasToken ? "已配置" : "未配置";
   const autoDistributeOnSync = settings.distribution.autoDistributeOnSync;
   const activeSettingsSection = (() => {
     switch (activeSettingsNavigationHref) {
@@ -315,47 +317,64 @@ export const SettingsPage = () => {
           <SettingsPanel
             id="github-token"
             icon={<KeyRound aria-hidden="true" />}
-            title="GitHub API token"
-            description="用于解析 GitHub repo metadata 和 tree API，避免未认证请求的低频率限制。"
-            action={
-              <Badge variant={settings.github.hasToken ? "secondary" : "outline"}>
-                {tokenStatusLabel}
-              </Badge>
-            }
+            title="凭证管理"
+            description="管理 Skills Manager 访问代码托管平台所需的凭证。"
           >
-            <div className="grid max-w-2xl gap-4">
-              <Field>
-                <FieldLabel>GitHub token</FieldLabel>
-                <Input
-                  type="password"
-                  value={githubToken}
-                  placeholder="github_pat_..."
-                  disabled={isSaving}
-                  onValueChange={setGithubToken}
-                />
-                <FieldDescription>
-                  {settings.github.hasToken
-                    ? "当前 token 不会回显，输入新 token 后保存即可替换。"
-                    : "建议使用 fine-grained token，并授予 Metadata read 与 Contents read。"}
-                </FieldDescription>
-              </Field>
+            <CredentialProviderBlock
+              id="github-credential"
+              icon={<GitBranch aria-hidden="true" />}
+              title="GitHub token"
+              titleAction={
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="查看 GitHub token 创建帮助"
+                        onClick={openGitHubTokenHelp}
+                      />
+                    }
+                  >
+                    <CircleHelpIcon />
+                  </TooltipTrigger>
+                  <TooltipContent>如何创建 GitHub token</TooltipContent>
+                </Tooltip>
+              }
+            >
+              <div className="grid max-w-2xl gap-4">
+                <Field>
+                  <FieldLabel className="sr-only">GitHub token</FieldLabel>
+                  <Input
+                    type="password"
+                    value={githubToken}
+                    placeholder={settings.github.hasToken ? "********" : "请输入 GitHub Token"}
+                    disabled={isSaving}
+                    onValueChange={setGithubToken}
+                  />
+                </Field>
 
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" disabled={isSaving} onClick={saveToken}>
-                  <Save aria-hidden="true" />
-                  保存 GitHub token
-                </Button>
-                <Button type="button" variant="outline" disabled={isSaving} onClick={clearToken}>
-                  <Trash2 aria-hidden="true" />
-                  清除 GitHub token
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" disabled={isSaving} onClick={saveToken}>
+                    保存
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isSaving}
+                    onClick={clearToken}
+                  >
+                    清除
+                  </Button>
+                </div>
+
+                {status === "saved" ? (
+                  <p className="text-sm text-muted-foreground">已保存 GitHub token。</p>
+                ) : null}
+                {error ? <p className="text-sm text-destructive">{error}</p> : null}
               </div>
-
-              {status === "saved" ? (
-                <p className="text-sm text-muted-foreground">已保存 GitHub token。</p>
-              ) : null}
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-            </div>
+            </CredentialProviderBlock>
           </SettingsPanel>
         );
       case "#skill-distribution":
@@ -364,7 +383,7 @@ export const SettingsPage = () => {
             id="skill-distribution"
             icon={<PackageCheck aria-hidden="true" />}
             title="技能分发"
-            description="控制来源同步完成后，是否自动 copy 到已经在 Skills/Targets 中设置的目标目录。"
+            description="控制来源同步完成后，是否自动分发到已经在 Skills/Targets 中设置的目标目录。"
             action={
               <Badge variant={autoDistributeOnSync ? "secondary" : "outline"}>
                 {autoDistributeOnSync ? "已开启" : "已关闭"}
@@ -381,8 +400,7 @@ export const SettingsPage = () => {
                     同步后自动分发到已设置目标
                   </span>
                   <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                    关闭时，同步完成后只显示可手动分发的数量；开启后，会自动 copy
-                    到已选择的目标目录。
+                    开启后，从来源同步完成后，各个技能会自动分发到已选择的目标目录。
                   </span>
                 </span>
                 <Switch
@@ -404,7 +422,7 @@ export const SettingsPage = () => {
             id="local-storage"
             icon={<Database aria-hidden="true" />}
             title="本地存储"
-            description="查看 Skills Manager 的本地缓存根目录和 SQLite 数据库文件路径。重建数据库会清空本地索引，不会删除缓存目录或 agent 目标目录中的文件。"
+            description="查看 Skills Manager 的本地缓存根目录和 SQLite 数据库文件路径。"
           >
             <div className="grid gap-3">
               <StoragePathRow
@@ -429,38 +447,6 @@ export const SettingsPage = () => {
               />
             </div>
           </SettingsPanel>
-        );
-      case "#github-token-help":
-        return (
-          <section
-            className="grid scroll-mt-6 gap-4 rounded-xl border border-border bg-card p-4"
-            aria-labelledby="github-token-help"
-          >
-            <div>
-              <h2 id="github-token-help" className="scroll-mt-6 font-semibold">
-                如何创建 GitHub token
-              </h2>
-              <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                请选择 Fine-grained personal access token。它可以限制资源 owner、仓库范围和权限，比
-                classic token 更适合这里的只读访问。
-              </p>
-            </div>
-
-            <ol className="grid gap-2 text-sm leading-6 text-muted-foreground">
-              <li>1. 打开 GitHub 的 Fine-grained tokens 创建页，填写 token 名称和过期时间。</li>
-              <li>2. Repository access 选择只需要扫描的仓库。</li>
-              <li>
-                3. Repository permissions 至少确认 <strong>Contents: Read-only</strong> 和{" "}
-                <strong>Metadata: Read-only</strong>。
-              </li>
-              <li>4. 生成后复制 token，回到本页粘贴并保存。</li>
-            </ol>
-
-            <Button type="button" variant="outline" onClick={openGitHubTokenCreationPage}>
-              <ExternalLink aria-hidden="true" />
-              打开 GitHub token 创建页面
-            </Button>
-          </section>
         );
       case "#settings-danger-zone":
         return (
@@ -556,23 +542,6 @@ export const SettingsPage = () => {
           })}
         </nav>
 
-        <section className="mt-auto rounded-lg border border-border bg-background p-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="size-4 text-muted-foreground" aria-hidden="true" />
-            <h2 className="font-semibold">凭据状态</h2>
-          </div>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            {settings.github.hasToken
-              ? "GitHub token 已保存在本机设置中。替换时只需要输入新 token 并保存。"
-              : "尚未保存 GitHub token。公共仓库仍可扫描，但请求频率限制更低。"}
-          </p>
-          <div className="mt-3 rounded-lg border border-border bg-muted/40 p-3">
-            <span className="text-xs font-semibold text-muted-foreground">安全提示</span>
-            <p className="mt-1 text-sm leading-6">
-              保存后的 token 不会回显到界面，也不会离开本机应用设置。
-            </p>
-          </div>
-        </section>
       </aside>
 
       <main
@@ -649,6 +618,39 @@ const SettingsPanel = ({
       </div>
 
       <div className="mt-4">{children}</div>
+    </section>
+  );
+};
+
+const CredentialProviderBlock = ({
+  children,
+  icon,
+  id,
+  title,
+  titleAction
+}: React.PropsWithChildren<{
+  icon: React.ReactNode;
+  id: string;
+  title: string;
+  titleAction?: React.ReactNode;
+}>) => {
+  return (
+    <section
+      className="rounded-lg border border-border bg-muted/40 p-3"
+      aria-labelledby={id}
+    >
+      <div className="flex items-center gap-2">
+        <span className="inline-flex size-4 items-center justify-center text-muted-foreground [&_svg]:size-4">
+          {icon}
+        </span>
+        <div className="flex min-w-0 items-center gap-1">
+          <h3 id={id} className="text-sm font-semibold text-foreground">
+            {title}
+          </h3>
+          {titleAction}
+        </div>
+      </div>
+      <div className="mt-3">{children}</div>
     </section>
   );
 };

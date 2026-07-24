@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { ArrowUp, Send, Heart } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import React from "react";
+import { ArrowUp, Heart } from "lucide-react";
 import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png";
 import type { ReleaseManifestState } from "../hooks/use-release-manifest";
 
@@ -42,7 +43,9 @@ export default function Footer({ onScrollToTop, release }: FooterProps) {
         </div>
 
         <div className="border-t border-zinc-900 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-          <p>© 2026 Skills Manager。所有索引与设置默认保存在本机。</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-start">
+            <p>© 2026 Skills Manager。所有索引与设置默认保存在本机。</p>
+          </div>
           <p className="flex items-center gap-1.5">
             <span>为本地 Agent 工作流构建</span>
             <Heart className="h-3.5 w-3.5 text-rose-500 fill-rose-500 animate-pulse" />

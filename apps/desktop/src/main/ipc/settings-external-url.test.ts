@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { getAppSettings, openExternalUrl, updateDistributionSettings } from "./settings";
 import { createDbClient } from "../../db/client";
+import { GITHUB_TOKEN_HELP_URL } from "../../core/app-constants";
 
 vi.mock("electron", () => ({
   ipcMain: {
@@ -22,12 +23,28 @@ describe("openExternalUrl", () => {
     expect(openExternal).toHaveBeenCalledWith(url);
   });
 
+  it("opens the landing GitHub token help URL with the system browser", async () => {
+    const openExternal = vi.fn().mockResolvedValue(undefined);
+
+    await openExternalUrl(GITHUB_TOKEN_HELP_URL, { openExternal });
+
+    expect(openExternal).toHaveBeenCalledWith(GITHUB_TOKEN_HELP_URL);
+  });
+
   it("rejects non-GitHub external URLs", async () => {
     await expect(
       openExternalUrl("https://example.com/settings", {
         openExternal: vi.fn()
       })
-    ).rejects.toThrow("Only GitHub URLs can be opened from settings.");
+    ).rejects.toThrow("Only approved settings URLs can be opened.");
+  });
+
+  it("rejects other URLs on the landing host", async () => {
+    await expect(
+      openExternalUrl("https://sk.magicfuture.app/settings", {
+        openExternal: vi.fn()
+      })
+    ).rejects.toThrow("Only approved settings URLs can be opened.");
   });
 });
 

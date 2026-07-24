@@ -38,6 +38,9 @@ type DeriveSkillPatternOptions = {
   singleTopLevelSkillDirectoryAsGlob?: boolean;
 };
 
+const GITHUB_TOKEN_SETUP_GUIDANCE =
+  "请前往“设置 > 凭证管理”配置 GitHub Token 后重试。";
+
 const defaultFetchJson = async (url: string, githubToken?: string): Promise<unknown> => {
   const response = await fetch(url, {
     headers: {
@@ -197,6 +200,10 @@ const toRepositorySourceInspectionError = (
 };
 
 const toGitHubApiUserMessage = (error: GitHubApiHttpError): string => {
+  return `${toGitHubApiProblemMessage(error)} ${GITHUB_TOKEN_SETUP_GUIDANCE}`;
+};
+
+const toGitHubApiProblemMessage = (error: GitHubApiHttpError): string => {
   if (error.retryAfter) {
     return `GitHub API 暂时限流，请约 ${error.retryAfter} 秒后重试。`;
   }

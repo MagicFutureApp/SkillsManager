@@ -155,7 +155,7 @@ describe("inspectRepositorySource", () => {
     );
 
     await expect(inspectRepositorySource("https://github.com/anthropics/skills")).rejects.toThrow(
-      "GitHub API 访问频率已达上限，请在 2026-06-15T00:00:00.000Z 后重试。"
+      "GitHub API 访问频率已达上限，请在 2026-06-15T00:00:00.000Z 后重试。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。"
     );
   });
 
@@ -173,7 +173,7 @@ describe("inspectRepositorySource", () => {
     );
 
     await expect(inspectRepositorySource("https://github.com/anthropics/skills")).rejects.toThrow(
-      "GitHub token 权限不足，需要 Metadata read 权限后才能解析这个来源。"
+      "GitHub token 权限不足，需要 Metadata read 权限后才能解析这个来源。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。"
     );
   });
 
@@ -228,7 +228,7 @@ describe("inspectRepositorySource", () => {
     );
 
     await expect(inspectRepositorySource("https://github.com/anthropics/skills")).rejects.toThrow(
-      "GitHub API 暂时限流，请约 60 秒后重试。"
+      "GitHub API 暂时限流，请约 60 秒后重试。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。"
     );
   });
 

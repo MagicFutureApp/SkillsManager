@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HelpGithubTokenRouteImport } from './routes/help.github-token'
 import { Route as ApiReleasesLatestRouteImport } from './routes/api/releases/latest'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpGithubTokenRoute = HelpGithubTokenRouteImport.update({
+  id: '/help/github-token',
+  path: '/help/github-token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiReleasesLatestRoute = ApiReleasesLatestRouteImport.update({
@@ -25,27 +31,31 @@ const ApiReleasesLatestRoute = ApiReleasesLatestRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/help/github-token': typeof HelpGithubTokenRoute
   '/api/releases/latest': typeof ApiReleasesLatestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/help/github-token': typeof HelpGithubTokenRoute
   '/api/releases/latest': typeof ApiReleasesLatestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/help/github-token': typeof HelpGithubTokenRoute
   '/api/releases/latest': typeof ApiReleasesLatestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/releases/latest'
+  fullPaths: '/' | '/help/github-token' | '/api/releases/latest'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/releases/latest'
-  id: '__root__' | '/' | '/api/releases/latest'
+  to: '/' | '/help/github-token' | '/api/releases/latest'
+  id: '__root__' | '/' | '/help/github-token' | '/api/releases/latest'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HelpGithubTokenRoute: typeof HelpGithubTokenRoute
   ApiReleasesLatestRoute: typeof ApiReleasesLatestRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help/github-token': {
+      id: '/help/github-token'
+      path: '/help/github-token'
+      fullPath: '/help/github-token'
+      preLoaderRoute: typeof HelpGithubTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/releases/latest': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HelpGithubTokenRoute: HelpGithubTokenRoute,
   ApiReleasesLatestRoute: ApiReleasesLatestRoute,
 }
 export const routeTree = rootRouteImport

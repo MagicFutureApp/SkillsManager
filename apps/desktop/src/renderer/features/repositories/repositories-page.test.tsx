@@ -1696,6 +1696,32 @@ describe("RepositoriesPage", () => {
     expect(inspectRepositorySource).toHaveBeenCalledWith("https://github.com/anthropics/skills");
   });
 
+  it("shows GitHub token setup guidance when source inspection returns an API error", async () => {
+    const apiError =
+      "GitHub API 访问频率已达上限，请稍后重试。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。";
+    const inspectRepositorySource = vi.fn().mockRejectedValue(new Error(apiError));
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      inspectRepositorySource,
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32"
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    const dialog = screen.getByRole("dialog", { name: "新增来源" });
+    fireEvent.change(within(dialog).getByLabelText("URL / 本机路径"), {
+      target: { value: "https://github.com/anthropics/skills" }
+    });
+
+    expect(await within(dialog).findByText(apiError)).toBeInTheDocument();
+    expect(inspectRepositorySource).toHaveBeenCalledWith("https://github.com/anthropics/skills");
+  });
+
   it("renders English UI copy when initialized with en-US", async () => {
     await renderRepositoriesPage("en-US");
 

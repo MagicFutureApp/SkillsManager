@@ -1,20 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Header from "./components/header";
 import Hero from "./components/hero";
 import Features from "./components/features";
 import InteractiveSandbox from "./components/interactive-sandbox";
 import Pricing from "./components/pricing";
 import Footer from "./components/footer";
+import { useDownloadPlatform } from "./hooks/use-download-platform";
 import { useReleaseManifest } from "./hooks/use-release-manifest";
-import { getBrowserPlatform, type ReleasePlatform } from "./lib/release-manifest";
 
 export default function App() {
   const release = useReleaseManifest();
-  const [downloadPlatform, setDownloadPlatform] = useState<ReleasePlatform>("windows");
-
-  useEffect(() => {
-    setDownloadPlatform(getBrowserPlatform());
-  }, []);
+  const [downloadPlatform, setDownloadPlatform] = useDownloadPlatform();
 
   // Navigation scrolling logic
   const handleScrollToSection = (id: string) => {

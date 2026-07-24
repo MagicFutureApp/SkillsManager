@@ -8,3 +8,5 @@ export const APP_META = {
   title: "Skills Manager",
   description: "Sync and Distribute Skills"
 } as const;
+
+export const GITHUB_TOKEN_HELP_URL = "https://sk.magicfuture.app/help/github-token";

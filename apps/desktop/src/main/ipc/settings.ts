@@ -2,6 +2,7 @@ import { ipcMain, shell } from "electron";
 import { createAppSettingsRepository } from "../../db/repositories/appSettingsRepository.js";
 import type { AppDbRuntime, AppStoragePaths } from "../app-storage.js";
 import type { createDbClient } from "../../db/client.js";
+import { GITHUB_TOKEN_HELP_URL } from "../../core/app-constants.js";
 
 const GITHUB_TOKEN_SETTING_KEY = "githubToken";
 const DISTRIBUTION_SETTINGS_KEY = "distribution";
@@ -129,9 +130,11 @@ export const openExternalUrl = async (
   operations: OpenExternalOperations = shell
 ): Promise<void> => {
   const parsedUrl = new URL(url);
+  const isGitHubUrl = parsedUrl.protocol === "https:" && parsedUrl.hostname === "github.com";
+  const isGitHubTokenHelpUrl = parsedUrl.href === GITHUB_TOKEN_HELP_URL;
 
-  if (parsedUrl.protocol !== "https:" || parsedUrl.hostname !== "github.com") {
-    throw new Error("Only GitHub URLs can be opened from settings.");
+  if (!isGitHubUrl && !isGitHubTokenHelpUrl) {
+    throw new Error("Only approved settings URLs can be opened.");
   }
 
   await operations.openExternal(url);
