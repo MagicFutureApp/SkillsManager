@@ -51,6 +51,7 @@ export const RepositoriesPageMain = () => {
           status: t("repositories.filters.status"),
           statusLabels: {
             failed: t("repositories.status.failed"),
+            pending: t("repositories.status.pending"),
             ready: t("repositories.status.ready"),
             review: t("repositories.status.review")
           }

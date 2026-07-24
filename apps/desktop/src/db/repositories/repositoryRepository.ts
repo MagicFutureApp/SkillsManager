@@ -59,7 +59,7 @@ export type RepositorySyncRecordResult = {
   repositoryId: string;
   scan: RepositoryScanSummary;
   skillUnits: number;
-  status: RepositoryScanStatus;
+  status: Exclude<RepositoryScanStatus, "failed" | "pending">;
 };
 
 export type RepositorySyncFailureRecordInput = {
@@ -394,7 +394,7 @@ export const createRepositoryRepository = (db: DbClient) => {
         removed: removedDetails,
         warnings: []
       };
-      const status: RepositoryScanStatus = scan.warnings > 0 ? "review" : "ready";
+      const status: RepositorySyncRecordResult["status"] = scan.warnings > 0 ? "review" : "ready";
 
       if (removedSkillIds.length) {
         const removedVersionRows = await db
@@ -865,7 +865,10 @@ const mergeRepositoryConfig = ({
     providerName: savedConfig.providerName ?? providerName,
     scan: savedConfig.scan ?? { added: 0, changed: 0, removed: 0, warnings: 0 },
     skillUnits: skillUnitCount,
-    status: savedConfig.status ?? (wasScanned ? "ready" : "review")
+    status:
+      !wasScanned && (savedConfig.status === undefined || savedConfig.status === "review")
+        ? "pending"
+        : (savedConfig.status ?? "ready")
   };
 };
 
@@ -879,7 +882,7 @@ const buildCreatedRepositoryConfig = (input: CreateRepositoryInput): RepositoryC
     providerName: input.provider,
     scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
     skillUnits: 0,
-    status: "review"
+    status: "pending"
   };
 };
 
@@ -1098,7 +1101,7 @@ const isProviderName = (value: unknown): value is RepositoryProviderName => {
 };
 
 const isScanStatus = (value: unknown): value is RepositoryConfig["status"] => {
-  return value === "ready" || value === "review" || value === "failed";
+  return value === "pending" || value === "ready" || value === "review" || value === "failed";
 };
 
 const isLocalPath = (remoteUrl: string): boolean => {

@@ -388,6 +388,7 @@ export const resources = {
         },
         status: {
           failed: "失败",
+          pending: "待同步",
           ready: "就绪",
           review: "需复核"
         },
@@ -882,6 +883,7 @@ export const resources = {
         },
         status: {
           failed: "Failed",
+          pending: "Pending sync",
           ready: "Ready",
           review: "Needs review"
         },

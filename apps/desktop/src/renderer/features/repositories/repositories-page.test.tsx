@@ -139,6 +139,11 @@ describe("RepositoriesPage", () => {
     expect(screen.getByLabelText("搜索")).toBeInTheDocument();
     expect(screen.getByLabelText("类型")).toBeInTheDocument();
     expect(screen.getByLabelText("状态")).toBeInTheDocument();
+    fireEvent.pointerDown(screen.getByLabelText("状态"), { pointerType: "mouse" });
+    fireEvent.mouseDown(screen.getByLabelText("状态"), { button: 0 });
+    expect(await screen.findByRole("option", { name: "待同步" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "需复核" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("option", { name: "全部状态" }));
     fireEvent.pointerDown(screen.getByLabelText("排序"), { pointerType: "mouse" });
     fireEvent.mouseDown(screen.getByLabelText("排序"), { button: 0 });
     expect(await screen.findByRole("option", { name: "来源" })).toBeInTheDocument();
@@ -1232,7 +1237,7 @@ describe("RepositoriesPage", () => {
         providerName: "GitHub",
         scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
         skillUnits: 0,
-        status: "review"
+        status: "pending"
       }),
       id: "repo-huashu-design",
       lastSync: null,
@@ -1259,7 +1264,7 @@ describe("RepositoriesPage", () => {
               providerName: "GitHub",
               scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
               skillUnits: 0,
-              status: "review"
+              status: "pending"
             }),
             id: "repo-huashu-design",
             lastSync: null,
@@ -1332,6 +1337,7 @@ describe("RepositoriesPage", () => {
     );
     expect(listRepositories).toHaveBeenCalledTimes(2);
     expect(await screen.findByRole("button", { name: "huashu-design" })).toBeInTheDocument();
+    expect(screen.getByText("待同步")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "huashu-design" })).toBeInTheDocument();
   });
 
@@ -1628,7 +1634,7 @@ describe("RepositoriesPage", () => {
         providerName: "Local",
         scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
         skillUnits: 0,
-        status: "review"
+        status: "pending"
       }),
       id: "repo-local-skills",
       lastSync: null,

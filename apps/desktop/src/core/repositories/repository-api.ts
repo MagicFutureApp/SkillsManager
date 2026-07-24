@@ -1,6 +1,6 @@
-export type RepositoryScanStatus = "ready" | "review" | "failed";
+export type RepositoryScanStatus = "pending" | "ready" | "review" | "failed";
 export type RepositoryLastSyncStatus = "failed" | "interrupted" | "running" | "success";
-export type RepositorySyncItemStatus = RepositoryScanStatus | "skipped";
+export type RepositorySyncItemStatus = Exclude<RepositoryScanStatus, "pending"> | "skipped";
 
 export type RepositoryProviderName =
   | "Bitbucket"

@@ -60,7 +60,7 @@ const defaultConfig: RepositoryConfig = {
   providerName: "GitHub",
   scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
   skillUnits: 0,
-  status: "review"
+  status: "pending"
 };
 
 export const repositoryProviderOptions: Array<{
@@ -88,6 +88,7 @@ export const visibleRepositoryProviderOptions = repositoryProviderOptions.filter
 
 export const repositoryStatusOptions: RepositoryStatusFilter[] = [
   "all",
+  "pending",
   "ready",
   "review",
   "failed"
@@ -202,7 +203,7 @@ export const buildRepositoryFromForm = ({
     remoteUrl: formValues.remoteUrl,
     scan: { added: 0, changed: 0, removed: 0, warnings: 0 },
     skillUnits: 0,
-    status: "review"
+    status: "pending"
   };
 };
 
@@ -227,7 +228,7 @@ const isProviderName = (value: unknown): value is RepositoryProviderName => {
 };
 
 const isScanStatus = (value: unknown): value is RepositoryScanStatus => {
-  return value === "ready" || value === "review" || value === "failed";
+  return value === "pending" || value === "ready" || value === "review" || value === "failed";
 };
 
 const parseRepositoryConfig = (configJson: string): RepositoryConfig => {

@@ -92,6 +92,38 @@ describe("createRepositoryRepository", () => {
     await expect(createRepositoryRepository(db).list()).resolves.toEqual([]);
   });
 
+  it("maps legacy unscanned review sources to pending sync", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-08T00:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: JSON.stringify({ status: "review" }),
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-pending",
+      lastScannedCommitSha: null,
+      localCachePath: "~/.skills-manager/cache/pending",
+      name: "Pending source",
+      providerId: "github",
+      remoteUrl: "https://github.com/team/pending.git",
+      updatedAt: createdAt
+    });
+
+    const [repository] = await createRepositoryRepository(db).list();
+
+    expect(JSON.parse(repository?.configJson ?? "{}")).toMatchObject({
+      status: "pending"
+    });
+  });
+
   it("counts repository rows independently of list pagination", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-08T00:00:00.000Z");
@@ -281,7 +313,7 @@ describe("createRepositoryRepository", () => {
       patterns: ["skills/*/SKILL.md"],
       providerName: "GitHub",
       skillUnits: 0,
-      status: "review"
+      status: "pending"
     });
   });
 
