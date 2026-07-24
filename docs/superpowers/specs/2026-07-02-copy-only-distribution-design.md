@@ -207,7 +207,7 @@ last_error
 - `skill_unit_id` 作为稳定查询入口，避免每次 join `skill_versions` 才能定位 skill-target 状态。
 - 不再需要 `install_strategy`，因为唯一策略就是 copy。
 - `target_snapshot_json` 保留执行时目标名称、类型、原始路径和规范化路径。
-- 删除 target 时不删除历史安装事实；但本次 v1 不展示历史页，只用于当前状态和冲突判断。
+- 删除 target 时删除与其关联的 `install_instances` 当前事实；是否同时删除目标目录中的 Skill 文件由删除操作的独立选项控制。v1 不保留独立安装历史。
 
 ### 4.6 修改 `app_settings`
 

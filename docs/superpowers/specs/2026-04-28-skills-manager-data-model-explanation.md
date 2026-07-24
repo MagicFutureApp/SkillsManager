@@ -400,7 +400,7 @@ last_error
 
 `distribution_plans` 是计划，`install_instances` 是执行后的状态。
 
-`target_snapshot_json` 保留安装执行时的目标信息，例如目标名称、类型、原始路径、规范化路径和默认策略。这样即使用户后续在 Targets 页删除了 `agent_targets` 记录，历史安装事实仍然可读、可审计，也能解释当时安装到了哪里。
+`target_snapshot_json` 保留安装执行时的目标信息，例如目标名称、类型、原始路径、规范化路径和默认策略，用于目标仍存在时解释当前安装事实。用户在 Targets 页删除 `agent_targets` 记录时，对应 `install_instances` 也会删除；如果后续需要独立审计历史，应引入单独的历史模型，而不是复用当前安装事实。
 
 举例：
 

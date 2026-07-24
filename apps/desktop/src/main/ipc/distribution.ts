@@ -8,6 +8,7 @@ import type {
   DistributionExecuteConflictResolution,
   DistributionExecuteItemResult,
   DistributionExecuteResult,
+  DistributionOperationType,
   DistributionPreviewInput,
   DistributionPreviewResult,
   DistributionPreviewItem,
@@ -18,14 +19,17 @@ import { installInstances } from "../../db/schema.js";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
 import { expandHomePath, isSameOrChildPath, normalizeFilesystemPath } from "../path-utils.js";
 
-type DistributionPreviewOperations = {
+type DistributionPathInspectionOperations = {
+  isDirectory: (candidatePath: string) => Promise<boolean>;
+  isFile: (candidatePath: string) => Promise<boolean>;
+  pathExists: (candidatePath: string) => Promise<boolean>;
+};
+type DistributionPreviewOperations = DistributionPathInspectionOperations & {
   now: () => Date;
 };
 type DistributionExecuteOperations = DistributionPreviewOperations & {
   copyDirectory: (sourcePath: string, targetPath: string) => Promise<void>;
   ensureDirectory: (directoryPath: string) => Promise<void>;
-  isDirectory: (candidatePath: string) => Promise<boolean>;
-  pathExists: (candidatePath: string) => Promise<boolean>;
   removePath: (candidatePath: string) => Promise<void>;
 };
 
@@ -39,16 +43,19 @@ export type {
 export const previewDistribution = async (
   db: DbClient,
   input: DistributionPreviewInput,
-  operations: DistributionPreviewOperations = {
-    now: () => new Date()
-  }
+  operations: Partial<DistributionPreviewOperations> = defaultPreviewOperations
 ): Promise<DistributionPreviewResult> => {
+  const previewOperations: DistributionPreviewOperations = {
+    ...defaultPreviewOperations,
+    ...operations
+  };
   const distributionRepository = createDistributionRepository(db);
-
-  return distributionRepository.createPreview(
+  const preview = await distributionRepository.createPreview(
     normalizeDistributionPreviewInput(input),
-    operations.now()
+    previewOperations.now()
   );
+
+  return reconcileSkippedPreviewItems(preview, previewOperations);
 };
 
 export const executeDistribution = async (
@@ -67,7 +74,12 @@ export const executeDistribution = async (
       skillUnitIds: normalizedInput.skillUnitIds,
       triggerSource: normalizedInput.triggerSource ?? "skills_bulk"
     },
-    { now: executeOperations.now }
+    {
+      isDirectory: executeOperations.isDirectory,
+      isFile: executeOperations.isFile,
+      now: executeOperations.now,
+      pathExists: executeOperations.pathExists
+    }
   );
   const conflictResolutions = buildConflictResolutionMap(normalizedInput.conflictResolutions ?? []);
   const seenTargetPaths = new Set<string>();
@@ -178,17 +190,23 @@ const executePreviewItem = async ({
   operations: DistributionExecuteOperations;
   seenTargetPaths: Set<string>;
 }): Promise<DistributionExecuteItemResult> => {
-  const filesystemItem = resolvePreviewItemFilesystemPaths(item);
+  let filesystemItem = resolvePreviewItemFilesystemPaths(item);
 
-  if (item.action === "skip") {
-    return createItemResult(filesystemItem, "skipped", null);
+  if (filesystemItem.action === "skip") {
+    const missingFilesAction = await resolveMissingInstalledSkillAction(filesystemItem, operations);
+
+    if (!missingFilesAction) {
+      return createItemResult(filesystemItem, "skipped", null);
+    }
+
+    filesystemItem = createMissingInstalledSkillItem(filesystemItem, missingFilesAction);
   }
 
-  if (item.action === "blocked") {
+  if (filesystemItem.action === "blocked") {
     return createItemResult(
       filesystemItem,
       "blocked",
-      item.reason ?? "Distribution item is blocked."
+      filesystemItem.reason ?? "Distribution item is blocked."
     );
   }
 
@@ -198,13 +216,17 @@ const executePreviewItem = async ({
     return createItemResult(filesystemItem, "blocked", validation.message);
   }
 
-  const resolution = resolveConflictResolution(item, conflictResolutions);
+  const resolution = resolveConflictResolution(filesystemItem, conflictResolutions);
 
   if (
-    (item.action === "conflict" || validation.result === "conflict") &&
+    (filesystemItem.action === "conflict" || validation.result === "conflict") &&
     resolution !== "overwrite"
   ) {
-    return createItemResult(filesystemItem, "conflict", validation.message ?? item.reason);
+    return createItemResult(
+      filesystemItem,
+      "conflict",
+      validation.message ?? filesystemItem.reason
+    );
   }
 
   try {
@@ -219,7 +241,7 @@ const executePreviewItem = async ({
 
     return createItemResult(
       filesystemItem,
-      item.action === "update" ? "updated" : "installed",
+      filesystemItem.action === "update" ? "updated" : "installed",
       null
     );
   } catch (error) {
@@ -229,6 +251,106 @@ const executePreviewItem = async ({
 
     return createItemResult(filesystemItem, "failed", message);
   }
+};
+
+const missingInstalledSkillReason = "Installed skill files are missing from the target.";
+
+const reconcileSkippedPreviewItems = async (
+  preview: DistributionPreviewResult,
+  operations: DistributionPathInspectionOperations
+): Promise<DistributionPreviewResult> => {
+  const items = await Promise.all(
+    preview.items.map(async (item) => {
+      if (item.action !== "skip") {
+        return item;
+      }
+
+      const filesystemItem = resolvePreviewItemFilesystemPaths(item);
+      const missingFilesAction = await resolveMissingInstalledSkillAction(
+        filesystemItem,
+        operations
+      );
+
+      return missingFilesAction ? createMissingInstalledSkillItem(item, missingFilesAction) : item;
+    })
+  );
+
+  if (items.every((item, index) => item === preview.items[index])) {
+    return preview;
+  }
+
+  return rebuildPreviewDerivedState(preview, items);
+};
+
+const resolveMissingInstalledSkillAction = async (
+  item: DistributionPreviewItem,
+  operations: DistributionPathInspectionOperations
+): Promise<"install" | "update" | null> => {
+  if (!(await operations.pathExists(item.targetPath))) {
+    return "install";
+  }
+
+  if (
+    !(await operations.isDirectory(item.targetPath)) ||
+    !(await operations.isFile(path.join(item.targetPath, "SKILL.md")))
+  ) {
+    return "update";
+  }
+
+  return null;
+};
+
+const createMissingInstalledSkillItem = (
+  item: DistributionPreviewItem,
+  action: "install" | "update"
+): DistributionPreviewItem => ({
+  ...item,
+  action,
+  reason: missingInstalledSkillReason,
+  status: "pending"
+});
+
+const rebuildPreviewDerivedState = (
+  preview: DistributionPreviewResult,
+  items: DistributionPreviewItem[]
+): DistributionPreviewResult => {
+  const actionCounts = {
+    blocked: countPreviewActions(items, "blocked"),
+    conflict: countPreviewActions(items, "conflict"),
+    install: countPreviewActions(items, "install"),
+    skip: countPreviewActions(items, "skip"),
+    update: countPreviewActions(items, "update")
+  };
+
+  return {
+    ...preview,
+    items,
+    operationType: resolvePreviewOperationType(items),
+    status: actionCounts.blocked > 0 ? "blocked" : actionCounts.conflict > 0 ? "conflict" : "ready",
+    summary: {
+      ...preview.summary,
+      actionCounts
+    }
+  };
+};
+
+const countPreviewActions = (
+  items: DistributionPreviewItem[],
+  action: DistributionPreviewItem["action"]
+): number => items.filter((item) => item.action === action).length;
+
+const resolvePreviewOperationType = (
+  items: DistributionPreviewItem[]
+): DistributionOperationType => {
+  const writingActions = new Set(
+    items
+      .map((item) => item.action)
+      .filter(
+        (action): action is "install" | "update" => action === "install" || action === "update"
+      )
+  );
+
+  return writingActions.size === 1 ? Array.from(writingActions)[0] : "mixed";
 };
 
 const resolvePreviewItemFilesystemPaths = (
@@ -411,16 +533,17 @@ const createItemResult = (
   };
 };
 
-const defaultExecuteOperations: DistributionExecuteOperations = {
-  async copyDirectory(sourcePath, targetPath) {
-    await cp(sourcePath, targetPath, { recursive: true });
-  },
-  async ensureDirectory(directoryPath) {
-    await mkdir(directoryPath, { recursive: true });
-  },
+const defaultPreviewOperations: DistributionPreviewOperations = {
   async isDirectory(candidatePath) {
     try {
       return (await stat(candidatePath)).isDirectory();
+    } catch {
+      return false;
+    }
+  },
+  async isFile(candidatePath) {
+    try {
+      return (await stat(candidatePath)).isFile();
     } catch {
       return false;
     }
@@ -433,6 +556,16 @@ const defaultExecuteOperations: DistributionExecuteOperations = {
     } catch {
       return false;
     }
+  }
+};
+
+const defaultExecuteOperations: DistributionExecuteOperations = {
+  ...defaultPreviewOperations,
+  async copyDirectory(sourcePath, targetPath) {
+    await cp(sourcePath, targetPath, { recursive: true });
+  },
+  async ensureDirectory(directoryPath) {
+    await mkdir(directoryPath, { recursive: true });
   },
   async removePath(candidatePath) {
     await rm(candidatePath, { force: true, recursive: true });

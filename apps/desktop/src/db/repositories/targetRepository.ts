@@ -168,10 +168,7 @@ export const createTargetRepository = (db: DbClient) => {
         .where(inArray(installInstances.agentTargetId, deletableTargetIds));
     },
 
-    async deleteTargets(
-      targetIds: string[],
-      options: { deleteInstallInstances?: boolean } = {}
-    ): Promise<void> {
+    async deleteTargets(targetIds: string[]): Promise<void> {
       const normalizedTargetIds = normalizeTargetIds(targetIds);
 
       if (!normalizedTargetIds.length) {
@@ -197,11 +194,9 @@ export const createTargetRepository = (db: DbClient) => {
       }
 
       db.transaction((tx) => {
-        if (options.deleteInstallInstances) {
-          tx.delete(installInstances)
-            .where(inArray(installInstances.agentTargetId, deletableTargetIds))
-            .run();
-        }
+        tx.delete(installInstances)
+          .where(inArray(installInstances.agentTargetId, deletableTargetIds))
+          .run();
         tx.delete(skillTargetPreferences)
           .where(inArray(skillTargetPreferences.agentTargetId, deletableTargetIds))
           .run();

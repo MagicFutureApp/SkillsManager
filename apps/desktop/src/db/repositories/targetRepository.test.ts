@@ -296,7 +296,7 @@ describe("createTargetRepository", () => {
     await expect(createTargetRepository(db).count()).resolves.toBe(4);
   });
 
-  it("deletes custom directory targets and their skill preferences without deleting install history", async () => {
+  it("deletes custom directory targets, their preferences, and current install records", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-21T00:00:00.000Z");
 
@@ -397,9 +397,7 @@ describe("createTargetRepository", () => {
     await expect(db.select().from(skillTargetPreferences)).resolves.toMatchObject([
       { agentTargetId: "target-keep", id: "preference-keep" }
     ]);
-    await expect(db.select().from(installInstances)).resolves.toMatchObject([
-      { agentTargetId: "target-project", id: "install-1" }
-    ]);
+    await expect(db.select().from(installInstances)).resolves.toEqual([]);
   });
 
   it("rejects deletion when any target id resolves to a built-in system target", async () => {

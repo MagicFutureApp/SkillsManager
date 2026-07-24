@@ -99,6 +99,86 @@ describe("distribution IPC handlers", () => {
     ]);
   });
 
+  it("reinstalls a recorded skill when its target files are missing", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-07-02T00:00:00.000Z");
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-missing-install-"));
+    const cachePath = path.join(workspace, "cache");
+    const targetPath = path.join(workspace, "target");
+
+    await seedPreviewFixture(db, createdAt, { cachePath, targetPath });
+    await seedInstalledFixture(db, createdAt, targetPath);
+
+    const result = await previewDistribution(
+      db,
+      {
+        skillUnitIds: ["skill-review"],
+        triggerSource: "skill_detail"
+      },
+      { now: () => createdAt }
+    );
+
+    expect(result.summary.actionCounts).toMatchObject({ install: 1, skip: 0, update: 0 });
+    expect(result.items).toEqual([
+      expect.objectContaining({
+        action: "install",
+        reason: "Installed skill files are missing from the target.",
+        status: "pending"
+      })
+    ]);
+  });
+
+  it("rechecks skipped skill files immediately before execution", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-07-02T00:00:00.000Z");
+    const sourcePath = "/Users/test/.skills-manager/cache/team-skills/review-bot";
+    const targetRoot = "/Users/test/.codex/skills";
+    const targetPath = "/Users/test/.codex/skills/review-bot";
+    const copiedPaths: Array<{ sourcePath: string; targetPath: string }> = [];
+    let targetPathExistsChecks = 0;
+
+    await seedPreviewFixture(db, createdAt);
+    await seedInstalledFixture(db, createdAt, targetRoot);
+
+    const result = await executeDistribution(
+      db,
+      { skillUnitIds: ["skill-review"] },
+      {
+        async copyDirectory(nextSourcePath, nextTargetPath) {
+          copiedPaths.push({ sourcePath: nextSourcePath, targetPath: nextTargetPath });
+        },
+        async ensureDirectory() {
+          return undefined;
+        },
+        async isDirectory(candidatePath) {
+          return candidatePath === sourcePath || candidatePath === targetPath;
+        },
+        async isFile(candidatePath) {
+          return candidatePath === path.join(targetPath, "SKILL.md");
+        },
+        now: () => createdAt,
+        async pathExists(candidatePath) {
+          if (candidatePath === targetPath) {
+            targetPathExistsChecks += 1;
+            return targetPathExistsChecks === 1;
+          }
+
+          return candidatePath === sourcePath;
+        },
+        async removePath() {
+          return undefined;
+        }
+      }
+    );
+
+    expect(result.preview.items).toEqual([expect.objectContaining({ action: "skip" })]);
+    expect(result.summary).toMatchObject({ installed: 1, skipped: 0 });
+    expect(result.items).toEqual([
+      expect.objectContaining({ action: "install", result: "installed" })
+    ]);
+    expect(copiedPaths).toEqual([{ sourcePath, targetPath }]);
+  });
+
   it("expands home-relative repository cache paths before copying", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-07-02T00:00:00.000Z");
@@ -270,6 +350,25 @@ const seedPreviewFixture = async (
     enabled: true,
     id: "preference-review-codex",
     skillUnitId: "skill-review",
+    updatedAt: createdAt
+  });
+};
+
+const seedInstalledFixture = async (
+  db: ReturnType<typeof createDbClient>,
+  createdAt: Date,
+  targetRoot: string
+): Promise<void> => {
+  await db.insert(installInstances).values({
+    agentTargetId: "target-codex",
+    id: "install-review",
+    installedAt: createdAt,
+    installedCommitSha: "abc123456789",
+    installedPath: path.join(targetRoot, "review-bot"),
+    skillUnitId: "skill-review",
+    skillVersionId: "version-review",
+    status: "installed",
+    targetSnapshotJson: '{"name":"Codex"}',
     updatedAt: createdAt
   });
 };

@@ -336,6 +336,11 @@ describe("target IPC handlers", () => {
   it("deletes selected custom directory targets and returns refreshed targets", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-24T00:00:00.000Z");
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-target-record-delete-"));
+    const installedPath = path.join(workspace, "review-bot");
+
+    await mkdir(installedPath, { recursive: true });
+    await writeFile(path.join(installedPath, "SKILL.md"), "# Review Bot\n", "utf8");
 
     await db.insert(agentTargets).values([
       {
@@ -359,6 +364,18 @@ describe("target IPC handlers", () => {
         updatedAt: createdAt
       }
     ]);
+    await db.insert(installInstances).values({
+      agentTargetId: "target-project",
+      id: "install-review",
+      installedAt: createdAt,
+      installedCommitSha: "abcdef123456",
+      installedPath,
+      skillUnitId: "skill-review",
+      skillVersionId: "version-review",
+      status: "installed",
+      targetSnapshotJson: '{"name":"Project target"}',
+      updatedAt: createdAt
+    });
 
     await expect(deleteTargets(db, { targetIds: [" target-project ", ""] })).resolves.toEqual({
       registeredTargets: [
@@ -380,6 +397,10 @@ describe("target IPC handlers", () => {
         }
       ]
     });
+    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).resolves.toBe(
+      "# Review Bot\n"
+    );
+    await expect(db.select().from(installInstances)).resolves.toEqual([]);
   });
 
   it("deletes installed skill files and install records when requested during target deletion", async () => {

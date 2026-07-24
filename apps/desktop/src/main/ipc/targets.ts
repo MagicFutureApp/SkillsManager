@@ -297,9 +297,7 @@ export const deleteTargets = async (
     );
   }
 
-  await targetRepository.deleteTargets(targetIds, {
-    deleteInstallInstances: deleteInstalledFiles
-  });
+  await targetRepository.deleteTargets(targetIds);
 
   return getTargets(db);
 };
