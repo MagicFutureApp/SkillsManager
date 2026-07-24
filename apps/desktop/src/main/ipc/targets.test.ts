@@ -142,8 +142,11 @@ describe("target IPC handlers", () => {
       })
     ).resolves.toEqual({
       basePath: "/Users/test/project",
+      customDirectoryName: ".agents",
       options: createExpectedTargetDirectoryAgentOptions("/Users/test/project"),
-      status: "requires-agent-type"
+      selectedAgentType: "custom",
+      status: "requires-agent-type",
+      targetPath: "/Users/test/project/.agents/skills"
     });
   });
 

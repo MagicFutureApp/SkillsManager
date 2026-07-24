@@ -1042,6 +1042,7 @@ describe("TargetsPage", () => {
     const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/project");
     const resolveSelectedTargetDirectory = vi.fn().mockResolvedValue({
       basePath: "/Users/test/project",
+      customDirectoryName: ".agents",
       options: [
         {
           directoryName: ".codex",
@@ -1062,7 +1063,9 @@ describe("TargetsPage", () => {
           type: "gemini-cli"
         }
       ],
-      status: "requires-agent-type"
+      selectedAgentType: "custom",
+      status: "requires-agent-type",
+      targetPath: "/Users/test/project/.agents/skills"
     });
     const addCustomDirectoryTarget = vi
       .fn()
@@ -1086,7 +1089,14 @@ describe("TargetsPage", () => {
       expect(resolveSelectedTargetDirectory).toHaveBeenCalledWith("/Users/test/project");
       expect(within(dialog).getByText("确认 agent 类型")).toBeInTheDocument();
       expect(within(dialog).getByText("/Users/test/project")).toBeInTheDocument();
-      expect(within(dialog).getByLabelText("本机路径")).toHaveValue("/Users/test/project");
+      expect(within(dialog).getByRole("radio", { name: "自定义" })).toHaveAttribute(
+        "aria-checked",
+        "true"
+      );
+      expect(within(dialog).getByLabelText("自定义文件夹")).toHaveValue(".agents");
+      expect(within(dialog).getByLabelText("本机路径")).toHaveValue(
+        "/Users/test/project/.agents/skills"
+      );
       expect(within(dialog).getByLabelText("名称")).toHaveValue("project");
     });
 

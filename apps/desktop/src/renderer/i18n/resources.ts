@@ -239,7 +239,7 @@ export const resources = {
         },
         modal: {
           agentType: "确认 agent 类型",
-          agentTypeDescription: "未找到 skills 目录，请选择要归一化到哪一种 agent 目录。",
+          agentTypeDescription: "未找到 skills 目录，请选择要使用哪一种 agent 目录。",
           browse: "浏览",
           cancel: "取消",
           close: "关闭",

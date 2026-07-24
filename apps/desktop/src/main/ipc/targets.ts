@@ -94,6 +94,8 @@ type AddCustomDirectoryTargetOperations = {
   now: () => Date;
 };
 
+const defaultCustomAgentDirectoryName = ".agents";
+
 export const getTargets = async (db: DbClient): Promise<TargetsListResult> => {
   const targetRepository = createTargetRepository(db);
 
@@ -205,7 +207,10 @@ export const resolveSelectedTargetDirectory = async (
   }
 
   return createTargetDirectoryAgentTypeResolution({
-    basePath: targetPath
+    basePath: targetPath,
+    customDirectoryName: defaultCustomAgentDirectoryName,
+    selectedAgentType: "custom",
+    targetPath: joinTargetPath(targetPath, defaultCustomAgentDirectoryName, "skills")
   });
 };
 
