@@ -76,6 +76,16 @@ export const repositoryProviderOptions: Array<{
   { label: "skills.sh", value: "skills.sh" }
 ];
 
+const visibleRepositoryProviderNames = new Set<RepositoryProviderFilter>([
+  "all",
+  "GitHub",
+  "Local"
+]);
+
+export const visibleRepositoryProviderOptions = repositoryProviderOptions.filter((option) =>
+  visibleRepositoryProviderNames.has(option.value)
+);
+
 export const repositoryStatusOptions: RepositoryStatusFilter[] = [
   "all",
   "ready",

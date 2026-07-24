@@ -14,7 +14,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { toErrorMessage } from "@/lib/errors";
 import { Select, type SelectOption } from "@/components/ui/select";
 import {
-  repositoryProviderOptions,
+  visibleRepositoryProviderOptions,
   type RepositoryFormValues,
   type RepositoryProviderFilter,
   type RepositoryViewModel
@@ -198,7 +198,7 @@ export const RepositoryModal = ({
   };
 
   const providerOptions: SelectOption<Exclude<RepositoryProviderFilter, "all">>[] =
-    repositoryProviderOptions
+    visibleRepositoryProviderOptions
       .filter((option) => option.value !== "all")
       .map((option) => ({
         value: option.value as Exclude<RepositoryProviderFilter, "all">,

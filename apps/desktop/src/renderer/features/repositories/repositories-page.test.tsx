@@ -70,6 +70,15 @@ const selectOption = async (label: string, optionName: string) => {
   fireEvent.click(option);
 };
 
+const expectOnlyGitHubAndLocalProviderOptions = async () => {
+  expect(await screen.findByRole("option", { name: "GitHub" })).toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "Local" })).toBeInTheDocument();
+  expect(screen.queryByRole("option", { name: "GitLab" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("option", { name: "Gitea" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("option", { name: "Bitbucket" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("option", { name: "skills.sh" })).not.toBeInTheDocument();
+};
+
 const getRepositorySyncButton = (repositoryName: string) => {
   return screen.getByLabelText((_content, element) => {
     return (
@@ -218,14 +227,23 @@ describe("RepositoriesPage", () => {
   it("filters sources by provider and status", async () => {
     await renderRepositoriesPage();
 
-    await selectOption("类型", "GitLab");
-    expect(screen.getByRole("button", { name: "Design lab prompts" })).toBeInTheDocument();
+    await selectOption("类型", "Local");
+    expect(screen.getByRole("button", { name: "Local development skills" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Team skills repository" })
     ).not.toBeInTheDocument();
 
-    await selectOption("状态", "就绪");
+    await selectOption("状态", "需复核");
     expect(screen.getByText("没有匹配的来源。调整搜索或筛选条件。")).toBeInTheDocument();
+  });
+
+  it("only offers GitHub and Local in the provider filter", async () => {
+    await renderRepositoriesPage();
+
+    fireEvent.pointerDown(screen.getByLabelText("类型"), { pointerType: "mouse" });
+    fireEvent.mouseDown(screen.getByLabelText("类型"), { button: 0 });
+
+    await expectOnlyGitHubAndLocalProviderOptions();
   });
 
   it("paginates large source lists after sorting and limits select-all to the current page", async () => {
@@ -1417,6 +1435,28 @@ describe("RepositoriesPage", () => {
       "true"
     );
     expect(screen.getByRole("heading", { name: "Team skills edited" })).toBeInTheDocument();
+  });
+
+  it("only offers GitHub and Local when adding a source", async () => {
+    await renderRepositoriesPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+    const dialog = screen.getByRole("dialog", { name: "新增来源" });
+    fireEvent.click(within(dialog).getByLabelText("来源类型"));
+
+    await expectOnlyGitHubAndLocalProviderOptions();
+  });
+
+  it("only offers GitHub and Local when editing a source", async () => {
+    await renderRepositoriesPage();
+
+    fireEvent.click(
+      within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" })
+    );
+    const dialog = screen.getByRole("dialog", { name: "编辑来源" });
+    fireEvent.click(within(dialog).getByLabelText("来源类型"));
+
+    await expectOnlyGitHubAndLocalProviderOptions();
   });
 
   it("deletes a source from the detail pane after confirming affected skills", async () => {

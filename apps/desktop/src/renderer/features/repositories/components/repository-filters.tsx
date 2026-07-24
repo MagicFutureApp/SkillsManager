@@ -1,6 +1,6 @@
 import {
-  repositoryProviderOptions,
   repositoryStatusOptions,
+  visibleRepositoryProviderOptions,
   type RepositoryProviderFilter,
   type RepositorySort,
   type RepositoryStatusFilter
@@ -48,7 +48,7 @@ const repositorySortOptions = (
 const repositoryProviderSelectOptions = (
   copy: RepositoryFiltersProps["copy"]
 ): SelectOption<RepositoryProviderFilter>[] =>
-  repositoryProviderOptions.map((option) => ({
+  visibleRepositoryProviderOptions.map((option) => ({
     value: option.value,
     label: option.value === "all" ? copy.allProviders : option.label
   }));
