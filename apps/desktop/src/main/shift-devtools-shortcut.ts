@@ -1,5 +1,4 @@
-const SHIFT_DEVTOOLS_PRESS_COUNT = 4;
-const SHIFT_DEVTOOLS_RESET_MS = 300;
+import { createShiftPressSequenceHandler } from "../core/keyboard/shift-press-sequence.js";
 
 type DevToolsShortcutWindow = {
   webContents: {
@@ -12,32 +11,15 @@ type DevToolsShortcutWindow = {
 };
 
 export const registerShiftDevToolsShortcut = (window: DevToolsShortcutWindow): void => {
-  let shiftPressCount = 0;
-  let previousShiftPressAt = 0;
+  const handleShiftPress = createShiftPressSequenceHandler(() => {
+    window.webContents.openDevTools();
+  });
 
   window.webContents.on("before-input-event", (_event, input) => {
-    if (input.type !== "keyDown" || input.isAutoRepeat) {
+    if (input.type !== "keyDown") {
       return;
     }
 
-    if (input.key !== "Shift") {
-      shiftPressCount = 0;
-      previousShiftPressAt = 0;
-      return;
-    }
-
-    const now = Date.now();
-    if (shiftPressCount > 0 && now - previousShiftPressAt > SHIFT_DEVTOOLS_RESET_MS) {
-      shiftPressCount = 0;
-    }
-
-    shiftPressCount += 1;
-    previousShiftPressAt = now;
-
-    if (shiftPressCount >= SHIFT_DEVTOOLS_PRESS_COUNT) {
-      window.webContents.openDevTools();
-      shiftPressCount = 0;
-      previousShiftPressAt = 0;
-    }
+    handleShiftPress({ key: input.key, isAutoRepeat: input.isAutoRepeat });
   });
 };

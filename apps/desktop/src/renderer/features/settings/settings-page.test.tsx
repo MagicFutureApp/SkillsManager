@@ -13,6 +13,12 @@ describe("SettingsPage", () => {
     fireEvent.click(within(settingsNavigation).getByRole("link", { name }));
   };
 
+  const revealDataReset = () => {
+    for (let press = 0; press < 4; press += 1) {
+      fireEvent.keyDown(window, { key: "Shift" });
+    }
+  };
+
   beforeEach(() => {
     writeText.mockClear();
     window.history.replaceState(null, "", "/#/settings");
@@ -136,10 +142,9 @@ describe("SettingsPage", () => {
     expect(
       within(settingsNavigation).queryByRole("link", { name: "如何创建 GitHub token" })
     ).not.toBeInTheDocument();
-    expect(within(settingsNavigation).getByRole("link", { name: "危险操作" })).toHaveAttribute(
-      "href",
-      "#/settings#settings-danger-zone"
-    );
+    expect(
+      within(settingsNavigation).queryByRole("link", { name: "数据重置" })
+    ).not.toBeInTheDocument();
     expect(within(settingsNavigation).getByRole("link", { name: "关于" })).toHaveAttribute(
       "href",
       "#/settings#settings-about"
@@ -154,11 +159,33 @@ describe("SettingsPage", () => {
       within(main).getByRole("heading", { name: "GitHub token", level: 3 })
     ).toBeInTheDocument();
     expect(within(main).getByLabelText("GitHub token", { selector: "input" })).toBeInTheDocument();
-    expect(within(main).queryByRole("heading", { name: "危险操作" })).not.toBeInTheDocument();
+    expect(within(main).queryByRole("heading", { name: "数据重置" })).not.toBeInTheDocument();
 
     clickSettingsNavigationLink("关于");
 
     expect(screen.queryByRole("heading", { name: "关于", level: 1 })).not.toBeInTheDocument();
+  });
+
+  it("reveals data reset only after four consecutive Shift presses", async () => {
+    render(<SettingsPage />);
+
+    await screen.findByRole("main");
+    const settingsNavigation = screen.getByRole("navigation", { name: "设置页面导航" });
+
+    for (let press = 0; press < 3; press += 1) {
+      fireEvent.keyDown(window, { key: "Shift" });
+    }
+
+    expect(
+      within(settingsNavigation).queryByRole("link", { name: "数据重置" })
+    ).not.toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Shift" });
+
+    expect(within(settingsNavigation).getByRole("link", { name: "数据重置" })).toHaveAttribute(
+      "href",
+      "#/settings#settings-data-reset"
+    );
   });
 
   it("shows an about section with the logo and app version", async () => {
@@ -195,22 +222,23 @@ describe("SettingsPage", () => {
     const githubTokenLink = within(settingsNavigation).getByRole("link", {
       name: "凭证管理"
     });
-    const dangerZoneLink = within(settingsNavigation).getByRole("link", { name: "危险操作" });
+    revealDataReset();
+    const dataResetLink = within(settingsNavigation).getByRole("link", { name: "数据重置" });
     const aboutLink = within(settingsNavigation).getByRole("link", { name: "关于" });
 
     expect(githubTokenLink).toHaveAttribute("aria-current", "location");
-    expect(dangerZoneLink).not.toHaveAttribute("aria-current");
+    expect(dataResetLink).not.toHaveAttribute("aria-current");
     expect(aboutLink).not.toHaveAttribute("aria-current");
 
-    fireEvent.click(dangerZoneLink);
+    fireEvent.click(dataResetLink);
 
-    expect(dangerZoneLink).toHaveAttribute("aria-current", "location");
+    expect(dataResetLink).toHaveAttribute("aria-current", "location");
     expect(githubTokenLink).not.toHaveAttribute("aria-current");
 
     fireEvent.click(aboutLink);
 
     expect(aboutLink).toHaveAttribute("aria-current", "location");
-    expect(dangerZoneLink).not.toHaveAttribute("aria-current");
+    expect(dataResetLink).not.toHaveAttribute("aria-current");
     expect(window.location.hash).toBe("#/settings#settings-about");
   });
 
@@ -230,11 +258,12 @@ describe("SettingsPage", () => {
     expect(
       within(main).queryByRole("heading", { name: "GitHub API token" })
     ).not.toBeInTheDocument();
-    expect(within(main).queryByRole("heading", { name: "危险操作" })).not.toBeInTheDocument();
+    expect(within(main).queryByRole("heading", { name: "数据重置" })).not.toBeInTheDocument();
 
-    fireEvent.click(within(settingsNavigation).getByRole("link", { name: "危险操作" }));
+    revealDataReset();
+    fireEvent.click(within(settingsNavigation).getByRole("link", { name: "数据重置" }));
 
-    expect(within(main).getByRole("heading", { name: "危险操作", level: 2 })).toBeInTheDocument();
+    expect(within(main).getByRole("heading", { name: "数据重置", level: 2 })).toBeInTheDocument();
     expect(within(main).queryByRole("region", { name: "关于" })).not.toBeInTheDocument();
   });
 
@@ -321,7 +350,8 @@ describe("SettingsPage", () => {
     render(<SettingsPage />);
 
     await screen.findByRole("main");
-    clickSettingsNavigationLink("危险操作");
+    revealDataReset();
+    clickSettingsNavigationLink("数据重置");
     fireEvent.click(await screen.findByRole("button", { name: "重建本地数据库" }));
 
     const dialog = await screen.findByRole("alertdialog", { name: "重建本地数据库？" });

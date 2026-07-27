@@ -30,17 +30,24 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import type { AppInfo, AppSettingsResult, AppStoragePathsResult } from "@/global";
 import { GITHUB_TOKEN_HELP_URL } from "../../../core/app-constants";
+import { createShiftPressSequenceHandler } from "../../../core/keyboard/shift-press-sequence";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type StorageStatus = "loading" | "idle" | "resetting" | "reset" | "error";
+const DATA_RESET_NAVIGATION_HREF = "#settings-data-reset";
 const settingsNavigationItems = [
   { href: "#github-token", label: "凭证管理" },
   { href: "#skill-distribution", label: "技能分发" },
   { href: "#local-storage", label: "本地存储" },
-  { href: "#settings-danger-zone", label: "危险操作" },
+  { href: DATA_RESET_NAVIGATION_HREF, label: "数据重置" },
   { href: "#settings-about", label: "关于" }
 ] as const;
 type SettingsNavigationHref = (typeof settingsNavigationItems)[number]["href"];
+
+const getVisibleSettingsNavigationItems = (isDataResetVisible: boolean) =>
+  settingsNavigationItems.filter(
+    (item) => isDataResetVisible || item.href !== DATA_RESET_NAVIGATION_HREF
+  );
 
 const splitHashHistoryLocationHash = (hash: string) => {
   const nestedHashIndex = hash.indexOf("#", 1);
@@ -57,12 +64,16 @@ const splitHashHistoryLocationHash = (hash: string) => {
   };
 };
 
-const getSettingsNavigationHrefFromHash = (hash: string): SettingsNavigationHref => {
+const getSettingsNavigationHrefFromHash = (
+  hash: string,
+  isDataResetVisible: boolean
+): SettingsNavigationHref => {
   const { settingsNavigationHref } = splitHashHistoryLocationHash(hash);
 
   return (
-    settingsNavigationItems.find((item) => item.href === settingsNavigationHref)?.href ??
-    settingsNavigationItems[0].href
+    getVisibleSettingsNavigationItems(isDataResetVisible).find(
+      (item) => item.href === settingsNavigationHref
+    )?.href ?? settingsNavigationItems[0].href
   );
 };
 
@@ -94,8 +105,11 @@ export const SettingsPage = () => {
   const [error, setError] = useState("");
   const [storageError, setStorageError] = useState("");
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isDataResetVisible, setIsDataResetVisible] = useState(false);
   const [activeSettingsNavigationHref, setActiveSettingsNavigationHref] =
-    useState<SettingsNavigationHref>(() => getSettingsNavigationHrefFromHash(window.location.hash));
+    useState<SettingsNavigationHref>(() =>
+      getSettingsNavigationHrefFromHash(window.location.hash, false)
+    );
   const settingsContentRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -150,7 +164,9 @@ export const SettingsPage = () => {
 
   useEffect(() => {
     const syncActiveNavigationHref = () => {
-      setActiveSettingsNavigationHref(getSettingsNavigationHrefFromHash(window.location.hash));
+      setActiveSettingsNavigationHref(
+        getSettingsNavigationHrefFromHash(window.location.hash, isDataResetVisible)
+      );
     };
 
     syncActiveNavigationHref();
@@ -160,6 +176,21 @@ export const SettingsPage = () => {
     return () => {
       window.removeEventListener("hashchange", syncActiveNavigationHref);
       window.removeEventListener("popstate", syncActiveNavigationHref);
+    };
+  }, [isDataResetVisible]);
+
+  useEffect(() => {
+    const handleShiftPress = createShiftPressSequenceHandler(() => {
+      setIsDataResetVisible(true);
+    });
+    const handleKeyDown = (event: KeyboardEvent) => {
+      handleShiftPress({ key: event.key, isAutoRepeat: event.repeat });
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -448,17 +479,21 @@ export const SettingsPage = () => {
             </div>
           </SettingsPanel>
         );
-      case "#settings-danger-zone":
+      case DATA_RESET_NAVIGATION_HREF:
+        if (!isDataResetVisible) {
+          return null;
+        }
+
         return (
           <section
             className="grid scroll-mt-6 gap-4 rounded-xl border border-destructive/25 bg-destructive/5 p-4"
-            aria-labelledby="settings-danger-zone"
+            aria-labelledby="settings-data-reset"
           >
             <div>
               <div className="flex items-center gap-2">
                 <AlertTriangle className="size-4 text-destructive" aria-hidden="true" />
-                <h2 id="settings-danger-zone" className="scroll-mt-6 font-semibold">
-                  危险操作
+                <h2 id="settings-data-reset" className="scroll-mt-6 font-semibold">
+                  数据重置
                 </h2>
               </div>
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
@@ -520,7 +555,7 @@ export const SettingsPage = () => {
         </div>
 
         <nav className="grid gap-1" aria-label="设置页面导航">
-          {settingsNavigationItems.map((item) => {
+          {getVisibleSettingsNavigationItems(isDataResetVisible).map((item) => {
             const isActive = activeSettingsNavigationHref === item.href;
 
             return (
