@@ -392,7 +392,7 @@ describe("TargetsPage", () => {
     expect(pageHeader).not.toBeNull();
     expect(within(pageHeader as HTMLElement).queryByText("Targets")).not.toBeInTheDocument();
     expect(
-      screen.getByText("扫描本机 agent 目录，并汇总 Skills 页面已选择的本地目标。")
+      screen.getByText("扫描本机 Agent 目录，并汇总 Skills 页面已选择的本地目标。")
     ).toBeInTheDocument();
     const headerButtons = within(pageHeader as HTMLElement)
       .getAllByRole("button")

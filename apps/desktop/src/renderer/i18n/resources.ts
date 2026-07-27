@@ -173,7 +173,7 @@ export const resources = {
       targets: {
         pageLabel: "Targets",
         heading: "目标管理",
-        description: "扫描本机 agent 目录，并汇总 Skills 页面已选择的本地目标。",
+        description: "扫描本机 Agent 目录，并汇总 Skills 页面已选择的本地目标。",
         empty: "没有匹配的目标。调整搜索条件。",
         actions: {
           addTarget: "新增",
