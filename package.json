@@ -28,7 +28,9 @@
       "electron",
       "esbuild",
       "msw",
-      "protobufjs"
+      "protobufjs",
+      "sharp",
+      "workerd"
     ]
   },
   "devDependencies": {
