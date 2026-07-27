@@ -1,11 +1,27 @@
 import React from "react";
+import Autoplay from "embla-carousel-autoplay";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
+import sourcesPreview from "../../assets/sources.png";
 import skillsPreview from "../../assets/skills.png";
+import targetsPreview from "../../assets/targets.png";
 import type { ReleaseManifestState } from "../hooks/use-release-manifest";
 import type { ReleasePlatform } from "../lib/release-manifest";
 import DownloadButtonGroup from "./download-button-group";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
+} from "./ui/carousel";
+
+const heroPreviews = [
+  { src: sourcesPreview, alt: "Skills Manager Sources 页面截图" },
+  { src: skillsPreview, alt: "Skills Manager Skills 页面截图" },
+  { src: targetsPreview, alt: "Skills Manager Targets 页面截图" }
+] as const;
 
 interface HeroProps {
   onScrollToSandbox: () => void;
@@ -20,6 +36,10 @@ export default function Hero({
   downloadPlatform,
   onDownloadPlatformChange
 }: HeroProps) {
+  const autoplayPlugin = React.useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  );
+
   return (
     <section
       className="relative overflow-hidden bg-zinc-50 pt-20 pb-16 lg:pt-32 lg:pb-24"
@@ -102,7 +122,38 @@ export default function Hero({
           id="hero-mockup"
         >
           <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 overflow-hidden">
-            <img src={skillsPreview} alt={"skills manager app screen shot"} />
+            <Carousel
+              opts={{ loop: true }}
+              plugins={[autoplayPlugin.current]}
+              aria-label="Skills Manager 应用页面截图"
+            >
+              <CarouselContent className="ml-0">
+                {heroPreviews.map((preview, index) => (
+                  <CarouselItem
+                    key={preview.src}
+                    className="pl-0"
+                    aria-label={`${index + 1} / ${heroPreviews.length}`}
+                  >
+                    <img
+                      src={preview.src}
+                      alt={preview.alt}
+                      className="block w-full"
+                      draggable={false}
+                      loading={index === 0 ? "eager" : "lazy"}
+                      fetchPriority={index === 0 ? "high" : "auto"}
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious
+                aria-label="上一张"
+                className="left-3 z-10 border-zinc-200 bg-white/90 text-zinc-800 shadow-md backdrop-blur-sm hover:bg-white focus-visible:border-zinc-400 focus-visible:ring-2 focus-visible:ring-zinc-900/20 disabled:opacity-0"
+              />
+              <CarouselNext
+                aria-label="下一张"
+                className="right-3 z-10 border-zinc-200 bg-white/90 text-zinc-800 shadow-md backdrop-blur-sm hover:bg-white focus-visible:border-zinc-400 focus-visible:ring-2 focus-visible:ring-zinc-900/20 disabled:opacity-0"
+              />
+            </Carousel>
           </div>
         </motion.div>
       </div>
