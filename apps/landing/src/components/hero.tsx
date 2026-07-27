@@ -37,7 +37,11 @@ export default function Hero({
   onDownloadPlatformChange
 }: HeroProps) {
   const autoplayPlugin = React.useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: false })
+    Autoplay({
+      delay: 3000,
+      stopOnInteraction: false,
+      stopOnMouseEnter: true
+    })
   );
 
   return (
