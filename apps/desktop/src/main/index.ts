@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Tray } from "electron";
+import { app, BrowserWindow, Menu, screen, Tray } from "electron";
 import { createAppDbRuntime, type AppDbRuntime } from "./app-storage.js";
 import { registerAppInfoIpc } from "./ipc/app-info.js";
 import { registerDistributionIpc } from "./ipc/distribution.js";
@@ -13,6 +13,11 @@ import { registerTargetsIpc } from "./ipc/targets.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
 import { createTrayIconImage } from "./tray-icon.js";
+import {
+  loadMainWindowState,
+  resolveMainWindowPlacement,
+  saveMainWindowState
+} from "./window-state.js";
 import {
   buildMainWindowOptions,
   disableWindowMenuBar,
@@ -37,15 +42,77 @@ const loadMainWindow = async (window: BrowserWindow): Promise<void> => {
 };
 
 const createMainWindow = async (): Promise<void> => {
-  mainWindow = new BrowserWindow(buildMainWindowOptions(__dirname));
+  const fallbackDisplay = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const savedState = dbRuntime ? await loadMainWindowState(dbRuntime.getDb()) : null;
+  const placement = resolveMainWindowPlacement({
+    displays: screen.getAllDisplays(),
+    fallbackDisplay,
+    savedState
+  });
+
+  mainWindow = new BrowserWindow({
+    ...buildMainWindowOptions(__dirname),
+    ...placement.bounds
+  });
   disableWindowMenuBar(mainWindow);
   registerShiftDevToolsShortcut(mainWindow);
+  registerMainWindowStatePersistence(mainWindow);
+
+  if (placement.isMaximized) {
+    mainWindow.maximize();
+  }
 
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
 
   await loadMainWindow(mainWindow);
+};
+
+const registerMainWindowStatePersistence = (window: BrowserWindow): void => {
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const persistWindowState = (): void => {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+
+    if (window.isDestroyed() || window.isMinimized() || !dbRuntime) {
+      return;
+    }
+
+    const bounds = window.getNormalBounds();
+    const display = screen.getDisplayMatching(bounds);
+
+    void saveMainWindowState(dbRuntime.getDb(), {
+      displayId: display.id,
+      bounds,
+      isMaximized: window.isMaximized()
+    }).catch((error: unknown) => {
+      console.error("Failed to save main window state.", error);
+    });
+  };
+
+  const scheduleWindowStateSave = (): void => {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+    }
+
+    saveTimer = setTimeout(persistWindowState, 250);
+  };
+
+  window.on("move", scheduleWindowStateSave);
+  window.on("resize", scheduleWindowStateSave);
+  window.on("maximize", scheduleWindowStateSave);
+  window.on("unmaximize", scheduleWindowStateSave);
+  window.on("close", persistWindowState);
+  window.on("closed", () => {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+  });
 };
 
 const createTray = (): void => {
@@ -140,7 +207,7 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on("before-quit", () => {
+app.on("will-quit", () => {
   dbRuntime?.close();
   dbRuntime = null;
 });
