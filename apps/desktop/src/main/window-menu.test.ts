@@ -4,6 +4,13 @@ import { describe, expect, it, vi } from "vitest";
 import { buildMainWindowOptions, disableWindowMenuBar, getMainWindowHtmlPath } from "./window-menu";
 
 describe("main window menu bar", () => {
+  it("leaves the initial size to the resolved window placement", () => {
+    const options = buildMainWindowOptions("dist/main/main");
+
+    expect(options).not.toHaveProperty("width");
+    expect(options).not.toHaveProperty("height");
+  });
+
   it("creates the main window with the menu bar hidden", () => {
     expect(buildMainWindowOptions("dist/main/main")).toMatchObject({
       autoHideMenuBar: true

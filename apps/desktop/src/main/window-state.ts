@@ -1,13 +1,12 @@
 import type { Rectangle } from "electron";
 
-import { WINDOW_MIN_WIDTH } from "../core/app-constants.js";
+import { WINDOW_MIN_HEIGHT, WINDOW_MIN_WIDTH } from "../core/app-constants.js";
 import { createAppSettingsRepository } from "../db/repositories/appSettingsRepository.js";
 import type { DbClient } from "./app-storage.js";
 
 export const MAIN_WINDOW_STATE_SETTING_KEY = "mainWindowState";
 
 const DEFAULT_WINDOW_SCALE = 0.8;
-const WINDOW_MIN_HEIGHT = 640;
 
 export type MainWindowState = {
   displayId: number;

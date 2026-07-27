@@ -1,17 +1,15 @@
 import type { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
 import path from "node:path";
 
-import { APP_META, WINDOW_MIN_WIDTH } from "../core/app-constants.js";
+import { APP_META, WINDOW_MIN_HEIGHT, WINDOW_MIN_WIDTH } from "../core/app-constants.js";
 import { getAppIconPath } from "./tray-icon.js";
 
 export const getMainWindowHtmlPath = (mainDirname: string): string =>
   path.join(mainDirname, "..", "..", "renderer", "index.html");
 
 export const buildMainWindowOptions = (mainDirname: string): BrowserWindowConstructorOptions => ({
-  width: 1180,
-  height: 760,
   minWidth: WINDOW_MIN_WIDTH,
-  minHeight: 640,
+  minHeight: WINDOW_MIN_HEIGHT,
   title: APP_META.title,
   icon: getAppIconPath(mainDirname),
   autoHideMenuBar: true,
