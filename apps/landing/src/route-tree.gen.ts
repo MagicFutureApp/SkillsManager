@@ -9,22 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as HelpGithubTokenRouteImport } from './routes/help.github-token'
+import { Route as PaymentSuccessRouteRouteImport } from './routes/payment-success/route'
+import { Route as IndexRouteRouteImport } from './routes/index/route'
+import { Route as HelpGithubTokenRouteRouteImport } from './routes/help/github-token/route'
 import { Route as ApiReleasesLatestRouteImport } from './routes/api/releases/latest'
 
-const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+const PaymentSuccessRouteRoute = PaymentSuccessRouteRouteImport.update({
   id: '/payment-success',
   path: '/payment-success',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const IndexRouteRoute = IndexRouteRouteImport.update({
   id: '/',
-  path: '/',
+  path: '',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HelpGithubTokenRoute = HelpGithubTokenRouteImport.update({
+const HelpGithubTokenRouteRoute = HelpGithubTokenRouteRouteImport.update({
   id: '/help/github-token',
   path: '/help/github-token',
   getParentRoute: () => rootRouteImport,
@@ -36,22 +36,22 @@ const ApiReleasesLatestRoute = ApiReleasesLatestRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/payment-success': typeof PaymentSuccessRoute
-  '/help/github-token': typeof HelpGithubTokenRoute
+  '/': typeof IndexRouteRoute
+  '/payment-success': typeof PaymentSuccessRouteRoute
+  '/help/github-token': typeof HelpGithubTokenRouteRoute
   '/api/releases/latest': typeof ApiReleasesLatestRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/payment-success': typeof PaymentSuccessRoute
-  '/help/github-token': typeof HelpGithubTokenRoute
+  '/': typeof IndexRouteRoute
+  '/payment-success': typeof PaymentSuccessRouteRoute
+  '/help/github-token': typeof HelpGithubTokenRouteRoute
   '/api/releases/latest': typeof ApiReleasesLatestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/payment-success': typeof PaymentSuccessRoute
-  '/help/github-token': typeof HelpGithubTokenRoute
+  '/': typeof IndexRouteRoute
+  '/payment-success': typeof PaymentSuccessRouteRoute
+  '/help/github-token': typeof HelpGithubTokenRouteRoute
   '/api/releases/latest': typeof ApiReleasesLatestRoute
 }
 export interface FileRouteTypes {
@@ -72,9 +72,9 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  PaymentSuccessRoute: typeof PaymentSuccessRoute
-  HelpGithubTokenRoute: typeof HelpGithubTokenRoute
+  IndexRouteRoute: typeof IndexRouteRoute
+  PaymentSuccessRouteRoute: typeof PaymentSuccessRouteRoute
+  HelpGithubTokenRouteRoute: typeof HelpGithubTokenRouteRoute
   ApiReleasesLatestRoute: typeof ApiReleasesLatestRoute
 }
 
@@ -84,21 +84,21 @@ declare module '@tanstack/react-router' {
       id: '/payment-success'
       path: '/payment-success'
       fullPath: '/payment-success'
-      preLoaderRoute: typeof PaymentSuccessRouteImport
+      preLoaderRoute: typeof PaymentSuccessRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
       id: '/'
-      path: '/'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof IndexRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help/github-token': {
       id: '/help/github-token'
       path: '/help/github-token'
       fullPath: '/help/github-token'
-      preLoaderRoute: typeof HelpGithubTokenRouteImport
+      preLoaderRoute: typeof HelpGithubTokenRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/releases/latest': {
@@ -112,9 +112,9 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  PaymentSuccessRoute: PaymentSuccessRoute,
-  HelpGithubTokenRoute: HelpGithubTokenRoute,
+  IndexRouteRoute: IndexRouteRoute,
+  PaymentSuccessRouteRoute: PaymentSuccessRouteRoute,
+  HelpGithubTokenRouteRoute: HelpGithubTokenRouteRoute,
   ApiReleasesLatestRoute: ApiReleasesLatestRoute,
 }
 export const routeTree = rootRouteImport

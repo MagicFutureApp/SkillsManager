@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import GitHubTokenHelpPage from "./help/github-token/-components/github-token-help-page";
+import GitHubTokenHelpPage from "./-components/github-token-help-page";
 
 export const Route = createFileRoute("/help/github-token")({
   head: () => ({
