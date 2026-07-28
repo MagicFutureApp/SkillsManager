@@ -42,11 +42,11 @@ native builds in parallel. It can be started manually from the Actions tab and a
 tag matching `v*` is pushed. Manual builds upload the installers as workflow artifacts for 14
 days. Tag builds also create or update the matching public GitHub Release and attach the Windows,
 macOS, and Ubuntu installers together with `SHA256SUMS.txt` and `latest.json`. The Release job uses
-`PUBLIC_RELEASE_TOKEN` to publish to `MagicFutureApp/SkillsManager-Releases`, then writes the same manifest
-to the Cloudflare KV namespace configured for the landing Worker.
+the workflow `GITHUB_TOKEN` to publish to the current repository, then writes the same manifest to
+the Cloudflare KV namespace configured for the landing Worker.
 
-The source repository must define `PUBLIC_RELEASE_TOKEN`, `CLOUDFLARE_API_TOKEN`,
-`CLOUDFLARE_ACCOUNT_ID`, and `CLOUDFLARE_RELEASE_KV_NAMESPACE_ID` as GitHub Actions secrets.
+The source repository must define `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and
+`CLOUDFLARE_RELEASE_KV_NAMESPACE_ID` as GitHub Actions secrets.
 
 Before pushing a release tag, make sure it matches the desktop package version. For example, the
 version `0.1.0` in `apps/desktop/package.json` should be released with:

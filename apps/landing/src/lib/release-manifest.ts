@@ -1,6 +1,6 @@
 export const SKILLS_MANAGER_RELEASE_MANIFEST_KEY = "latest";
 export const SKILLS_MANAGER_RELEASE_PAGE_URL =
-  "https://github.com/MagicFutureApp/SkillsManager-Releases/releases/latest";
+  "https://github.com/MagicFutureApp/SkillsManager/releases/latest";
 
 export type ReleasePlatform = "windows" | "macos" | "linux";
 export const RELEASE_PLATFORMS: ReleasePlatform[] = ["windows", "macos", "linux"];

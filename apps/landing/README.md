@@ -53,11 +53,10 @@ pnpm --filter @skills-manager/landing run deploy
 - 上传到对应的公开 GitHub Release；
 - 写入 Cloudflare KV 的 `latest` key。
 
-重跑旧 tag 时只更新该 Release 的 assets；workflow 仅在当前 tag 仍是公开仓库 latest Release 时更新 KV，避免 landing 回退到旧版本。
+重跑旧 tag 时只更新该 Release 的 assets；workflow 仅在当前 tag 仍是当前仓库 latest Release 时更新 KV，避免 landing 回退到旧版本。
 
 源仓库需要配置以下 GitHub Actions secrets：
 
-- `PUBLIC_RELEASE_TOKEN`：写入 `MagicFutureApp/SkillsManager-Releases`；
 - `CLOUDFLARE_API_TOKEN`：至少具有目标 namespace 的 Workers KV Storage Write 权限；
 - `CLOUDFLARE_ACCOUNT_ID`：Cloudflare account ID；
 - `CLOUDFLARE_RELEASE_KV_NAMESPACE_ID`：`SKILLS_MANAGER_RELEASE_MANIFEST` namespace ID。
