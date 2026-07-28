@@ -1,14 +1,15 @@
 import React from "react";
-import Header from "./components/header";
-import Hero from "./components/hero";
-import Features from "./components/features";
-import InteractiveSandbox from "./components/interactive-sandbox";
-import Pricing from "./components/pricing";
-import Footer from "./components/footer";
-import { useDownloadPlatform } from "./hooks/use-download-platform";
-import { useReleaseManifest } from "./hooks/use-release-manifest";
 
-export default function App() {
+import Footer from "../../../components/footer";
+import Header from "../../../components/header";
+import { useDownloadPlatform } from "../../../hooks/use-download-platform";
+import { useReleaseManifest } from "../../../hooks/use-release-manifest";
+import Features from "./features";
+import Hero from "./hero";
+import InteractiveSandbox from "./interactive-sandbox";
+import Pricing from "./pricing";
+
+export default function IndexPage() {
   const release = useReleaseManifest();
   const [downloadPlatform, setDownloadPlatform] = useDownloadPlatform();
 

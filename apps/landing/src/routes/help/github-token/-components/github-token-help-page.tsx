@@ -9,10 +9,11 @@ import {
   ShieldCheck
 } from "lucide-react";
 import React from "react";
-import Footer from "./footer";
-import Header from "./header";
-import { useDownloadPlatform } from "../hooks/use-download-platform";
-import { useReleaseManifest } from "../hooks/use-release-manifest";
+
+import Footer from "../../../../components/footer";
+import Header from "../../../../components/header";
+import { useDownloadPlatform } from "../../../../hooks/use-download-platform";
+import { useReleaseManifest } from "../../../../hooks/use-release-manifest";
 
 const GITHUB_TOKEN_CREATION_URL =
   "https://github.com/settings/personal-access-tokens/new?name=Skills+Manager&description=Read+repository+metadata+and+SKILL.md+files&contents=read";

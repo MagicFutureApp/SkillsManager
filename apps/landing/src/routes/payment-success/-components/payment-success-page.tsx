@@ -2,10 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 import React from "react";
 
-import { useDownloadPlatform } from "../hooks/use-download-platform";
-import { useReleaseManifest } from "../hooks/use-release-manifest";
-import Footer from "./footer";
-import Header from "./header";
+import Footer from "../../../components/footer";
+import Header from "../../../components/header";
+import { useDownloadPlatform } from "../../../hooks/use-download-platform";
+import { useReleaseManifest } from "../../../hooks/use-release-manifest";
 
 export default function PaymentSuccessPage() {
   const release = useReleaseManifest();

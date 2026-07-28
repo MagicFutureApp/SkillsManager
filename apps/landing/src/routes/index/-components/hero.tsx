@@ -3,19 +3,19 @@ import Autoplay from "embla-carousel-autoplay";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
-import sourcesPreview from "../../assets/sources.png";
-import skillsPreview from "../../assets/skills.png";
-import targetsPreview from "../../assets/targets.png";
-import type { ReleaseManifestState } from "../hooks/use-release-manifest";
-import type { ReleasePlatform } from "../lib/release-manifest";
-import DownloadButtonGroup from "./download-button-group";
+import sourcesPreview from "../../../../assets/sources.png";
+import skillsPreview from "../../../../assets/skills.png";
+import targetsPreview from "../../../../assets/targets.png";
+import DownloadButtonGroup from "../../../components/download-button-group";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious
-} from "./ui/carousel";
+} from "../../../components/ui/carousel";
+import type { ReleaseManifestState } from "../../../hooks/use-release-manifest";
+import type { ReleasePlatform } from "../../../lib/release-manifest";
 
 const heroPreviews = [
   { src: sourcesPreview, alt: "Skills Manager Sources 页面截图" },

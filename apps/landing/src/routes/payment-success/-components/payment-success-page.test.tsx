@@ -12,19 +12,19 @@ vi.mock("@tanstack/react-router", () => ({
   )
 }));
 
-vi.mock("../hooks/use-download-platform", () => ({
+vi.mock("../../../hooks/use-download-platform", () => ({
   useDownloadPlatform: () => ["windows", vi.fn()]
 }));
 
-vi.mock("../hooks/use-release-manifest", () => ({
+vi.mock("../../../hooks/use-release-manifest", () => ({
   useReleaseManifest: () => ({ loading: false, manifest: null })
 }));
 
-vi.mock("./header", () => ({
+vi.mock("../../../components/header", () => ({
   default: () => <header>Skills Manager</header>
 }));
 
-vi.mock("./footer", () => ({
+vi.mock("../../../components/footer", () => ({
   default: () => <footer>Skills Manager footer</footer>
 }));
 
