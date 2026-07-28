@@ -2,9 +2,9 @@ import React from "react";
 import { ArrowUpRight, Coffee, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 
-export default function Pricing() {
-  const byMeACoffee = () => {};
+export const CREEM_COFFEE_PAYMENT_URL = "https://www.creem.io/payment/prod_RI63ylX0p3Cq8aRghxHJH";
 
+export default function Pricing() {
   return (
     <section className="bg-white py-20 sm:py-28 border-t border-zinc-200" id="pricing">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -22,9 +22,10 @@ export default function Pricing() {
             transition={{ duration: 0.6, delay: 0.45 }}
             className="mt-10 flex flex-wrap justify-center gap-4"
           >
-            <button
-              type="button"
-              onClick={byMeACoffee}
+            <a
+              href={CREEM_COFFEE_PAYMENT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group inline-flex h-13 w-50 items-center gap-3 rounded-lg bg-zinc-950 py-1 pr-1 pl-5 text-sm font-semibold text-white shadow-sm transition-[background-color,box-shadow,transform] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 active:scale-[0.98]"
               id="price-btn"
             >
@@ -36,7 +37,7 @@ export default function Pricing() {
                   aria-hidden="true"
                 />
               </span>
-            </button>
+            </a>
           </motion.div>
         </div>
       </div>
