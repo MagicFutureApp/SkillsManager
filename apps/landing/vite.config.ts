@@ -13,7 +13,8 @@ export default defineConfig({
     tailwindcss(),
     tanstackStart({
       router: {
-        generatedRouteTree: "route-tree.gen.ts"
+        generatedRouteTree: "route-tree.gen.ts",
+        routeFileIgnorePattern: "^components$"
       }
     }),
     react()

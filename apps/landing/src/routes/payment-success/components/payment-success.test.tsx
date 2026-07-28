@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { PropsWithChildren } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import PaymentSuccessPage from "./payment-success-page";
+import PaymentSuccess from "./payment-success";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to, ...props }: PropsWithChildren<{ to: string }>) => (
@@ -28,9 +28,9 @@ vi.mock("../../../components/footer", () => ({
   default: () => <footer>Skills Manager footer</footer>
 }));
 
-describe("PaymentSuccessPage", () => {
+describe("PaymentSuccess", () => {
   it("renders the thank-you message and a route back to the landing page", () => {
-    const markup = renderToStaticMarkup(<PaymentSuccessPage />);
+    const markup = renderToStaticMarkup(<PaymentSuccess />);
 
     expect(markup).toContain("谢谢你的咖啡");
     expect(markup).toContain("你的这杯咖啡，会继续变成更可靠的技能管理与分发体验。");

@@ -7,7 +7,7 @@ import Header from "../../../components/header";
 import { useDownloadPlatform } from "../../../hooks/use-download-platform";
 import { useReleaseManifest } from "../../../hooks/use-release-manifest";
 
-export default function PaymentSuccessPage() {
+export default function PaymentSuccess() {
   const release = useReleaseManifest();
   const [downloadPlatform, setDownloadPlatform] = useDownloadPlatform();
 

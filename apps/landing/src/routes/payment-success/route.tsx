@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import PaymentSuccessPage from "./-components/payment-success-page";
+import PaymentSuccess from "./components/payment-success";
 
 export const Route = createFileRoute("/payment-success")({
   head: () => ({
@@ -12,5 +12,5 @@ export const Route = createFileRoute("/payment-success")({
       }
     ]
   }),
-  component: PaymentSuccessPage
+  component: PaymentSuccess
 });

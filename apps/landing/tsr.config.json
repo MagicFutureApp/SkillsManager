@@ -1,4 +1,5 @@
 {
   "target": "react",
-  "generatedRouteTree": "./src/route-tree.gen.ts"
+  "generatedRouteTree": "./src/route-tree.gen.ts",
+  "routeFileIgnorePattern": "^components$"
 }

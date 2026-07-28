@@ -56,7 +56,7 @@ const tableOfContents = [
   { href: "#security", label: "安全建议" }
 ] as const;
 
-export default function GitHubTokenHelpPage() {
+export default function GitHubTokenHelp() {
   const release = useReleaseManifest();
   const [downloadPlatform, setDownloadPlatform] = useDownloadPlatform();
 

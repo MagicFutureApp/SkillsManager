@@ -9,7 +9,7 @@ import Hero from "./hero";
 import InteractiveSandbox from "./interactive-sandbox";
 import Pricing from "./pricing";
 
-export default function IndexPage() {
+export default function Index() {
   const release = useReleaseManifest();
   const [downloadPlatform, setDownloadPlatform] = useDownloadPlatform();
 
