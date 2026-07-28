@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import React from "react";
 import { ArrowUp, Heart } from "lucide-react";
 import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png";
