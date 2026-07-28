@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PUBLIC_RELEASE_REPOSITORY: MagicFutureApp/SkillsManager-Releases
+
 jobs:
   build:
     name: ${{ matrix.name }}
@@ -101,7 +104,7 @@ jobs:
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
-          GH_REPO: yimity/SkillsManager-Releases
+          GH_REPO: ${{ env.PUBLIC_RELEASE_REPOSITORY }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
@@ -115,7 +118,7 @@ jobs:
       - name: Generate release manifest
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
-          GH_REPO: yimity/SkillsManager-Releases
+          GH_REPO: ${{ env.PUBLIC_RELEASE_REPOSITORY }}
           TAG_NAME: ${{ github.ref_name }}
         working-directory: release-assets
         shell: bash
@@ -195,14 +198,14 @@ jobs:
       - name: Upload release manifest asset
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
-          GH_REPO: yimity/SkillsManager-Releases
+          GH_REPO: ${{ env.PUBLIC_RELEASE_REPOSITORY }}
           TAG_NAME: ${{ github.ref_name }}
         run: gh release upload "$TAG_NAME" release-assets/latest.json --clobber
 
       - name: Publish release manifest to Cloudflare KV
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
-          GH_REPO: yimity/SkillsManager-Releases
+          GH_REPO: ${{ env.PUBLIC_RELEASE_REPOSITORY }}
           TAG_NAME: ${{ github.ref_name }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

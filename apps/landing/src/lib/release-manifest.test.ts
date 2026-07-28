@@ -12,7 +12,7 @@ const manifest = {
   version: "0.1.5",
   tag: "v0.1.5",
   publishedAt: "2026-07-22T00:00:00Z",
-  releaseUrl: "https://github.com/yimity/SkillsManager-Releases/releases/tag/v0.1.5",
+  releaseUrl: "https://github.com/MagicFutureApp/SkillsManager-Releases/releases/tag/v0.1.5",
   downloads: {
     windows: {
       name: "skills-manager-0.1.5-win-x64-setup.exe",

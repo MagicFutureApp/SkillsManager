@@ -57,7 +57,7 @@ pnpm --filter @skills-manager/landing run deploy
 
 源仓库需要配置以下 GitHub Actions secrets：
 
-- `PUBLIC_RELEASE_TOKEN`：写入 `yimity/SkillsManager-Releases`；
+- `PUBLIC_RELEASE_TOKEN`：写入 `MagicFutureApp/SkillsManager-Releases`；
 - `CLOUDFLARE_API_TOKEN`：至少具有目标 namespace 的 Workers KV Storage Write 权限；
 - `CLOUDFLARE_ACCOUNT_ID`：Cloudflare account ID；
 - `CLOUDFLARE_RELEASE_KV_NAMESPACE_ID`：`SKILLS_MANAGER_RELEASE_MANIFEST` namespace ID。

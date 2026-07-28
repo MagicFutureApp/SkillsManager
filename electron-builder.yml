@@ -43,7 +43,7 @@ linux:
   icon: apps/desktop/src/renderer/assets/macOS
   category: Development
   executableName: skills-manager
-  maintainer: yimity
+  maintainer: MagicFuture
   syncDesktopName: true
   artifactName: skills-manager-${version}-ubuntu-${arch}.${ext}
 

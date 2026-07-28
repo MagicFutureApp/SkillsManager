@@ -42,7 +42,7 @@ native builds in parallel. It can be started manually from the Actions tab and a
 tag matching `v*` is pushed. Manual builds upload the installers as workflow artifacts for 14
 days. Tag builds also create or update the matching public GitHub Release and attach the Windows,
 macOS, and Ubuntu installers together with `SHA256SUMS.txt` and `latest.json`. The Release job uses
-`PUBLIC_RELEASE_TOKEN` to publish to `yimity/SkillsManager-Releases`, then writes the same manifest
+`PUBLIC_RELEASE_TOKEN` to publish to `MagicFutureApp/SkillsManager-Releases`, then writes the same manifest
 to the Cloudflare KV namespace configured for the landing Worker.
 
 The source repository must define `PUBLIC_RELEASE_TOKEN`, `CLOUDFLARE_API_TOKEN`,
