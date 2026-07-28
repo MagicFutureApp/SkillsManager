@@ -19,7 +19,8 @@
     "db:generate": "pnpm --filter @skills-manager/desktop run db:generate",
     "db:check": "pnpm --filter @skills-manager/desktop run db:check",
     "format": "pnpm --filter @skills-manager/desktop run format",
-    "format:check": "pnpm --filter @skills-manager/desktop run format:check"
+    "format:check": "pnpm --filter @skills-manager/desktop run format:check",
+    "release": "tsx scripts/release.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
