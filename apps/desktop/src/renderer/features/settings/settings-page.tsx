@@ -560,7 +560,7 @@ export const SettingsPage = () => {
                 </p>
               </div>
               <p className="mt-5 text-sm font-medium text-muted-foreground">
-                版本 {appInfo?.version ?? "--"}
+                版本 {appInfo?.version ? `v${appInfo.version}` : "--"}
               </p>
               {officialSiteError ? (
                 <p className="mt-2 text-sm text-destructive">{officialSiteError}</p>

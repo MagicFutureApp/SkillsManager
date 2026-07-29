@@ -137,7 +137,7 @@ export const SkillsPageSider = () => {
             [t("skills.detail.skillId"), selectedSkill.skillId],
             [t("skills.detail.repository"), selectedSkill.repository],
             [t("skills.detail.entryFile"), selectedSkill.entry],
-            [t("skills.detail.version"), selectedSkill.version],
+            [t("skills.detail.version"), selectedSkill.version ? `v${selectedSkill.version}` : "--"],
             [t("skills.detail.tags"), selectedSkill.tags.join(", ")]
           ].map(([label, value]) => (
             <div key={label} className="rounded-lg border border-border bg-muted/40 p-2">

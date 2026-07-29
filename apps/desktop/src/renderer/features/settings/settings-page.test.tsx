@@ -210,7 +210,7 @@ describe("SettingsPage", () => {
     expect(skillsManagerMark).toHaveClass("size-16");
     expect(within(aboutSection).getByText("Skills Manager")).toBeInTheDocument();
     expect(within(aboutSection).getByText("Sync and distribute agent skills")).toBeInTheDocument();
-    expect(await within(aboutSection).findByText("版本 0.1.0")).toBeInTheDocument();
+    expect(await within(aboutSection).findByText("版本 v0.1.0")).toBeInTheDocument();
     expect(window.skillsManager?.getInfo).toHaveBeenCalled();
     expect(
       within(aboutSection).getByRole("button", {

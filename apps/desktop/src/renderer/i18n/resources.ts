@@ -20,7 +20,7 @@ export const resources = {
           repositories: "管理技能来源和本地索引入口。",
           skills: "浏览 skill unit，选择目标并执行 copy 分发。",
           targets: "维护 Codex、Claude Code、Gemini CLI 和自定义目录目标。",
-          versionLabel: "版本: {{version}}"
+          versionLabel: "版本 v{{version}}"
         }
       },
       skills: {
@@ -502,7 +502,7 @@ export const resources = {
           repositories: "Manage skill sources and local index entry points.",
           skills: "Browse skill units, choose targets, and copy them to targets.",
           targets: "Maintain Codex, Claude Code, Gemini CLI, and custom directory targets.",
-          versionLabel: "Version: {{version}}"
+          versionLabel: "Version v{{version}}"
         }
       },
       skills: {

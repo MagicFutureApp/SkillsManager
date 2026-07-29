@@ -121,7 +121,7 @@ describe("AppSidebar", () => {
   it("falls back to the app version when the active navigation item has no description", async () => {
     await renderSidebar({ activeRouteId: "settings", appVersion: "2.3.4" });
 
-    expect(screen.getByText("版本: 2.3.4")).toBeInTheDocument();
+    expect(screen.getByText("版本 v2.3.4")).toBeInTheDocument();
   });
 
   it("renders icons for every visible navigation item when expanded", async () => {
