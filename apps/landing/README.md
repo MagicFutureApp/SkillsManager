@@ -30,7 +30,9 @@ Landing 使用 `@cloudflare/vite-plugin` 部署到 Cloudflare Workers，并通�
 `GET /api/releases/latest`，成功响应缓存 5 分钟；KV 中不存在有效 manifest 时返回 404。
 
 首页 Contact 区块的留言表单由 Worker 后端 `POST /api/contact` 接收，并通过
-[Resend](https://resend.com) 发送邮件到 `contact@magicfuture.app`。该路由在
+[Resend](https://resend.com) 发送邮件到 `contact@magicfuture.app`。发送逻辑抽到了共享模块
+`src/lib/server/email.ts` 的 `sendEmail()`（失败抛 `EmailSendError`，含建议的 HTTP 状态码），
+其他需要发邮件的 Worker 路由可直接复用。该路由在
 `wrangler.jsonc` 的 `vars` 中读取两个配置：
 
 - `RESEND_FROM`：发件人地址（默认 `Skills Manager <noreply@magicfuture.app>`，需为
