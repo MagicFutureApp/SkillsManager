@@ -11,7 +11,7 @@
     }
   ],
   "vars": {
-    "RESEND_FROM": "Skills Manager <noreply@magicfuture.app>",
+    "RESEND_FROM": "Skills Manager <noreply@iconplus.app>",
     "RESEND_API_KEY": ""
   }
 }

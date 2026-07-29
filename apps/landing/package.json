@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --port 3701 --host 0.0.0.0",
+    "worker:dev": "vite dev --port 3701 --host 0.0.0.0",
     "generate-routes": "tsr generate",
     "build": "vite build",
     "preview": "vite preview",

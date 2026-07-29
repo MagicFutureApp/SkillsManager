@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 
 import { SettingsPage } from "./settings-page";
-import { GITHUB_TOKEN_HELP_URL } from "../../../core/app-constants";
+import { GITHUB_TOKEN_HELP_URL, OFFICIAL_SITE_URL } from "../../../core/app-constants";
 
 describe("SettingsPage", () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
@@ -212,6 +212,24 @@ describe("SettingsPage", () => {
     expect(within(aboutSection).getByText("Sync and distribute agent skills")).toBeInTheDocument();
     expect(await within(aboutSection).findByText("版本 0.1.0")).toBeInTheDocument();
     expect(window.skillsManager?.getInfo).toHaveBeenCalled();
+    expect(
+      within(aboutSection).getByRole("button", {
+        name: "访问 Skills Manager 官方网站 https://sk.magicfuture.app"
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("opens the official website when the about link is clicked", async () => {
+    window.history.replaceState(null, "", "/#/settings#settings-about");
+    render(<SettingsPage />);
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "访问 Skills Manager 官方网站 https://sk.magicfuture.app"
+      })
+    );
+
+    expect(window.skillsManager?.openExternalUrl).toHaveBeenCalledWith(OFFICIAL_SITE_URL);
   });
 
   it("updates the selected internal settings navigation item after clicking it", async () => {

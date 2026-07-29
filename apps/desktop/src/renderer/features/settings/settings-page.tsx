@@ -21,6 +21,7 @@ import {
   CircleHelpIcon,
   Copy,
   Database,
+  ExternalLink,
   FolderOpen,
   GitBranch,
   KeyRound,
@@ -29,7 +30,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import type { AppInfo, AppSettingsResult, AppStoragePathsResult } from "@/global";
-import { GITHUB_TOKEN_HELP_URL } from "../../../core/app-constants";
+import { GITHUB_TOKEN_HELP_URL, OFFICIAL_SITE_URL } from "../../../core/app-constants";
 import { createShiftPressSequenceHandler } from "../../../core/keyboard/shift-press-sequence";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -106,6 +107,7 @@ export const SettingsPage = () => {
   const [storageError, setStorageError] = useState("");
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isDataResetVisible, setIsDataResetVisible] = useState(false);
+  const [officialSiteError, setOfficialSiteError] = useState("");
   const [activeSettingsNavigationHref, setActiveSettingsNavigationHref] =
     useState<SettingsNavigationHref>(() =>
       getSettingsNavigationHrefFromHash(window.location.hash, false)
@@ -292,6 +294,20 @@ export const SettingsPage = () => {
 
   const copyPath = (value: string) => {
     void navigator.clipboard?.writeText(value);
+  };
+
+  const openOfficialSite = () => {
+    if (!window.skillsManager?.openExternalUrl) {
+      setOfficialSiteError("打开官方网站的接口不可用。");
+      return;
+    }
+
+    void window.skillsManager
+      .openExternalUrl(OFFICIAL_SITE_URL)
+      .then(() => setOfficialSiteError(""))
+      .catch((unknownError: unknown) => {
+        setOfficialSiteError(toErrorMessage(unknownError) || "无法打开官方网站。");
+      });
   };
 
   const openGitHubTokenHelp = () => {
@@ -530,7 +546,15 @@ export const SettingsPage = () => {
             <div className="flex flex-col items-center justify-center">
               <img src={skillsManagerMark} alt="Skills Manager logo" className="size-16" />
               <div className="mt-4 text-center">
-                <p className="text-lg font-semibold text-foreground">Skills Manager</p>
+                <button
+                  type="button"
+                  onClick={openOfficialSite}
+                  aria-label="访问 Skills Manager 官方网站 https://sk.magicfuture.app"
+                  className="inline-flex items-center gap-1.5 rounded-sm text-lg font-semibold text-foreground outline-none transition-colors hover:text-primary focus-visible:text-primary"
+                >
+                  Skills Manager
+                  <ExternalLink className="size-4 text-muted-foreground" aria-hidden="true" />
+                </button>
                 <p className="mt-1 text-xs font-medium text-muted-foreground">
                   Sync and distribute agent skills
                 </p>
@@ -538,6 +562,9 @@ export const SettingsPage = () => {
               <p className="mt-5 text-sm font-medium text-muted-foreground">
                 版本 {appInfo?.version ?? "--"}
               </p>
+              {officialSiteError ? (
+                <p className="mt-2 text-sm text-destructive">{officialSiteError}</p>
+              ) : null}
             </div>
           </section>
         );

@@ -2,8 +2,10 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "../index.css?url";
 import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png?url";
+import NotFound from "../components/not-found";
 
 export const Route = createRootRoute({
+  notFoundComponent: NotFound,
   head: () => ({
     meta: [
       { charSet: "utf-8" },

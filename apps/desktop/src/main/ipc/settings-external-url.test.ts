@@ -39,12 +39,21 @@ describe("openExternalUrl", () => {
     ).rejects.toThrow("Only approved settings URLs can be opened.");
   });
 
-  it("rejects other URLs on the landing host", async () => {
+  it("rejects other URLs on non-approved hosts", async () => {
     await expect(
-      openExternalUrl("https://sk.magicfuture.app/settings", {
+      openExternalUrl("https://example.org/settings", {
         openExternal: vi.fn()
       })
     ).rejects.toThrow("Only approved settings URLs can be opened.");
+  });
+
+  it("opens the official site with the system browser", async () => {
+    const openExternal = vi.fn().mockResolvedValue(undefined);
+    const url = "https://sk.magicfuture.app";
+
+    await openExternalUrl(url, { openExternal });
+
+    expect(openExternal).toHaveBeenCalledWith(url);
   });
 });
 

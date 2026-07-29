@@ -11,3 +11,5 @@ export const APP_META = {
 } as const;
 
 export const GITHUB_TOKEN_HELP_URL = "https://sk.magicfuture.app/help/github-token";
+
+export const OFFICIAL_SITE_URL = "https://sk.magicfuture.app";

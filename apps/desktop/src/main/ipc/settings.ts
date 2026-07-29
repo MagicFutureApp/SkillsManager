@@ -132,8 +132,10 @@ export const openExternalUrl = async (
   const parsedUrl = new URL(url);
   const isGitHubUrl = parsedUrl.protocol === "https:" && parsedUrl.hostname === "github.com";
   const isGitHubTokenHelpUrl = parsedUrl.href === GITHUB_TOKEN_HELP_URL;
+  const isOfficialSiteUrl =
+    parsedUrl.protocol === "https:" && parsedUrl.hostname === "sk.magicfuture.app";
 
-  if (!isGitHubUrl && !isGitHubTokenHelpUrl) {
+  if (!isGitHubUrl && !isGitHubTokenHelpUrl && !isOfficialSiteUrl) {
     throw new Error("Only approved settings URLs can be opened.");
   }
 
