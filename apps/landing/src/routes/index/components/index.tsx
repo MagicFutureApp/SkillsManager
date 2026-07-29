@@ -4,6 +4,7 @@ import Footer from "../../../components/footer";
 import Header from "../../../components/header";
 import { useDownloadPlatform } from "../../../hooks/use-download-platform";
 import { useReleaseManifest } from "../../../hooks/use-release-manifest";
+import Contact from "./contact";
 import Features from "./features";
 import Hero from "./hero";
 import InteractiveSandbox from "./interactive-sandbox";
@@ -52,6 +53,9 @@ export default function Index() {
 
         {/* Pricing tiers */}
         <Pricing />
+
+        {/* Contact */}
+        <Contact />
       </main>
 
       {/* Structured Footer */}
