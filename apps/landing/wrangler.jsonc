@@ -9,5 +9,9 @@
       "binding": "SKILLS_MANAGER_RELEASE_MANIFEST",
       "id": "c10e0405c51b4efdaef90a26e74acd87"
     }
-  ]
+  ],
+  "vars": {
+    "RESEND_FROM": "Skills Manager <noreply@magicfuture.app>",
+    "RESEND_API_KEY": ""
+  }
 }

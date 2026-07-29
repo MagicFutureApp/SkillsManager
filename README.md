@@ -73,3 +73,11 @@ for that runtime automatically:
 ```shell
 pnpm run rebuild:better-sqlite3
 ```
+
+## License
+
+Distributed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+
+- Copyright © 2026 Liang ([https://sk.magicfuture.app](https://sk.magicfuture.app))
+- Full license text: [`LICENSE`](./LICENSE) (中文说明见 [`LICENSE.zh.md`](./LICENSE.zh.md))
+- For proprietary or commercial use, contact the copyright holder for a separate **Commercial License**.

@@ -29,6 +29,29 @@ Landing 使用 `@cloudflare/vite-plugin` 部署到 Cloudflare Workers，并通�
 `SKILLS_MANAGER_RELEASE_MANIFEST` KV binding 读取最新桌面版本信息。Worker 暴露
 `GET /api/releases/latest`，成功响应缓存 5 分钟；KV 中不存在有效 manifest 时返回 404。
 
+首页 Contact 区块的留言表单由 Worker 后端 `POST /api/contact` 接收，并通过
+[Resend](https://resend.com) 发送邮件到 `contact@magicfuture.app`。该路由在
+`wrangler.jsonc` 的 `vars` 中读取两个配置：
+
+- `RESEND_FROM`：发件人地址（默认 `Skills Manager <noreply@magicfuture.app>`，需为
+  Resend 已验证的域名下的地址）。
+- `RESEND_API_KEY`：`wrangler.jsonc` 中留空占位，**生产环境**通过 secret 注入，**本地
+  开发**写入 `.dev.vars`（已被 gitignore）。CloudFlare 的 secret 会覆盖同名 `vars`。
+
+配置与部署：
+
+```bash
+# 本地开发：在 apps/landing/.dev.vars 写入（不要提交）
+# RESEND_API_KEY=re_xxx
+
+# 生产：通过 wrangler secret 注入（覆盖 wrangler.jsonc 中的空占位）
+pnpm --filter @skills-manager/landing exec wrangler secret put RESEND_API_KEY
+
+# 生成类型并部署
+pnpm --filter @skills-manager/landing run cf-typegen
+pnpm --filter @skills-manager/landing run deploy
+```
+
 首次部署前创建 KV namespace：
 
 ```bash

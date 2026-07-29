@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowUpRight, Github, Mail, MessageSquare, Send } from "lucide-react";
+import { ArrowUpRight, Github, Loader2, Mail, MessageSquare, Send } from "lucide-react";
 import { motion } from "motion/react";
 
 // 项目真实的联系邮箱与 GitHub 仓库地址
@@ -34,14 +34,34 @@ export default function Contact() {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [message, setMessage] = React.useState("");
+  const [status, setStatus] = React.useState<"idle" | "sending" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = React.useState("");
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const subject = encodeURIComponent(`Skills Manager 联系：${name || "你好"}`);
-    const body = encodeURIComponent(
-      `${message}\n\n——\n来自：${name} <${email}>`
-    );
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+    if (status === "sending") return;
+    setStatus("sending");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message })
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (res.ok && data.ok) {
+        setStatus("success");
+        setName("");
+        setEmail("");
+        setMessage("");
+      } else {
+        setStatus("error");
+        setErrorMsg(data.error || "发送失败，请稍后重试");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("网络错误，请稍后重试");
+    }
   };
 
   return (
@@ -138,14 +158,31 @@ export default function Contact() {
               </label>
               <button
                 type="submit"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-zinc-950 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800 active:scale-[0.99]"
+                disabled={status === "sending"}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-zinc-950 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
               >
-                <Send className="h-4 w-4" />
-                <span>发送消息</span>
+                {status === "sending" ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>发送中…</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    <span>发送消息</span>
+                  </>
+                )}
               </button>
-              {/*<p className="text-center text-xs text-zinc-500">
-                提交后将通过你的邮件客户端发往 {CONTACT_EMAIL}
-              </p>*/}
+              {status === "success" && (
+                <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-center text-xs font-medium text-emerald-700">
+                  消息已发送，我们会尽快回复你。
+                </p>
+              )}
+              {status === "error" && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-center text-xs font-medium text-red-700">
+                  {errorMsg || "发送失败，请稍后重试"}
+                </p>
+              )}
             </form>
           </motion.div>
         </div>

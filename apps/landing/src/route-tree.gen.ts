@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PaymentSuccessRouteRouteImport } from './routes/payment-success/route'
 import { Route as IndexRouteRouteImport } from './routes/index/route'
+import { Route as ApiContactRouteImport } from './routes/api/contact'
 import { Route as HelpGithubTokenRouteRouteImport } from './routes/help/github-token/route'
 import { Route as ApiReleasesLatestRouteImport } from './routes/api/releases/latest'
 
@@ -22,6 +23,11 @@ const PaymentSuccessRouteRoute = PaymentSuccessRouteRouteImport.update({
 const IndexRouteRoute = IndexRouteRouteImport.update({
   id: '/',
   path: '',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiContactRoute = ApiContactRouteImport.update({
+  id: '/api/contact',
+  path: '/api/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpGithubTokenRouteRoute = HelpGithubTokenRouteRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRouteRoute
   '/payment-success': typeof PaymentSuccessRouteRoute
   '/help/github-token': typeof HelpGithubTokenRouteRoute
+  '/api/contact': typeof ApiContactRoute
   '/api/releases/latest': typeof ApiReleasesLatestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRouteRoute
   '/payment-success': typeof PaymentSuccessRouteRoute
   '/help/github-token': typeof HelpGithubTokenRouteRoute
+  '/api/contact': typeof ApiContactRoute
   '/api/releases/latest': typeof ApiReleasesLatestRoute
 }
 export interface FileRoutesById {
@@ -52,6 +60,7 @@ export interface FileRoutesById {
   '/': typeof IndexRouteRoute
   '/payment-success': typeof PaymentSuccessRouteRoute
   '/help/github-token': typeof HelpGithubTokenRouteRoute
+  '/api/contact': typeof ApiContactRoute
   '/api/releases/latest': typeof ApiReleasesLatestRoute
 }
 export interface FileRouteTypes {
@@ -60,14 +69,21 @@ export interface FileRouteTypes {
     | '/'
     | '/payment-success'
     | '/help/github-token'
+    | '/api/contact'
     | '/api/releases/latest'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/payment-success' | '/help/github-token' | '/api/releases/latest'
+  to:
+    | '/'
+    | '/payment-success'
+    | '/help/github-token'
+    | '/api/contact'
+    | '/api/releases/latest'
   id:
     | '__root__'
     | '/'
     | '/payment-success'
     | '/help/github-token'
+    | '/api/contact'
     | '/api/releases/latest'
   fileRoutesById: FileRoutesById
 }
@@ -75,6 +91,7 @@ export interface RootRouteChildren {
   IndexRouteRoute: typeof IndexRouteRoute
   PaymentSuccessRouteRoute: typeof PaymentSuccessRouteRoute
   HelpGithubTokenRouteRoute: typeof HelpGithubTokenRouteRoute
+  ApiContactRoute: typeof ApiContactRoute
   ApiReleasesLatestRoute: typeof ApiReleasesLatestRoute
 }
 
@@ -92,6 +109,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/contact': {
+      id: '/api/contact'
+      path: '/api/contact'
+      fullPath: '/api/contact'
+      preLoaderRoute: typeof ApiContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help/github-token': {
@@ -115,6 +139,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRouteRoute: IndexRouteRoute,
   PaymentSuccessRouteRoute: PaymentSuccessRouteRoute,
   HelpGithubTokenRouteRoute: HelpGithubTokenRouteRoute,
+  ApiContactRoute: ApiContactRoute,
   ApiReleasesLatestRoute: ApiReleasesLatestRoute,
 }
 export const routeTree = rootRouteImport
