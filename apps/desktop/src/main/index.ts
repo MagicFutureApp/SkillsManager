@@ -6,6 +6,7 @@ import { registerHealthIpc } from "./ipc/health";
 import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
 import { registerNavigationBadgesIpc } from "./ipc/navigation-badges.js";
 import { registerProvidersIpc } from "./ipc/providers.js";
+import { registerReleaseIpc } from "./ipc/release";
 import { registerRepositoriesIpc } from "./ipc/repositories.js";
 import { registerSettingsIpc } from "./ipc/settings.js";
 import { registerSkillsIpc } from "./ipc/skills.js";
@@ -182,6 +183,7 @@ void app
     registerLocaleIpc();
     registerNavigationBadgesIpc(dbRuntime.getDb);
     registerProvidersIpc(dbRuntime.getDb);
+    registerReleaseIpc();
     registerRepositoriesIpc(dbRuntime.getDb);
     registerSettingsIpc(dbRuntime);
     registerSkillsIpc(dbRuntime.getDb);

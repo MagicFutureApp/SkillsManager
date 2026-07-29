@@ -13,3 +13,5 @@ export const APP_META = {
 export const GITHUB_TOKEN_HELP_URL = "https://sk.magicfuture.app/help/github-token";
 
 export const OFFICIAL_SITE_URL = "https://sk.magicfuture.app";
+
+export const RELEASE_MANIFEST_URL = "https://sk.magicfuture.app/api/releases/latest";

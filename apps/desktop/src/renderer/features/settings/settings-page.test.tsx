@@ -45,6 +45,7 @@ describe("SettingsPage", () => {
       }),
       getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
       getInfo: vi.fn().mockResolvedValue({ version: "0.1.0" }),
+      getLatestRelease: vi.fn().mockResolvedValue(null),
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: [] }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
@@ -230,6 +231,40 @@ describe("SettingsPage", () => {
     );
 
     expect(window.skillsManager?.openExternalUrl).toHaveBeenCalledWith(OFFICIAL_SITE_URL);
+  });
+
+  it("shows a newer-version prompt when the latest release is higher than the current version", async () => {
+    window.skillsManager!.getLatestRelease = vi
+      .fn()
+      .mockResolvedValue({
+        version: "1.2.3",
+        downloadUrl: "https://github.com/MagicFutureApp/SkillsManager/releases/download/v1.2.3/skills-manager-win.exe"
+      });
+    window.history.replaceState(null, "", "/#/settings#settings-about");
+    render(<SettingsPage />);
+
+    const aboutSection = await screen.findByRole("region", { name: "关于" });
+    const newVersionButton = await within(aboutSection).findByRole("button", {
+      name: "发现新版本 v1.2.3，点击前往下载"
+    });
+
+    expect(newVersionButton).toHaveTextContent("新版本 v1.2.3");
+
+    fireEvent.click(newVersionButton);
+
+    expect(window.skillsManager?.openExternalUrl).toHaveBeenCalledWith(
+      "https://github.com/MagicFutureApp/SkillsManager/releases/download/v1.2.3/skills-manager-win.exe"
+    );
+  });
+
+  it("hides the newer-version prompt when the latest release is not higher than the current version", async () => {
+    window.skillsManager!.getLatestRelease = vi.fn().mockResolvedValue({ version: "0.1.0" });
+    window.history.replaceState(null, "", "/#/settings#settings-about");
+    render(<SettingsPage />);
+
+    const aboutSection = await screen.findByRole("region", { name: "关于" });
+
+    expect(within(aboutSection).queryByText(/新版本 v/)).not.toBeInTheDocument();
   });
 
   it("updates the selected internal settings navigation item after clicking it", async () => {

@@ -1,5 +1,6 @@
 import type { AppHealth as MainAppHealth } from "../main/ipc/health";
 import type { AppInfo as MainAppInfo } from "../main/ipc/app-info";
+import type { LatestReleaseInfo as MainLatestReleaseInfo } from "../main/ipc/release";
 import type {
   DistributionExecuteInput as MainDistributionExecuteInput,
   DistributionExecuteResult as MainDistributionExecuteResult,
@@ -49,6 +50,7 @@ import type { RuntimePlatform as RendererRuntimePlatform } from "./platform-font
 
 export type AppHealth = MainAppHealth;
 export type AppInfo = MainAppInfo;
+export type LatestReleaseInfo = MainLatestReleaseInfo;
 export type DistributionExecuteInput = MainDistributionExecuteInput;
 export type DistributionExecuteResult = MainDistributionExecuteResult;
 export type DistributionPreviewInput = MainDistributionPreviewInput;
@@ -96,6 +98,7 @@ declare global {
       deleteRepository?: (repositoryId: string) => Promise<DeleteRepositoryResult>;
       getHealth: () => Promise<AppHealth>;
       getInfo: () => Promise<AppInfo>;
+      getLatestRelease?: () => Promise<LatestReleaseInfo | null>;
       getLocale: () => Promise<SupportedLocale>;
       getNavigationBadgeCounts?: () => Promise<NavigationBadgeCountsResult>;
       getAppStoragePaths?: () => Promise<AppStoragePathsResult>;
