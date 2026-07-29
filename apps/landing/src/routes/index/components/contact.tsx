@@ -67,7 +67,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-5 justify-center"
           >
             {contactMethods.map((method) => (
               <a
@@ -98,11 +98,11 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-            className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 shadow-sm sm:p-8"
+            className="flex h-full flex-col rounded-2xl border border-zinc-200 bg-zinc-50 p-7"
           >
-            <form onSubmit={handleSubmit} className="grid gap-5">
+            <form onSubmit={handleSubmit} className="flex h-full flex-col gap-4">
               <div className="grid gap-5 sm:grid-cols-2">
-                <label className="grid gap-1.5 text-sm font-semibold text-zinc-700">
+                <label className="grid gap-1 text-sm font-semibold text-zinc-700">
                   姓名
                   <input
                     type="text"
@@ -113,7 +113,7 @@ export default function Contact() {
                     className="h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-zinc-800 outline-none transition focus:border-zinc-400"
                   />
                 </label>
-                <label className="grid gap-1.5 text-sm font-semibold text-zinc-700">
+                <label className="grid gap-1 text-sm font-semibold text-zinc-700">
                   邮箱
                   <input
                     type="email"
@@ -125,7 +125,7 @@ export default function Contact() {
                   />
                 </label>
               </div>
-              <label className="grid gap-1.5 text-sm font-semibold text-zinc-700">
+              <label className="flex flex-1 flex-col gap-1 text-sm font-semibold text-zinc-700">
                 留言
                 <textarea
                   required
@@ -133,7 +133,7 @@ export default function Contact() {
                   onChange={(event) => setMessage(event.target.value)}
                   placeholder="想聊点什么？"
                   rows={5}
-                  className="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm font-normal text-zinc-800 outline-none transition focus:border-zinc-400"
+                  className="w-full flex-1 resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm font-normal text-zinc-800 outline-none transition focus:border-zinc-400"
                 />
               </label>
               <button
@@ -143,9 +143,9 @@ export default function Contact() {
                 <Send className="h-4 w-4" />
                 <span>发送消息</span>
               </button>
-              <p className="text-center text-xs text-zinc-500">
+              {/*<p className="text-center text-xs text-zinc-500">
                 提交后将通过你的邮件客户端发往 {CONTACT_EMAIL}
-              </p>
+              </p>*/}
             </form>
           </motion.div>
         </div>
