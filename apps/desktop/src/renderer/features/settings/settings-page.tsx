@@ -32,6 +32,7 @@ import React, { useEffect, useRef, useState } from "react";
 import type { AppInfo, AppSettingsResult, AppStoragePathsResult, LatestReleaseInfo } from "@/global";
 import { GITHUB_TOKEN_HELP_URL, OFFICIAL_SITE_URL } from "../../../core/app-constants";
 import { createShiftPressSequenceHandler } from "../../../core/keyboard/shift-press-sequence";
+import { LatestReleaseHint } from "./components/latest-release-hint";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type StorageStatus = "loading" | "idle" | "resetting" | "reset" | "error";
@@ -90,31 +91,6 @@ const resetSettingsWindowScroll = () => {
   if (!window.navigator.userAgent.includes("jsdom")) {
     window.scrollTo({ left: 0, top: 0 });
   }
-};
-
-const parseVersionSegments = (version: string): number[] =>
-  version
-    .split(".")
-    .map((segment) => Number.parseInt(segment, 10))
-    .filter((segment) => !Number.isNaN(segment));
-
-const isNewerVersion = (latest: string, current: string): boolean => {
-  const latestSegments = parseVersionSegments(latest);
-  const currentSegments = parseVersionSegments(current);
-
-  if (latestSegments.length === 0) return false;
-
-  const length = Math.max(latestSegments.length, currentSegments.length);
-
-  for (let index = 0; index < length; index += 1) {
-    const latestSegment = latestSegments[index] ?? 0;
-    const currentSegment = currentSegments[index] ?? 0;
-
-    if (latestSegment > currentSegment) return true;
-    if (latestSegment < currentSegment) return false;
-  }
-
-  return false;
 };
 
 export const SettingsPage = () => {
@@ -635,33 +611,12 @@ export const SettingsPage = () => {
               <p className="mt-5 text-sm font-medium text-muted-foreground">
                 版本 {appInfo?.version ? `v${appInfo.version}` : "--"}
               </p>
-              {(() => {
-                if (isCheckingLatestRelease) {
-                  return (
-                    <p className="mt-2 text-xs text-muted-foreground">正在检查新版本…</p>
-                  );
-                }
-
-                if (
-                  latestRelease?.version &&
-                  appInfo?.version &&
-                  isNewerVersion(latestRelease.version, appInfo.version)
-                ) {
-                  return (
-                    <button
-                      type="button"
-                      onClick={openLatestDownload}
-                      aria-label={`发现新版本 v${latestRelease.version}，点击前往下载`}
-                      className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:underline"
-                    >
-                      <PackageCheck className="size-3.5 text-primary" aria-hidden="true" />
-                      新版本 v{latestRelease.version}
-                    </button>
-                  );
-                }
-
-                return null;
-              })()}
+              <LatestReleaseHint
+                isChecking={isCheckingLatestRelease}
+                latestRelease={latestRelease}
+                currentVersion={appInfo?.version}
+                onOpenDownload={openLatestDownload}
+              />
               {officialSiteError ? (
                 <p className="mt-2 text-sm text-destructive">{officialSiteError}</p>
               ) : null}

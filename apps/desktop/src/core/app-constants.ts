@@ -10,8 +10,10 @@ export const APP_META = {
   description: "Sync and Distribute Skills"
 } as const;
 
-export const GITHUB_TOKEN_HELP_URL = "https://sk.magicfuture.app/help/github-token";
+export const SKILLS_MANAGER_BASE_URL = "https://sk.magicfuture.app";
 
-export const OFFICIAL_SITE_URL = "https://sk.magicfuture.app";
+export const GITHUB_TOKEN_HELP_URL = `${SKILLS_MANAGER_BASE_URL}/help/github-token`;
 
-export const RELEASE_MANIFEST_URL = "https://sk.magicfuture.app/api/releases/latest";
+export const OFFICIAL_SITE_URL = SKILLS_MANAGER_BASE_URL;
+
+export const RELEASE_MANIFEST_URL = `${SKILLS_MANAGER_BASE_URL}/api/releases/latest`;
