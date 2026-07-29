@@ -11,7 +11,7 @@
     }
   ],
   "vars": {
-    "RESEND_FROM": "Skills Manager <noreply@iconplus.app>",
-    "RESEND_API_KEY": ""
+    "RESEND_FROM": "Skills Manager <noreply@iconplus.app>"
   }
+  // RESEND_API_KEY 通过 `wrangler secret put RESEND_API_KEY` 配置，禁止写入本文件
 }
