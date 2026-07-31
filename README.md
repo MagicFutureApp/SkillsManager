@@ -108,11 +108,20 @@ flowchart LR
 
 可从[官方网站](https://sk.magicfuture.app)或 [GitHub Releases](https://github.com/MagicFutureApp/SkillsManager/releases/latest) 下载当前版本。
 
-| 平台       | 当前构建              | 安装包        |
-| ---------- | --------------------- | ------------- |
-| Windows 11 | x64                   | NSIS `.exe`   |
-| macOS      | Apple Silicon / arm64 | `.dmg`        |
-| Ubuntu     | x64                   | Debian `.deb` |
+| 平台       | 当前构建 | 安装包        |
+| ---------- |----------| ------------- |
+| Windows 11 | x64      | `skills-manager-<version>-win-x64-setup.exe`   |
+| macOS      | Arm64    | `skills-manager-<version>-mac-arm64.dmg`        |
+| Ubuntu     | x64      | `skills-manager-<version>-ubuntu-amd64.deb` |
+
+### macOS（Homebrew）
+
+macOS 用户也可以通过 Homebrew 安装：
+
+```bash
+brew tap MagicFutureApp/skills-manager https://github.com/MagicFutureApp/SkillsManager
+brew install --cask skills-manager
+```
 
 首次使用建议按以下顺序操作：
 

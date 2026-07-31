@@ -221,3 +221,28 @@ jobs:
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             -H "Content-Type: application/json" \
             --data-binary @release-assets/latest.json
+
+      - name: Checkout main branch
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Update Homebrew Cask version and checksum
+        shell: bash
+        run: |
+          version="${TAG_NAME#v}"
+          macos_sha256="$(grep 'mac-arm64\.dmg' release-assets/SHA256SUMS.txt | awk '{print $1}')"
+
+          if [ -z "$macos_sha256" ]; then
+            echo "Could not find macOS dmg checksum in SHA256SUMS.txt"
+            exit 1
+          fi
+
+          sed -i "s/^  version \".*\"/  version \"$version\"/" Casks/skills-manager.rb
+          sed -i "s/^  sha256 \".*\"/  sha256 \"$macos_sha256\"/" Casks/skills-manager.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/skills-manager.rb
+          git commit -m "chore: update Homebrew Cask to v$version" || echo "No changes to commit"
+          git push origin main
