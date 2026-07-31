@@ -2,10 +2,11 @@ import React from "react";
 
 import Footer from "../../../components/footer";
 import Header from "../../../components/header";
-import { useDownloadPlatform } from "../../../hooks/use-download-platform";
-import { useReleaseManifest } from "../../../hooks/use-release-manifest";
+import { useDownloadPlatform } from "@/hooks/use-download-platform.ts";
+import { useReleaseManifest } from "@/hooks/use-release-manifest.ts";
 import Contact from "./contact";
 import Features from "./features";
+import Faq from "./faq";
 import Hero from "./hero";
 import InteractiveSandbox from "./interactive-sandbox";
 import Pricing from "./pricing";
@@ -53,6 +54,9 @@ export default function Index() {
 
         {/* Pricing tiers */}
         <Pricing />
+
+        {/* FAQ */}
+        <Faq />
 
         {/* Contact */}
         <Contact />

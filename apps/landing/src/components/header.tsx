@@ -25,6 +25,7 @@ export default function Header({
   const homeNavItems = [
     { label: "产品能力", id: "features" },
     { label: "交互演示", id: "sandbox" },
+    { label: "常见问题", id: "faq" },
     { label: "请我喝杯咖啡", id: "pricing" },
     { label: "联系我们", id: "contact" }
   ];
