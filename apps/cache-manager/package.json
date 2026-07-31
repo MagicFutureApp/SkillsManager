@@ -1,0 +1,30 @@
+{
+  "name": "@skills-manager/cache-manager",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit",
+    "test": "vitest run --pool=threads --maxWorkers=1 --no-file-parallelism",
+    "format": "prettier --write package.json tsconfig.json wrangler.jsonc vercel.json README.md DEPLOYMENT.md api src",
+    "format:check": "prettier --check package.json tsconfig.json wrangler.jsonc vercel.json README.md DEPLOYMENT.md api src"
+  },
+  "dependencies": {
+    "@vercel/oidc": "^3.8.1",
+    "hono": "^4.12.32"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "prettier": "^3.8.3",
+    "typescript": "6.0.3",
+    "vite": "8.1.5",
+    "vitest": "4.1.7",
+    "wrangler": "4.113.0"
+  }
+}

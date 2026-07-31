@@ -21,7 +21,11 @@
     "db:check": "pnpm --filter @skills-manager/desktop run db:check",
     "format": "pnpm --filter @skills-manager/desktop run format",
     "format:check": "pnpm --filter @skills-manager/desktop run format:check",
-    "release": "tsx scripts/release.ts"
+    "release": "tsx scripts/release.ts",
+    "cache:dev": "pnpm --filter @skills-manager/cache-manager run dev",
+    "cache:build": "pnpm --filter @skills-manager/cache-manager run build",
+    "cache:check": "pnpm --filter @skills-manager/cache-manager run check",
+    "cache:test": "pnpm --filter @skills-manager/cache-manager test"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -36,6 +40,7 @@
     ]
   },
   "devDependencies": {
+    "@types/node": "^26.1.2",
     "electron-builder": "26.15.3"
   }
 }
