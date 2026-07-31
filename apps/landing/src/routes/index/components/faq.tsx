@@ -54,7 +54,7 @@ export default function Faq() {
             安装与使用答疑
           </h2>
           <p className="mt-4 text-lg text-zinc-600">
-            关于未签名安装包在各平台上的提示与绕过方式，这里集中说明。
+            关于未签名安装包在各平台上的提示与绕过方式。
           </p>
         </div>
 
