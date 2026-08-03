@@ -1,6 +1,6 @@
 cask "skills-manager" do
-  version "0.2.0"
-  sha256 "47f9f15d82b004545e93e1aaf17c2db71b0047385cac645cefd99cd096a5eb03"
+  version "0.2.3"
+  sha256 "5ddc3594a995d6854260649ff3fedffa97bfc8614de4b37ff23a02514974d091"
 
   url "https://github.com/MagicFutureApp/SkillsManager/releases/download/v#{version}/skills-manager-#{version}-mac-arm64.dmg"
   name "Skills Manager"
