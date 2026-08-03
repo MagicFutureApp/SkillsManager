@@ -36,6 +36,8 @@
     ]
   },
   "devDependencies": {
-    "electron-builder": "26.15.3"
+    "electron-builder": "26.15.3",
+    "tsx": "^4.22.3",
+    "@types/node": "^25.9.1"
   }
 }
