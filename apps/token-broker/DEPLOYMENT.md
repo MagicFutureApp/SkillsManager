@@ -125,6 +125,12 @@ $TokenBody.token.Length
 - 本地 `pnpm run token:check` 必须通过。
 - 对最新 commit 创建新 deployment；重新部署旧 commit 不会包含修复。
 
+### `504` 和 `default export returned a Response`
+
+- `api/token.ts` 必须使用 Vercel Web API 的命名 `POST` 导出，不能使用返回 `Response` 的 `default` 导出。
+- 确认 deployment 使用的是包含 `export function POST(request)` 的最新 commit。
+- 在 `Project -> Deployments` 中为最新 commit 创建新 deployment；重新部署旧 commit 不会包含修复。
+
 ### `401`
 
 - 请求必须发送 `Authorization: Bearer <SKILLS_SH_TOKEN_SECRET>`。

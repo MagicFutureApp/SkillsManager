@@ -1,5 +1,4 @@
 import { getVercelOidcToken } from "@vercel/oidc";
-import { handle } from "hono/vercel";
 
 import { createTokenApp } from "../src/token-app.js";
 
@@ -8,4 +7,6 @@ const app = createTokenApp({
   getOidcToken: getVercelOidcToken
 });
 
-export default handle(app);
+export function POST(request: Request): Response | Promise<Response> {
+  return app.fetch(request);
+}
