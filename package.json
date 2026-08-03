@@ -25,7 +25,10 @@
     "cache:dev": "pnpm --filter @skills-manager/cache-manager run dev",
     "cache:build": "pnpm --filter @skills-manager/cache-manager run build",
     "cache:check": "pnpm --filter @skills-manager/cache-manager run check",
-    "cache:test": "pnpm --filter @skills-manager/cache-manager test"
+    "cache:test": "pnpm --filter @skills-manager/cache-manager test",
+    "token:check": "pnpm --filter @skills-manager/token-broker run check",
+    "token:test": "pnpm --filter @skills-manager/token-broker test",
+    "token:format:check": "pnpm --filter @skills-manager/token-broker run format:check"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

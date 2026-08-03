@@ -1,6 +1,6 @@
 # Skills Manager Cache Manager
 
-skills.sh catalog 的本地优先中心缓存。Cloudflare Worker 使用 Hono 提供只读 catalog API，Cloudflare KV 保存最近两代完整分页快照；一个极小的 Vercel Function 只负责向 Cloudflare 返回 request-scoped OIDC token，所有 skills.sh 数据请求都由 Cloudflare 发起。
+skills.sh catalog 的本地优先中心缓存。Cloudflare Worker 使用 Hono 提供只读 catalog API，Cloudflare KV 保存最近两代完整分页快照。所有 skills.sh 数据请求都由 Cloudflare 发起；request-scoped OIDC Token 由独立的 [`apps/token-broker`](../token-broker/README.md) Vercel 应用提供。
 
 catalog 不再由 Cron 定时刷新。用户读取 catalog 时，如果当前 generation 已超过 6 小时，Worker 立即返回旧数据并在后台构建完整的新 generation；完全没有缓存时返回 `202 catalog_warming`，客户端按 `Retry-After` 重试。缓存服务不保存 skill `files`、`SKILL.md`、Git repository、安装包、搜索词或凭据。安装仍由 Electron main process 使用系统 Git 完成。
 
@@ -39,33 +39,16 @@ pnpm --filter @skills-manager/cache-manager run build
 pnpm --filter @skills-manager/cache-manager run dev
 ```
 
-完整的 Vercel Token Broker、Cloudflare KV/Worker 部署与验收步骤参见 [DEPLOYMENT.md](./DEPLOYMENT.md)。
+完整的 Cloudflare KV/Worker 部署与验收步骤参见 [DEPLOYMENT.md](./DEPLOYMENT.md)。
 
-## Vercel Token Broker
+## External Token Broker
 
-在 Vercel 创建项目，Root Directory 指向 `apps/cache-manager`，启用 `Settings -> OIDC Federation`，并配置：
-
-```text
-SKILLS_SH_TOKEN_SECRET=<long-random-secret>
-```
-
-Token endpoint 是：
+先部署独立的 [`@skills-manager/token-broker`](../token-broker/DEPLOYMENT.md)，然后把它的 endpoint 和 shared secret 配置为 Cloudflare Worker secrets：
 
 ```text
-POST https://<project>.vercel.app/api/token
-Authorization: Bearer <SKILLS_SH_TOKEN_SECRET>
+SKILLS_SH_TOKEN_URL=https://<token-broker-project>.vercel.app/api/token
+SKILLS_SH_TOKEN_SECRET=<与 Vercel 完全相同的 shared secret>
 ```
-
-成功响应：
-
-```json
-{
-  "token": "<vercel-oidc-token>",
-  "expiresAt": 1785398400
-}
-```
-
-Token Broker 不请求 skills.sh，不接受 page、source、skill 或任意上游 URL。它只在认证通过后调用 `getVercelOidcToken()`，校验 JWT `exp`，并返回 `Cache-Control: no-store` 的响应。
 
 Cloudflare 使用该 Token 直接请求：
 

@@ -1,12 +1,45 @@
-import { Hono, type Context } from "hono";
+import { Buffer } from "node:buffer";
+import { timingSafeEqual } from "node:crypto";
 
-import { parseJwtExpiration } from "../security/jwt";
-import { matchesBearerToken } from "../security/shared-secret";
+import { Hono, type Context } from "hono";
 
 type TokenAppDependencies = {
   expectedSecret: string | undefined;
   getOidcToken: () => Promise<string>;
   now?: () => Date;
+};
+
+const parseJwtExpiration = (token: string): number | null => {
+  const parts = token.split(".");
+  if (parts.length !== 3 || !parts[1]) {
+    return null;
+  }
+
+  try {
+    const payload: unknown = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+    if (
+      typeof payload !== "object" ||
+      payload === null ||
+      !("exp" in payload) ||
+      !Number.isSafeInteger(payload.exp) ||
+      Number(payload.exp) <= 0
+    ) {
+      return null;
+    }
+    return Number(payload.exp);
+  } catch {
+    return null;
+  }
+};
+
+const matchesBearerToken = (authorization: string | undefined, expected: string): boolean => {
+  if (!authorization?.startsWith("Bearer ") || expected.length === 0) {
+    return false;
+  }
+
+  const actualBytes = Buffer.from(authorization.slice("Bearer ".length));
+  const expectedBytes = Buffer.from(expected);
+  return actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes);
 };
 
 const setNoStoreHeaders = (context: Context): void => {

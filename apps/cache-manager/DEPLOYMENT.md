@@ -1,11 +1,11 @@
 # Cache Manager Deployment
 
-本文说明如何部署当前的 Token Broker 架构：Vercel 只负责获取 request-scoped OIDC Token，Cloudflare Worker 使用该 Token 直接调用 skills.sh，并把 catalog 保存到 KV、把 skill detail 保存到 Workers Cache API。
+本文说明如何部署 Cloudflare Cache Manager。Worker 通过已部署的外部 Token Broker 获取 request-scoped OIDC Token，直接调用 skills.sh，并把 catalog 保存到 KV、把 skill detail 保存到 Workers Cache API。
 
 ```text
 Client
   -> Cloudflare Worker
-       -> Vercel POST /api/token
+       -> Token Broker POST /api/token
             -> getVercelOidcToken()
        -> skills.sh /api/v1/*
        -> KV / Workers Cache API
@@ -13,15 +13,14 @@ Client
 
 OIDC Token 只保存在当前 Worker isolate 的模块内存中，不写入 KV、D1、Workers Cache API、日志或客户端响应。
 
-本文按当前 `cache-manager` 分支实现编写，对应 `apps/cache-manager/package.json` 中的
-Node.js `>=20`、Wrangler `4.113.0` 和 `@vercel/oidc` `3.8.1`。除非步骤中明确说明，所有命令都从仓库根目录执行。
+本文按当前 `cache-manager` 分支实现编写，对应 `apps/cache-manager/package.json` 中的 Wrangler `4.113.0`。除非步骤中明确说明，所有命令都从仓库根目录执行。
 
 ## 1. Prerequisites
 
 - Node.js 20 或更高版本；建议使用仓库 `package.json` 声明的 pnpm `10.23.0`。
 - pnpm。
-- 一个 Vercel account。
 - 一个 Cloudflare account，并启用 Workers。
+- 已部署的 [`@skills-manager/token-broker`](../token-broker/DEPLOYMENT.md)，包括 endpoint 和 shared secret。
 - 当前仓库依赖已经安装。
 
 从仓库根目录执行：
@@ -58,126 +57,16 @@ $AdminToken = node -e "process.stdout.write(require('node:crypto').randomBytes(3
 
 把它们暂存在密码管理器或当前 shell session 中。不要写入 `wrangler.jsonc`、Git tracked 文件或 `.dev.vars.example`。
 
-## 3. Deploy the Vercel Token Broker
+## 3. Prepare the Token Broker configuration
 
-### 3.1 Import the Git repository
-
-Vercel Dashboard 不会读取本地工作树。先确认要部署的 `cache-manager` 分支已经推送到 GitHub、GitLab 或 Bitbucket，本地未提交或未推送的改动不会进入 deployment。
-
-1. 打开 [Vercel New Project](https://vercel.com/new)。
-2. 连接 Git provider，选择 Skills Manager repository，然后点击 `Import`。
-3. 建议使用独立项目名，例如 `skills-manager-token-broker`。
-4. 在 `Configure Project` 页面设置：
+按 [`apps/token-broker/DEPLOYMENT.md`](../token-broker/DEPLOYMENT.md) 完成 Vercel 部署和验收，然后记录：
 
 ```text
-Framework Preset: Other
-Root Directory: apps/cache-manager
-Build Command: 启用 Override，并留空
-Output Directory: 保持默认
-Install Command: 保持默认
+SKILLS_SH_TOKEN_URL=https://<token-broker-project>.vercel.app/api/token
+SKILLS_SH_TOKEN_SECRET=<与 Vercel 完全相同的 shared secret>
 ```
 
-根据 Vercel 的 `Skip Build Step` 配置，`Other` 项目应启用 Build Command Override 但保持输入框为空。不要填写 `pnpm run build`；该 script 是 Cloudflare Wrangler dry-run。Vercel 仍会安装 Function 依赖并构建 `api/token.ts`。
-
-在同一页面的 `Environment Variables` 中添加：
-
-```text
-Name: SKILLS_SH_TOKEN_SECRET
-Value: <TokenSecret>
-Environment: Production
-```
-
-需要测试 Preview deployment 时，也给 Preview 添加同一个变量。环境变量在 Vercel 中静态加密，不要把它写入 repository。
-
-点击 `Deploy` 创建项目。如果 `cache-manager` 还没有合并到 repository 的默认分支，项目创建后打开：
-
-```text
-Project
-  -> Settings
-  -> Git
-  -> Production Branch
-  -> cache-manager
-```
-
-保存后需要从该分支重新部署。如果代码已经合并到当前 Production Branch，保持原设置即可。
-
-### 3.2 Enable OIDC Federation
-
-在 Vercel Dashboard 打开：
-
-```text
-Project
-  -> Settings
-  -> Security
-  -> Secure backend access with OIDC federation
-```
-
-启用 OIDC，并优先使用 Vercel 推荐的 `Team` issuer mode。skills.sh 端必须信任该 Vercel team/project 签发的 OIDC Token。启用或修改 OIDC 后必须重新部署 Production，已存在的 deployment 不会自动获得新配置。
-
-### 3.3 Redeploy Production
-
-打开 `Project -> Deployments`，找到 Production deployment，从右侧菜单选择 `Redeploy`。确认 deployment 来自当前 Production Branch，然后完成重新部署。
-
-如果在项目创建后才添加或修改 `SKILLS_SH_TOKEN_SECRET`，也必须重新部署；Vercel 的环境变量变更只对新 deployment 生效。以后向 Production Branch 推送新提交时，Vercel 会自动创建新的 Production deployment。
-
-记录 Production URL，例如：
-
-```text
-https://skills-manager-token-broker.vercel.app
-```
-
-Token endpoint 是：
-
-```text
-POST https://skills-manager-token-broker.vercel.app/api/token
-```
-
-### 3.4 Verify the Token Broker
-
-不带 secret 的请求应该返回 `401`：
-
-```powershell
-$VercelBaseUrl = "https://skills-manager-token-broker.vercel.app"
-try {
-  Invoke-WebRequest -Method Post -Uri "$VercelBaseUrl/api/token"
-} catch {
-  $_.Exception.Response.StatusCode.value__
-}
-```
-
-带正确 secret 的请求应该返回 `200`。不要把响应中的原始 Token 打印到终端：
-
-```powershell
-$TokenResponse = Invoke-WebRequest `
-  -Method Post `
-  -Uri "$VercelBaseUrl/api/token" `
-  -Headers @{ Authorization = "Bearer $TokenSecret" }
-
-$TokenBody = $TokenResponse.Content | ConvertFrom-Json
-$TokenResponse.StatusCode
-$TokenResponse.Headers["Cache-Control"]
-$TokenResponse.Headers["Pragma"]
-$TokenBody.expiresAt
-$TokenBody.token.Length
-```
-
-预期：
-
-```text
-Status: 200
-Cache-Control: no-store
-Pragma: no-cache
-expiresAt: future Unix timestamp
-token.Length: greater than 0
-```
-
-测试后清除包含 Token 的临时变量：
-
-```powershell
-Remove-Variable TokenBody, TokenResponse
-```
-
-如果这里返回 `502 oidc_unavailable`，检查 OIDC Federation 是否启用，并在启用后重新部署 Production。
+Cache Manager 只依赖这两个运行时配置，不包含 Vercel Function 实现。
 
 ## 4. Create the Cloudflare KV Namespace
 
@@ -407,22 +296,9 @@ $ManualRefresh.current
 pnpm --filter @skills-manager/cache-manager exec wrangler tail
 ```
 
-### `/api/token` returns 404
+### Token Broker errors
 
-- 确认 Vercel Root Directory 是 `apps/cache-manager`。
-- 确认部署包含 `api/token.ts`。
-- 确认使用 `POST`，不是 `GET`。
-
-### `/api/token` returns 401
-
-- 调用方没有发送 `Authorization: Bearer ...`。
-- Cloudflare 与 Vercel 的 `SKILLS_SH_TOKEN_SECRET` 不一致。
-
-### `/api/token` returns `502 oidc_unavailable`
-
-- Vercel `Settings -> Security -> Secure backend access with OIDC federation` 没有启用。
-- 启用 OIDC 后没有重新部署 Production。
-- 请求命中了未配置 OIDC/环境变量的 Preview deployment。
+`/api/token` 的 `404`、`401`、`502` 或 `ERR_MODULE_NOT_FOUND` 由独立 Token Broker 处理，参见 [`apps/token-broker/DEPLOYMENT.md`](../token-broker/DEPLOYMENT.md#6-troubleshooting)。
 
 ### Catalog remains `202 warming`
 
@@ -489,9 +365,6 @@ Set-Clipboard -Value ""
 
 ## 11. Official References
 
-- [Vercel: Deploy from the dashboard](https://vercel.com/docs/getting-started-with-vercel#deploy-from-the-dashboard)
-- [Vercel: Configuring a Build](https://vercel.com/docs/builds/configure-a-build)
-- [Vercel OpenID Connect (OIDC) Federation](https://vercel.com/docs/oidc)
 - [Cloudflare Workers KV: Get started](https://developers.cloudflare.com/kv/get-started/)
 - [Cloudflare Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [Wrangler commands](https://developers.cloudflare.com/workers/wrangler/commands/)

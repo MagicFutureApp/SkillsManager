@@ -1,0 +1,25 @@
+{
+  "name": "@skills-manager/token-broker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run --pool=threads --maxWorkers=1 --no-file-parallelism",
+    "format": "prettier --write package.json tsconfig.json vercel.json README.md DEPLOYMENT.md api src",
+    "format:check": "prettier --check package.json tsconfig.json vercel.json README.md DEPLOYMENT.md api src"
+  },
+  "dependencies": {
+    "@vercel/oidc": "^3.8.1",
+    "hono": "^4.12.32"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "prettier": "^3.8.3",
+    "typescript": "6.0.3",
+    "vitest": "4.1.7"
+  }
+}

@@ -12,11 +12,10 @@
     "deploy": "wrangler deploy",
     "check": "tsc --noEmit",
     "test": "vitest run --pool=threads --maxWorkers=1 --no-file-parallelism",
-    "format": "prettier --write package.json tsconfig.json wrangler.jsonc vercel.json README.md DEPLOYMENT.md api src",
-    "format:check": "prettier --check package.json tsconfig.json wrangler.jsonc vercel.json README.md DEPLOYMENT.md api src"
+    "format": "prettier --write package.json tsconfig.json wrangler.jsonc README.md DEPLOYMENT.md src",
+    "format:check": "prettier --check package.json tsconfig.json wrangler.jsonc README.md DEPLOYMENT.md src"
   },
   "dependencies": {
-    "@vercel/oidc": "^3.8.1",
     "hono": "^4.12.32"
   },
   "devDependencies": {

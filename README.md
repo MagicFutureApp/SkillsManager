@@ -6,10 +6,11 @@ A local-first Skills Manager monorepo.
 
 - `apps/desktop`: Electron, React, TypeScript, and SQLite desktop application.
 - `apps/landing`: TanStack Start landing page deployed to Cloudflare Workers.
-- `apps/cache-manager`: reserved for the Cloudflare Hono cache manager.
+- `apps/cache-manager`: Cloudflare Hono catalog and skill detail cache manager.
+- `apps/token-broker`: Vercel OIDC Token Broker used by the cache manager.
 
-The cache-manager workspace remains a tracked placeholder. Release metadata for the landing page
-is currently served by the landing Worker itself from a Cloudflare KV binding.
+Cache Manager and Token Broker are separate deployable workspaces. The Cloudflare Worker calls the
+Vercel Broker through its protected HTTP endpoint; neither application imports code from the other.
 
 ## Commands
 
@@ -24,6 +25,10 @@ pnpm run package:linux
 pnpm run check
 pnpm test
 pnpm run format:check
+pnpm run cache:check
+pnpm run cache:test
+pnpm run token:check
+pnpm run token:test
 ```
 
 ## Build installable desktop apps

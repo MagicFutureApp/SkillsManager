@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createUnsignedJwt } from "../test/create-jwt";
-import { createTokenApp } from "./token-app";
+import { createUnsignedJwt } from "./test/create-jwt.js";
+import { createTokenApp } from "./token-app.js";
 
 const now = () => new Date("2026-07-30T00:00:00.000Z");
 const expiresAt = Math.floor(now().getTime() / 1_000) + 3_600;
