@@ -13,7 +13,7 @@ cask "skills-manager" do
     strategy :github_releases
   end
 
-  depends_on macos: ">= :monterey"
+  depends_on macos: :monterey
   depends_on arch: :arm64
 
   app "Skills Manager.app"
