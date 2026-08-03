@@ -121,6 +121,7 @@ macOS 用户也可以通过 Homebrew 安装：
 
 ```bash
 brew tap MagicFutureApp/skills-manager https://github.com/MagicFutureApp/SkillsManager
+brew trust magicfutureapp/skills-manager
 brew install --cask skills-manager
 ```
 

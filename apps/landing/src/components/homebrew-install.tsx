@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 
 const HOMEBREW_COMMANDS = `brew tap MagicFutureApp/skills-manager https://github.com/MagicFutureApp/SkillsManager
+brew trust magicfutureapp/skills-manager
 brew install --cask skills-manager`;
 
 export default function HomebrewInstall() {
