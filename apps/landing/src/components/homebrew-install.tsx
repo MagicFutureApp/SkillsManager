@@ -19,7 +19,7 @@ export default function HomebrewInstall() {
   };
 
   return (
-    <div className="mt-4 w-fit max-w-full text-left">
+    <div className="homebrew-install mt-4 w-fit max-w-full text-left">
       <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-3.5 py-2">
           <span className="font-mono text-xs text-zinc-400">macOS · Homebrew</span>
@@ -33,7 +33,7 @@ export default function HomebrewInstall() {
             <span>{copied ? "已复制" : "复制"}</span>
           </button>
         </div>
-        <pre className="select-text overflow-x-auto px-3.5 py-3 font-mono text-xs leading-relaxed text-zinc-100 selection:bg-zinc-600 selection:text-white">
+        <pre className="select-text overflow-x-auto px-3.5 py-3 font-mono text-xs leading-relaxed text-zinc-100">
           <code>{HOMEBREW_COMMANDS}</code>
         </pre>
       </div>

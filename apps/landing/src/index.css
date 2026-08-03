@@ -7,3 +7,9 @@
   --font-display: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
+
+/* Homebrew 安装代码块：选中命令时显示高亮背景 */
+.homebrew-install ::selection {
+  background-color: rgb(82 82 91); /* zinc-600 */
+  color: #fff;
+}
