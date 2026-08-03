@@ -124,6 +124,8 @@ brew tap MagicFutureApp/skills-manager https://github.com/MagicFutureApp/SkillsM
 brew install --cask skills-manager
 ```
 
+> 当前 Homebrew Cask 仅提供 Apple Silicon（arm64）版本，要求 macOS Monterey 或更高。后续升级运行 `brew upgrade --cask skills-manager` 即可，版本检测由 Cask 内的 `livecheck` 自动完成。
+
 首次使用建议按以下顺序操作：
 
 1. 在“来源”中添加 GitHub URL 或本地目录。

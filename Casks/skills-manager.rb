@@ -7,6 +7,12 @@ cask "skills-manager" do
   desc "Local-first desktop app for managing agent skills"
   homepage "https://github.com/MagicFutureApp/SkillsManager"
 
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+    strategy :github_releases
+  end
+
   depends_on macos: ">= :monterey"
   depends_on arch: :arm64
 
