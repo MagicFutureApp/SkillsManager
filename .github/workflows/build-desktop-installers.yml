@@ -231,7 +231,11 @@ jobs:
         shell: bash
         run: |
           version="${TAG_NAME#v}"
-          macos_sha256="$(grep 'mac-arm64\.dmg' release-assets/SHA256SUMS.txt | awk '{print $1}')"
+
+          tmp_dir="$(mktemp -d)"
+          gh release download "$TAG_NAME" -p SHA256SUMS.txt --dir "$tmp_dir"
+
+          macos_sha256="$(grep 'mac-arm64\.dmg' "$tmp_dir/SHA256SUMS.txt" | awk '{print $1}')"
 
           if [ -z "$macos_sha256" ]; then
             echo "Could not find macOS dmg checksum in SHA256SUMS.txt"
