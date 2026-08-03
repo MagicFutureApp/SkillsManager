@@ -7,6 +7,7 @@ import sourcesPreview from "../../../../assets/sources.png";
 import skillsPreview from "../../../../assets/skills.png";
 import targetsPreview from "../../../../assets/targets.png";
 import DownloadButtonGroup from "../../../components/download-button-group";
+import HomebrewInstall from "../../../components/homebrew-install";
 import {
   Carousel,
   CarouselContent,
@@ -116,6 +117,17 @@ export default function Hero({
               release={release}
             />
           </motion.div>
+
+          {downloadPlatform === "macos" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.55 }}
+              className="flex justify-center"
+            >
+              <HomebrewInstall />
+            </motion.div>
+          )}
         </div>
 
         <motion.div
