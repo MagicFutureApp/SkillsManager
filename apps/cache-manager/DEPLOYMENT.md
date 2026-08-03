@@ -13,9 +13,12 @@ Client
 
 OIDC Token 只保存在当前 Worker isolate 的模块内存中，不写入 KV、D1、Workers Cache API、日志或客户端响应。
 
+本文按当前 `cache-manager` 分支实现编写，对应 `apps/cache-manager/package.json` 中的
+Node.js `>=20`、Wrangler `4.113.0` 和 `@vercel/oidc` `3.8.1`。除非步骤中明确说明，所有命令都从仓库根目录执行。
+
 ## 1. Prerequisites
 
-- Node.js 20 或更高版本。
+- Node.js 20 或更高版本；建议使用仓库 `package.json` 声明的 pnpm `10.23.0`。
 - pnpm。
 - 一个 Vercel account。
 - 一个 Cloudflare account，并启用 Workers。
@@ -23,12 +26,11 @@ OIDC Token 只保存在当前 Worker isolate 的模块内存中，不写入 KV�
 
 从仓库根目录执行：
 
-```powershell
-Set-Location D:\code\skills-manager
-pnpm install
-pnpm --filter @skills-manager/cache-manager test
-pnpm --filter @skills-manager/cache-manager run check
-pnpm --filter @skills-manager/cache-manager run build
+```bash
+pnpm install --frozen-lockfile
+pnpm run cache:test
+pnpm run cache:check
+pnpm run cache:build
 ```
 
 最后三个命令应分别通过测试、TypeScript 检查和 Wrangler dry-run build。
@@ -40,37 +42,64 @@ pnpm --filter @skills-manager/cache-manager run build
 - `SKILLS_SH_TOKEN_SECRET`：只用于 Cloudflare Worker 调用 Vercel Token Broker。
 - `CACHE_ADMIN_TOKEN`：只用于调用 Cloudflare 的手动 catalog 刷新接口。
 
-在 PowerShell 中生成：
+在 macOS/Linux shell 中生成：
+
+```bash
+export SKILLS_SH_TOKEN_SECRET="$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url'))")"
+export CACHE_ADMIN_TOKEN="$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url'))")"
+```
+
+或在 PowerShell 中生成：
 
 ```powershell
 $TokenSecret = node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url'))"
 $AdminToken = node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url'))"
 ```
 
-把它们暂存在密码管理器或当前 PowerShell session 中。不要写入 `wrangler.jsonc`、Git tracked 文件或 `.dev.vars.example`。
+把它们暂存在密码管理器或当前 shell session 中。不要写入 `wrangler.jsonc`、Git tracked 文件或 `.dev.vars.example`。
 
 ## 3. Deploy the Vercel Token Broker
 
-### 3.1 Create or link the project
+### 3.1 Import the Git repository
 
-当前工作树未提交时，可以使用 Vercel CLI 直接部署本地文件：
+Vercel Dashboard 不会读取本地工作树。先确认要部署的 `cache-manager` 分支已经推送到 GitHub、GitLab 或 Bitbucket，本地未提交或未推送的改动不会进入 deployment。
 
-```powershell
-Set-Location D:\code\skills-manager\apps\cache-manager
-pnpm dlx vercel@latest login
-pnpm dlx vercel@latest link
-```
-
-建议使用独立项目名，例如 `skills-manager-token-broker`。
-
-如果通过 Vercel Dashboard 导入 Git repository，设置：
+1. 打开 [Vercel New Project](https://vercel.com/new)。
+2. 连接 Git provider，选择 Skills Manager repository，然后点击 `Import`。
+3. 建议使用独立项目名，例如 `skills-manager-token-broker`。
+4. 在 `Configure Project` 页面设置：
 
 ```text
-Root Directory: apps/cache-manager
 Framework Preset: Other
+Root Directory: apps/cache-manager
+Build Command: 启用 Override，并留空
+Output Directory: 保持默认
+Install Command: 保持默认
 ```
 
-不要把 Vercel Build Command 设置成 `pnpm run build`；该 script 是 Cloudflare Wrangler dry-run。Vercel 只需要构建 `api/token.ts` Function。
+根据 Vercel 的 `Skip Build Step` 配置，`Other` 项目应启用 Build Command Override 但保持输入框为空。不要填写 `pnpm run build`；该 script 是 Cloudflare Wrangler dry-run。Vercel 仍会安装 Function 依赖并构建 `api/token.ts`。
+
+在同一页面的 `Environment Variables` 中添加：
+
+```text
+Name: SKILLS_SH_TOKEN_SECRET
+Value: <TokenSecret>
+Environment: Production
+```
+
+需要测试 Preview deployment 时，也给 Preview 添加同一个变量。环境变量在 Vercel 中静态加密，不要把它写入 repository。
+
+点击 `Deploy` 创建项目。如果 `cache-manager` 还没有合并到 repository 的默认分支，项目创建后打开：
+
+```text
+Project
+  -> Settings
+  -> Git
+  -> Production Branch
+  -> cache-manager
+```
+
+保存后需要从该分支重新部署。如果代码已经合并到当前 Production Branch，保持原设置即可。
 
 ### 3.2 Enable OIDC Federation
 
@@ -79,41 +108,17 @@ Framework Preset: Other
 ```text
 Project
   -> Settings
-  -> OIDC Federation
-  -> Enable
+  -> Security
+  -> Secure backend access with OIDC federation
 ```
 
-OIDC 必须在 Production environment 中启用。启用或修改 OIDC 后需要重新部署。
+启用 OIDC，并优先使用 Vercel 推荐的 `Team` issuer mode。skills.sh 端必须信任该 Vercel team/project 签发的 OIDC Token。启用或修改 OIDC 后必须重新部署 Production，已存在的 deployment 不会自动获得新配置。
 
-### 3.3 Configure the shared secret
+### 3.3 Redeploy Production
 
-在 Vercel 项目的 Environment Variables 中添加：
+打开 `Project -> Deployments`，找到 Production deployment，从右侧菜单选择 `Redeploy`。确认 deployment 来自当前 Production Branch，然后完成重新部署。
 
-```text
-Name: SKILLS_SH_TOKEN_SECRET
-Value: <TokenSecret>
-Environment: Production
-```
-
-需要测试 Preview deployment 时，也给 Preview 添加同一个变量。
-
-也可以使用 CLI：
-
-```powershell
-pnpm dlx vercel@latest env add SKILLS_SH_TOKEN_SECRET production
-```
-
-该命令会交互式提示输入值。可以先执行 `Set-Clipboard -Value $TokenSecret`，粘贴完成后清空 clipboard：
-
-```powershell
-Set-Clipboard -Value ""
-```
-
-### 3.4 Deploy
-
-```powershell
-pnpm dlx vercel@latest --prod
-```
+如果在项目创建后才添加或修改 `SKILLS_SH_TOKEN_SECRET`，也必须重新部署；Vercel 的环境变量变更只对新 deployment 生效。以后向 Production Branch 推送新提交时，Vercel 会自动创建新的 Production deployment。
 
 记录 Production URL，例如：
 
@@ -127,7 +132,7 @@ Token endpoint 是：
 POST https://skills-manager-token-broker.vercel.app/api/token
 ```
 
-### 3.5 Verify the Token Broker
+### 3.4 Verify the Token Broker
 
 不带 secret 的请求应该返回 `401`：
 
@@ -176,18 +181,17 @@ Remove-Variable TokenBody, TokenResponse
 
 ## 4. Create the Cloudflare KV Namespace
 
-本仓库的 Wrangler 固定在 workspace 根 `node_modules`。在 `apps/cache-manager` 中使用显式入口，避免 `pnpm exec wrangler` 解析到全局版本或悬空的 workspace symlink：
+使用 workspace filter 调用分支锁定的 Wrangler，避免解析到全局版本：
 
-```powershell
-Set-Location D:\code\skills-manager\apps\cache-manager
-node ..\..\node_modules\wrangler\bin\wrangler.js login
-node ..\..\node_modules\wrangler\bin\wrangler.js whoami
+```bash
+pnpm --filter @skills-manager/cache-manager exec wrangler login
+pnpm --filter @skills-manager/cache-manager exec wrangler whoami
 ```
 
 创建 Production KV namespace：
 
-```powershell
-node ..\..\node_modules\wrangler\bin\wrangler.js kv namespace create SKILLS_SH_CACHE
+```bash
+pnpm --filter @skills-manager/cache-manager exec wrangler kv namespace create SKILLS_SH_CACHE
 ```
 
 记录返回的 namespace ID，然后修改 `apps/cache-manager/wrangler.jsonc`：
@@ -211,8 +215,8 @@ KV namespace ID 不是 secret，可以提交；不要把 Token 或 shared secret
 
 添加 KV ID 后先部署一次，使 Worker 存在于 Cloudflare account：
 
-```powershell
-pnpm run deploy
+```bash
+pnpm --filter @skills-manager/cache-manager run deploy
 ```
 
 此时 `/health` 可以工作，但 catalog 在 secrets 配置完成前不能同步。
@@ -221,32 +225,32 @@ pnpm run deploy
 
 依次执行：
 
-```powershell
-node ..\..\node_modules\wrangler\bin\wrangler.js secret put SKILLS_SH_TOKEN_URL
-node ..\..\node_modules\wrangler\bin\wrangler.js secret put SKILLS_SH_TOKEN_SECRET
-node ..\..\node_modules\wrangler\bin\wrangler.js secret put CACHE_ADMIN_TOKEN
+```bash
+pnpm --filter @skills-manager/cache-manager exec wrangler secret put SKILLS_SH_TOKEN_URL
+pnpm --filter @skills-manager/cache-manager exec wrangler secret put SKILLS_SH_TOKEN_SECRET
+pnpm --filter @skills-manager/cache-manager exec wrangler secret put CACHE_ADMIN_TOKEN
 ```
 
-交互式输入：
+每条命令提示输入 secret 时，只粘贴等右边的值，不要输入变量名或 `=`：
 
 ```text
-SKILLS_SH_TOKEN_URL=https://skills-manager-token-broker.vercel.app/api/token
-SKILLS_SH_TOKEN_SECRET=<与 Vercel 完全相同的 TokenSecret>
-CACHE_ADMIN_TOKEN=<另一个 AdminToken>
+https://skills-manager-token-broker.vercel.app/api/token
+<与 Vercel 完全相同的 TokenSecret>
+<另一个 AdminToken>
 ```
 
 检查 secret 名称：
 
-```powershell
-node ..\..\node_modules\wrangler\bin\wrangler.js secret list
+```bash
+pnpm --filter @skills-manager/cache-manager exec wrangler secret list
 ```
 
 该命令只显示名称，不显示 secret 值。
 
 ### 5.3 Deploy the final configuration
 
-```powershell
-pnpm run deploy
+```bash
+pnpm --filter @skills-manager/cache-manager run deploy
 ```
 
 记录 Wrangler 输出的 Worker URL，例如：
@@ -399,9 +403,8 @@ $ManualRefresh.current
 
 ### Worker logs
 
-```powershell
-Set-Location D:\code\skills-manager\apps\cache-manager
-node ..\..\node_modules\wrangler\bin\wrangler.js tail
+```bash
+pnpm --filter @skills-manager/cache-manager exec wrangler tail
 ```
 
 ### `/api/token` returns 404
@@ -417,7 +420,7 @@ node ..\..\node_modules\wrangler\bin\wrangler.js tail
 
 ### `/api/token` returns `502 oidc_unavailable`
 
-- Vercel OIDC Federation 没有启用。
+- Vercel `Settings -> Security -> Secure backend access with OIDC federation` 没有启用。
 - 启用 OIDC 后没有重新部署 Production。
 - 请求命中了未配置 OIDC/环境变量的 Preview deployment。
 
@@ -457,9 +460,9 @@ Workers Cache API 按 Cloudflare location 分散。同一 skill 在东京命中�
 4. 部署并完成 catalog/detail 验证。
 5. 删除 Cloudflare 的旧 secrets：
 
-```powershell
-node ..\..\node_modules\wrangler\bin\wrangler.js secret delete SKILLS_SH_BRIDGE_URL
-node ..\..\node_modules\wrangler\bin\wrangler.js secret delete SKILLS_SH_BRIDGE_SECRET
+```bash
+pnpm --filter @skills-manager/cache-manager exec wrangler secret delete SKILLS_SH_BRIDGE_URL
+pnpm --filter @skills-manager/cache-manager exec wrangler secret delete SKILLS_SH_BRIDGE_SECRET
 ```
 
 6. 从 Vercel 删除旧的 `SKILLS_SH_BRIDGE_SECRET` environment variable。
@@ -467,7 +470,15 @@ node ..\..\node_modules\wrangler\bin\wrangler.js secret delete SKILLS_SH_BRIDGE_
 
 ## 10. Clean Up Local Secrets
 
-部署与验证完成后清理 PowerShell 变量和 clipboard：
+部署与验证完成后清理当前 session 中的 secret：
+
+macOS/Linux shell：
+
+```bash
+unset SKILLS_SH_TOKEN_SECRET CACHE_ADMIN_TOKEN
+```
+
+PowerShell：
 
 ```powershell
 Remove-Variable TokenSecret, AdminToken -ErrorAction SilentlyContinue
@@ -475,3 +486,12 @@ Set-Clipboard -Value ""
 ```
 
 真实本地 secrets 只能放在被忽略的 `apps/cache-manager/.dev.vars` 中。不要提交 `.dev.vars`、Vercel OIDC Token、shared secret 或 admin token。
+
+## 11. Official References
+
+- [Vercel: Deploy from the dashboard](https://vercel.com/docs/getting-started-with-vercel#deploy-from-the-dashboard)
+- [Vercel: Configuring a Build](https://vercel.com/docs/builds/configure-a-build)
+- [Vercel OpenID Connect (OIDC) Federation](https://vercel.com/docs/oidc)
+- [Cloudflare Workers KV: Get started](https://developers.cloudflare.com/kv/get-started/)
+- [Cloudflare Workers secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
+- [Wrangler commands](https://developers.cloudflare.com/workers/wrangler/commands/)
