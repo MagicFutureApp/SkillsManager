@@ -45,10 +45,13 @@ export const rebuildBetterSqlite3ForElectron = () => {
 
   console.log(`Rebuilding better-sqlite3 for Electron ${electronVersion}...`);
 
+  // Windows 需要通过 shell 执行 .cmd/.bat（Node.js 自 CVE-2024-27980 修复后强制要求），
+  // 其他平台一并开启也无副作用，且 args 固定无注入风险。
   const result = spawnSync(invocation.command, invocation.args, {
     cwd: desktopRoot,
     env: { ...process.env, ...invocation.env },
-    stdio: "inherit"
+    stdio: "inherit",
+    shell: true
   });
 
   if (result.error) {
