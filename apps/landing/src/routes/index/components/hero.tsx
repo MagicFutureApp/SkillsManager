@@ -14,9 +14,9 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious
-} from "../../../components/ui/carousel";
-import type { ReleaseManifestState } from "../../../hooks/use-release-manifest";
-import type { ReleasePlatform } from "../../../lib/release-manifest";
+} from "@/components/ui/carousel.tsx";
+import type { ReleaseManifestState } from "@/hooks/use-release-manifest.ts";
+import type { ReleasePlatform } from "@/lib/release-manifest.ts";
 
 const heroPreviews = [
   { src: sourcesPreview, alt: "Skills Manager Sources 页面截图" },
@@ -92,14 +92,6 @@ export default function Hero({
             transition={{ duration: 0.6, delay: 0.45 }}
             className="mt-10 flex flex-wrap justify-center gap-8"
           >
-            {/*<button
-              onClick={onScrollToSandbox}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 px-6 py-3.5 text-sm font-semibold text-zinc-50 shadow-sm transition-all  bg-zinc-900 hover:bg-zinc-800 hover:shadow-lg active:scale-95 cursor-pointer"
-              id="hero-btn"
-            >
-              <span>查看分发预览</span>
-              <Play className="h-4 w-4 fill-current text-zinc-50" />
-            </button>*/}
             <button
               type="button"
               onClick={onScrollToSandbox}
@@ -120,9 +112,9 @@ export default function Hero({
 
           {downloadPlatform === "macos" && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0.4, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.55 }}
+              transition={{ duration: 0.5, delay: 0 }}
               className="flex justify-center"
             >
               <HomebrewInstall />

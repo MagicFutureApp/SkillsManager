@@ -3,9 +3,14 @@ import type { ReactNode } from "react";
 import appCss from "../index.css?url";
 import skillsManagerMark from "../../../desktop/src/renderer/assets/skills-manager-mark.png?url";
 import NotFound from "../components/not-found";
+import { getReleaseManifest } from "@/lib/server/release-manifest.ts";
 
 export const Route = createRootRoute({
   notFoundComponent: NotFound,
+  loader: async () => {
+    const releaseManifest = await getReleaseManifest();
+    return { releaseManifest };
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

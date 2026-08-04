@@ -1,36 +1,22 @@
-import { useEffect, useState } from "react";
+import { getRouteApi } from "@tanstack/react-router";
 
-import { isReleaseManifest, type ReleaseManifest } from "../lib/release-manifest";
+import type { ReleaseManifest } from "@/lib/release-manifest.ts";
+
+const rootRouteApi = getRouteApi("__root__");
 
 export interface ReleaseManifestState {
   manifest: ReleaseManifest | null;
   loading: boolean;
 }
 
+/**
+ * 读取 SSR 注入的最新发布清单。
+ *
+ * 数据由 root route 的 loader 在服务端读取并序列化进 HTML，
+ * 首屏无需客户端二次请求，也不会出现加载闪动。
+ * 发新版本并更新 KV 后，下一次 SSR 即可反映最新版本。
+ */
 export function useReleaseManifest(): ReleaseManifestState {
-  const [state, setState] = useState<ReleaseManifestState>({ manifest: null, loading: true });
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/api/releases/latest", {
-      headers: { Accept: "application/json" },
-      signal: controller.signal
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`Release manifest request failed: ${response.status}`);
-        const value: unknown = await response.json();
-        if (!isReleaseManifest(value)) throw new Error("Release manifest has an invalid shape");
-        return value;
-      })
-      .then((manifest) => setState({ manifest, loading: false }))
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setState({ manifest: null, loading: false });
-      });
-
-    return () => controller.abort();
-  }, []);
-
-  return state;
+  const { releaseManifest } = rootRouteApi.useLoaderData();
+  return { manifest: releaseManifest, loading: false };
 }
