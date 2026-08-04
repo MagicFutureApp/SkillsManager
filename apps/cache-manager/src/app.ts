@@ -18,6 +18,7 @@ import {
 } from "./security/skills-sh-token";
 import { syncCatalog } from "./sync/catalog-sync";
 import type { CacheManagerEnv, WorkerBindings } from "./worker-env";
+import { workerFetch } from "./worker-fetch";
 
 type CatalogSync = (bindings: WorkerBindings) => Promise<CatalogManifest>;
 
@@ -77,7 +78,7 @@ const defaultStatus: CatalogSyncStatus = {
 export const createApp = (dependencies: AppDependencies = {}) => {
   const app = new Hono<CacheManagerEnv>();
   const now = dependencies.now ?? (() => new Date());
-  const fetchImpl = dependencies.fetchImpl ?? fetch;
+  const fetchImpl = dependencies.fetchImpl ?? workerFetch;
   const tokenProvider =
     dependencies.tokenProvider ?? createSkillsShTokenProvider({ fetchImpl, now });
   const syncCatalogImpl: CatalogSync =

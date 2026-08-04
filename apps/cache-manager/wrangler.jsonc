@@ -6,7 +6,10 @@
   "compatibility_flags": ["nodejs_compat"],
   "kv_namespaces": [
     {
-      "binding": "SKILLS_SH_CACHE"
+      "binding": "SKILLS_SH_CACHE",
+      "id": "a57b13b829274e71910da0621ce5a09e",
+      // Optional: preview_id used when running `wrangler dev` for local dev
+      "preview_id": "<ID_OF_PREVIEW_KV_NAMESPACE_FOR_LOCAL_DEVELOPMENT>"
     }
   ]
 }

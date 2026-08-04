@@ -12,6 +12,7 @@ import {
   createSkillsShTokenProvider,
   type SkillsShTokenProvider
 } from "../security/skills-sh-token";
+import { workerFetch } from "../worker-fetch";
 import { fetchCatalogPage } from "./catalog-client";
 
 type SyncDependencies = {
@@ -55,7 +56,7 @@ export const syncCatalog = async (
 ): Promise<CatalogManifest> => {
   requireSyncConfiguration(bindings);
 
-  const fetchImpl = dependencies.fetchImpl ?? fetch;
+  const fetchImpl = dependencies.fetchImpl ?? workerFetch;
   const now = dependencies.now ?? (() => new Date());
   const tokenProvider =
     dependencies.tokenProvider ?? createSkillsShTokenProvider({ fetchImpl, now });

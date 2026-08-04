@@ -1,9 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createApp } from "./app";
 import { catalogManifestKey, catalogPageKey, catalogStatusKey } from "./catalog/keys";
 import type { CatalogManifest, CatalogSyncStatus } from "./catalog/types";
 import type { SkillsShTokenProvider } from "./security/skills-sh-token";
+import { createUnsignedJwt } from "./test/create-jwt";
 import { MemoryKv } from "./test/memory-kv";
 
 class MemoryResponseCache {
@@ -53,6 +54,10 @@ const envWith = (kv: MemoryKv) => ({
 });
 
 describe("cache manager API", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("returns the current catalog manifest", async () => {
     const kv = new MemoryKv();
     kv.values.set(catalogManifestKey, JSON.stringify(manifest));
@@ -161,6 +166,38 @@ describe("cache manager API", () => {
     );
 
     expect(response.status).toBe(401);
+  });
+
+  it("preserves the Cloudflare global fetch receiver during manual sync", async () => {
+    const kv = new MemoryKv();
+    const currentTime = new Date("2026-07-29T01:00:00.000Z");
+    const expiresAt = Math.floor(currentTime.getTime() / 1_000) + 3_600;
+    const token = createUnsignedJwt(expiresAt);
+    const fetchImpl = vi.fn(async function (
+      this: unknown,
+      input: RequestInfo | URL
+    ): Promise<Response> {
+      if (this !== globalThis) {
+        throw new TypeError("Illegal invocation: function called with incorrect `this` reference");
+      }
+      if (String(input) === "https://token.example/api/token") {
+        return Response.json({ token, expiresAt });
+      }
+      return Response.json({
+        data: [{ id: "owner/repo/skill" }],
+        pagination: { page: 0, perPage: 500, total: 1, hasMore: false }
+      });
+    });
+    vi.stubGlobal("fetch", fetchImpl);
+
+    const response = await createApp({ now: () => currentTime }).request(
+      "/internal/sync",
+      { method: "POST", headers: { authorization: "Bearer admin-secret" } },
+      envWith(kv)
+    );
+
+    expect(response.status).toBe(200);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
   it("caches projected skill details for five minutes", async () => {
