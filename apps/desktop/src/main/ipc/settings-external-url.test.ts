@@ -55,6 +55,40 @@ describe("openExternalUrl", () => {
 
     expect(openExternal).toHaveBeenCalledWith(url);
   });
+
+  it("opens skills.sh catalog detail URLs with the system browser", async () => {
+    const openExternal = vi.fn().mockResolvedValue(undefined);
+    const url = "https://skills.sh/skills/some-skill";
+
+    await openExternalUrl(url, { openExternal });
+
+    expect(openExternal).toHaveBeenCalledWith(url);
+  });
+
+  it("opens www.skills.sh catalog detail URLs with the system browser", async () => {
+    const openExternal = vi.fn().mockResolvedValue(undefined);
+    const url = "https://www.skills.sh/skills/another-skill";
+
+    await openExternalUrl(url, { openExternal });
+
+    expect(openExternal).toHaveBeenCalledWith(url);
+  });
+
+  it("rejects http (non-https) skills.sh URLs", async () => {
+    await expect(
+      openExternalUrl("http://skills.sh/skills/x", {
+        openExternal: vi.fn()
+      })
+    ).rejects.toThrow("Only approved settings URLs can be opened.");
+  });
+
+  it("rejects spoofed subdomain hosts such as skills.sh.evil.com", async () => {
+    await expect(
+      openExternalUrl("https://skills.sh.evil.com/skills/x", {
+        openExternal: vi.fn()
+      })
+    ).rejects.toThrow("Only approved settings URLs can be opened.");
+  });
 });
 
 describe("app settings", () => {

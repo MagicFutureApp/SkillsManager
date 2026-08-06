@@ -4,6 +4,12 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-07-28",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    // Origins allowed to call this worker from a browser. Comma-separated.
+    // Use "*" to allow every origin (current default), or a list such as
+    // "http://localhost:3700,https://your-app.example.com".
+    "CORS_ALLOWED_ORIGINS": "*"
+  },
   "kv_namespaces": [
     {
       "binding": "SKILLS_SH_CACHE",

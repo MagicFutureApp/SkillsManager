@@ -9,6 +9,7 @@ catalog 不再由 Cron 定时刷新。用户读取 catalog 时，如果当前 ge
 ```text
 GET  /health
 GET  /v1/catalog
+GET  /v1/catalog/search
 GET  /v1/catalog/:generation/pages/:page
 GET  /v1/skills/:source/:skill
 GET  /v1/status
@@ -24,6 +25,31 @@ GET /v1/skills/vercel-labs/skills/find-skills
 ```
 
 详情缓存使用 Workers Cache API：5 分钟内返回 `HIT`，过期后先返回最多保留 1 小时的 `STALE` 数据并异步刷新。Worker 会剔除上游详情中的 `files`，但保留轻量的 `hash`。响应通过 `X-Cache: HIT | MISS | STALE` 暴露缓存状态。
+
+### 搜索
+
+```text
+GET /v1/catalog/search?q=react&limit=50&owner=expo
+```
+
+`q` 必填，2–200 字符；`limit` 为 1–200 的整数，缺省 50，超界自动收敛到边界；`owner` 可选，必须是合法 GitHub owner。参数非法时直接返回 `400 invalid_query | invalid_limit | invalid_owner`，不消耗上游配额。
+
+响应只保留客户端契约字段，上游的 `durationMs` 被丢弃：
+
+```jsonc
+{
+  "data": [
+    /* V1Skill[]，逐条要求 id 为非空 string */
+  ],
+  "query": "react",
+  "searchType": "fuzzy",
+  "count": 1
+}
+```
+
+搜索是实时代理，不落 KV：查询空间无界，持久化快照会被任意搜索词打爆。Workers Cache API 只做 60 秒短缓存，且**不做 stale-while-revalidate**，过期即回源。缓存键在写入前规范化为 `q`（小写、trim、折叠空白）+ `limit` + `owner` 的固定顺序，因此 `?q=React` 与 `?q=%20react%20` 命中同一条目。
+
+错误映射：上游 `400` → `400 invalid_query`；上游 `401` → `503 search_unavailable`（401 只代表 broker/token 配置故障，绝不透给客户端）；上游 `429` → `429 rate_limited` 并透传 `Retry-After` / `X-RateLimit-*`；上游 `503` → `503 search_unavailable`；其他 5xx 或 fetch 抛错 → `502 search_unavailable`；上游响应体形状非法 → `502 invalid_search_response`。搜索词只出现在上游请求 URL 中，不写入 KV、日志或任何持久化存储。
 
 ## Local validation
 
@@ -55,6 +81,7 @@ Cloudflare 使用该 Token 直接请求：
 ```text
 https://skills.sh/api/v1/skills?view=all-time&page=<page>&per_page=500
 https://skills.sh/api/v1/skills/<source>/<skill>
+https://skills.sh/api/v1/skills/search?q=<query>&limit=<n>[&owner=<owner>]
 ```
 
 OIDC Token 仅保存在当前 Worker isolate 的模块内存中，按 JWT `exp` 提前 60 秒失效。Token 不写入 KV、D1、Workers Cache API、日志或任何公开响应；skills.sh 返回 `401` 时清除旧 Token，重新获取后只重试一次。

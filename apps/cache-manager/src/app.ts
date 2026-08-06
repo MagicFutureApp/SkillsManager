@@ -11,6 +11,7 @@ import {
 } from "./catalog/types";
 import { createDetailHandler, type ResponseCache } from "./details/detail-cache";
 import { parseSkillReferencePath } from "./details/skill-detail";
+import { createSearchHandler } from "./search/search-cache";
 import { matchesBearerToken } from "./security/shared-secret";
 import {
   createSkillsShTokenProvider,
@@ -26,12 +27,13 @@ type AppDependencies = {
   detailCache?: ResponseCache;
   fetchImpl?: typeof fetch;
   now?: () => Date;
+  searchCache?: ResponseCache;
   syncCatalogImpl?: CatalogSync;
   tokenProvider?: SkillsShTokenProvider;
   waitUntil?: (promise: Promise<unknown>) => void;
 };
 
-const getDefaultDetailCache = (): ResponseCache | undefined => {
+const getDefaultResponseCache = (): ResponseCache | undefined => {
   const cacheStorage = (
     globalThis as typeof globalThis & {
       caches?: CacheStorage & { default?: Cache };
@@ -75,8 +77,78 @@ const defaultStatus: CatalogSyncStatus = {
   error: null
 };
 
+const ALLOW_ALL_ORIGIN = "*";
+
+const parseAllowedOrigins = (raw: string | undefined): string[] => {
+  if (!raw || raw.trim() === "") {
+    return [ALLOW_ALL_ORIGIN];
+  }
+  return raw
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+};
+
+// Resolves the value for `Access-Control-Allow-Origin`.
+// - "*" in the allowlist means every origin is permitted.
+// - Otherwise we echo the requesting origin only when it is explicitly listed;
+//   an unlisted origin gets no CORS header and the browser will block it.
+const resolveAllowOrigin = (allowed: string[], requestOrigin: string | null): string | null => {
+  if (allowed.includes(ALLOW_ALL_ORIGIN)) {
+    return ALLOW_ALL_ORIGIN;
+  }
+  if (requestOrigin && allowed.includes(requestOrigin)) {
+    return requestOrigin;
+  }
+  return null;
+};
+
+// Adds CORS headers to every response and answers preflight requests.
+// Allowed origins are read from the CORS_ALLOWED_ORIGINS binding (env var).
+//
+// Setting headers on `context.res` post-next() is required because the
+// catalog page route returns its own `new Response(...)` instead of
+// `context.json(...)`, which would otherwise discard middleware-set headers.
+// We use try/finally so CORS headers are attached even if the route handler
+// throws, and we answer OPTIONS preflights directly (a browser sends a
+// preflight before a cross-origin GET, but there is no OPTIONS route to match).
+const withCors = async (context: Context<CacheManagerEnv>, next: () => Promise<void>) => {
+  if (context.req.method === "OPTIONS") {
+    context.res = new Response(null, { status: 204 });
+  } else {
+    try {
+      await next();
+    } catch {
+      // Let Hono's onError produce the response, then attach CORS below.
+    }
+  }
+
+  const response = context.res;
+  if (!response) {
+    return;
+  }
+
+  const requestOrigin = context.req.header("origin") ?? null;
+  const allowOrigin = resolveAllowOrigin(
+    parseAllowedOrigins(context.env?.CORS_ALLOWED_ORIGINS),
+    requestOrigin
+  );
+
+  if (allowOrigin) {
+    response.headers.set("Access-Control-Allow-Origin", allowOrigin);
+    response.headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type");
+    response.headers.set("Access-Control-Max-Age", "86400");
+    if (allowOrigin !== ALLOW_ALL_ORIGIN) {
+      // Echoing a specific origin: tell shared caches to vary by Origin.
+      response.headers.set("Vary", "Origin");
+    }
+  }
+};
+
 export const createApp = (dependencies: AppDependencies = {}) => {
   const app = new Hono<CacheManagerEnv>();
+  app.use("*", withCors);
   const now = dependencies.now ?? (() => new Date());
   const fetchImpl = dependencies.fetchImpl ?? workerFetch;
   const tokenProvider =
@@ -116,11 +188,18 @@ export const createApp = (dependencies: AppDependencies = {}) => {
   };
 
   const handleDetail = createDetailHandler({
-    cache: dependencies.detailCache ?? getDefaultDetailCache(),
+    cache: dependencies.detailCache ?? getDefaultResponseCache(),
     fetchImpl,
     now,
     tokenProvider,
     waitUntil
+  });
+
+  const handleSearch = createSearchHandler({
+    cache: dependencies.searchCache ?? getDefaultResponseCache(),
+    fetchImpl,
+    now,
+    tokenProvider
   });
 
   app.get("/health", (context) =>
@@ -144,6 +223,11 @@ export const createApp = (dependencies: AppDependencies = {}) => {
     context.header("X-Cache", currentIsFresh ? "HIT" : "STALE");
     return context.json(manifest);
   });
+
+  // Registered before the `:generation` route so the literal `search` segment can
+  // never be captured as a generation id. It also intentionally lives outside
+  // `/v1/skills/*`, which the detail wildcard route would otherwise swallow.
+  app.get("/v1/catalog/search", (context) => handleSearch(context));
 
   app.get("/v1/catalog/:generation/pages/:page", async (context) => {
     const manifest = parseCatalogManifest(

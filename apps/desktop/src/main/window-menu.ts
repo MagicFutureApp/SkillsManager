@@ -32,3 +32,12 @@ export const disableWindowMenuBar = (
   window.setMenu(null);
   window.setMenuBarVisibility(false);
 };
+
+type WindowOpenHandlerTarget = {
+  webContents: { setWindowOpenHandler: (handler: () => { action: "deny" }) => void };
+};
+
+/** 拒绝渲染进程发起的一切新窗口；外链必须显式走 settings:openExternalUrl 白名单。 */
+export const denyExternalWindowOpen = (target: WindowOpenHandlerTarget): void => {
+  target.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+};

@@ -1,8 +1,9 @@
-export const routeIds = ["providers", "repositories", "skills", "targets", "settings"] as const;
+export const routeIds = ["discover", "providers", "repositories", "skills", "targets", "settings"] as const;
 
 export type AppRouteId = (typeof routeIds)[number];
 
 export const routePathById: Record<AppRouteId, string> = {
+  discover: "/discover",
   providers: "/providers",
   repositories: "/repositories",
   skills: "/skills",

@@ -11,6 +11,7 @@ import { registerRepositoriesIpc } from "./ipc/repositories.js";
 import { registerSettingsIpc } from "./ipc/settings.js";
 import { registerSkillsIpc } from "./ipc/skills.js";
 import { registerTargetsIpc } from "./ipc/targets.js";
+import { registerCatalogIpc } from "./ipc/catalog.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
 import { createTrayIconImage } from "./tray-icon.js";
@@ -21,6 +22,7 @@ import {
 } from "./window-state.js";
 import {
   buildMainWindowOptions,
+  denyExternalWindowOpen,
   disableWindowMenuBar,
   getMainWindowHtmlPath
 } from "./window-menu.js";
@@ -56,6 +58,7 @@ const createMainWindow = async (): Promise<void> => {
     ...placement.bounds
   });
   disableWindowMenuBar(mainWindow);
+  denyExternalWindowOpen(mainWindow);
   registerShiftDevToolsShortcut(mainWindow);
   registerMainWindowStatePersistence(mainWindow);
 
@@ -188,6 +191,7 @@ void app
     registerSettingsIpc(dbRuntime);
     registerSkillsIpc(dbRuntime.getDb);
     registerTargetsIpc(dbRuntime.getDb);
+    registerCatalogIpc();
     await createMainWindow();
     createTray();
 

@@ -23,6 +23,14 @@ import type {
   ResetLocalDatabaseResult
 } from "./ipc/settings";
 import type {
+  CatalogManifestResult,
+  CatalogPageInput,
+  CatalogPageResult,
+  CatalogResult,
+  CatalogSearchInput,
+  CatalogSearchResult
+} from "./ipc/catalog";
+import type {
   RemoveSkillTargetPreferenceInput,
   RemoveSkillTargetPreferenceResult,
   SkillsListResult,
@@ -66,6 +74,12 @@ contextBridge.exposeInMainWorld("skillsManager", {
   getAppStoragePaths: () =>
     ipcRenderer.invoke("settings:getStoragePaths") as Promise<AppStoragePathsResult>,
   getAppSettings: () => ipcRenderer.invoke("settings:get") as Promise<AppSettingsResult>,
+  getCatalogManifest: () =>
+    ipcRenderer.invoke("catalog:getManifest") as Promise<CatalogResult<CatalogManifestResult>>,
+  getCatalogPage: (input: CatalogPageInput) =>
+    ipcRenderer.invoke("catalog:getPage", input) as Promise<CatalogResult<CatalogPageResult>>,
+  searchCatalog: (input: CatalogSearchInput) =>
+    ipcRenderer.invoke("catalog:search", input) as Promise<CatalogResult<CatalogSearchResult>>,
   getRepositoryDeletePreview: (repositoryId: string) =>
     ipcRenderer.invoke(
       "repositories:getDeletePreview",

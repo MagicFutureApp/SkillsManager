@@ -9,6 +9,8 @@ export type WorkerBindings = {
   SKILLS_SH_TOKEN_URL: string;
   SKILLS_SH_TOKEN_SECRET: string;
   CACHE_ADMIN_TOKEN: string;
+  /** Comma-separated list of origins allowed for CORS. Use "*" to allow all. */
+  CORS_ALLOWED_ORIGINS?: string;
 };
 
 export type CacheManagerEnv = {

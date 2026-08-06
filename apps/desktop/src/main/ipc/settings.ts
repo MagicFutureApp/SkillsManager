@@ -125,17 +125,23 @@ export const resetLocalDatabase = async (
   };
 };
 
+const EXTERNAL_URL_ALLOWED_HOSTNAMES = new Set([
+  "github.com",
+  "sk.magicfuture.app",
+  "skills.sh",
+  "www.skills.sh"
+]);
+
 export const openExternalUrl = async (
   url: string,
   operations: OpenExternalOperations = shell
 ): Promise<void> => {
   const parsedUrl = new URL(url);
-  const isGitHubUrl = parsedUrl.protocol === "https:" && parsedUrl.hostname === "github.com";
+  const isAllowedHost =
+    parsedUrl.protocol === "https:" && EXTERNAL_URL_ALLOWED_HOSTNAMES.has(parsedUrl.hostname);
   const isGitHubTokenHelpUrl = parsedUrl.href === GITHUB_TOKEN_HELP_URL;
-  const isOfficialSiteUrl =
-    parsedUrl.protocol === "https:" && parsedUrl.hostname === "sk.magicfuture.app";
 
-  if (!isGitHubUrl && !isGitHubTokenHelpUrl && !isOfficialSiteUrl) {
+  if (!isAllowedHost && !isGitHubTokenHelpUrl) {
     throw new Error("Only approved settings URLs can be opened.");
   }
 

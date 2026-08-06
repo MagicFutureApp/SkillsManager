@@ -16,16 +16,17 @@
 - 受共享 secret 保护的 Vercel OIDC Token Broker。
 - catalog manifest、固定 generation 分页和同步状态 API。
 - 使用 Workers Cache API 的 skill detail 精确缓存。
+- 经 cache-manager 代理的 skills.sh 搜索 API（`GET /v1/catalog/search`），复用同一 OIDC Token Broker 与 Workers Cache。
 - 手动触发同步的受保护内部 API。
 
 第一版不包含：
 
 - skills.sh detail endpoint 返回的 `files`；轻量 `hash` 可以保留。
 - `SKILL.md`、Git archive、repository 或安装包缓存。
-- 任意搜索词的持久化缓存。
-- semantic search、curated、trending、hot 或 audit。
+- 任意搜索词的**持久化**缓存（KV 版本化快照）。搜索走实时代理 + 60 秒 Workers Cache，不落 KV。
+- curated、trending、hot 或 audit。
 - well-known source 的安装实现。
-- Electron renderer 或 main process 接入。
+- Electron renderer 直连 Worker（发现页一律经由 main process 消费，见 Desktop consumer contract）。
 
 ## Runtime Topology
 
@@ -33,6 +34,10 @@
 Electron main process
   -> Cloudflare Worker (Hono)
     -> Cloudflare KV catalog snapshots
+
+Electron main process
+  -> Cloudflare Worker /v1/catalog/search
+    -> skills.sh /api/v1/skills/search   (real-time proxy, 60s Workers Cache)
 
 Cloudflare access-triggered/manual sync
   -> protected Vercel Token Broker
@@ -83,11 +88,14 @@ type CatalogManifest = {
 ```text
 GET  /health
 GET  /v1/catalog
+GET  /v1/catalog/search?q=&limit=&owner=
 GET  /v1/catalog/:generation/pages/:page
 GET  /v1/skills/<source>/<skill>
 GET  /v1/status
 POST /internal/sync
 ```
+
+`/v1/catalog/search` 必须注册在 `/v1/catalog/:generation/pages/:page` 之前，否则 `search` 会被当作 generation 匹配。
 
 `POST /internal/sync` 需要 `Authorization: Bearer <CACHE_ADMIN_TOKEN>`。
 
@@ -109,6 +117,15 @@ detail 使用 Workers Cache API，不写 KV：
 - 响应使用 `X-Cache: HIT | MISS | STALE`。
 - 不缓存 `files`；安装继续从 Git provider 获取内容。
 
+search 同样使用 Workers Cache API，不写 KV：
+
+- 60 秒 fresh TTL，**没有 stale-while-revalidate**：搜索词键空间无界，保留 stale 只会污染缓存。
+- cache key 由规范化后的 `q`（小写、折叠空白）+ `limit` + `owner` 按固定顺序构成，消灭 URL 变体。
+- `q` 长度 2~200、`limit` 1~200（默认 50）、`owner` 需匹配 GitHub owner 规则；不合法一律 `400 invalid_query` 且不打上游。
+- 响应投影只保留 catalog 条目字段（含 `isDuplicate`），丢弃上游的 `durationMs` 等诊断字段。
+- 上游失败一律不写缓存，并且**丢弃上游响应体**，避免 Token 或内部信息经错误信息外泄：
+  `400 → invalid_query`、`401 → 503 search_unavailable`、`429 → 429 rate_limited`（透传 `Retry-After` 与 `X-RateLimit-*`）、`503 → 503 search_unavailable`、其他 → `502 search_unavailable`、响应体畸形 → `502 invalid_search_response`。
+
 ## Failure Rules
 
 - Token Broker、skills.sh 分页、KV 写入或响应校验任一失败，不切换 manifest。
@@ -119,6 +136,37 @@ detail 使用 Workers Cache API，不写 KV：
 - Token Broker 错误不暴露 OIDC Token，也不写入 catalog。
 - skills.sh 首次返回 `401` 时清除内存 Token，重新获取后只重试一次。
 - skills.sh 的 `429`、`503` 不写入 catalog；`Retry-After` 保留在同步错误中用于诊断。
+
+## Desktop consumer contract
+
+桌面端只允许 Electron main process 访问本 Worker，renderer 不得直接发起 HTTP 请求。
+
+- 客户端实现：`apps/desktop/src/core/catalog/*`（可移植、无 Electron 依赖）
+- IPC 通道：`catalog:getManifest`、`catalog:getPage`、`catalog:search`，三者恒返回判别式结果，不 reject
+- base URL：`core/app-constants.ts` 的 `CATALOG_BASE_URL`，可用 `SKILLS_MANAGER_CATALOG_BASE_URL` 覆盖
+- `core/catalog/catalog-types.ts` 必须保持零运行时（无 import、无值），它是 renderer 经 `renderer/global.d.ts` 唯一可以引用的 catalog 模块
+
+generation 生命周期：
+
+- 客户端锁定单一 generation，绝不跨页混用两代
+- 客户端 TTL 5 分钟（短于服务端 6 小时），到期重新校验 manifest
+- 收到 404 时清空缓存的 generation，重取 manifest 后重试，最多 1 次
+
+退避与回退预算（四轴独立、互不重置）：
+
+- 202 warming：按响应 `Retry-After` 退避（clamp 到 1~10 秒），最多重试 3 次
+- 404 not found：重取 manifest 后重试，最多 1 次
+- 503 unavailable：切换到 `previous` 并整次会话锁定该代，最多 1 次
+- search 独立一轴：429 按 `Retry-After` 退避重试最多 1 次；不参与 warming / manifest refresh / fallback 三轴，也不触碰 generation 与页缓存
+- 单次调用总预算 25 秒，单次 HTTP 超时 15 秒
+
+缓存与展示：
+
+- 第一版只做进程内存缓存（manifest + 最近 6 页），不落 SQLite / 磁盘
+- 客户端读取 `pagination.total` 覆盖 manifest 的 total
+- 搜索经 cache-manager 的 `/v1/catalog/search` 走 skills.sh 服务端搜索（单词 fuzzy / 多词 semantic），最多 200 条、无分页；Discover 为 Browse / Search 双模式，Search 模式不叠加客户端过滤
+- 搜索结果另有一份进程内 LRU 缓存：key 为 `${normalizedQuery}|${limit}|${owner ?? ""}`，容量 8、TTL 60 秒；`reset()` 清空，generation 轮换不清空（搜索与 generation 无关）
+- 回退到 previous 时，UI 必须提示数据可能稍旧；Search 模式下不得出现该提示（搜索没有 generation）
 
 ## Free Tier Budget
 

@@ -1,7 +1,12 @@
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
-import { buildMainWindowOptions, disableWindowMenuBar, getMainWindowHtmlPath } from "./window-menu";
+import {
+  buildMainWindowOptions,
+  denyExternalWindowOpen,
+  disableWindowMenuBar,
+  getMainWindowHtmlPath
+} from "./window-menu";
 
 describe("main window menu bar", () => {
   it("leaves the initial size to the resolved window placement", () => {
@@ -44,5 +49,16 @@ describe("main window menu bar", () => {
 
     expect(window.setMenu).toHaveBeenCalledWith(null);
     expect(window.setMenuBarVisibility).toHaveBeenCalledWith(false);
+  });
+
+  it("denies all new windows opened from the renderer", () => {
+    const setWindowOpenHandler = vi.fn();
+    const target = { webContents: { setWindowOpenHandler } };
+
+    denyExternalWindowOpen(target);
+
+    expect(setWindowOpenHandler).toHaveBeenCalledTimes(1);
+    const handler = setWindowOpenHandler.mock.calls[0]?.[0] as () => { action: "deny" };
+    expect(handler()).toEqual({ action: "deny" });
   });
 });

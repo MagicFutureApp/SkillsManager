@@ -21,6 +21,17 @@ import type {
   ResetLocalDatabaseResult as MainResetLocalDatabaseResult
 } from "../main/ipc/settings";
 import type {
+  CatalogSkill as CoreCatalogSkill,
+  CatalogErrorCode as CoreCatalogErrorCode,
+  CatalogManifestResult as CoreCatalogManifestResult,
+  CatalogPageInput as CoreCatalogPageInput,
+  CatalogPageResult as CoreCatalogPageResult,
+  CatalogResult as CoreCatalogResult,
+  CatalogSearchInput as CoreCatalogSearchInput,
+  CatalogSearchResult as CoreCatalogSearchResult,
+  CatalogSearchType as CoreCatalogSearchType
+} from "../core/catalog/catalog-types.js";
+import type {
   RemoveSkillTargetPreferenceInput as MainRemoveSkillTargetPreferenceInput,
   RemoveSkillTargetPreferenceResult as MainRemoveSkillTargetPreferenceResult,
   SkillsListResult as MainSkillsListResult,
@@ -85,6 +96,15 @@ export type RepositoryDeletePreview = CoreRepositoryDeletePreview;
 export type RepositorySourceInspection = CoreRepositorySourceInspection;
 export type RuntimePlatform = RendererRuntimePlatform;
 export type SupportedLocale = CoreSupportedLocale;
+export type CatalogSkill = CoreCatalogSkill;
+export type CatalogErrorCode = CoreCatalogErrorCode;
+export type CatalogPageInput = CoreCatalogPageInput;
+export type CatalogPageResult = CoreCatalogPageResult;
+export type CatalogResult<T> = CoreCatalogResult<T>;
+export type CatalogManifestResult = CoreCatalogManifestResult;
+export type CatalogSearchInput = CoreCatalogSearchInput;
+export type CatalogSearchResult = CoreCatalogSearchResult;
+export type CatalogSearchType = CoreCatalogSearchType;
 
 declare global {
   interface Window {
@@ -103,6 +123,9 @@ declare global {
       getNavigationBadgeCounts?: () => Promise<NavigationBadgeCountsResult>;
       getAppStoragePaths?: () => Promise<AppStoragePathsResult>;
       getAppSettings?: () => Promise<AppSettingsResult>;
+      getCatalogManifest?: () => Promise<CatalogResult<CatalogManifestResult>>;
+      getCatalogPage?: (input: CatalogPageInput) => Promise<CatalogResult<CatalogPageResult>>;
+      searchCatalog?: (input: CatalogSearchInput) => Promise<CatalogResult<CatalogSearchResult>>;
       getRepositoryDeletePreview?: (repositoryId: string) => Promise<RepositoryDeletePreview>;
       inspectRepositorySource?: (remoteUrl: string) => Promise<RepositorySourceInspection>;
       listProviders: () => Promise<ProvidersListResult>;

@@ -2,6 +2,7 @@ import { createRoute, createRootRoute, Navigate, Outlet } from "@tanstack/react-
 import React from "react";
 
 import { AppShell } from "@/features/shell/app-shell";
+import { DiscoverPage } from "@/features/discover/discover-page";
 import { ProvidersPage } from "@/features/providers/providers-page";
 import { RepositoriesPage } from "@/features/repositories/repositories-page";
 import { SettingsPage } from "@/features/settings/settings-page";
@@ -19,7 +20,13 @@ export const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => <Navigate to="/skills" replace />
+  component: () => <Navigate to="/discover" replace />
+});
+
+const discoverRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/discover",
+  component: DiscoverPage
 });
 
 const providersRoute = createRoute({
@@ -54,6 +61,7 @@ const settingsRoute = createRoute({
 
 export const routeTree = rootRoute.addChildren([
   indexRoute,
+  discoverRoute,
   providersRoute,
   repositoriesRoute,
   skillsRoute,

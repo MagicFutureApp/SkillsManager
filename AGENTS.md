@@ -10,7 +10,7 @@ Skills Manager 是一个本地优先的桌面应用，用于管理 agent 技能�
 
 - Electron 桌面应用：`apps/desktop`
 - Landing 页面占位：`apps/landing`
-- Cloudflare Hono cache manager 占位：`apps/cache-manager`
+- Cloudflare Hono cache manager：`apps/cache-manager`（已提供 skills.sh catalog 缓存**与搜索代理** API，非占位）
 - Electron main/preload：`apps/desktop/src/main`
 - React renderer：`apps/desktop/src/renderer`
 - 可移植业务逻辑：`apps/desktop/src/core`
@@ -58,6 +58,7 @@ pnpm run format:check
 - `docs/superpowers/specs/2026-04-28-skills-manager-data-model-explanation.md`：实体意图和数据模型边界。若仍出现旧 `distribution_plans`、`distribution_plan_items` 或 `sync_runs` 表述，以当前 code 和 copy-only 文档为准。
 - `docs/superpowers/plans/2026-05-22-skills-manager-initialization.md`：初始化阶段历史计划。
 - `docs/superpowers/plans/2026-07-02-copy-only-distribution-implementation.md`：copy-only 分发实现计划和当前任务级检查点。
+- `docs/superpowers/specs/2026-07-29-skills-sh-catalog-cache-design.md`：catalog 缓存服务与 Discover 搜索（路线 A）的当前设计。涉及缓存 Worker、catalog 同步或搜索时以此为准。
 
 如果 docs 与代码不一致，先检查当前代码，再更新相关 docs 或在最终回复中明确说明差异。
 
@@ -89,6 +90,7 @@ pnpm run format:check
 - Main IPC 层负责把 renderer 意图转成受控的文件系统、Git 和数据库操作；renderer 不能绕过 IPC 自己执行。
 - Good：renderer 调用 `window.skillsManager.previewDistribution(...)`。
 - Bad：renderer 里 `import fs from "node:fs"` 或直接打开 SQLite。
+- `apps/desktop/src/core/catalog/catalog-types.ts` 必须保持零运行时：任何带 `fetch`、Node、Electron 或 DOM 的逻辑只能放在 `catalog-http.ts` / `catalog-client.ts`，renderer 永远不得导入后者。
 
 ## 产品规则
 
@@ -130,6 +132,9 @@ pnpm run format:check
 - `apps/desktop/src/core/repositories/*`：repository API、source inspection 和路径/配置工具。
 - `apps/desktop/src/core/distribution/*`：copy-only 分发预览和执行类型。
 - `apps/desktop/src/core/targets/*`：agent target 扫描和工具函数。
+- `apps/desktop/src/core/catalog/*`：可移植 catalog 客户端与零运行时类型（`catalog-types.ts` 不得引入任何运行时依赖，renderer 仅经 `renderer/global.d.ts` 引用）。
+- `apps/desktop/src/main/ipc/catalog.ts`：catalog browse/search IPC 通道（`catalog:getManifest`、`catalog:getPage`、`catalog:search`），handler 永不 reject。
+- `apps/cache-manager/src/search/*`：catalog 搜索 Worker 路由与 Workers Cache。
 - `apps/desktop/src/db/schema.ts`：Drizzle schema。
 - `apps/desktop/src/db/client.ts`：SQLite client 和新项目 schema bootstrap。
 - `apps/desktop/src/db/repositories/*`：数据库 repository/query 层。
@@ -171,7 +176,8 @@ pnpm run format:check
 
 - 构建桌面工具界面，而不是营销页面。
 - 优先支持信息密度、可读性和重复操作效率。
-- v1 主要区域是 `Sources`、`Repositories`、`Skills`、`Targets`、`Settings`；当前路由以 `apps/desktop/src/renderer/app/route-config.ts` 为准。
+- v1 主要区域是 `Discover`、`Sources`、`Repositories`、`Skills`、`Targets`、`Settings`；当前路由以 `apps/desktop/src/renderer/app/route-config.ts` 为准。
+- Discover 页为 Browse / Search 双模式：Browse 消费 `catalog:getManifest` / `catalog:getPage` 的分页排行榜；Search 消费 `catalog:search`，经 cache-manager `/v1/catalog/search` 打 skills.sh 服务端搜索（`q` ≥ 2 字符、最多 200 条、无分页）。renderer 不直连 Worker，main process 不直连 skills.sh。两个模式的状态互不相交，Search 模式不叠加客户端过滤，也不显示 generation 相关的陈旧提示。
 - 视觉风格保持克制，符合本地工作工具定位。
 - 所有用到的组件，先去 shadcn/base-ui 找一找，尽量使用现成组件，必要时稍微调整样式，但不要大幅改动结构或交互。参考：https://base-ui.com/llms.txt
 - 样式中的数字单位尽量使用 shadcn/Tailwind v4 的主题化格式，例如 `w-23`、`gap-3`、`rounded-xl`；只有在需要精确像素、外部规格对齐或主题格式无法表达时，才使用 `w-[92px]` 这类 arbitrary value。

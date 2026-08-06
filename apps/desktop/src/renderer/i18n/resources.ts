@@ -8,6 +8,7 @@ export const resources = {
           workspace: "工作区",
           system: "系统",
           providers: "Providers",
+          discover: "发现",
           repositories: "来源",
           skills: "技能",
           targets: "目标",
@@ -17,10 +18,54 @@ export const resources = {
         },
         navigationDescriptions: {
           providers: "管理 Provider 连接入口和访问诊断。",
+          discover: "浏览和发现来自技能市场的 Agent 技能。",
           repositories: "管理技能来源和本地索引入口。",
           skills: "浏览 skill unit，选择目标并执行 copy 分发。",
           targets: "维护 Codex、Claude Code、Gemini CLI 和自定义目录目标。",
           versionLabel: "版本 v{{version}}"
+        }
+      },
+      discover: {
+        heading: "发现技能",
+        description: "浏览和发现来自技能市场的 Agent 技能。",
+        searchPlaceholder: "搜索全部 {{total}} 个技能（至少 2 个字符，回车立即搜索）",
+        searchAriaLabel: "搜索技能",
+        searchResults: {
+          summary: "「{{query}}」找到 {{count}} 个技能",
+          truncated: "结果较多，仅展示前 {{count}} 个，请补充更具体的关键词。",
+          empty: "没有找到匹配「{{query}}」的技能。",
+          searching: "正在搜索...",
+          clear: "清除搜索"
+        },
+        searchType: {
+          fuzzy: "模糊匹配",
+          semantic: "语义匹配"
+        },
+        empty: "没有找到匹配的技能。",
+        error: "加载技能数据失败，请稍后重试。",
+        errors: {
+          config: "技能目录服务地址未配置，请联系维护者。",
+          warming: "技能目录正在准备中，请稍后重试。",
+          invalidQuery: "搜索词至少需要 2 个字符。",
+          rateLimited: "搜索过于频繁，请 {{seconds}} 秒后重试。",
+          searchUnavailable: "搜索服务暂时不可用，请稍后重试。"
+        },
+        retry: "重试",
+        staleNotice: "当前展示的是上一版目录数据，可能稍旧。",
+        loading: "正在加载技能...",
+        installs: "{{count}}",
+        sourceType: {
+          github: "GitHub",
+          well_known: "Well-known"
+        },
+        card: {
+          openDetail: "查看详情",
+          viewSource: "查看来源",
+          githubDescription: "来自 {{source}} 的 GitHub 技能。安装后即可为 Agent 增加该能力。",
+          wellKnownDescription: "来自 {{source}} 的 Well-known 技能。"
+        },
+        pagination: {
+          pageInfo: "第 {{current}} / {{total}} 页"
         }
       },
       skills: {
@@ -490,6 +535,7 @@ export const resources = {
           workspace: "Workspace",
           system: "System",
           providers: "Providers",
+          discover: "Discover",
           repositories: "Sources",
           skills: "Skills",
           targets: "Targets",
@@ -499,10 +545,55 @@ export const resources = {
         },
         navigationDescriptions: {
           providers: "Manage provider connection entry points and diagnostics.",
+          discover: "Browse and discover agent skills from the skill marketplace.",
           repositories: "Manage skill sources and local index entry points.",
           skills: "Browse skill units, choose targets, and copy them to targets.",
           targets: "Maintain Codex, Claude Code, Gemini CLI, and custom directory targets.",
           versionLabel: "Version v{{version}}"
+        }
+      },
+      discover: {
+        heading: "Browse Agent Skills",
+        description: "Browse and discover agent skills from the skill marketplace.",
+        searchPlaceholder: "Search all {{total}} skills (2+ characters, Enter to search now)",
+        searchAriaLabel: "Search skills",
+        searchResults: {
+          summary: "{{count}} skills found for “{{query}}”",
+          truncated: "Many matches; showing the first {{count}}. Add more specific keywords.",
+          empty: "No skills matched “{{query}}”.",
+          searching: "Searching...",
+          clear: "Clear search"
+        },
+        searchType: {
+          fuzzy: "Fuzzy match",
+          semantic: "Semantic match"
+        },
+        empty: "No matching skills found.",
+        error: "Failed to load skill data. Please try again later.",
+        errors: {
+          config: "The catalog service URL is not configured.",
+          warming: "The catalog is being prepared. Please retry shortly.",
+          invalidQuery: "Enter at least 2 characters to search.",
+          rateLimited: "Too many searches. Please retry in {{seconds}} seconds.",
+          searchUnavailable: "Search is temporarily unavailable. Please retry shortly."
+        },
+        retry: "Retry",
+        staleNotice: "Showing the previous catalog snapshot; data may be slightly out of date.",
+        loading: "Loading skills...",
+        installs: "{{count}}",
+        sourceType: {
+          github: "GitHub",
+          well_known: "Well-known"
+        },
+        card: {
+          openDetail: "View details",
+          viewSource: "View source",
+          githubDescription:
+            "GitHub skill from {{source}}. Install to add this capability to your agent.",
+          wellKnownDescription: "Well-known skill from {{source}}."
+        },
+        pagination: {
+          pageInfo: "Page {{current}} of {{total}}"
         }
       },
       skills: {
