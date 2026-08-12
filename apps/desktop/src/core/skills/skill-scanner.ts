@@ -1,8 +1,18 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { minimatch } from "minimatch";
+import * as minimatchModule from "minimatch";
 
 import { toSkillKey } from "./skill-utils";
+
+type MinimatchFn = (target: string, pattern: string, options?: { dot?: boolean }) => boolean;
+
+// minimatch v10 是 ESM-first，导出命名 `minimatch`；旧版本把函数作为模块默认导出。
+// 这里同时兼容两种形态，避免 `require("minimatch").minimatch is not a function` 的 interop 崩溃。
+const minimatch = (
+  (minimatchModule as { minimatch?: MinimatchFn }).minimatch ??
+  (minimatchModule as { default?: MinimatchFn }).default ??
+  (minimatchModule as unknown as MinimatchFn)
+) as MinimatchFn;
 
 export type DiscoveredSkill = {
   description: string;
