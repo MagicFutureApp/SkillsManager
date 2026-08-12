@@ -13,11 +13,11 @@ import type {
   DistributionPreviewResult,
   DistributionPreviewItem,
   DistributionPreviewTriggerSource
-} from "../../core/distribution/distribution-api.js";
-import { createDistributionRepository } from "../../db/repositories/distributionRepository.js";
-import { installInstances } from "../../db/schema.js";
-import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
-import { expandHomePath, isSameOrChildPath, normalizeFilesystemPath } from "../path-utils.js";
+} from "../../core/distribution/distribution-api";
+import { createDistributionRepository } from "../../db/repositories/distributionRepository";
+import { installInstances } from "../../db/schema";
+import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
+import { expandHomePath, isSameOrChildPath, normalizeFilesystemPath } from "../path-utils";
 
 type DistributionPathInspectionOperations = {
   isDirectory: (candidatePath: string) => Promise<boolean>;

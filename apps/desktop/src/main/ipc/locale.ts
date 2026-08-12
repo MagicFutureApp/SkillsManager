@@ -1,6 +1,6 @@
 import { app, ipcMain } from "electron";
 
-import { resolveSupportedLocale, type SupportedLocale } from "../../core/i18n/locale.js";
+import { resolveSupportedLocale, type SupportedLocale } from "../../core/i18n/locale";
 
 export const getAppLocale = (readLocale: () => string = () => app.getLocale()): SupportedLocale => {
   return resolveSupportedLocale(readLocale());

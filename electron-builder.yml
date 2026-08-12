@@ -10,6 +10,8 @@ files:
   - package.json
 
 asar: true
+asarUnpack:
+  - "**/*.mjs"
 npmRebuild: true
 
 win:

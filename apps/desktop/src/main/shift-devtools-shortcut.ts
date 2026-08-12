@@ -1,4 +1,4 @@
-import { createShiftPressSequenceHandler } from "../core/keyboard/shift-press-sequence.js";
+import { createShiftPressSequenceHandler } from "../core/keyboard/shift-press-sequence";
 
 type DevToolsShortcutWindow = {
   webContents: {

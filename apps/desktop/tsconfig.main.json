@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "rootDir": "src",
     "outDir": "dist/main",
     "strict": true,
@@ -11,5 +11,5 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["node", "electron"]
   },
-  "include": ["src/main/**/*.ts", "src/core/**/*.ts", "src/db/**/*.ts"]
+  "include": ["src/main/**/*.ts", "src/main/**/*.mts", "src/core/**/*.ts", "src/db/**/*.ts"]
 }

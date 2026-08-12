@@ -3,7 +3,7 @@ import { rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { createDbClient } from "../db/client.js";
+import { createDbClient } from "../db/client";
 
 export type DbClient = ReturnType<typeof createDbClient>;
 

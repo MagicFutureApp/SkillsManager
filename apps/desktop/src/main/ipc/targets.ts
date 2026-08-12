@@ -9,21 +9,21 @@ import type {
   TargetScanCandidate,
   TargetScanIssue,
   TargetScanRecord
-} from "../../core/targets/target-api.js";
+} from "../../core/targets/target-api";
 import {
   agentTargetDirectoryDefinitions,
   joinTargetPath,
   normalizeTargetPath,
   scanRegisteredTargets,
   scanSystemTargets
-} from "../../core/targets/target-scanner.js";
+} from "../../core/targets/target-scanner";
 import {
   buildCustomDirectoryTargetId,
   deriveCustomDirectoryTargetName
-} from "../../core/targets/target-utils.js";
-import { createTargetRepository } from "../../db/repositories/targetRepository.js";
-import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
-import { resolveSafeInstalledPath } from "../path-utils.js";
+} from "../../core/targets/target-utils";
+import { createTargetRepository } from "../../db/repositories/targetRepository";
+import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
+import { resolveSafeInstalledPath } from "../path-utils";
 
 export type TargetsListResult = {
   registeredTargets: RegisteredTargetRecord[];

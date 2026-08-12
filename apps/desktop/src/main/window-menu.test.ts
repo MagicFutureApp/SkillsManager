@@ -33,6 +33,16 @@ describe("main window menu bar", () => {
     });
   });
 
+  it("points the preload at the ESM bundle", () => {
+    // 全仓 ESM：preload 源是 src/main/preload.mts，编译产物为 dist/main/main/preload.mjs（ESM）。
+    // 关键：Electron 的 preload 会忽略 package.json 的 "type": "module"，只认扩展名，
+    // 所以 ESM preload 必须是 .mjs；若改回 .js/.cjs 或误开 sandbox，启动会被当作 CJS 解析而抛 SyntaxError。
+    const options = buildMainWindowOptions(path.join("dist", "main", "main"));
+
+    expect(options.webPreferences?.preload).toBe(path.join("dist", "main", "main", "preload.mjs"));
+    expect(options.webPreferences?.sandbox).toBe(false);
+  });
+
   it("resolves the packaged renderer entry from the compiled main directory", () => {
     expect(getMainWindowHtmlPath(path.join("dist", "main", "main"))).toBe(
       path.normalize(path.join("dist", "renderer", "index.html"))

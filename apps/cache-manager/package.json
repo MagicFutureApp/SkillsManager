@@ -16,6 +16,7 @@
     "format:check": "prettier --check package.json tsconfig.json wrangler.jsonc README.md DEPLOYMENT.md src"
   },
   "dependencies": {
+    "@skills-manager/utils": "workspace:*",
     "hono": "^4.12.32"
   },
   "devDependencies": {

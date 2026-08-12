@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
-import { createProviderRepository } from "../../db/repositories/providerRepository.js";
-import type { ProviderApiRecord } from "../../core/providers/provider-api.js";
-import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
+import { createProviderRepository } from "../../db/repositories/providerRepository";
+import type { ProviderApiRecord } from "../../core/providers/provider-api";
+import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
 
 export type ProvidersListResult = {
   providers: ProviderApiRecord[];

@@ -13,9 +13,9 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious
-} from "../../../components/ui/carousel";
-import type { ReleaseManifestState } from "../../../hooks/use-release-manifest";
-import type { ReleasePlatform } from "../../../lib/release-manifest";
+} from "@/components/ui/carousel";
+import type { ReleaseManifestState } from "@/hooks/use-release-manifest";
+import type { ReleasePlatform } from "@/lib/release-manifest";
 
 const heroPreviews = [
   { src: sourcesPreview, alt: "Skills Manager Sources 页面截图" },

@@ -53,16 +53,25 @@ export const resources = {
         retry: "重试",
         staleNotice: "当前展示的是上一版目录数据，可能稍旧。",
         loading: "正在加载技能...",
-        installs: "{{count}}",
         sourceType: {
           github: "GitHub",
           well_known: "Well-known"
         },
+        filters: {
+          ariaLabel: "技能搜索"
+        },
         card: {
           openDetail: "查看详情",
-          viewSource: "查看来源",
-          githubDescription: "来自 {{source}} 的 GitHub 技能。安装后即可为 Agent 增加该能力。",
-          wellKnownDescription: "来自 {{source}} 的 Well-known 技能。"
+          openDetailAria: "查看 {{name}} 的详情"
+        },
+        detail: {
+          installs: "安装量",
+          url: "来源地址",
+          openExternal: "在浏览器中打开",
+          close: "关闭",
+          install: "安装",
+          installComingSoon: "即将支持",
+          installHint: "安装功能即将支持。当前可在浏览器中打开来源页面查看该技能。"
         },
         pagination: {
           pageInfo: "第 {{current}} / {{total}} 页"
@@ -580,17 +589,26 @@ export const resources = {
         retry: "Retry",
         staleNotice: "Showing the previous catalog snapshot; data may be slightly out of date.",
         loading: "Loading skills...",
-        installs: "{{count}}",
         sourceType: {
           github: "GitHub",
           well_known: "Well-known"
         },
+        filters: {
+          ariaLabel: "Skill search"
+        },
         card: {
           openDetail: "View details",
-          viewSource: "View source",
-          githubDescription:
-            "GitHub skill from {{source}}. Install to add this capability to your agent.",
-          wellKnownDescription: "Well-known skill from {{source}}."
+          openDetailAria: "View details for {{name}}"
+        },
+        detail: {
+          installs: "Installs",
+          url: "Source URL",
+          openExternal: "Open in browser",
+          close: "Close",
+          install: "Install",
+          installComingSoon: "Coming soon",
+          installHint:
+            "Installing from Discover is coming soon. For now, open the source page in your browser."
         },
         pagination: {
           pageInfo: "Page {{current}} of {{total}}"

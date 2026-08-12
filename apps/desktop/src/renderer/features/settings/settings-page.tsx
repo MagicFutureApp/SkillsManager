@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import type { AppInfo, AppSettingsResult, AppStoragePathsResult, LatestReleaseInfo } from "@/global";
-import { GITHUB_TOKEN_HELP_URL, OFFICIAL_SITE_URL } from "../../../core/app-constants";
 import { createShiftPressSequenceHandler } from "../../../core/keyboard/shift-press-sequence";
 import { LatestReleaseHint } from "./components/latest-release-hint";
 
@@ -329,13 +328,14 @@ export const SettingsPage = () => {
   };
 
   const openOfficialSite = () => {
-    if (!window.skillsManager?.openExternalUrl) {
+    const opening = window.skillsManager?.openAppUrl?.("officialSite");
+
+    if (!opening) {
       setOfficialSiteError("打开官方网站的接口不可用。");
       return;
     }
 
-    void window.skillsManager
-      .openExternalUrl(OFFICIAL_SITE_URL)
+    void opening
       .then(() => setOfficialSiteError(""))
       .catch((unknownError: unknown) => {
         setOfficialSiteError(toErrorMessage(unknownError) || "无法打开官方网站。");
@@ -344,15 +344,19 @@ export const SettingsPage = () => {
 
   const openLatestDownload = () => {
     if (!latestRelease) return;
-    const targetUrl = latestRelease.downloadUrl ?? OFFICIAL_SITE_URL;
 
-    if (!window.skillsManager?.openExternalUrl) {
+    // A release download URL is arbitrary data from the manifest, so it goes
+    // through the generic channel; the official site is a semantic app URL.
+    const opening = latestRelease.downloadUrl
+      ? window.skillsManager?.openExternalUrl?.(latestRelease.downloadUrl)
+      : window.skillsManager?.openAppUrl?.("officialSite");
+
+    if (!opening) {
       setOfficialSiteError("打开下载页面的接口不可用。");
       return;
     }
 
-    void window.skillsManager
-      .openExternalUrl(targetUrl)
+    void opening
       .then(() => setOfficialSiteError(""))
       .catch((unknownError: unknown) => {
         setOfficialSiteError(toErrorMessage(unknownError) || "无法打开下载页面。");
@@ -360,14 +364,16 @@ export const SettingsPage = () => {
   };
 
   const openGitHubTokenHelp = () => {
-    if (!window.skillsManager?.openExternalUrl) {
+    const opening = window.skillsManager?.openAppUrl?.("githubTokenHelp");
+
+    if (!opening) {
       setError("打开 GitHub token 帮助的接口不可用。");
       setStatus("error");
       return;
     }
 
-    void window.skillsManager
-      .openExternalUrl(GITHUB_TOKEN_HELP_URL)
+    void opening
+      .then(() => setError(""))
       .catch((unknownError: unknown) => {
         setError(toErrorMessage(unknownError) || "无法打开 GitHub token 帮助页面。");
         setStatus("error");
@@ -598,7 +604,7 @@ export const SettingsPage = () => {
                 <button
                   type="button"
                   onClick={openOfficialSite}
-                  aria-label="访问 Skills Manager 官方网站 https://sk.magicfuture.app"
+                  aria-label="访问 Skills Manager 官方网站"
                   className="inline-flex items-center gap-1.5 rounded-sm text-lg font-semibold text-foreground outline-none transition-colors hover:text-primary focus-visible:text-primary"
                 >
                   Skills Manager

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveDb } from "./db-provider.js";
+import { resolveDb } from "./db-provider";
 
 describe("resolveDb", () => {
   it("returns the provided database client", () => {

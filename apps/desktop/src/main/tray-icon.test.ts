@@ -171,7 +171,7 @@ describe("app icon paths", () => {
   });
 
   it("keeps the macOS tray source close to the final menu bar size", () => {
-    const assetDirectory = path.resolve(__dirname, "../renderer/assets");
+    const assetDirectory = path.resolve(import.meta.dirname, "../renderer/assets");
     const pngMetadata = readPngMetadata(path.join(assetDirectory, "macOS", "32.png"));
 
     expect(pngMetadata).toEqual({
@@ -183,7 +183,7 @@ describe("app icon paths", () => {
   });
 
   it("keeps the Windows app icon corners transparent", () => {
-    const assetDirectory = path.resolve(__dirname, "../renderer/assets");
+    const assetDirectory = path.resolve(import.meta.dirname, "../renderer/assets");
     const icon = readPngRgbaPixels(path.join(assetDirectory, "skills-manager-mark.png"));
 
     expect([

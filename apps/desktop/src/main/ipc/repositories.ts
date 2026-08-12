@@ -4,17 +4,17 @@ import { spawn } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { minimatch } from "minimatch";
-import { createRepositoryRepository } from "../../db/repositories/repositoryRepository.js";
+import { createRepositoryRepository } from "../../db/repositories/repositoryRepository";
 import {
   deriveSkillPatterns,
   inspectRepositorySource
-} from "../../core/repositories/source-inspection.js";
-import { scanSkillDirectory } from "../../core/skills/skill-scanner.js";
-import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
-import { getDistributionSettings, getGitHubToken } from "./settings.js";
-import { executeDistribution } from "./distribution.js";
-import { expandHomePath } from "../path-utils.js";
-import type { RepositorySourceInspection } from "../../core/repositories/source-inspection.js";
+} from "../../core/repositories/source-inspection";
+import { scanSkillDirectory } from "../../core/skills/skill-scanner";
+import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
+import { getDistributionSettings, getGitHubToken } from "./settings";
+import { executeDistribution } from "./distribution";
+import { expandHomePath } from "../path-utils";
+import type { RepositorySourceInspection } from "../../core/repositories/source-inspection";
 import type {
   CreateRepositoryInput,
   DeleteRepositoryResult,
@@ -26,7 +26,7 @@ import type {
   RepositorySyncProgressEvent,
   RepositorySyncResultItem,
   UpdateRepositoryInput
-} from "../../core/repositories/repository-api.js";
+} from "../../core/repositories/repository-api";
 
 export type RepositoriesListResult = {
   repositories: RepositoryApiRecord[];

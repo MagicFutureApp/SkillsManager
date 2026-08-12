@@ -29,6 +29,12 @@ const makeSkill = (id: string, name: string, url: string): CatalogSkill => ({
   url
 });
 
+const makeWellKnownSkill = (id: string, name: string, url: string): CatalogSkill => ({
+  ...makeSkill(id, name, url),
+  source: "skills.sh",
+  sourceType: "well-known"
+});
+
 const successResult = (
   overrides: Partial<CatalogPageResult> = {}
 ): CatalogResult<CatalogPageResult> => ({
@@ -186,15 +192,57 @@ describe("DiscoverPage", () => {
     expect(await screen.findByText(/未配置/)).toBeInTheDocument();
   });
 
-  it("opens external links through openExternalUrl and never renders target=_blank", async () => {
+  it("opens external links from the detail dialog and never renders target=_blank", async () => {
     const { openExternalUrl } = setupWindow({});
 
     render(<DiscoverPage />);
-    const detail = await screen.findByText("查看详情");
-    fireEvent.click(detail);
+    // The card's stretched trigger is the only interactive element; the
+    // "查看详情" span is a non-interactive affordance and clicking it does nothing.
+    fireEvent.click(await screen.findByRole("button", { name: "查看 Alpha 的详情" }));
+
+    fireEvent.click(await screen.findByRole("button", { name: "在浏览器中打开" }));
 
     expect(openExternalUrl).toHaveBeenCalledWith("https://skills.sh/a");
     expect(document.querySelector('[target="_blank"]')).toBeNull();
+  });
+
+  it("renders the install action as a disabled placeholder", async () => {
+    setupWindow({});
+
+    render(<DiscoverPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "查看 Alpha 的详情" }));
+
+    const install = await screen.findByRole("button", { name: /安装/ });
+    expect(install).toBeDisabled();
+    expect(screen.getByText("即将支持")).toBeInTheDocument();
+  });
+
+  it("renders the well-known source type as a localized badge, not the raw wire value", async () => {
+    setupWindow({
+      getCatalogPageImpl: async () =>
+        successResult({ skills: [makeWellKnownSkill("a", "Alpha", "https://skills.sh/a")] })
+    });
+
+    render(<DiscoverPage />);
+    // The card badge must come from sourceTypeLabel, never from a raw key such as
+    // `discover.sourceType.well-known` that would surface if someone reintroduced
+    // the `${skill.sourceType}` interpolation trick.
+    expect(await screen.findByText("Well-known")).toBeInTheDocument();
+    expect(screen.queryByText("discover.sourceType.well-known")).toBeNull();
+  });
+
+  it("omits the url row and external button when skill.url is empty", async () => {
+    setupWindow({
+      getCatalogPageImpl: async () => successResult({ skills: [makeSkill("a", "Alpha", "")] })
+    });
+
+    render(<DiscoverPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "查看 Alpha 的详情" }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.queryByText("来源地址")).toBeNull();
+    expect(screen.queryByRole("button", { name: "在浏览器中打开" })).toBeNull();
+    expect(screen.getByRole("button", { name: /安装/ })).toBeDisabled();
   });
 
   it("does not crash when window.skillsManager is missing", async () => {

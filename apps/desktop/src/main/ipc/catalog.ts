@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 
-import { createCatalogClient, type CatalogClient } from "../../core/catalog/catalog-client.js";
+import { createCatalogClient, type CatalogClient } from "../../core/catalog/catalog-client";
 import type {
   CatalogManifestResult,
   CatalogPageInput,
@@ -9,7 +9,7 @@ import type {
   CatalogSearchInput,
   CatalogSearchResult,
   CatalogSearchType
-} from "../../core/catalog/catalog-types.js";
+} from "../../core/catalog/catalog-types";
 
 export type {
   CatalogManifestResult,

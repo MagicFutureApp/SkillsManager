@@ -1,4 +1,4 @@
-import { resolveCatalogBaseUrl } from "../app-constants.js";
+import { CATALOG_BASE_URL } from "../app-constants";
 import {
   CATALOG_SEARCH_MAX_QUERY_LENGTH,
   CATALOG_SEARCH_MIN_QUERY_LENGTH,
@@ -13,7 +13,7 @@ import {
   normalizeSearchQuery,
   resolveSearchLimit,
   type CatalogSearchPayload
-} from "./catalog-http.js";
+} from "./catalog-http";
 import type {
   CatalogFailure,
   CatalogGenerationInfo,
@@ -26,7 +26,7 @@ import type {
   CatalogSearchInput,
   CatalogSearchResult,
   CatalogSnapshot
-} from "./catalog-types.js";
+} from "./catalog-types";
 
 /** Client side generation TTL. Deliberately much shorter than the server side 6h rotation. */
 export const CATALOG_GENERATION_TTL_MS = 5 * 60_000;
@@ -151,7 +151,7 @@ const toFailure = (error: unknown): CatalogFailure => {
 };
 
 export const createCatalogClient = (options: CatalogClientOptions = {}): CatalogClient => {
-  const baseUrl = normalizeCatalogBaseUrl(options.baseUrl ?? resolveCatalogBaseUrl());
+  const baseUrl = normalizeCatalogBaseUrl(options.baseUrl ?? CATALOG_BASE_URL);
   const fetchImpl = options.fetchImpl ?? defaultFetchImpl;
   const now = options.now ?? ((): number => Date.now());
   const sleep = options.sleep ?? defaultSleep;

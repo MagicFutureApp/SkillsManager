@@ -1,4 +1,4 @@
-import type { SupportedLocale } from "../../core/i18n/locale.js";
+import type { SupportedLocale } from "../../core/i18n/locale";
 
 type MainMessages = {
   tray: {

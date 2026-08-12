@@ -92,6 +92,19 @@ pnpm run format:check
 - Bad：renderer 里 `import fs from "node:fs"` 或直接打开 SQLite。
 - `apps/desktop/src/core/catalog/catalog-types.ts` 必须保持零运行时：任何带 `fetch`、Node、Electron 或 DOM 的逻辑只能放在 `catalog-http.ts` / `catalog-client.ts`，renderer 永远不得导入后者。
 
+## 模块格式规则（ESM）
+
+`apps/desktop` 的 `package.json` 带 `"type": "module"`，主进程、`core`、`db` 全部输出 ESM。全仓四个 app 现在统一是 ESM，不存在 CJS 源码。
+
+- **共享工具包 `packages/utils`（纯 ESM 单构建）**：全仓唯一的跨 app 共享代码，`exports` 仅 `.`（零依赖、运行时无关助手：`clamp`/`isRecord`/`asString`/`isValidEmail`/`parseVersionSegments`+`isNewerVersion`/搜索校验 `normalizeSearchQuery`+`isValidSearchOwner`+`SEARCH_*` 常量）与 `./cn`（Tailwind 合并，引 `clsx`+`tailwind-merge`，独立子路径以不污染 Cloudflare Worker 安装图）。desktop / landing / cache-manager 的 `cn`、`asString`、`isValidEmail`、搜索校验原语都从这里 re-export，勿在各 app 内另写副本。改动此包后须 `tsc -p tsconfig.esm.json` 重新构建 `dist`。**re-export 别名陷阱**：`export { X as Y } from "mod"` 是纯 re-export，不会在本模块内创建局部绑定 `Y`，模块内部再引用 `Y` 会报 `Cannot find name`；要模块内复用且对外导出别名，必须 `import { X } from "mod"` 再 `export const Y = X`。
+
+- `src/main`、`src/core`、`src/db` 由 `tsconfig.main.json`（`module`/`moduleResolution` 均为 `NodeNext`）编译，**相对 import/export 必须带 `.js` 后缀**，否则 `tsc` 报 `TS2835`。写 `./foo.js` 指向 `./foo.ts`，这是 NodeNext 的正常写法。
+- 主进程不存在 `__dirname` / `__filename`，一律用 `import.meta.dirname` / `import.meta.filename`。`vite.config.ts` 同理。
+- 需要 `require` 时（如读 `electron/package.json`）用 `createRequire(import.meta.url)`，见 `scripts/rebuild-better-sqlite3-for-electron.ts`。
+- **preload 也是 ESM，且必须是 `.mjs`**：全仓统一 ESM，preload 源文件是 `src/main/preload.mts`，经 `tsconfig.main.json`（NodeNext）随主进程一起编译为 `dist/main/main/preload.mjs`（ESM），`window-menu.ts` 的 `webPreferences.preload` 指向 `preload.mjs`。**关键陷阱：Electron 的 preload 会忽略 `package.json` 的 `"type": "module"`，只认扩展名**——所以 ESM preload 必须用 `.mts` 源（→ `.mjs` 产物）；若误用 `.ts`（→ `.js` 产物），Electron 会把它当 CommonJS 解析，启动时直接抛 `SyntaxError: Cannot use import statement outside a module`。又因为 Electron 的 sandboxed preload 不支持 ESM，主窗口 `webPreferences` 必须显式设 `sandbox: false` 才能加载 ESM preload。**代价：主窗口渲染进程不再走 OS 级沙箱**；但 `contextIsolation` 保持 `true`、`nodeIntegration` 保持 `false`，渲染进程仍无法直接访问 Node/fs，只能走暴露的 IPC 桥。`window-menu.test.ts` 有断言守住 `preload.mjs` 与 `sandbox: false` 契约，不要绕过。打包侧：`electron-builder.yml` 用 `asarUnpack: ["**/*.mjs"]` 把 preload 解包到真实文件系统，避免 ESM `.mjs` 在 asar 内加载的已知坑。
+- `tsconfig.main.json` 的 `include` 含 `src/main/**/*.ts`、`src/core/**/*.ts`、`src/db/**/*.ts`，preload 作为 `src/main` 下的 `.ts` 一并被编译。
+- Renderer 由 Vite 处理（`tsconfig.renderer.json`，`moduleResolution: Bundler`），不受 `.js` 后缀约束，保持现有写法。
+
 ## 产品规则
 
 - 标准业务单元是 `skill unit`，不是 repository。
@@ -126,7 +139,7 @@ pnpm run format:check
 ## 当前代码结构
 
 - `apps/desktop/src/main/index.ts`：Electron app 生命周期和 IPC 注册入口。
-- `apps/desktop/src/main/preload.ts`：暴露给 renderer 的类型化桥。
+- `apps/desktop/src/main/preload.mts`：暴露给 renderer 的类型化桥（ESM，编译为 `preload.mjs`）。
 - `apps/desktop/src/main/ipc/*`：main process IPC handlers。
 - `apps/desktop/src/core/skills/*`：skill 扫描和 key 生成。
 - `apps/desktop/src/core/repositories/*`：repository API、source inspection 和路径/配置工具。

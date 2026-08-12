@@ -1,8 +1,8 @@
 import { ipcMain, shell } from "electron";
-import { createAppSettingsRepository } from "../../db/repositories/appSettingsRepository.js";
-import type { AppDbRuntime, AppStoragePaths } from "../app-storage.js";
-import type { createDbClient } from "../../db/client.js";
-import { GITHUB_TOKEN_HELP_URL } from "../../core/app-constants.js";
+import { createAppSettingsRepository } from "../../db/repositories/appSettingsRepository";
+import type { AppDbRuntime, AppStoragePaths } from "../app-storage";
+import type { createDbClient } from "../../db/client";
+import { GITHUB_TOKEN_HELP_URL, OFFICIAL_SITE_URL } from "../../core/app-constants";
 
 const GITHUB_TOKEN_SETTING_KEY = "githubToken";
 const DISTRIBUTION_SETTINGS_KEY = "distribution";
@@ -125,27 +125,82 @@ export const resetLocalDatabase = async (
   };
 };
 
-const EXTERNAL_URL_ALLOWED_HOSTNAMES = new Set([
-  "github.com",
-  "sk.magicfuture.app",
-  "skills.sh",
-  "www.skills.sh"
-]);
+/** Fixed third party hosts; the app's own host is injected at build time. */
+const EXTERNAL_URL_FIXED_HOSTNAMES = ["github.com", "skills.sh", "www.skills.sh"] as const;
+
+const toHostname = (url: string): string => {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+};
+
+/**
+ * An unconfigured base URL contributes no hostname instead of throwing, so a
+ * misconfigured build still opens the fixed third party links.
+ */
+export const buildExternalUrlAllowedHostnames = (appBaseUrl: string): Set<string> => {
+  const appHostname = toHostname(appBaseUrl);
+
+  return new Set(appHostname ? [...EXTERNAL_URL_FIXED_HOSTNAMES, appHostname] : EXTERNAL_URL_FIXED_HOSTNAMES);
+};
+
+const EXTERNAL_URL_ALLOWED_HOSTNAMES = buildExternalUrlAllowedHostnames(OFFICIAL_SITE_URL);
 
 export const openExternalUrl = async (
   url: string,
   operations: OpenExternalOperations = shell
 ): Promise<void> => {
-  const parsedUrl = new URL(url);
-  const isAllowedHost =
-    parsedUrl.protocol === "https:" && EXTERNAL_URL_ALLOWED_HOSTNAMES.has(parsedUrl.hostname);
-  const isGitHubTokenHelpUrl = parsedUrl.href === GITHUB_TOKEN_HELP_URL;
+  let parsedUrl: URL;
 
-  if (!isAllowedHost && !isGitHubTokenHelpUrl) {
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    throw new Error("Only approved settings URLs can be opened.");
+  }
+
+  if (parsedUrl.protocol !== "https:" || !EXTERNAL_URL_ALLOWED_HOSTNAMES.has(parsedUrl.hostname)) {
     throw new Error("Only approved settings URLs can be opened.");
   }
 
   await operations.openExternal(url);
+};
+
+/**
+ * Semantic identifiers for the app's own pages. The renderer only knows these
+ * keys; resolving them to URLs stays in the main process so no build time
+ * configuration ever reaches the renderer bundle.
+ */
+export type AppUrlKind = "githubTokenHelp" | "officialSite";
+
+export type AppUrls = Record<AppUrlKind, string>;
+
+const APP_URLS: AppUrls = {
+  githubTokenHelp: GITHUB_TOKEN_HELP_URL,
+  officialSite: OFFICIAL_SITE_URL
+};
+
+/** `kind` arrives from the renderer, so it is validated rather than trusted. */
+export const resolveAppUrl = (kind: unknown, urls: AppUrls = APP_URLS): string => {
+  if (typeof kind !== "string" || !Object.hasOwn(urls, kind)) {
+    throw new Error("Unknown app URL.");
+  }
+
+  const url = urls[kind as AppUrlKind];
+
+  if (!url) {
+    throw new Error("This app URL is not configured in the current build.");
+  }
+
+  return url;
+};
+
+export const openAppUrl = async (
+  kind: unknown,
+  operations: OpenExternalOperations = shell
+): Promise<void> => {
+  await openExternalUrl(resolveAppUrl(kind), operations);
 };
 
 export const registerSettingsIpc = (runtime: AppDbRuntime): void => {
@@ -181,5 +236,9 @@ export const registerSettingsIpc = (runtime: AppDbRuntime): void => {
 
   ipcMain.handle("settings:openExternalUrl", (_event, url: string): Promise<void> => {
     return openExternalUrl(url);
+  });
+
+  ipcMain.handle("settings:openAppUrl", (_event, kind: unknown): Promise<void> => {
+    return openAppUrl(kind);
   });
 };

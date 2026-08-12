@@ -1,9 +1,14 @@
 import React from "react";
+import type { CatalogSkill } from "@/global";
 import { DiscoverPageMain } from "./components/discover-page-main";
+import { SkillDetailDialog } from "./components/skill-detail-dialog";
 import { useDiscoverPageState } from "./hooks/use-discover-page-state";
 
 export const DiscoverPage = () => {
   const state = useDiscoverPageState();
+  // Purely local UI state: kept out of useDiscoverPageState, which only owns the
+  // mutually exclusive browse/search data states and their race guards.
+  const [detailSkill, setDetailSkill] = React.useState<CatalogSkill | null>(null);
 
   // External links go through the main-process whitelist; an untrusted `skill.url`
   // may be rejected, so the rejection is swallowed to avoid an unhandled rejection.
@@ -14,7 +19,8 @@ export const DiscoverPage = () => {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-background">
+    // Mirrors PageLayout's <main>, minus the sider: Discover is a single column.
+    <main className="h-full min-h-0 min-w-0 overflow-y-auto bg-background p-7">
       <DiscoverPageMain
         mode={state.mode}
         skills={state.skills}
@@ -35,8 +41,13 @@ export const DiscoverPage = () => {
         pageCount={state.pageCount}
         onPageChange={state.setPage}
         onRetry={state.refetch}
+        onSelectSkill={setDetailSkill}
+      />
+      <SkillDetailDialog
+        skill={detailSkill}
+        onClose={() => setDetailSkill(null)}
         onOpenExternal={openExternal}
       />
-    </div>
+    </main>
   );
 };

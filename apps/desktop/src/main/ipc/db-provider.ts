@@ -1,4 +1,4 @@
-import type { createDbClient } from "../../db/client.js";
+import type { createDbClient } from "../../db/client";
 
 export type DbClient = ReturnType<typeof createDbClient>;
 export type DbProvider<TDb = DbClient> = TDb | (() => TDb);

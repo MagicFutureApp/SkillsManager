@@ -1,33 +1,33 @@
 import { app, BrowserWindow, Menu, screen, Tray } from "electron";
-import { createAppDbRuntime, type AppDbRuntime } from "./app-storage.js";
-import { registerAppInfoIpc } from "./ipc/app-info.js";
-import { registerDistributionIpc } from "./ipc/distribution.js";
+import { createAppDbRuntime, type AppDbRuntime } from "./app-storage";
+import { registerAppInfoIpc } from "./ipc/app-info";
+import { registerDistributionIpc } from "./ipc/distribution";
 import { registerHealthIpc } from "./ipc/health";
-import { getAppLocale, registerLocaleIpc } from "./ipc/locale.js";
-import { registerNavigationBadgesIpc } from "./ipc/navigation-badges.js";
-import { registerProvidersIpc } from "./ipc/providers.js";
+import { getAppLocale, registerLocaleIpc } from "./ipc/locale";
+import { registerNavigationBadgesIpc } from "./ipc/navigation-badges";
+import { registerProvidersIpc } from "./ipc/providers";
 import { registerReleaseIpc } from "./ipc/release";
-import { registerRepositoriesIpc } from "./ipc/repositories.js";
-import { registerSettingsIpc } from "./ipc/settings.js";
-import { registerSkillsIpc } from "./ipc/skills.js";
-import { registerTargetsIpc } from "./ipc/targets.js";
-import { registerCatalogIpc } from "./ipc/catalog.js";
-import { getMainMessages } from "./i18n/main-messages.js";
-import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
-import { createTrayIconImage } from "./tray-icon.js";
+import { registerRepositoriesIpc } from "./ipc/repositories";
+import { registerSettingsIpc } from "./ipc/settings";
+import { registerSkillsIpc } from "./ipc/skills";
+import { registerTargetsIpc } from "./ipc/targets";
+import { registerCatalogIpc } from "./ipc/catalog";
+import { getMainMessages } from "./i18n/main-messages";
+import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut";
+import { createTrayIconImage } from "./tray-icon";
 import {
   loadMainWindowState,
   resolveMainWindowPlacement,
   saveMainWindowState
-} from "./window-state.js";
+} from "./window-state";
 import {
   buildMainWindowOptions,
   denyExternalWindowOpen,
   disableWindowMenuBar,
   getMainWindowHtmlPath
-} from "./window-menu.js";
-import { APP_META } from "../core/app-constants.js";
-import { createRepositoryRepository } from "../db/repositories/repositoryRepository.js";
+} from "./window-menu";
+import { APP_META } from "../core/app-constants";
+import { createRepositoryRepository } from "../db/repositories/repositoryRepository";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -41,7 +41,7 @@ const loadMainWindow = async (window: BrowserWindow): Promise<void> => {
     return;
   }
 
-  await window.loadFile(getMainWindowHtmlPath(__dirname));
+  await window.loadFile(getMainWindowHtmlPath(import.meta.dirname));
 };
 
 const createMainWindow = async (): Promise<void> => {
@@ -54,7 +54,7 @@ const createMainWindow = async (): Promise<void> => {
   });
 
   mainWindow = new BrowserWindow({
-    ...buildMainWindowOptions(__dirname),
+    ...buildMainWindowOptions(import.meta.dirname),
     ...placement.bounds
   });
   disableWindowMenuBar(mainWindow);
@@ -122,7 +122,7 @@ const registerMainWindowStatePersistence = (window: BrowserWindow): void => {
 const createTray = (): void => {
   const messages = getMainMessages(getAppLocale());
 
-  tray = new Tray(createTrayIconImage(__dirname));
+  tray = new Tray(createTrayIconImage(import.meta.dirname));
   tray.setToolTip(APP_META.title);
   tray.setContextMenu(
     Menu.buildFromTemplate([

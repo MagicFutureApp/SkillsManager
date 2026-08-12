@@ -14,6 +14,17 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
+    # Job level so every step that runs scripts/generate-app-config.ts (Check
+    # TypeScript as well as Build installer) sees the configuration. The script
+    # runs in strict mode on CI and fails the build when a value is missing,
+    # instead of shipping an installer that silently has no backend URL.
+    env:
+      # Origin of the Skills Manager site (official site, GitHub token help page
+      # and release manifest are all derived from it).
+      SKILLS_MANAGER_BASE_URL: ${{ vars.SKILLS_MANAGER_BASE_URL }}
+      # cache-manager catalog API base URL used by the Discover page. Kept on the
+      # pre-existing DISCOVER_CATALOG_BASE_URL repository var.
+      SKILLS_MANAGER_CATALOG_BASE_URL: ${{ vars.DISCOVER_CATALOG_BASE_URL }}
     strategy:
       fail-fast: false
       matrix:
@@ -71,11 +82,6 @@ jobs:
         run: pnpm run ${{ matrix.command }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-          # cache-manager base URL for the Discover page, injected into the
-          # renderer build as DISCOVER_CATALOG_BASE_URL. Sourced from the
-          # DISCOVER_CATALOG_BASE_URL repository vars so the domain can change
-          # without editing this file.
-          DISCOVER_CATALOG_BASE_URL: ${{ vars.DISCOVER_CATALOG_BASE_URL }}
 
       - name: Upload installer
         uses: actions/upload-artifact@v7

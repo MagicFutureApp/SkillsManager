@@ -1,9 +1,9 @@
 import { ipcMain } from "electron";
 
-import { createRepositoryRepository } from "../../db/repositories/repositoryRepository.js";
-import { createSkillRepository } from "../../db/repositories/skillRepository.js";
-import { createTargetRepository } from "../../db/repositories/targetRepository.js";
-import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
+import { createRepositoryRepository } from "../../db/repositories/repositoryRepository";
+import { createSkillRepository } from "../../db/repositories/skillRepository";
+import { createTargetRepository } from "../../db/repositories/targetRepository";
+import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
 
 export type NavigationBadgeCounts = {
   repositories: number;

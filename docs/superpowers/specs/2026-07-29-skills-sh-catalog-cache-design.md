@@ -143,7 +143,7 @@ search 同样使用 Workers Cache API，不写 KV：
 
 - 客户端实现：`apps/desktop/src/core/catalog/*`（可移植、无 Electron 依赖）
 - IPC 通道：`catalog:getManifest`、`catalog:getPage`、`catalog:search`，三者恒返回判别式结果，不 reject
-- base URL：`core/app-constants.ts` 的 `CATALOG_BASE_URL`，可用 `SKILLS_MANAGER_CATALOG_BASE_URL` 覆盖
+- base URL：`core/app-constants.ts` 的 `CATALOG_BASE_URL`，由 `scripts/generate-app-config.ts` 在构建期从 `SKILLS_MANAGER_CATALOG_BASE_URL` 环境变量固化进 `core/generated-app-config.ts`；没有硬编码兜底，未注入时为空串并触发 catalog 客户端的 `config` 错误
 - `core/catalog/catalog-types.ts` 必须保持零运行时（无 import、无值），它是 renderer 经 `renderer/global.d.ts` 唯一可以引用的 catalog 模块
 
 generation 生命周期：

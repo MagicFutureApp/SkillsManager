@@ -17,6 +17,7 @@ import type {
 import type {
   AppSettingsResult as MainAppSettingsResult,
   AppStoragePathsResult as MainAppStoragePathsResult,
+  AppUrlKind as MainAppUrlKind,
   DistributionSettings as MainDistributionSettings,
   ResetLocalDatabaseResult as MainResetLocalDatabaseResult
 } from "../main/ipc/settings";
@@ -30,7 +31,7 @@ import type {
   CatalogSearchInput as CoreCatalogSearchInput,
   CatalogSearchResult as CoreCatalogSearchResult,
   CatalogSearchType as CoreCatalogSearchType
-} from "../core/catalog/catalog-types.js";
+} from "../core/catalog/catalog-types";
 import type {
   RemoveSkillTargetPreferenceInput as MainRemoveSkillTargetPreferenceInput,
   RemoveSkillTargetPreferenceResult as MainRemoveSkillTargetPreferenceResult,
@@ -69,6 +70,7 @@ export type DistributionPreviewResult = MainDistributionPreviewResult;
 export type NavigationBadgeCountsResult = MainNavigationBadgeCountsResult;
 export type AppSettingsResult = MainAppSettingsResult;
 export type AppStoragePathsResult = MainAppStoragePathsResult;
+export type AppUrlKind = MainAppUrlKind;
 export type DistributionSettings = MainDistributionSettings;
 export type ResetLocalDatabaseResult = MainResetLocalDatabaseResult;
 export type ProvidersListResult = MainProvidersListResult;
@@ -149,6 +151,7 @@ declare global {
       ) => Promise<TargetsListResult>;
       deleteTargets?: (input: DeleteTargetsInput) => Promise<TargetsListResult>;
       rescanTargets?: () => Promise<TargetsRescanResult>;
+      openAppUrl?: (kind: AppUrlKind) => Promise<void>;
       openExternalUrl?: (url: string) => Promise<void>;
       openRepositoryLocation?: (location: string) => Promise<void>;
       onRepositorySyncProgress?: (

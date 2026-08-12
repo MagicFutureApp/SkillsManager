@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 
 import { SettingsPage } from "./settings-page";
-import { GITHUB_TOKEN_HELP_URL, OFFICIAL_SITE_URL } from "../../../core/app-constants";
 
 describe("SettingsPage", () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
@@ -49,6 +48,7 @@ describe("SettingsPage", () => {
       getLocale: vi.fn().mockResolvedValue("zh-CN"),
       listProviders: vi.fn().mockResolvedValue({ providers: [] }),
       listRepositories: vi.fn().mockResolvedValue({ repositories: [] }),
+      openAppUrl: vi.fn().mockResolvedValue(undefined),
       openExternalUrl: vi.fn().mockResolvedValue(undefined),
       platform: "win32",
       resetLocalDatabase: vi.fn().mockResolvedValue({
@@ -104,7 +104,8 @@ describe("SettingsPage", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "查看 GitHub token 创建帮助" }));
 
-    expect(window.skillsManager?.openExternalUrl).toHaveBeenCalledWith(GITHUB_TOKEN_HELP_URL);
+    expect(window.skillsManager?.openAppUrl).toHaveBeenCalledWith("githubTokenHelp");
+    expect(window.skillsManager?.openExternalUrl).not.toHaveBeenCalled();
   });
 
   it("uses the standard app layout with an internal settings navigation", async () => {
@@ -215,7 +216,7 @@ describe("SettingsPage", () => {
     expect(window.skillsManager?.getInfo).toHaveBeenCalled();
     expect(
       within(aboutSection).getByRole("button", {
-        name: "访问 Skills Manager 官方网站 https://sk.magicfuture.app"
+        name: "访问 Skills Manager 官方网站"
       })
     ).toBeInTheDocument();
   });
@@ -226,11 +227,12 @@ describe("SettingsPage", () => {
 
     fireEvent.click(
       await screen.findByRole("button", {
-        name: "访问 Skills Manager 官方网站 https://sk.magicfuture.app"
+        name: "访问 Skills Manager 官方网站"
       })
     );
 
-    expect(window.skillsManager?.openExternalUrl).toHaveBeenCalledWith(OFFICIAL_SITE_URL);
+    expect(window.skillsManager?.openAppUrl).toHaveBeenCalledWith("officialSite");
+    expect(window.skillsManager?.openExternalUrl).not.toHaveBeenCalled();
   });
 
   it("shows a newer-version prompt when the latest release is higher than the current version", async () => {
@@ -255,6 +257,25 @@ describe("SettingsPage", () => {
     expect(window.skillsManager?.openExternalUrl).toHaveBeenCalledWith(
       "https://github.com/MagicFutureApp/SkillsManager/releases/download/v1.2.3/skills-manager-win.exe"
     );
+  });
+
+  it("falls back to the official site when the newer release carries no download URL", async () => {
+    window.skillsManager!.getLatestRelease = vi
+      .fn()
+      .mockResolvedValue({ version: "1.2.3", downloadUrl: null });
+    window.history.replaceState(null, "", "/#/settings#settings-about");
+    render(<SettingsPage />);
+
+    const aboutSection = await screen.findByRole("region", { name: "关于" });
+
+    fireEvent.click(
+      await within(aboutSection).findByRole("button", {
+        name: "发现新版本 v1.2.3，点击前往下载"
+      })
+    );
+
+    expect(window.skillsManager?.openAppUrl).toHaveBeenCalledWith("officialSite");
+    expect(window.skillsManager?.openExternalUrl).not.toHaveBeenCalled();
   });
 
   it("hides the newer-version prompt when the latest release is not higher than the current version", async () => {

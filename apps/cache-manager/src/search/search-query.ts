@@ -4,16 +4,31 @@
  *
  * Everything here is side-effect free so it can be unit tested without a
  * Worker runtime.
+ *
+ * The validation primitives (query normalization, owner pattern, limits,
+ * `clamp`/`isRecord`) now come from the shared `@skills-manager/utils` package
+ * so desktop and cache-manager agree on one definition. The *error codes*
+ * (`invalid_query` / `invalid_limit` / `invalid_owner`) stay local — they are
+ * part of this Worker's public contract and are intentionally not unified.
  */
+import {
+  clamp,
+  isRecord,
+  isValidSearchOwner,
+  normalizeSearchQuery,
+  SEARCH_MIN_QUERY_LENGTH,
+  SEARCH_MAX_QUERY_LENGTH,
+  SEARCH_MIN_LIMIT,
+  SEARCH_MAX_LIMIT,
+  SEARCH_DEFAULT_LIMIT,
+} from "@skills-manager/utils";
 
-/** Upstream requires at least two characters (`q` shorter than this is rejected locally). */
-export const searchMinQueryLength = 2;
-/** Guard against pathological queries; skills.sh has no documented maximum. */
-export const searchMaxQueryLength = 200;
-export const searchMinLimit = 1;
-/** Hard upstream ceiling documented by skills.sh. */
-export const searchMaxLimit = 200;
-export const searchDefaultLimit = 50;
+export const searchMinQueryLength = SEARCH_MIN_QUERY_LENGTH;
+export const searchMaxQueryLength = SEARCH_MAX_QUERY_LENGTH;
+export const searchMinLimit = SEARCH_MIN_LIMIT;
+export const searchMaxLimit = SEARCH_MAX_LIMIT;
+export const searchDefaultLimit = SEARCH_DEFAULT_LIMIT;
+export const normalizeSearchQueryText = normalizeSearchQuery;
 
 const ownerPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const integerPattern = /^[+-]?\d+$/;
@@ -39,16 +54,6 @@ export type SearchProjection = {
   searchType: "fuzzy" | "semantic";
   count: number;
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.min(Math.max(value, min), max);
-
-/** Trim and collapse internal whitespace so `"  react   native "` and `"react native"` agree. */
-export const normalizeSearchQueryText = (value: string): string =>
-  value.trim().replace(/\s+/g, " ");
 
 const parseLimit = (raw: string | null): number | null => {
   if (raw === null || raw.trim() === "") {
@@ -100,7 +105,7 @@ export const parseSearchQuery = (params: URLSearchParams): SearchQueryParseResul
   const rawOwner = params.get("owner");
   const owner = rawOwner === null || rawOwner.trim() === "" ? undefined : rawOwner.trim();
 
-  if (owner !== undefined && !ownerPattern.test(owner)) {
+  if (owner !== undefined && !isValidSearchOwner(owner)) {
     return {
       ok: false,
       code: "invalid_owner",

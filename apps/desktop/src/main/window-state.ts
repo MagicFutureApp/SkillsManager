@@ -1,8 +1,8 @@
 import type { Rectangle } from "electron";
 
-import { WINDOW_MIN_HEIGHT, WINDOW_MIN_WIDTH } from "../core/app-constants.js";
-import { createAppSettingsRepository } from "../db/repositories/appSettingsRepository.js";
-import type { DbClient } from "./app-storage.js";
+import { WINDOW_MIN_HEIGHT, WINDOW_MIN_WIDTH } from "../core/app-constants";
+import { createAppSettingsRepository } from "../db/repositories/appSettingsRepository";
+import type { DbClient } from "./app-storage";
 
 export const MAIN_WINDOW_STATE_SETTING_KEY = "mainWindowState";
 

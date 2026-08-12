@@ -31,10 +31,7 @@
  * and nothing else does either.
  */
 
-import type {
-  CatalogErrorCode,
-  CatalogGenerationInfo
-} from "../../../core/catalog/catalog-types.js";
+import type { CatalogErrorCode, CatalogGenerationInfo } from "../../../core/catalog/catalog-types";
 
 declare const skillsManager: NonNullable<Window["skillsManager"]>;
 

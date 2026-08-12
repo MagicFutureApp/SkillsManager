@@ -8,10 +8,10 @@ import {
   PaginationNext,
   PaginationPrevious
 } from "@/components/ui/pagination";
-import { ExternalLink, Star } from "lucide-react";
+import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CatalogErrorCode, CatalogSearchType, CatalogSkill } from "@/global";
-import { formatCompact } from "../discover-utils";
+import { SkillCard } from "./skill-card";
 import type { DiscoverMode, DiscoverStatus } from "../hooks/use-discover-page-state";
 
 type DiscoverPageMainProps = {
@@ -34,7 +34,7 @@ type DiscoverPageMainProps = {
   pageCount: number;
   onPageChange: (page: number) => void;
   onRetry: () => void;
-  onOpenExternal: (url: string) => void;
+  onSelectSkill: (skill: CatalogSkill) => void;
 };
 
 /** Map a catalog failure code to the i18n key shown in the error block. */
@@ -75,7 +75,7 @@ export const DiscoverPageMain = ({
   pageCount,
   onPageChange,
   onRetry,
-  onOpenExternal
+  onSelectSkill
 }: DiscoverPageMainProps) => {
   const { t } = useTranslation();
 
@@ -89,32 +89,22 @@ export const DiscoverPageMain = ({
     errorCode === "unavailable" && !isSearchMode ? "discover.error" : errorMessageKey(errorCode);
 
   return (
-    <div className="grid h-full min-h-0 content-start gap-6 p-7">
-      {/* Page heading */}
-      <header className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {t("discover.heading")}
-        </h1>
+    <>
+      <header className="mb-6">
+        <h1 className="text-[28px] font-semibold leading-tight">{t("discover.heading")}</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+          {t("discover.description")}
+        </p>
       </header>
 
-      {/* Search bar */}
-      <div className="mx-auto flex w-full max-w-2xl items-center gap-3">
-        <div className="relative min-w-0 flex-1">
+      {/* Filter card: same shape as the repositories/providers filter bars */}
+      <section
+        className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 rounded-xl border border-border bg-card p-4"
+        aria-label={t("discover.filters.ariaLabel")}
+      >
+        <div className="relative min-w-0">
           <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              className="size-4"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
+            <Search className="size-4" aria-hidden="true" />
           </span>
           <Input
             type="search"
@@ -128,7 +118,7 @@ export const DiscoverPageMain = ({
               }
             }}
             placeholder={t("discover.searchPlaceholder", { total: formattedTotal })}
-            className="pl-9 h-11 text-sm"
+            className="pl-9"
             aria-label={t("discover.searchAriaLabel")}
           />
         </div>
@@ -137,19 +127,16 @@ export const DiscoverPageMain = ({
             {t("discover.searchResults.clear")}
           </Button>
         ) : null}
-      </div>
-
-      {/* Divider */}
-      <hr className="border-border" />
+      </section>
 
       {/* Stale notice: browse-only, search has no generation to fall back to */}
       {isStale ? (
-        <p className="text-xs text-muted-foreground text-center">{t("discover.staleNotice")}</p>
+        <p className="mt-3 text-xs text-muted-foreground">{t("discover.staleNotice")}</p>
       ) : null}
 
       {/* Search summary: what was matched, how, and whether it was cut off */}
       {isSearchMode && status === "success" ? (
-        <div className="grid gap-1 text-center">
+        <div className="mt-3 grid gap-1">
           <p className="text-sm text-muted-foreground">
             {t("discover.searchResults.summary", {
               query: searchResultQuery,
@@ -197,16 +184,16 @@ export const DiscoverPageMain = ({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {skills.map((skill) => (
-              <SkillCard key={skill.id} skill={skill} onOpenExternal={onOpenExternal} />
+              <SkillCard key={skill.id} skill={skill} onOpenDetail={onSelectSkill} />
             ))}
           </div>
 
           {/* Pagination is browse-only: search results are relevance ranked and
               deliberately capped, so there are no further pages to walk. */}
           {!isSearchMode && pageCount > 1 ? (
-            <Pagination className="mt-2">
+            <Pagination className="mt-4">
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
@@ -234,73 +221,6 @@ export const DiscoverPageMain = ({
           ) : null}
         </>
       )}
-    </div>
+    </>
   );
 };
-
-/* ── Skill Card ─────────────────────────────────────────────── */
-
-function SkillCard({
-  skill,
-  onOpenExternal
-}: {
-  skill: CatalogSkill;
-  onOpenExternal: (url: string) => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <article className="group grid gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30">
-      {/* Header: name + installs */}
-      <div className="flex items-start justify-between gap-2">
-        <h2 className="min-w-0 text-base font-semibold text-foreground">{skill.name}</h2>
-        <span
-          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-medium text-amber-600 dark:text-amber-400"
-          title={`${skill.installs.toLocaleString()} installs`}
-        >
-          <Star className="size-3 fill-current" aria-hidden="true" />
-          {formatCompact(skill.installs)}
-        </span>
-      </div>
-
-      {/* Source line */}
-      <div className="flex items-center gap-2 overflow-hidden text-sm">
-        <span
-          className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold uppercase text-muted-foreground"
-          aria-hidden="true"
-        >
-          {(skill.source.charAt(0) || "?").toUpperCase()}
-        </span>
-        <span className="min-w-0 truncate text-muted-foreground" title={skill.source}>
-          {skill.source}
-        </span>
-      </div>
-
-      {/* Description - cache-manager does not return descriptions; show source context */}
-      <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-        {skill.sourceType === "github"
-          ? t("discover.card.githubDescription", { source: skill.source })
-          : t("discover.card.wellKnownDescription", { source: skill.source })}
-      </p>
-
-      {/* Footer: source type + detail link */}
-      <div className="flex items-center justify-between pt-1">
-        <span className="text-xs text-muted-foreground">
-          {skill.sourceType === "github"
-            ? t("discover.sourceType.github")
-            : t("discover.sourceType.well_known")}
-        </span>
-        {skill.url ? (
-          <button
-            type="button"
-            onClick={() => onOpenExternal(skill.url)}
-            className="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-primary outline-none transition-colors hover:text-primary/80 focus-visible:text-primary/80"
-          >
-            <ExternalLink className="size-3" aria-hidden="true" />
-            <span>{t("discover.card.openDetail")}</span>
-          </button>
-        ) : null}
-      </div>
-    </article>
-  );
-}

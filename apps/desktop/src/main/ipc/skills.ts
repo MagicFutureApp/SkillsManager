@@ -9,11 +9,11 @@ import type {
   SkillApiRecord,
   UpdateSkillTargetPreferenceInput,
   UpdateSkillTargetPreferenceResult
-} from "../../core/skills/skill-api.js";
-import { createSkillRepository } from "../../db/repositories/skillRepository.js";
-import { agentTargets, installInstances, skillTargetPreferences } from "../../db/schema.js";
-import { resolveDb, type DbClient, type DbProvider } from "./db-provider.js";
-import { resolveSafeInstalledPath } from "../path-utils.js";
+} from "../../core/skills/skill-api";
+import { createSkillRepository } from "../../db/repositories/skillRepository";
+import { agentTargets, installInstances, skillTargetPreferences } from "../../db/schema";
+import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
+import { resolveSafeInstalledPath } from "../path-utils";
 
 export type SkillsListResult = {
   skills: SkillApiRecord[];

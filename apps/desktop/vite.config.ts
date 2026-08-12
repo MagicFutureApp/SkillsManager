@@ -7,8 +7,8 @@ import { defineConfig, type Plugin } from "vite";
 const copyAppIcons = (): Plugin => ({
   name: "copy-app-icons",
   closeBundle() {
-    const sourceDirectory = path.resolve(__dirname, "src/renderer/assets");
-    const targetDirectory = path.resolve(__dirname, "dist/renderer");
+    const sourceDirectory = path.resolve(import.meta.dirname, "src/renderer/assets");
+    const targetDirectory = path.resolve(import.meta.dirname, "dist/renderer");
     const iconFiles = [
       "skills-manager-mark.svg",
       "skills-manager-mark.png",
@@ -32,7 +32,7 @@ export default defineConfig({
   root: "src/renderer",
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src/renderer")
+      "@": path.resolve(import.meta.dirname, "src/renderer")
     }
   },
   build: {

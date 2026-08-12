@@ -1,26 +1,21 @@
-import type {
-  CatalogErrorCode,
-  CatalogManifest,
-  CatalogPage,
-  CatalogPagination,
-  CatalogSearchType,
-  CatalogSkill,
-  CatalogSnapshot
-} from "./catalog-types.js";
+import type { CatalogErrorCode, CatalogManifest, CatalogPage, CatalogPagination, CatalogSearchType, CatalogSkill, CatalogSnapshot } from "./catalog-types";
+
+import { clamp, SEARCH_MIN_QUERY_LENGTH, SEARCH_MAX_QUERY_LENGTH, SEARCH_MIN_LIMIT, SEARCH_MAX_LIMIT, SEARCH_DEFAULT_LIMIT, normalizeSearchQuery, isValidSearchOwner } from "@skills-manager/utils";
+
+// Search validation primitives now come from the shared `@skills-manager/utils`
+// package so desktop and cache-manager agree on one definition. The *error code*
+// (`invalid-query`) stays local — it is part of this app's public catalog contract.
+export const CATALOG_SEARCH_MIN_QUERY_LENGTH = SEARCH_MIN_QUERY_LENGTH;
+export const CATALOG_SEARCH_MAX_QUERY_LENGTH = SEARCH_MAX_QUERY_LENGTH;
+export const CATALOG_SEARCH_MIN_LIMIT = SEARCH_MIN_LIMIT;
+export const CATALOG_SEARCH_MAX_LIMIT = SEARCH_MAX_LIMIT;
+export const CATALOG_SEARCH_DEFAULT_LIMIT = SEARCH_DEFAULT_LIMIT;
+export { normalizeSearchQuery, isValidSearchOwner };
 
 /** Fallback used when the server omits or sends a malformed `Retry-After`. */
 export const DEFAULT_RETRY_AFTER_SECONDS = 2;
 export const MIN_RETRY_AFTER_SECONDS = 1;
 export const MAX_RETRY_AFTER_SECONDS = 10;
-
-/** Mirrors the cache-manager guard so a hopeless query never leaves the app. */
-export const CATALOG_SEARCH_MIN_QUERY_LENGTH = 2;
-export const CATALOG_SEARCH_MAX_QUERY_LENGTH = 200;
-export const CATALOG_SEARCH_MIN_LIMIT = 1;
-export const CATALOG_SEARCH_MAX_LIMIT = 200;
-export const CATALOG_SEARCH_DEFAULT_LIMIT = 50;
-
-const SEARCH_OWNER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 
 export type CatalogHttpOptions = {
   baseUrl: string;
@@ -62,28 +57,14 @@ export class CatalogHttpError extends Error {
   }
 }
 
-export const isCatalogHttpError = (value: unknown): value is CatalogHttpError =>
-  value instanceof CatalogHttpError;
+export const isCatalogHttpError = (value: unknown): value is CatalogHttpError => value instanceof CatalogHttpError;
 
 /** Strip trailing slashes so URL joins never produce `//v1/catalog`. */
-export const normalizeCatalogBaseUrl = (baseUrl: string): string =>
-  baseUrl.trim().replace(/\/+$/, "");
+export const normalizeCatalogBaseUrl = (baseUrl: string): string => baseUrl.trim().replace(/\/+$/, "");
 
-export const buildManifestUrl = (baseUrl: string): string =>
-  `${normalizeCatalogBaseUrl(baseUrl)}/v1/catalog`;
+export const buildManifestUrl = (baseUrl: string): string => `${normalizeCatalogBaseUrl(baseUrl)}/v1/catalog`;
 
-export const buildPageUrl = (baseUrl: string, generation: string, page: number): string =>
-  `${normalizeCatalogBaseUrl(baseUrl)}/v1/catalog/${encodeURIComponent(generation)}/pages/${page}`;
-
-/**
- * Trim and collapse internal whitespace.
- *
- * Shared by the client's local validation, its result cache key and the
- * outgoing URL, so all three always agree on what "the same query" means.
- */
-export const normalizeSearchQuery = (value: string): string => value.trim().replace(/\s+/g, " ");
-
-export const isValidSearchOwner = (owner: string): boolean => SEARCH_OWNER_PATTERN.test(owner);
+export const buildPageUrl = (baseUrl: string, generation: string, page: number): string => `${normalizeCatalogBaseUrl(baseUrl)}/v1/catalog/${encodeURIComponent(generation)}/pages/${page}`;
 
 /** Out of range limits are clamped rather than rejected; absent means the default. */
 export const resolveSearchLimit = (limit: number | undefined): number => {
@@ -94,13 +75,7 @@ export const resolveSearchLimit = (limit: number | undefined): number => {
   return clamp(Math.trunc(limit), CATALOG_SEARCH_MIN_LIMIT, CATALOG_SEARCH_MAX_LIMIT);
 };
 
-export const buildSearchUrl = (
-  baseUrl: string,
-  { query, limit, owner }: { query: string; limit: number; owner?: string }
-): string =>
-  `${normalizeCatalogBaseUrl(baseUrl)}/v1/catalog/search` +
-  `?q=${encodeURIComponent(query)}&limit=${limit}` +
-  (owner ? `&owner=${encodeURIComponent(owner)}` : "");
+export const buildSearchUrl = (baseUrl: string, { query, limit, owner }: { query: string; limit: number; owner?: string }): string => `${normalizeCatalogBaseUrl(baseUrl)}/v1/catalog/search` + `?q=${encodeURIComponent(query)}&limit=${limit}` + (owner ? `&owner=${encodeURIComponent(owner)}` : "");
 
 /**
  * Parse the `Retry-After` header. The Worker only emits the delta-seconds form,
@@ -123,9 +98,7 @@ export const parseRetryAfterSeconds = (headerValue: string | null): number => {
   return clamp(Math.round(parsed), MIN_RETRY_AFTER_SECONDS, MAX_RETRY_AFTER_SECONDS);
 };
 
-export const fetchCatalogManifest = async (
-  options: CatalogHttpOptions
-): Promise<CatalogManifest> => {
+export const fetchCatalogManifest = async (options: CatalogHttpOptions): Promise<CatalogManifest> => {
   const url = buildManifestUrl(options.baseUrl);
   const response = await performRequest(url, options);
 
@@ -143,9 +116,7 @@ export const fetchCatalogPage = async (options: CatalogPageHttpOptions): Promise
   return normalizeCatalogPage(await readJson(response, `Catalog page ${options.page}`));
 };
 
-export const fetchCatalogSearch = async (
-  options: CatalogSearchHttpOptions
-): Promise<CatalogSearchPayload> => {
+export const fetchCatalogSearch = async (options: CatalogSearchHttpOptions): Promise<CatalogSearchPayload> => {
   const url = buildSearchUrl(options.baseUrl, options);
   const response = await performRequest(url, options);
 
@@ -155,9 +126,6 @@ export const fetchCatalogSearch = async (
 };
 
 /* ── internals ──────────────────────────────────────────────── */
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.min(Math.max(value, min), max);
 
 /**
  * `AbortSignal.timeout` is available on Node 18+ / Electron, but jsdom based
@@ -176,8 +144,7 @@ const createTimeoutSignal = (timeoutMs: number): AbortSignal | undefined => {
   return AbortSignal.timeout(timeoutMs);
 };
 
-const describeError = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+const describeError = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
 const performRequest = async (url: string, options: CatalogHttpOptions): Promise<Response> => {
   try {
@@ -186,20 +153,13 @@ const performRequest = async (url: string, options: CatalogHttpOptions): Promise
       signal: createTimeoutSignal(options.timeoutMs)
     });
   } catch (error: unknown) {
-    throw new CatalogHttpError(
-      "network",
-      `Catalog request to ${url} failed: ${describeError(error)}`
-    );
+    throw new CatalogHttpError("network", `Catalog request to ${url} failed: ${describeError(error)}`);
   }
 };
 
 const assertSuccessfulResponse = (response: Response, context: string): void => {
   if (response.status === 202) {
-    throw new CatalogHttpError(
-      "warming",
-      `${context} is still warming up.`,
-      parseRetryAfterSeconds(response.headers.get("retry-after"))
-    );
+    throw new CatalogHttpError("warming", `${context} is still warming up.`, parseRetryAfterSeconds(response.headers.get("retry-after")));
   }
 
   if (response.status === 400) {
@@ -211,11 +171,7 @@ const assertSuccessfulResponse = (response: Response, context: string): void => 
   }
 
   if (response.status === 429) {
-    throw new CatalogHttpError(
-      "rate-limited",
-      `${context} was rate limited.`,
-      parseRetryAfterSeconds(response.headers.get("retry-after"))
-    );
+    throw new CatalogHttpError("rate-limited", `${context} was rate limited.`, parseRetryAfterSeconds(response.headers.get("retry-after")));
   }
 
   if (response.status === 503) {
@@ -231,18 +187,13 @@ const readJson = async (response: Response, context: string): Promise<unknown> =
   try {
     return (await response.json()) as unknown;
   } catch (error: unknown) {
-    throw new CatalogHttpError(
-      "invalid-response",
-      `${context} returned a malformed JSON body: ${describeError(error)}`
-    );
+    throw new CatalogHttpError("invalid-response", `${context} returned a malformed JSON body: ${describeError(error)}`);
   }
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
-const toFiniteNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+const toFiniteNumber = (value: unknown, fallback: number): number => (typeof value === "number" && Number.isFinite(value) ? value : fallback);
 
 const toNonNegativeInteger = (value: unknown, fallback: number): number => {
   const parsed = toFiniteNumber(value, fallback);
@@ -250,14 +201,11 @@ const toNonNegativeInteger = (value: unknown, fallback: number): number => {
   return parsed < 0 ? fallback : Math.trunc(parsed);
 };
 
-const toStringOrDefault = (value: unknown, fallback: string): string =>
-  typeof value === "string" ? value : fallback;
+const toStringOrDefault = (value: unknown, fallback: string): string => (typeof value === "string" ? value : fallback);
 
-const toNullableString = (value: unknown): string | null =>
-  typeof value === "string" && value.length > 0 ? value : null;
+const toNullableString = (value: unknown): string | null => (typeof value === "string" && value.length > 0 ? value : null);
 
-const normalizeSourceType = (value: unknown): CatalogSkill["sourceType"] =>
-  value === "github" ? "github" : "well-known";
+const normalizeSourceType = (value: unknown): CatalogSkill["sourceType"] => (value === "github" ? "github" : "well-known");
 
 /** cache-manager only hard-validates `id`; every other field is passed through. */
 const normalizeCatalogSkill = (value: unknown): CatalogSkill | null => {
@@ -303,9 +251,7 @@ export const normalizeCatalogPage = (value: unknown): CatalogPage => {
     throw new CatalogHttpError("invalid-response", "Catalog page payload has an invalid shape.");
   }
 
-  const data = value.data
-    .map((entry: unknown) => normalizeCatalogSkill(entry))
-    .filter((entry): entry is CatalogSkill => entry !== null);
+  const data = value.data.map((entry: unknown) => normalizeCatalogSkill(entry)).filter((entry): entry is CatalogSkill => entry !== null);
 
   return {
     data,
@@ -314,8 +260,7 @@ export const normalizeCatalogPage = (value: unknown): CatalogPage => {
 };
 
 /** Anything that is not exactly `"fuzzy"` is treated as semantic rather than throwing. */
-const normalizeSearchType = (value: unknown): CatalogSearchType =>
-  value === "fuzzy" ? "fuzzy" : "semantic";
+const normalizeSearchType = (value: unknown): CatalogSearchType => (value === "fuzzy" ? "fuzzy" : "semantic");
 
 /**
  * `count` is derived from the entries that survived normalization instead of
@@ -327,9 +272,7 @@ export const normalizeCatalogSearch = (value: unknown): CatalogSearchPayload => 
     throw new CatalogHttpError("invalid-response", "Catalog search payload has an invalid shape.");
   }
 
-  const data = value.data
-    .map((entry: unknown) => normalizeCatalogSkill(entry))
-    .filter((entry): entry is CatalogSkill => entry !== null);
+  const data = value.data.map((entry: unknown) => normalizeCatalogSkill(entry)).filter((entry): entry is CatalogSkill => entry !== null);
 
   return {
     data,
@@ -362,19 +305,13 @@ const normalizeCatalogSnapshot = (value: unknown): CatalogSnapshot | null => {
 
 export const normalizeCatalogManifest = (value: unknown): CatalogManifest => {
   if (!isRecord(value)) {
-    throw new CatalogHttpError(
-      "invalid-response",
-      "Catalog manifest payload has an invalid shape."
-    );
+    throw new CatalogHttpError("invalid-response", "Catalog manifest payload has an invalid shape.");
   }
 
   const current = normalizeCatalogSnapshot(value.current);
 
   if (!current) {
-    throw new CatalogHttpError(
-      "invalid-response",
-      "Catalog manifest is missing a usable current generation."
-    );
+    throw new CatalogHttpError("invalid-response", "Catalog manifest is missing a usable current generation.");
   }
 
   const previous = normalizeCatalogSnapshot(value.previous);
