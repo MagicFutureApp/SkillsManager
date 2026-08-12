@@ -2,23 +2,10 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 
-import type {
-  DistributionAction,
-  DistributionPreviewInput,
-  DistributionPreviewItem,
-  DistributionPreviewResult,
-  DistributionPreviewSummary
-} from "../../core/distribution/distribution-api";
+import type { DistributionAction, DistributionPreviewInput, DistributionPreviewItem, DistributionPreviewResult, DistributionPreviewSummary } from "../../core/distribution/distribution-api";
 import { resolveSkillKey } from "../../core/skills/skill-utils";
 import type { createDbClient } from "../client";
-import {
-  agentTargets,
-  installInstances,
-  repositories,
-  skillTargetPreferences,
-  skillUnits,
-  skillVersions
-} from "../schema";
+import { agentTargets, installInstances, repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
 
@@ -77,12 +64,7 @@ export const createDistributionRepository = (db: DbClient) => {
       });
       const summary = summarizePreviewItems(items);
       const operationType = resolveOperationType(items);
-      const status =
-        summary.actionCounts.blocked > 0
-          ? "blocked"
-          : summary.actionCounts.conflict > 0
-            ? "conflict"
-            : "ready";
+      const status = summary.actionCounts.blocked > 0 ? "blocked" : summary.actionCounts.conflict > 0 ? "conflict" : "ready";
       const previewId = randomUUID();
       const preview: DistributionPreviewResult = {
         createdAt: createdAt.toISOString(),
@@ -103,10 +85,7 @@ const normalizeSkillUnitIds = (skillUnitIds: string[]): string[] => {
   return Array.from(new Set(skillUnitIds.map((id) => id.trim()).filter(Boolean)));
 };
 
-const getLatestSkillVersionsBySkillId = async (
-  db: DbClient,
-  skillUnitIds: string[]
-): Promise<Map<string, SkillVersionRow>> => {
+const getLatestSkillVersionsBySkillId = async (db: DbClient, skillUnitIds: string[]): Promise<Map<string, SkillVersionRow>> => {
   const rows = await db
     .select({
       commitSha: skillVersions.commitSha,
@@ -131,10 +110,7 @@ const getLatestSkillVersionsBySkillId = async (
   return rowsBySkillId;
 };
 
-const getTargetPreferencesBySkillId = async (
-  db: DbClient,
-  skillUnitIds: string[]
-): Promise<Map<string, TargetPreferenceRow[]>> => {
+const getTargetPreferencesBySkillId = async (db: DbClient, skillUnitIds: string[]): Promise<Map<string, TargetPreferenceRow[]>> => {
   const rows = await db
     .select({
       agentTargetId: agentTargets.id,
@@ -147,12 +123,7 @@ const getTargetPreferencesBySkillId = async (
     })
     .from(skillTargetPreferences)
     .innerJoin(agentTargets, eq(agentTargets.id, skillTargetPreferences.agentTargetId))
-    .where(
-      and(
-        inArray(skillTargetPreferences.skillUnitId, skillUnitIds),
-        eq(skillTargetPreferences.enabled, true)
-      )
-    )
+    .where(and(inArray(skillTargetPreferences.skillUnitId, skillUnitIds), eq(skillTargetPreferences.enabled, true)))
     .orderBy(asc(agentTargets.name));
   const rowsBySkillId = new Map<string, TargetPreferenceRow[]>();
 
@@ -181,9 +152,7 @@ const getInstalledInstances = async (db: DbClient): Promise<InstalledInstanceRow
     .orderBy(asc(installInstances.updatedAt));
 };
 
-const buildInstalledBySkillTarget = (
-  installedInstances: InstalledInstanceRow[]
-): Map<string, InstalledInstanceRow> => {
+const buildInstalledBySkillTarget = (installedInstances: InstalledInstanceRow[]): Map<string, InstalledInstanceRow> => {
   const installedBySkillTarget = new Map<string, InstalledInstanceRow>();
 
   installedInstances.forEach((instance) => {
@@ -191,18 +160,13 @@ const buildInstalledBySkillTarget = (
       return;
     }
 
-    installedBySkillTarget.set(
-      createSkillTargetKey(instance.skillUnitId, instance.agentTargetId),
-      instance
-    );
+    installedBySkillTarget.set(createSkillTargetKey(instance.skillUnitId, instance.agentTargetId), instance);
   });
 
   return installedBySkillTarget;
 };
 
-const buildInstalledByTargetPath = (
-  installedInstances: InstalledInstanceRow[]
-): Map<string, InstalledInstanceRow> => {
+const buildInstalledByTargetPath = (installedInstances: InstalledInstanceRow[]): Map<string, InstalledInstanceRow> => {
   const installedByTargetPath = new Map<string, InstalledInstanceRow>();
 
   installedInstances.forEach((instance) => {
@@ -210,29 +174,13 @@ const buildInstalledByTargetPath = (
       return;
     }
 
-    installedByTargetPath.set(
-      createTargetPathKey(instance.agentTargetId, instance.installedPath),
-      instance
-    );
+    installedByTargetPath.set(createTargetPathKey(instance.agentTargetId, instance.installedPath), instance);
   });
 
   return installedByTargetPath;
 };
 
-const buildPreviewItems = ({
-  installedBySkillTarget,
-  installedByTargetPath,
-  skillUnitIds,
-  skillsById,
-  targetPreferencesBySkillId
-}: {
-  createdAt: Date;
-  installedBySkillTarget: Map<string, InstalledInstanceRow>;
-  installedByTargetPath: Map<string, InstalledInstanceRow>;
-  skillUnitIds: string[];
-  skillsById: Map<string, SkillVersionRow>;
-  targetPreferencesBySkillId: Map<string, TargetPreferenceRow[]>;
-}): DistributionPreviewItem[] => {
+const buildPreviewItems = ({ installedBySkillTarget, installedByTargetPath, skillUnitIds, skillsById, targetPreferencesBySkillId }: { createdAt: Date; installedBySkillTarget: Map<string, InstalledInstanceRow>; installedByTargetPath: Map<string, InstalledInstanceRow>; skillUnitIds: string[]; skillsById: Map<string, SkillVersionRow>; targetPreferencesBySkillId: Map<string, TargetPreferenceRow[]> }): DistributionPreviewItem[] => {
   return skillUnitIds.flatMap((skillUnitId) => {
     const skill = skillsById.get(skillUnitId);
 
@@ -246,12 +194,8 @@ const buildPreviewItems = ({
 
     return targets.map((target) => {
       const targetPath = joinStoredPath(target.targetPath, skillKey);
-      const installedAtPath = installedByTargetPath.get(
-        createTargetPathKey(target.agentTargetId, targetPath)
-      );
-      const installedForSkillTarget = installedBySkillTarget.get(
-        createSkillTargetKey(skillUnitId, target.agentTargetId)
-      );
+      const installedAtPath = installedByTargetPath.get(createTargetPathKey(target.agentTargetId, targetPath));
+      const installedForSkillTarget = installedBySkillTarget.get(createSkillTargetKey(skillUnitId, target.agentTargetId));
       const classification = classifyPreviewItem({
         installedAtPath,
         installedForSkillTarget,
@@ -276,12 +220,7 @@ const buildPreviewItems = ({
         skillUnitId,
         skillVersionId: skill.skillVersionId,
         sourcePath,
-        status:
-          classification.action === "blocked"
-            ? "blocked"
-            : classification.action === "skip"
-              ? "skipped"
-              : "pending",
+        status: classification.action === "blocked" ? "blocked" : classification.action === "skip" ? "skipped" : "pending",
         targetName: target.targetName,
         targetPath,
         targetSnapshot: {
@@ -296,19 +235,7 @@ const buildPreviewItems = ({
   });
 };
 
-const classifyPreviewItem = ({
-  installedAtPath,
-  installedForSkillTarget,
-  skill,
-  skillUnitId,
-  target
-}: {
-  installedAtPath: InstalledInstanceRow | undefined;
-  installedForSkillTarget: InstalledInstanceRow | undefined;
-  skill: SkillVersionRow;
-  skillUnitId: string;
-  target: TargetPreferenceRow;
-}): { action: DistributionAction; reason: string | null } => {
+const classifyPreviewItem = ({ installedAtPath, installedForSkillTarget, skill, skillUnitId, target }: { installedAtPath: InstalledInstanceRow | undefined; installedForSkillTarget: InstalledInstanceRow | undefined; skill: SkillVersionRow; skillUnitId: string; target: TargetPreferenceRow }): { action: DistributionAction; reason: string | null } => {
   if (!target.targetEnabled) {
     return {
       action: "blocked",
@@ -330,10 +257,7 @@ const classifyPreviewItem = ({
     };
   }
 
-  if (
-    installedForSkillTarget.skillVersionId === skill.skillVersionId ||
-    installedForSkillTarget.installedCommitSha === skill.commitSha
-  ) {
+  if (installedForSkillTarget.skillVersionId === skill.skillVersionId || installedForSkillTarget.installedCommitSha === skill.commitSha) {
     return {
       action: "skip",
       reason: "Selected skill version is already installed on this target."
@@ -369,13 +293,7 @@ const countActions = (items: DistributionPreviewItem[], action: DistributionActi
 };
 
 const resolveOperationType = (items: DistributionPreviewItem[]) => {
-  const writingActions = new Set(
-    items
-      .map((item) => item.action)
-      .filter(
-        (action): action is "install" | "update" => action === "install" || action === "update"
-      )
-  );
+  const writingActions = new Set(items.map((item) => item.action).filter((action): action is "install" | "update" => action === "install" || action === "update"));
 
   if (writingActions.size === 1) {
     return Array.from(writingActions)[0];

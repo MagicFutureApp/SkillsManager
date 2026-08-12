@@ -59,18 +59,12 @@ describe("Select", () => {
   });
 
   it("keeps a long selected value on one truncated line", () => {
-    const longRepositoryName =
-      "github.com/very-long-organization-name/very-long-repository-name-with-many-segments";
+    const longRepositoryName = "github.com/very-long-organization-name/very-long-repository-name-with-many-segments";
 
     render(
       <Field>
         <FieldLabel>Repository</FieldLabel>
-        <Select
-          className="max-w-40"
-          value="long-repository"
-          options={[{ value: "long-repository", label: longRepositoryName }]}
-          onValueChange={vi.fn()}
-        />
+        <Select className="max-w-40" value="long-repository" options={[{ value: "long-repository", label: longRepositoryName }]} onValueChange={vi.fn()} />
       </Field>
     );
 

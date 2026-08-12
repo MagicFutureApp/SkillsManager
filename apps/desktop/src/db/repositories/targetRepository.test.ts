@@ -2,15 +2,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { createDbClient } from "../client";
-import {
-  agentTargets,
-  installInstances,
-  providers,
-  repositories,
-  skillTargetPreferences,
-  skillUnits,
-  skillVersions
-} from "../schema";
+import { agentTargets, installInstances, providers, repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";
 import { createTargetRepository } from "./targetRepository";
 
 describe("createTargetRepository", () => {
@@ -394,9 +386,7 @@ describe("createTargetRepository", () => {
     await createTargetRepository(db).deleteTargets(["target-project"]);
 
     await expect(db.select().from(agentTargets)).resolves.toMatchObject([{ id: "target-keep" }]);
-    await expect(db.select().from(skillTargetPreferences)).resolves.toMatchObject([
-      { agentTargetId: "target-keep", id: "preference-keep" }
-    ]);
+    await expect(db.select().from(skillTargetPreferences)).resolves.toMatchObject([{ agentTargetId: "target-keep", id: "preference-keep" }]);
     await expect(db.select().from(installInstances)).resolves.toEqual([]);
   });
 
@@ -427,9 +417,7 @@ describe("createTargetRepository", () => {
       }
     ]);
 
-    await expect(
-      createTargetRepository(db).deleteTargets(["system-codex", "target-project"])
-    ).rejects.toThrow("System built-in targets cannot be deleted.");
+    await expect(createTargetRepository(db).deleteTargets(["system-codex", "target-project"])).rejects.toThrow("System built-in targets cannot be deleted.");
     await expect(db.select().from(agentTargets)).resolves.toHaveLength(2);
   });
 
@@ -450,9 +438,7 @@ describe("createTargetRepository", () => {
 
     await createTargetRepository(db).deleteTargets(["", "missing-target"]);
 
-    await expect(
-      db.select().from(agentTargets).where(eq(agentTargets.id, "target-project"))
-    ).resolves.toHaveLength(1);
+    await expect(db.select().from(agentTargets).where(eq(agentTargets.id, "target-project"))).resolves.toHaveLength(1);
   });
 
   it("preserves existing target scope when scan results update a registered target", async () => {

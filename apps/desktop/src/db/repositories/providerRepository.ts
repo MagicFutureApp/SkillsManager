@@ -28,14 +28,7 @@ const toIsoString = (value: Date): string => {
 };
 
 const normalizeProviderType = (value: string): ProviderType => {
-  if (
-    value === "github" ||
-    value === "gitlab" ||
-    value === "gitea" ||
-    value === "bitbucket" ||
-    value === "local_git" ||
-    value === "skills_sh"
-  ) {
+  if (value === "github" || value === "gitlab" || value === "gitea" || value === "bitbucket" || value === "local_git" || value === "skills_sh") {
     return value;
   }
 

@@ -14,16 +14,8 @@ export const SkillsPage = () => {
 
   return (
     <SkillsPageProvider state={page}>
-      <PageLayout
-        Main={SkillsPageMain}
-        Sider={SkillsPageSider}
-        siderLabel={t("skills.detail.ariaLabel")}
-      />
-      <TargetAddDialog
-        description={t("skills.addTargetModal.description")}
-        state={page.addTargetDialog}
-        title={t("targets.modal.title")}
-      />
+      <PageLayout Main={SkillsPageMain} Sider={SkillsPageSider} siderLabel={t("skills.detail.ariaLabel")} />
+      <TargetAddDialog description={t("skills.addTargetModal.description")} state={page.addTargetDialog} title={t("targets.modal.title")} />
     </SkillsPageProvider>
   );
 };

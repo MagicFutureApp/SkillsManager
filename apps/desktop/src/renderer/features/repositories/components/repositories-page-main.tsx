@@ -15,20 +15,13 @@ export const RepositoriesPageMain = () => {
         <div className="flex items-center justify-between gap-4 max-[860px]:items-start">
           <div className="min-w-0">
             <h1 className="text-[28px] font-semibold leading-tight">{t("repositories.heading")}</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-              {t("repositories.description")}
-            </p>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t("repositories.description")}</p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" onClick={page.openCreateModal}>
               {t("repositories.actions.addRepository")}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!page.hasCheckedRepositories}
-              onClick={() => void page.syncCheckedRepositories()}
-            >
+            <Button type="button" variant="outline" disabled={!page.hasCheckedRepositories} onClick={() => void page.syncCheckedRepositories()}>
               {t("repositories.actions.syncSelected")}
             </Button>
           </div>

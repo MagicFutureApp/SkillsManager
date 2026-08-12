@@ -16,45 +16,10 @@ export type DiscoveredSkill = {
   tags: string[];
 };
 
-const ignoredSkillScanDirectoryNames = new Set([
-  ".bundle",
-  ".build",
-  ".cargo",
-  ".dart_tool",
-  ".gradle",
-  ".kotlin",
-  ".konan",
-  ".m2",
-  ".nuget",
-  ".pub-cache",
-  ".stack-work",
-  ".terraform",
-  ".terragrunt-cache",
-  ".tox",
-  ".venv",
-  "__pycache__",
-  "__pypackages__",
-  "bower_components",
-  "carthage",
-  "dist-packages",
-  "env",
-  "jspm_packages",
-  "node_modules",
-  "pods",
-  "site-packages",
-  "target",
-  "vendor",
-  "venv"
-]);
+const ignoredSkillScanDirectoryNames = new Set([".bundle", ".build", ".cargo", ".dart_tool", ".gradle", ".kotlin", ".konan", ".m2", ".nuget", ".pub-cache", ".stack-work", ".terraform", ".terragrunt-cache", ".tox", ".venv", "__pycache__", "__pypackages__", "bower_components", "carthage", "dist-packages", "env", "jspm_packages", "node_modules", "pods", "site-packages", "target", "vendor", "venv"]);
 
-export const scanSkillDirectory = async (
-  rootPath: string,
-  discoveryEntries: string[] = []
-): Promise<DiscoveredSkill[]> => {
-  const skillEntries = filterSkillEntries(
-    await findSkillEntries(rootPath, rootPath),
-    normalizeDiscoveryEntries(discoveryEntries)
-  );
+export const scanSkillDirectory = async (rootPath: string, discoveryEntries: string[] = []): Promise<DiscoveredSkill[]> => {
+  const skillEntries = filterSkillEntries(await findSkillEntries(rootPath, rootPath), normalizeDiscoveryEntries(discoveryEntries));
 
   return Promise.all(
     skillEntries.sort().map(async (entryPath) => {
@@ -107,9 +72,7 @@ const isIgnoredSkillScanDirectory = (directoryName: string): boolean => {
 };
 
 const normalizeDiscoveryEntries = (entries: string[]): string[] => {
-  return entries
-    .map((entry) => toPosixPath(entry).trim().replace(/^\.\//, ""))
-    .filter((entry) => entry.endsWith("SKILL.md"));
+  return entries.map((entry) => toPosixPath(entry).trim().replace(/^\.\//, "")).filter((entry) => entry.endsWith("SKILL.md"));
 };
 
 const filterSkillEntries = (skillEntries: string[], discoveryEntries: string[]): string[] => {
@@ -117,19 +80,14 @@ const filterSkillEntries = (skillEntries: string[], discoveryEntries: string[]):
     return skillEntries;
   }
 
-  return skillEntries.filter((entryPath) =>
-    discoveryEntries.some((discoveryEntry) => matchesDiscoveryEntry(entryPath, discoveryEntry))
-  );
+  return skillEntries.filter((entryPath) => discoveryEntries.some((discoveryEntry) => matchesDiscoveryEntry(entryPath, discoveryEntry)));
 };
 
 const matchesDiscoveryEntry = (entryPath: string, discoveryEntry: string): boolean => {
   return minimatch(entryPath, discoveryEntry, { dot: true });
 };
 
-const parseSkillMarkdown = (
-  markdown: string,
-  rootPath: string
-): { description: string; license: string; name: string } => {
+const parseSkillMarkdown = (markdown: string, rootPath: string): { description: string; license: string; name: string } => {
   const lines = markdown.split(/\r?\n/);
   const frontmatter = parseFrontmatter(lines);
   const markdownLines = frontmatter.bodyLines;
@@ -142,14 +100,11 @@ const parseSkillMarkdown = (
   return {
     description: frontmatter.description || description?.trim() || "",
     license: frontmatter.license,
-    name:
-      frontmatter.name || heading?.replace(/^#\s+/, "").trim() || titleize(path.basename(rootPath))
+    name: frontmatter.name || heading?.replace(/^#\s+/, "").trim() || titleize(path.basename(rootPath))
   };
 };
 
-const parseFrontmatter = (
-  lines: string[]
-): { bodyLines: string[]; description: string; license: string; name: string } => {
+const parseFrontmatter = (lines: string[]): { bodyLines: string[]; description: string; license: string; name: string } => {
   if (lines[0]?.trim() !== "---") {
     return { bodyLines: lines, description: "", license: "", name: "" };
   }
@@ -186,10 +141,7 @@ const parseFrontmatter = (
 };
 
 const unquoteYamlScalar = (value: string): string => {
-  if (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  ) {
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
     return value.slice(1, -1);
   }
 

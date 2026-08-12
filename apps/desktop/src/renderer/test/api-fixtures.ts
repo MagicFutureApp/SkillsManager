@@ -13,8 +13,7 @@ export const providerApiRecordsFixture: ProviderApiRecord[] = [
       discoveryPatterns: ["skills/*/SKILL.md", ".codex/skills/*/SKILL.md"],
       discoveryStrategy: "manifest first",
       enabled: true,
-      notes:
-        "通过系统 Git、SSH key、HTTPS credential helper 或现有 CLI 登录状态访问 GitHub 仓库。应用不保存 token 明文。",
+      notes: "通过系统 Git、SSH key、HTTPS credential helper 或现有 CLI 登录状态访问 GitHub 仓库。应用不保存 token 明文。",
       priority: 1,
       status: "connected"
     } satisfies ProviderConfig),
@@ -28,8 +27,7 @@ export const providerApiRecordsFixture: ProviderApiRecord[] = [
     configJson: JSON.stringify({
       authMode: "系统 Git 凭据",
       connected: true,
-      diagnostic:
-        "credential helper: reachable\nnamespace probe: one namespace requires review\nlast result: needs review",
+      diagnostic: "credential helper: reachable\nnamespace probe: one namespace requires review\nlast result: needs review",
       discoveryPatterns: ["skills/*/SKILL.md"],
       discoveryStrategy: "manifest first",
       enabled: true,
@@ -47,8 +45,7 @@ export const providerApiRecordsFixture: ProviderApiRecord[] = [
     configJson: JSON.stringify({
       authMode: "Local filesystem",
       connected: true,
-      diagnostic:
-        "folder permission: granted\ngit worktree probe: reachable\nlast result: connected",
+      diagnostic: "folder permission: granted\ngit worktree probe: reachable\nlast result: connected",
       discoveryPatterns: ["agents/skills/*/SKILL.md", "skills/*/SKILL.md"],
       discoveryStrategy: "convention scan",
       enabled: true,
@@ -84,8 +81,7 @@ export const providerApiRecordsFixture: ProviderApiRecord[] = [
     configJson: JSON.stringify({
       authMode: "系统 Git 凭据",
       connected: false,
-      diagnostic:
-        "credential helper: expired\nsuggestion: reconnect with system Git environment\nlast result: error",
+      diagnostic: "credential helper: expired\nsuggestion: reconnect with system Git environment\nlast result: error",
       discoveryPatterns: ["skills/*/SKILL.md"],
       discoveryStrategy: "convention scan",
       enabled: false,
@@ -103,8 +99,7 @@ export const providerApiRecordsFixture: ProviderApiRecord[] = [
     configJson: JSON.stringify({
       authMode: "系统 Git 凭据",
       connected: false,
-      diagnostic:
-        "instance access: not connected\nhost verification: pending\nlast result: needs review",
+      diagnostic: "instance access: not connected\nhost verification: pending\nlast result: needs review",
       discoveryPatterns: ["skills/*/SKILL.md"],
       discoveryStrategy: "manifest first",
       enabled: false,

@@ -68,8 +68,7 @@ export function useDiscoverPageState() {
   // independent manifest-refresh budget, so the combination stays bounded.
   const notFoundRecoveredRef = useRef(false);
 
-  const mode: DiscoverMode =
-    committedQuery.length >= DISCOVER_MIN_SEARCH_LENGTH ? "search" : "browse";
+  const mode: DiscoverMode = committedQuery.length >= DISCOVER_MIN_SEARCH_LENGTH ? "search" : "browse";
 
   const load = useCallback(async (targetPage: number, forceRefresh = false) => {
     const requestId = ++browseRequestIdRef.current;

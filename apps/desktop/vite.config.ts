@@ -9,11 +9,7 @@ const copyAppIcons = (): Plugin => ({
   closeBundle() {
     const sourceDirectory = path.resolve(import.meta.dirname, "src/renderer/assets");
     const targetDirectory = path.resolve(import.meta.dirname, "dist/renderer");
-    const iconFiles = [
-      "skills-manager-mark.svg",
-      "skills-manager-mark.png",
-      path.join("macOS", "32.png")
-    ];
+    const iconFiles = ["skills-manager-mark.svg", "skills-manager-mark.png", path.join("macOS", "32.png")];
 
     mkdirSync(targetDirectory, { recursive: true });
 

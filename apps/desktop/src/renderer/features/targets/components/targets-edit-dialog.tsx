@@ -3,15 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogClose,
-  DialogDescription,
-  DialogPopup,
-  DialogPortal,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Dialog, DialogBackdrop, DialogClose, DialogDescription, DialogPopup, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
@@ -37,10 +29,7 @@ export const TargetsEditDialog = () => {
   });
 
   return (
-    <Dialog
-      open={page.isEditTargetDialogOpen}
-      onOpenChange={(nextOpen) => !nextOpen && page.closeEditTargetDialog()}
-    >
+    <Dialog open={page.isEditTargetDialogOpen} onOpenChange={(nextOpen) => !nextOpen && page.closeEditTargetDialog()}>
       <DialogPortal>
         <DialogBackdrop />
         <DialogPopup>
@@ -50,18 +39,7 @@ export const TargetsEditDialog = () => {
                 <DialogTitle>{t("targets.editDialog.title")}</DialogTitle>
                 <DialogDescription>{t("targets.editDialog.description")}</DialogDescription>
               </div>
-              <DialogClose
-                render={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={page.isSavingEditTarget}
-                  />
-                }
-              >
-                {t("targets.editDialog.close")}
-              </DialogClose>
+              <DialogClose render={<Button type="button" variant="outline" size="sm" disabled={page.isSavingEditTarget} />}>{t("targets.editDialog.close")}</DialogClose>
             </div>
 
             <div className="grid gap-3">
@@ -81,24 +59,14 @@ export const TargetsEditDialog = () => {
 
               <Field>
                 <FieldLabel>{t("targets.editDialog.name")}</FieldLabel>
-                <Input
-                  disabled={page.isSavingEditTarget}
-                  value={page.editTargetName}
-                  onValueChange={page.setEditTargetName}
-                />
+                <Input disabled={page.isSavingEditTarget} value={page.editTargetName} onValueChange={page.setEditTargetName} />
               </Field>
             </div>
 
             {errorMessage ? <p className="mt-3 text-sm text-destructive">{errorMessage}</p> : null}
 
             <div className="mt-4 flex justify-end gap-2">
-              <DialogClose
-                render={
-                  <Button type="button" variant="outline" disabled={page.isSavingEditTarget} />
-                }
-              >
-                {t("targets.editDialog.cancel")}
-              </DialogClose>
+              <DialogClose render={<Button type="button" variant="outline" disabled={page.isSavingEditTarget} />}>{t("targets.editDialog.cancel")}</DialogClose>
               <Button type="submit" disabled={page.isSavingEditTarget}>
                 {t("targets.editDialog.save")}
               </Button>

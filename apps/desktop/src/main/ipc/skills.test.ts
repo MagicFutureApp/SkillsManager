@@ -32,9 +32,7 @@ describe("skills IPC handlers", () => {
       success: true
     });
 
-    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).resolves.toBe(
-      "# Review Bot\n"
-    );
+    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).resolves.toBe("# Review Bot\n");
     await expect(db.select().from(skillTargetPreferences)).resolves.toMatchObject([
       {
         agentTargetId: "target-codex",
@@ -76,9 +74,7 @@ describe("skills IPC handlers", () => {
       success: true
     });
 
-    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).resolves.toBe(
-      "# Review Bot\n"
-    );
+    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).resolves.toBe("# Review Bot\n");
     await expect(db.select().from(skillTargetPreferences)).resolves.toEqual([]);
     await expect(db.select().from(installInstances)).resolves.toMatchObject([
       {
@@ -172,9 +168,7 @@ describe("skills IPC handlers", () => {
     });
 
     await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).rejects.toThrow();
-    await expect(readFile(path.join(siblingPath, "SKILL.md"), "utf8")).resolves.toBe(
-      "# Other Skill\n"
-    );
+    await expect(readFile(path.join(siblingPath, "SKILL.md"), "utf8")).resolves.toBe("# Other Skill\n");
     await expect(db.select().from(skillTargetPreferences)).resolves.toMatchObject([
       {
         agentTargetId: "target-codex",

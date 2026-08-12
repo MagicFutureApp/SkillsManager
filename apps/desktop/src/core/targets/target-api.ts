@@ -1,13 +1,6 @@
 export type AgentTargetType = "codex" | "claude-code" | "gemini-cli" | "custom-directory";
 
-export type TargetDetectionStatus =
-  | "detected"
-  | "app-missing"
-  | "path-missing"
-  | "not-writable"
-  | "not-directory"
-  | "scan-error"
-  | "missing";
+export type TargetDetectionStatus = "detected" | "app-missing" | "path-missing" | "not-writable" | "not-directory" | "scan-error" | "missing";
 export type TargetRegistrationScope = "global" | "independent";
 export type RegisteredTargetStatus = TargetDetectionStatus | "registered" | "disabled";
 
@@ -70,8 +63,6 @@ export type RegisteredTargetRecord = {
   updatedAt: string;
 };
 
-export const isBuiltInTargetType = (
-  type: string
-): type is Exclude<AgentTargetType, "custom-directory"> => {
+export const isBuiltInTargetType = (type: string): type is Exclude<AgentTargetType, "custom-directory"> => {
   return type === "codex" || type === "claude-code" || type === "gemini-cli";
 };

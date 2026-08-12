@@ -1,8 +1,5 @@
 import type { SkillApiRecord, SkillApiStatus } from "../../../../core/skills/skill-api";
-import type {
-  RegisteredTargetRecord,
-  TargetRegistrationScope
-} from "../../../../core/targets/target-api";
+import type { RegisteredTargetRecord, TargetRegistrationScope } from "../../../../core/targets/target-api";
 
 export type SkillStatus = SkillApiStatus;
 export type SkillRepositoryFilter = string;
@@ -66,10 +63,7 @@ export const adaptTargetOption = (record: RegisteredTargetRecord): TargetOption 
   };
 };
 
-export const getTargetOptionsForSkill = (
-  targets: TargetOption[],
-  skill: Pick<Skill, "id"> | null
-): TargetOption[] => {
+export const getTargetOptionsForSkill = (targets: TargetOption[], skill: Pick<Skill, "id"> | null): TargetOption[] => {
   return targets.filter((target) => {
     if (target.scope === "global") {
       return true;
@@ -85,9 +79,7 @@ export const getSkillRepositoryOptions = (skills: Skill[]): SkillRepositoryFilte
   return ["all", ...Array.from(repositories).sort((first, second) => first.localeCompare(second))];
 };
 
-export const getSkillDistributionState = (
-  skill: Pick<Skill, "targets"> | null
-): SkillDistributionState => {
+export const getSkillDistributionState = (skill: Pick<Skill, "targets"> | null): SkillDistributionState => {
   if (!skill) {
     return "no-selection";
   }
@@ -95,22 +87,15 @@ export const getSkillDistributionState = (
   return skill.targets.length > 0 ? "ready" : "no-targets";
 };
 
-export const getSelectedSkillsDistributionState = (
-  selectedSkills: Pick<Skill, "targets">[]
-): SkillDistributionState => {
+export const getSelectedSkillsDistributionState = (selectedSkills: Pick<Skill, "targets">[]): SkillDistributionState => {
   if (!selectedSkills.length) {
     return "no-selection";
   }
 
-  return selectedSkills.every((skill) => getSkillDistributionState(skill) === "ready")
-    ? "ready"
-    : "no-targets";
+  return selectedSkills.every((skill) => getSkillDistributionState(skill) === "ready") ? "ready" : "no-targets";
 };
 
-export const getDistributionTitleKey = (
-  state: SkillDistributionState,
-  scope: SkillDistributionScope
-) => {
+export const getDistributionTitleKey = (state: SkillDistributionState, scope: SkillDistributionScope) => {
   if (state === "ready") {
     return "skills.actions.syncReady";
   }
@@ -119,9 +104,7 @@ export const getDistributionTitleKey = (
     return "skills.actions.syncNoSelection";
   }
 
-  return scope === "selected"
-    ? "skills.actions.syncSelectedNoTargets"
-    : "skills.actions.syncNoTargets";
+  return scope === "selected" ? "skills.actions.syncSelectedNoTargets" : "skills.actions.syncNoTargets";
 };
 
 export const filterSkills = ({ query, repository, skills, sort }: SkillFilterInput): Skill[] => {
@@ -129,10 +112,7 @@ export const filterSkills = ({ query, repository, skills, sort }: SkillFilterInp
   const visible = skills.filter((skill) => {
     const searchable = [skill.name, skill.repository, skill.description].join(" ").toLowerCase();
 
-    return (
-      (!normalizedQuery || searchable.includes(normalizedQuery)) &&
-      (repository === "all" || skill.repository === repository)
-    );
+    return (!normalizedQuery || searchable.includes(normalizedQuery)) && (repository === "all" || skill.repository === repository);
   });
 
   return [...visible].sort((first, second) => {
@@ -141,9 +121,7 @@ export const filterSkills = ({ query, repository, skills, sort }: SkillFilterInp
     }
 
     if (sort === "repository") {
-      return (
-        first.repository.localeCompare(second.repository) || first.name.localeCompare(second.name)
-      );
+      return first.repository.localeCompare(second.repository) || first.name.localeCompare(second.name);
     }
 
     return first.name.localeCompare(second.name);

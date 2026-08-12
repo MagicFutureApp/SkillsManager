@@ -5,23 +5,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { SystemTargetRecord, TargetScanRecord } from "../../core/targets/target-api";
 import { createDbClient } from "../../db/client";
-import {
-  agentTargets,
-  installInstances,
-  repositories,
-  skillTargetPreferences,
-  skillUnits
-} from "../../db/schema";
-import {
-  addSkillDirectoryTarget,
-  addCustomDirectoryTarget,
-  deleteTargets,
-  getTargets,
-  resolveSelectedTargetDirectory,
-  rescanTargets,
-  selectTargetDirectory,
-  updateCustomDirectoryTarget
-} from "./targets";
+import { agentTargets, installInstances, repositories, skillTargetPreferences, skillUnits } from "../../db/schema";
+import { addSkillDirectoryTarget, addCustomDirectoryTarget, deleteTargets, getTargets, resolveSelectedTargetDirectory, rescanTargets, selectTargetDirectory, updateCustomDirectoryTarget } from "./targets";
 
 const createExpectedTargetDirectoryAgentOptions = (basePath: string) => [
   {
@@ -51,9 +36,7 @@ describe("target IPC handlers", () => {
       filePaths: ["/Users/test/review-skills"]
     });
 
-    await expect(selectTargetDirectory({ showOpenDialog })).resolves.toBe(
-      "/Users/test/review-skills"
-    );
+    await expect(selectTargetDirectory({ showOpenDialog })).resolves.toBe("/Users/test/review-skills");
     expect(showOpenDialog).toHaveBeenCalledWith({
       properties: ["openDirectory"]
     });
@@ -397,9 +380,7 @@ describe("target IPC handlers", () => {
         }
       ]
     });
-    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).resolves.toBe(
-      "# Review Bot\n"
-    );
+    await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).resolves.toBe("# Review Bot\n");
     await expect(db.select().from(installInstances)).resolves.toEqual([]);
   });
 
@@ -448,18 +429,14 @@ describe("target IPC handlers", () => {
     });
 
     await expect(readFile(path.join(installedPath, "SKILL.md"), "utf8")).rejects.toThrow();
-    await expect(readFile(path.join(siblingPath, "SKILL.md"), "utf8")).resolves.toBe(
-      "# Other Skill\n"
-    );
+    await expect(readFile(path.join(siblingPath, "SKILL.md"), "utf8")).resolves.toBe("# Other Skill\n");
     await expect(db.select().from(installInstances)).resolves.toEqual([]);
   });
 
   it("rejects target deletion when no target ids are provided", async () => {
     const db = createDbClient(":memory:");
 
-    await expect(deleteTargets(db, { targetIds: [" "] })).rejects.toThrow(
-      "At least one target is required."
-    );
+    await expect(deleteTargets(db, { targetIds: [" "] })).rejects.toThrow("At least one target is required.");
   });
 
   it("updates a selected custom directory target and returns refreshed targets", async () => {

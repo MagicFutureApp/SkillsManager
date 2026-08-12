@@ -3,12 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getCatalogManifest, getCatalogPage, registerCatalogIpc, searchCatalog } from "./catalog";
 import type { CatalogClient } from "../../core/catalog/catalog-client";
-import type {
-  CatalogManifestResult,
-  CatalogPageResult,
-  CatalogResult,
-  CatalogSearchResult
-} from "../../core/catalog/catalog-types";
+import type { CatalogManifestResult, CatalogPageResult, CatalogResult, CatalogSearchResult } from "../../core/catalog/catalog-types";
 
 vi.mock("electron", () => ({
   ipcMain: {

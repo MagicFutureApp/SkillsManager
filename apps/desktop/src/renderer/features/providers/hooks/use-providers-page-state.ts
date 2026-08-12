@@ -1,12 +1,4 @@
-import {
-  adaptProviderRecords,
-  createDefaultProviders,
-  filterProviders,
-  type ProviderFilter,
-  type ProviderSort,
-  type ProviderStatusFilter,
-  type ProviderViewModel
-} from "../components/provider-data";
+import { adaptProviderRecords, createDefaultProviders, filterProviders, type ProviderFilter, type ProviderSort, type ProviderStatusFilter, type ProviderViewModel } from "../components/provider-data";
 import { useEffect, useMemo, useState } from "react";
 
 export const useProvidersPageState = () => {
@@ -14,9 +6,7 @@ export const useProvidersPageState = () => {
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>("all");
   const [statusFilter, setStatusFilter] = useState<ProviderStatusFilter>("all");
   const [sort, setSort] = useState<ProviderSort>("priority");
-  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
-    () => providers[0]?.id ?? null
-  );
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(() => providers[0]?.id ?? null);
 
   useEffect(() => {
     let isMounted = true;
@@ -28,9 +18,7 @@ export const useProvidersPageState = () => {
 
       const nextProviders = adaptProviderRecords(result.providers);
       setProviders(nextProviders);
-      setSelectedProviderId(
-        (currentProviderId) => currentProviderId ?? nextProviders[0]?.id ?? null
-      );
+      setSelectedProviderId((currentProviderId) => currentProviderId ?? nextProviders[0]?.id ?? null);
     });
 
     return () => {
@@ -49,19 +37,12 @@ export const useProvidersPageState = () => {
 
   const selectedProvider = providers.find((provider) => provider.id === selectedProviderId) ?? null;
 
-  const updateProvider = (
-    providerId: string | null,
-    updater: (provider: ProviderViewModel) => ProviderViewModel
-  ) => {
+  const updateProvider = (providerId: string | null, updater: (provider: ProviderViewModel) => ProviderViewModel) => {
     if (!providerId) {
       return;
     }
 
-    setProviders((currentProviders) =>
-      currentProviders.map((provider) =>
-        provider.id === providerId ? updater(provider) : provider
-      )
-    );
+    setProviders((currentProviders) => currentProviders.map((provider) => (provider.id === providerId ? updater(provider) : provider)));
   };
 
   const connectSelectedProvider = () => {
@@ -90,9 +71,7 @@ export const useProvidersPageState = () => {
 
       return {
         ...provider,
-        diagnostic: `provider: ${provider.name}\nauth: ${provider.authMode}\nconnection: ${
-          provider.connected ? "active" : "not connected"
-        }\nresult: ${provider.connected ? "access ready" : "login required"}`,
+        diagnostic: `provider: ${provider.name}\nauth: ${provider.authMode}\nconnection: ${provider.connected ? "active" : "not connected"}\nresult: ${provider.connected ? "access ready" : "login required"}`,
         status
       };
     });
@@ -109,9 +88,7 @@ export const useProvidersPageState = () => {
     updateProvider(providerId, (item) => ({
       ...item,
       connected: !item.connected,
-      diagnostic: `provider: ${item.name}\nconnection: ${
-        item.connected ? "disconnected" : "active"
-      }\nresult: ${item.connected ? "access disabled" : "connected"}`,
+      diagnostic: `provider: ${item.name}\nconnection: ${item.connected ? "disconnected" : "active"}\nresult: ${item.connected ? "access disabled" : "connected"}`,
       enabled: !item.connected,
       status: item.connected ? "error" : "connected"
     }));

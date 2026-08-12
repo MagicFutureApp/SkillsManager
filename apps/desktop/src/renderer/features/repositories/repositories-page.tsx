@@ -16,11 +16,7 @@ export const RepositoriesPage = () => {
 
   return (
     <RepositoriesPageProvider state={page}>
-      <PageLayout
-        Main={RepositoriesPageMain}
-        Sider={RepositoriesPageSider}
-        siderLabel={t("repositories.detail.ariaLabel")}
-      />
+      <PageLayout Main={RepositoriesPageMain} Sider={RepositoriesPageSider} siderLabel={t("repositories.detail.ariaLabel")} />
       <RepositoriesPageDeleteDialog />
       <RepositoriesPageLocalSyncConfirmDialog />
       <RepositoriesPageSyncProgressDialog />

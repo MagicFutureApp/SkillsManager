@@ -24,13 +24,7 @@ vi.mock("electron", () => ({
   nativeImage: nativeImageMocks.nativeImage
 }));
 
-import {
-  createTrayIconImage,
-  getAppIconPath,
-  getMacOsTrayIconPath,
-  getTrayIconPath,
-  MACOS_TRAY_ICON_SIZE
-} from "./tray-icon";
+import { createTrayIconImage, getAppIconPath, getMacOsTrayIconPath, getTrayIconPath, MACOS_TRAY_ICON_SIZE } from "./tray-icon";
 
 const readPngMetadata = (filePath: string) => {
   const png = readFileSync(filePath);
@@ -81,8 +75,7 @@ const readPngRgbaPixels = (filePath: string) => {
       const raw = inflated[sourceOffset + 1 + x];
       const left = x >= bytesPerPixel ? pixels[rowOffset + x - bytesPerPixel] : 0;
       const up = y > 0 ? pixels[previousRowOffset + x] : 0;
-      const upLeft =
-        y > 0 && x >= bytesPerPixel ? pixels[previousRowOffset + x - bytesPerPixel] : 0;
+      const upLeft = y > 0 && x >= bytesPerPixel ? pixels[previousRowOffset + x - bytesPerPixel] : 0;
       let value: number;
 
       if (filter === 0) {
@@ -98,12 +91,7 @@ const readPngRgbaPixels = (filePath: string) => {
         const leftDistance = Math.abs(predictor - left);
         const upDistance = Math.abs(predictor - up);
         const upLeftDistance = Math.abs(predictor - upLeft);
-        const paeth =
-          leftDistance <= upDistance && leftDistance <= upLeftDistance
-            ? left
-            : upDistance <= upLeftDistance
-              ? up
-              : upLeft;
+        const paeth = leftDistance <= upDistance && leftDistance <= upLeftDistance ? left : upDistance <= upLeftDistance ? up : upLeft;
 
         value = raw + paeth;
       } else {
@@ -136,18 +124,14 @@ describe("app icon paths", () => {
 
   it("uses the full-size mark asset for the window icon", () => {
     const mainDirname = path.join("dist", "main", "main");
-    const expectedIconPath = path.normalize(
-      path.join("dist", "renderer", "skills-manager-mark.png")
-    );
+    const expectedIconPath = path.normalize(path.join("dist", "renderer", "skills-manager-mark.png"));
 
     expect(getAppIconPath(mainDirname)).toBe(expectedIconPath);
   });
 
   it("uses the mark asset path directly for non-macOS tray icons", () => {
     const mainDirname = path.join("dist", "main", "main");
-    const expectedIconPath = path.normalize(
-      path.join("dist", "renderer", "skills-manager-mark.png")
-    );
+    const expectedIconPath = path.normalize(path.join("dist", "renderer", "skills-manager-mark.png"));
 
     expect(getTrayIconPath(mainDirname)).toBe(expectedIconPath);
     expect(createTrayIconImage(mainDirname, "win32")).toBe(expectedIconPath);
@@ -186,11 +170,6 @@ describe("app icon paths", () => {
     const assetDirectory = path.resolve(import.meta.dirname, "../renderer/assets");
     const icon = readPngRgbaPixels(path.join(assetDirectory, "skills-manager-mark.png"));
 
-    expect([
-      icon.getAlphaAt(0, 0),
-      icon.getAlphaAt(icon.width - 1, 0),
-      icon.getAlphaAt(0, icon.height - 1),
-      icon.getAlphaAt(icon.width - 1, icon.height - 1)
-    ]).toEqual([0, 0, 0, 0]);
+    expect([icon.getAlphaAt(0, 0), icon.getAlphaAt(icon.width - 1, 0), icon.getAlphaAt(0, icon.height - 1), icon.getAlphaAt(icon.width - 1, icon.height - 1)]).toEqual([0, 0, 0, 0]);
   });
 });

@@ -1,9 +1,4 @@
-import type {
-  ProviderApiRecord,
-  ProviderConfig,
-  ProviderConnectionStatus,
-  ProviderType
-} from "../../../../core/providers/provider-api";
+import type { ProviderApiRecord, ProviderConfig, ProviderConnectionStatus, ProviderType } from "../../../../core/providers/provider-api";
 
 export type ProviderFilter = ProviderType | "all";
 export type ProviderSort = "priority" | "name" | "status" | "provider";
@@ -81,21 +76,9 @@ export const createDefaultProviders = (): ProviderViewModel[] => {
   return [];
 };
 
-export const filterProviders = ({
-  provider,
-  providers,
-  sort,
-  status
-}: {
-  provider: ProviderFilter;
-  providers: ProviderViewModel[];
-  sort: ProviderSort;
-  status: ProviderStatusFilter;
-}): ProviderViewModel[] => {
+export const filterProviders = ({ provider, providers, sort, status }: { provider: ProviderFilter; providers: ProviderViewModel[]; sort: ProviderSort; status: ProviderStatusFilter }): ProviderViewModel[] => {
   const visibleProviders = providers.filter((item) => {
-    return (
-      (provider === "all" || item.type === provider) && (status === "all" || item.status === status)
-    );
+    return (provider === "all" || item.type === provider) && (status === "all" || item.status === status);
   });
 
   return [...visibleProviders].sort((first, second) => {
@@ -124,25 +107,14 @@ const parseProviderConfig = (configJson: string): ProviderConfig => {
     const parsed = JSON.parse(configJson) as Partial<ProviderConfig>;
 
     return {
-      authMode:
-        typeof parsed.authMode === "string" ? parsed.authMode : defaultProviderConfig.authMode,
-      connected:
-        typeof parsed.connected === "boolean" ? parsed.connected : defaultProviderConfig.connected,
-      diagnostic:
-        typeof parsed.diagnostic === "string"
-          ? parsed.diagnostic
-          : defaultProviderConfig.diagnostic,
-      discoveryPatterns: Array.isArray(parsed.discoveryPatterns)
-        ? parsed.discoveryPatterns.filter((item): item is string => typeof item === "string")
-        : defaultProviderConfig.discoveryPatterns,
-      discoveryStrategy:
-        typeof parsed.discoveryStrategy === "string"
-          ? parsed.discoveryStrategy
-          : defaultProviderConfig.discoveryStrategy,
+      authMode: typeof parsed.authMode === "string" ? parsed.authMode : defaultProviderConfig.authMode,
+      connected: typeof parsed.connected === "boolean" ? parsed.connected : defaultProviderConfig.connected,
+      diagnostic: typeof parsed.diagnostic === "string" ? parsed.diagnostic : defaultProviderConfig.diagnostic,
+      discoveryPatterns: Array.isArray(parsed.discoveryPatterns) ? parsed.discoveryPatterns.filter((item): item is string => typeof item === "string") : defaultProviderConfig.discoveryPatterns,
+      discoveryStrategy: typeof parsed.discoveryStrategy === "string" ? parsed.discoveryStrategy : defaultProviderConfig.discoveryStrategy,
       enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : defaultProviderConfig.enabled,
       notes: typeof parsed.notes === "string" ? parsed.notes : defaultProviderConfig.notes,
-      priority:
-        typeof parsed.priority === "number" ? parsed.priority : defaultProviderConfig.priority,
+      priority: typeof parsed.priority === "number" ? parsed.priority : defaultProviderConfig.priority,
       status: isProviderStatus(parsed.status) ? parsed.status : defaultProviderConfig.status
     };
   } catch {

@@ -5,21 +5,8 @@ import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 import { createDbClient } from "../../db/client";
-import {
-  agentTargets,
-  appSettings,
-  installInstances,
-  providers,
-  repositories,
-  skillTargetPreferences,
-  skillUnits,
-  skillVersions
-} from "../../db/schema";
-import {
-  deleteRepository,
-  inspectRepositorySourceWithSettings,
-  syncRepositories
-} from "./repositories";
+import { agentTargets, appSettings, installInstances, providers, repositories, skillTargetPreferences, skillUnits, skillVersions } from "../../db/schema";
+import { deleteRepository, inspectRepositorySourceWithSettings, syncRepositories } from "./repositories";
 
 vi.mock("electron", () => ({
   ipcMain: {
@@ -82,11 +69,7 @@ describe("repository IPC handlers", () => {
     const projectPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-local-project-"));
 
     await mkdir(path.join(projectPath, ".agents", "skills", "kanji-helper"), { recursive: true });
-    await writeFile(
-      path.join(projectPath, ".agents", "skills", "kanji-helper", "SKILL.md"),
-      "# Kanji Helper\n\nPractices kanji.\n",
-      "utf8"
-    );
+    await writeFile(path.join(projectPath, ".agents", "skills", "kanji-helper", "SKILL.md"), "# Kanji Helper\n\nPractices kanji.\n", "utf8");
 
     await expect(inspectRepositorySourceWithSettings(db, projectPath)).resolves.toEqual({
       name: path.basename(projectPath),
@@ -101,11 +84,7 @@ describe("repository IPC handlers", () => {
     const agentPath = path.join(projectPath, ".agents");
 
     await mkdir(path.join(agentPath, "skills", "kanji-helper"), { recursive: true });
-    await writeFile(
-      path.join(agentPath, "skills", "kanji-helper", "SKILL.md"),
-      "# Kanji Helper\n\nPractices kanji.\n",
-      "utf8"
-    );
+    await writeFile(path.join(agentPath, "skills", "kanji-helper", "SKILL.md"), "# Kanji Helper\n\nPractices kanji.\n", "utf8");
 
     await expect(inspectRepositorySourceWithSettings(db, agentPath)).resolves.toEqual({
       name: ".agents",
@@ -120,11 +99,7 @@ describe("repository IPC handlers", () => {
     const skillsPath = path.join(projectPath, ".agents", "skills");
 
     await mkdir(path.join(skillsPath, "kanji-helper"), { recursive: true });
-    await writeFile(
-      path.join(skillsPath, "kanji-helper", "SKILL.md"),
-      "# Kanji Helper\n\nPractices kanji.\n",
-      "utf8"
-    );
+    await writeFile(path.join(skillsPath, "kanji-helper", "SKILL.md"), "# Kanji Helper\n\nPractices kanji.\n", "utf8");
 
     await expect(inspectRepositorySourceWithSettings(db, skillsPath)).resolves.toEqual({
       name: "skills",
@@ -140,19 +115,11 @@ describe("repository IPC handlers", () => {
     const cachePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-cache-"));
     const copyLocalSource = vi.fn().mockImplementation(async () => {
       await mkdir(path.join(cachePath, "skills", "review-bot"), { recursive: true });
-      await writeFile(
-        path.join(cachePath, "skills", "review-bot", "SKILL.md"),
-        "# Review Bot\n\nReviews pull requests.\n",
-        "utf8"
-      );
+      await writeFile(path.join(cachePath, "skills", "review-bot", "SKILL.md"), "# Review Bot\n\nReviews pull requests.\n", "utf8");
     });
 
     await mkdir(path.join(sourcePath, "skills", "review-bot"), { recursive: true });
-    await writeFile(
-      path.join(sourcePath, "skills", "review-bot", "SKILL.md"),
-      "# Review Bot\n\nReviews pull requests.\n",
-      "utf8"
-    );
+    await writeFile(path.join(sourcePath, "skills", "review-bot", "SKILL.md"), "# Review Bot\n\nReviews pull requests.\n", "utf8");
     await db.insert(providers).values({
       configJson: "{}",
       createdAt,
@@ -218,11 +185,7 @@ describe("repository IPC handlers", () => {
 
     const copyLocalSource = vi.fn().mockImplementation(async () => {
       await mkdir(path.join(cachePath, "review-bot"), { recursive: true });
-      await writeFile(
-        path.join(cachePath, "review-bot", "SKILL.md"),
-        "# Review Bot\n\nReviews pull requests.\n",
-        "utf8"
-      );
+      await writeFile(path.join(cachePath, "review-bot", "SKILL.md"), "# Review Bot\n\nReviews pull requests.\n", "utf8");
     });
 
     const result = await syncRepositories(db, ["repo-auto-off"], {
@@ -264,11 +227,7 @@ describe("repository IPC handlers", () => {
 
     const copyLocalSource = vi.fn().mockImplementation(async () => {
       await mkdir(path.join(cachePath, "review-bot"), { recursive: true });
-      await writeFile(
-        path.join(cachePath, "review-bot", "SKILL.md"),
-        "# Review Bot\n\nUpdated.\n",
-        "utf8"
-      );
+      await writeFile(path.join(cachePath, "review-bot", "SKILL.md"), "# Review Bot\n\nUpdated.\n", "utf8");
     });
 
     const result = await syncRepositories(db, ["repo-auto-on"], {
@@ -277,9 +236,7 @@ describe("repository IPC handlers", () => {
       resolveCommitSha: vi.fn().mockResolvedValue("after-sha")
     });
 
-    await expect(readFile(path.join(targetPath, "review-bot", "SKILL.md"), "utf8")).resolves.toBe(
-      "# Review Bot\n\nUpdated.\n"
-    );
+    await expect(readFile(path.join(targetPath, "review-bot", "SKILL.md"), "utf8")).resolves.toBe("# Review Bot\n\nUpdated.\n");
     expect(result.results[0]).toMatchObject({
       distribution: {
         autoDistributionEnabled: true,
@@ -307,21 +264,9 @@ describe("repository IPC handlers", () => {
       await mkdir(path.join(cachePath, "skills", "review-bot"), { recursive: true });
       await mkdir(path.join(cachePath, "skills", "release-notes"), { recursive: true });
       await mkdir(path.join(cachePath, "docs", "ignored"), { recursive: true });
-      await writeFile(
-        path.join(cachePath, "skills", "review-bot", "SKILL.md"),
-        "# Review Bot\n\nReviews pull requests.\n",
-        "utf8"
-      );
-      await writeFile(
-        path.join(cachePath, "skills", "release-notes", "SKILL.md"),
-        "# Release Notes\n\nWrites release notes.\n",
-        "utf8"
-      );
-      await writeFile(
-        path.join(cachePath, "docs", "ignored", "SKILL.md"),
-        "# Ignored\n\nOutside the configured discovery entry.\n",
-        "utf8"
-      );
+      await writeFile(path.join(cachePath, "skills", "review-bot", "SKILL.md"), "# Review Bot\n\nReviews pull requests.\n", "utf8");
+      await writeFile(path.join(cachePath, "skills", "release-notes", "SKILL.md"), "# Release Notes\n\nWrites release notes.\n", "utf8");
+      await writeFile(path.join(cachePath, "docs", "ignored", "SKILL.md"), "# Ignored\n\nOutside the configured discovery entry.\n", "utf8");
     });
 
     await db.insert(providers).values({
@@ -386,26 +331,10 @@ describe("repository IPC handlers", () => {
     await mkdir(path.join(sourcePath, "skills", "news-reader", "assets"), { recursive: true });
     await mkdir(path.join(sourcePath, "skills", "writing-helper"), { recursive: true });
     await mkdir(path.join(sourcePath, "docs", "ignored"), { recursive: true });
-    await writeFile(
-      path.join(sourcePath, "skills", "news-reader", "SKILL.md"),
-      "# News Reader\n\nReads news.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(sourcePath, "skills", "news-reader", "assets", "prompt.md"),
-      "Asset copied with the skill root.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(sourcePath, "skills", "writing-helper", "SKILL.md"),
-      "# Writing Helper\n\nWrites drafts.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(sourcePath, "docs", "ignored", "SKILL.md"),
-      "# Ignored\n\nOutside the configured discovery entry.\n",
-      "utf8"
-    );
+    await writeFile(path.join(sourcePath, "skills", "news-reader", "SKILL.md"), "# News Reader\n\nReads news.\n", "utf8");
+    await writeFile(path.join(sourcePath, "skills", "news-reader", "assets", "prompt.md"), "Asset copied with the skill root.\n", "utf8");
+    await writeFile(path.join(sourcePath, "skills", "writing-helper", "SKILL.md"), "# Writing Helper\n\nWrites drafts.\n", "utf8");
+    await writeFile(path.join(sourcePath, "docs", "ignored", "SKILL.md"), "# Ignored\n\nOutside the configured discovery entry.\n", "utf8");
     await writeFile(path.join(sourcePath, "README.md"), "# Source readme\n", "utf8");
     await db.insert(providers).values({
       configJson: "{}",
@@ -442,32 +371,24 @@ describe("repository IPC handlers", () => {
       ]
     });
 
-    await expect(
-      readFile(path.join(cachePath, "news-reader", "SKILL.md"), "utf8")
-    ).resolves.toContain("News Reader");
-    await expect(
-      readFile(path.join(cachePath, "news-reader", "assets", "prompt.md"), "utf8")
-    ).resolves.toContain("Asset copied with the skill root.");
-    await expect(
-      readFile(path.join(cachePath, "writing-helper", "SKILL.md"), "utf8")
-    ).resolves.toContain("Writing Helper");
+    await expect(readFile(path.join(cachePath, "news-reader", "SKILL.md"), "utf8")).resolves.toContain("News Reader");
+    await expect(readFile(path.join(cachePath, "news-reader", "assets", "prompt.md"), "utf8")).resolves.toContain("Asset copied with the skill root.");
+    await expect(readFile(path.join(cachePath, "writing-helper", "SKILL.md"), "utf8")).resolves.toContain("Writing Helper");
     await expect(pathExists(path.join(cachePath, "skills"))).resolves.toBe(false);
     await expect(pathExists(path.join(cachePath, "docs"))).resolves.toBe(false);
     await expect(pathExists(path.join(cachePath, "README.md"))).resolves.toBe(false);
-    await expect(db.select().from(skillUnits).orderBy(skillUnits.entryPath)).resolves.toMatchObject(
-      [
-        {
-          entryPath: "news-reader/SKILL.md",
-          name: "News Reader",
-          rootPath: "news-reader"
-        },
-        {
-          entryPath: "writing-helper/SKILL.md",
-          name: "Writing Helper",
-          rootPath: "writing-helper"
-        }
-      ]
-    );
+    await expect(db.select().from(skillUnits).orderBy(skillUnits.entryPath)).resolves.toMatchObject([
+      {
+        entryPath: "news-reader/SKILL.md",
+        name: "News Reader",
+        rootPath: "news-reader"
+      },
+      {
+        entryPath: "writing-helper/SKILL.md",
+        name: "Writing Helper",
+        rootPath: "writing-helper"
+      }
+    ]);
   });
 
   it("copies a root SKILL.md source as one repository folder inside the source cache", async () => {
@@ -480,11 +401,7 @@ describe("repository IPC handlers", () => {
     await mkdir(path.join(sourcePath, "examples", "ignored"), { recursive: true });
     await writeFile(path.join(sourcePath, "SKILL.md"), "# The News\n\nSummarizes news.\n", "utf8");
     await writeFile(path.join(sourcePath, "README.md"), "# The News readme\n", "utf8");
-    await writeFile(
-      path.join(sourcePath, "examples", "ignored", "SKILL.md"),
-      "# Ignored\n\nNot part of the configured root entry.\n",
-      "utf8"
-    );
+    await writeFile(path.join(sourcePath, "examples", "ignored", "SKILL.md"), "# Ignored\n\nNot part of the configured root entry.\n", "utf8");
     await db.insert(providers).values({
       configJson: "{}",
       createdAt,
@@ -520,12 +437,8 @@ describe("repository IPC handlers", () => {
       ]
     });
 
-    await expect(readFile(path.join(cachePath, "the-news", "SKILL.md"), "utf8")).resolves.toContain(
-      "The News"
-    );
-    await expect(
-      readFile(path.join(cachePath, "the-news", "README.md"), "utf8")
-    ).resolves.toContain("The News readme");
+    await expect(readFile(path.join(cachePath, "the-news", "SKILL.md"), "utf8")).resolves.toContain("The News");
+    await expect(readFile(path.join(cachePath, "the-news", "README.md"), "utf8")).resolves.toContain("The News readme");
     await expect(pathExists(path.join(cachePath, "SKILL.md"))).resolves.toBe(false);
     await expect(db.select().from(skillUnits)).resolves.toMatchObject([
       {
@@ -545,33 +458,15 @@ describe("repository IPC handlers", () => {
     const ensureGitRepository = vi.fn(async (_remoteUrl: string, sourcePath: string) => {
       await mkdir(path.join(sourcePath, ".git"), { recursive: true });
       await mkdir(path.join(sourcePath, "skills", "browser"), { recursive: true });
-      await writeFile(
-        path.join(sourcePath, "skills", "browser", "SKILL.md"),
-        "# Browser\n\nControls browser tasks.\n",
-        "utf8"
-      );
+      await writeFile(path.join(sourcePath, "skills", "browser", "SKILL.md"), "# Browser\n\nControls browser tasks.\n", "utf8");
     });
-    const materializeSourceCache = vi.fn(
-      async ({
-        cachePath,
-        sourcePath
-      }: {
-        cachePath: string;
-        discoveryEntries: string[];
-        sourceFolderName: string;
-        sourcePath: string;
-      }) => {
-        materializedSourcePath = sourcePath;
-        await mkdir(path.join(cachePath, "browser"), { recursive: true });
-        await writeFile(
-          path.join(cachePath, "browser", "SKILL.md"),
-          await readFile(path.join(sourcePath, "skills", "browser", "SKILL.md"), "utf8"),
-          "utf8"
-        );
+    const materializeSourceCache = vi.fn(async ({ cachePath, sourcePath }: { cachePath: string; discoveryEntries: string[]; sourceFolderName: string; sourcePath: string }) => {
+      materializedSourcePath = sourcePath;
+      await mkdir(path.join(cachePath, "browser"), { recursive: true });
+      await writeFile(path.join(cachePath, "browser", "SKILL.md"), await readFile(path.join(sourcePath, "skills", "browser", "SKILL.md"), "utf8"), "utf8");
 
-        return { scanDiscoveryEntries: ["browser/SKILL.md"] };
-      }
-    );
+      return { scanDiscoveryEntries: ["browser/SKILL.md"] };
+    });
     const resolveCommitSha = vi.fn().mockResolvedValue("abcdef123456");
 
     await db.insert(providers).values({
@@ -614,20 +509,10 @@ describe("repository IPC handlers", () => {
         }
       ]
     });
-    expect(ensureGitRepository).toHaveBeenCalledWith(
-      "https://github.com/ConardLi/garden-skills",
-      path.join(cacheParentPath, ".source-repositories", "conardli-garden-skills"),
-      "main"
-    );
-    expect(materializedSourcePath).toBe(
-      path.join(cacheParentPath, ".source-repositories", "conardli-garden-skills")
-    );
-    expect(resolveCommitSha).toHaveBeenCalledWith(
-      path.join(cacheParentPath, ".source-repositories", "conardli-garden-skills")
-    );
-    await expect(readFile(path.join(cachePath, "browser", "SKILL.md"), "utf8")).resolves.toContain(
-      "Browser"
-    );
+    expect(ensureGitRepository).toHaveBeenCalledWith("https://github.com/ConardLi/garden-skills", path.join(cacheParentPath, ".source-repositories", "conardli-garden-skills"), "main");
+    expect(materializedSourcePath).toBe(path.join(cacheParentPath, ".source-repositories", "conardli-garden-skills"));
+    expect(resolveCommitSha).toHaveBeenCalledWith(path.join(cacheParentPath, ".source-repositories", "conardli-garden-skills"));
+    await expect(readFile(path.join(cachePath, "browser", "SKILL.md"), "utf8")).resolves.toContain("Browser");
     await expect(pathExists(path.join(cachePath, ".git"))).resolves.toBe(false);
   });
 
@@ -642,11 +527,7 @@ describe("repository IPC handlers", () => {
       runningStatusDuringCopy = runningRows[0]?.lastSyncStatus ?? null;
 
       await mkdir(path.join(cachePath, "skills", "review-bot"), { recursive: true });
-      await writeFile(
-        path.join(cachePath, "skills", "review-bot", "SKILL.md"),
-        "# Review Bot\n\nReviews pull requests.\n",
-        "utf8"
-      );
+      await writeFile(path.join(cachePath, "skills", "review-bot", "SKILL.md"), "# Review Bot\n\nReviews pull requests.\n", "utf8");
     });
 
     await db.insert(providers).values({
@@ -691,11 +572,7 @@ describe("repository IPC handlers", () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-14T00:00:00.000Z");
     const logDirectory = await mkdtemp(path.join(os.tmpdir(), "skills-manager-sync-logs-"));
-    const rawGitError = [
-      "Cloning into '/Users/yimity/.skills-manager/cache/alchaincyf-huashu-design'...",
-      "error: RPC failed; curl 56 Recv failure: Connection reset by peer",
-      "fatal: early EOF"
-    ].join("\n");
+    const rawGitError = ["Cloning into '/Users/yimity/.skills-manager/cache/alchaincyf-huashu-design'...", "error: RPC failed; curl 56 Recv failure: Connection reset by peer", "fatal: early EOF"].join("\n");
 
     await db.insert(providers).values({
       configJson: "{}",
@@ -741,8 +618,7 @@ describe("repository IPC handlers", () => {
     await expect(db.select().from(repositories)).resolves.toMatchObject([
       {
         id: "repo-github",
-        lastSyncErrorMessage:
-          "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。",
+        lastSyncErrorMessage: "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。",
         lastSyncLogPath: logPath,
         lastSyncStatus: "failed"
       }
@@ -817,11 +693,7 @@ describe("repository IPC handlers", () => {
       }
 
       await mkdir(path.join(cachePath, "skills", "review-bot"), { recursive: true });
-      await writeFile(
-        path.join(cachePath, "skills", "review-bot", "SKILL.md"),
-        "# Review Bot\n\nReviews pull requests.\n",
-        "utf8"
-      );
+      await writeFile(path.join(cachePath, "skills", "review-bot", "SKILL.md"), "# Review Bot\n\nReviews pull requests.\n", "utf8");
     });
 
     await db.insert(providers).values({

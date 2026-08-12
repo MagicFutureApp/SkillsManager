@@ -59,12 +59,4 @@ const settingsRoute = createRoute({
   component: SettingsPage
 });
 
-export const routeTree = rootRoute.addChildren([
-  indexRoute,
-  discoverRoute,
-  providersRoute,
-  repositoriesRoute,
-  skillsRoute,
-  targetsRoute,
-  settingsRoute
-]);
+export const routeTree = rootRoute.addChildren([indexRoute, discoverRoute, providersRoute, repositoriesRoute, skillsRoute, targetsRoute, settingsRoute]);

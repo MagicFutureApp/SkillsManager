@@ -3,11 +3,7 @@ import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import {
-  inspectRepositorySourceWithSettings,
-  openRepositoryLocation,
-  selectLocalRepositoryPath
-} from "./repositories";
+import { inspectRepositorySourceWithSettings, openRepositoryLocation, selectLocalRepositoryPath } from "./repositories";
 
 vi.mock("electron", () => ({
   dialog: {
@@ -72,22 +68,9 @@ describe("inspectRepositorySourceWithSettings", () => {
     const sourcePath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-source-inspection-"));
 
     await mkdir(path.join(sourcePath, "skills", "review-bot"), { recursive: true });
-    await writeFile(
-      path.join(sourcePath, "skills", "review-bot", "SKILL.md"),
-      [
-        "---",
-        "name: review-bot",
-        "description: Review pull requests.",
-        "---",
-        "",
-        "# Review Bot"
-      ].join("\n"),
-      "utf8"
-    );
+    await writeFile(path.join(sourcePath, "skills", "review-bot", "SKILL.md"), ["---", "name: review-bot", "description: Review pull requests.", "---", "", "# Review Bot"].join("\n"), "utf8");
 
-    await expect(
-      inspectRepositorySourceWithSettings({} as never, sourcePath)
-    ).resolves.toMatchObject({
+    await expect(inspectRepositorySourceWithSettings({} as never, sourcePath)).resolves.toMatchObject({
       name: path.basename(sourcePath),
       patterns: ["skills/*/SKILL.md"],
       provider: "Local"
@@ -102,9 +85,7 @@ describe("selectLocalRepositoryPath", () => {
       filePaths: ["D:\\workspace\\local-skills"]
     });
 
-    await expect(selectLocalRepositoryPath({ showOpenDialog })).resolves.toBe(
-      "D:\\workspace\\local-skills"
-    );
+    await expect(selectLocalRepositoryPath({ showOpenDialog })).resolves.toBe("D:\\workspace\\local-skills");
     expect(showOpenDialog).toHaveBeenCalledWith({
       properties: ["openDirectory"]
     });

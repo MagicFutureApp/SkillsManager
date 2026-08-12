@@ -1,13 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious
-} from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CatalogErrorCode, CatalogSearchType, CatalogSkill } from "@/global";
@@ -55,28 +49,7 @@ const errorMessageKey = (code: CatalogErrorCode | null): string => {
   }
 };
 
-export const DiscoverPageMain = ({
-  mode,
-  skills,
-  status,
-  errorCode,
-  retryAfterSeconds,
-  searchInput,
-  onSearchInputChange,
-  onSearchSubmit,
-  onSearchClear,
-  searchResultQuery,
-  searchType,
-  searchCount,
-  searchTruncated,
-  formattedTotal,
-  isStale,
-  page,
-  pageCount,
-  onPageChange,
-  onRetry,
-  onSelectSkill
-}: DiscoverPageMainProps) => {
+export const DiscoverPageMain = ({ mode, skills, status, errorCode, retryAfterSeconds, searchInput, onSearchInputChange, onSearchSubmit, onSearchClear, searchResultQuery, searchType, searchCount, searchTruncated, formattedTotal, isStale, page, pageCount, onPageChange, onRetry, onSelectSkill }: DiscoverPageMainProps) => {
   const { t } = useTranslation();
 
   const isSearchMode = mode === "search";
@@ -85,23 +58,17 @@ export const DiscoverPageMain = ({
 
   // `unavailable` in browse mode is a generic load failure, but in search mode it
   // specifically means the search upstream is down — the copy differs.
-  const resolvedErrorKey =
-    errorCode === "unavailable" && !isSearchMode ? "discover.error" : errorMessageKey(errorCode);
+  const resolvedErrorKey = errorCode === "unavailable" && !isSearchMode ? "discover.error" : errorMessageKey(errorCode);
 
   return (
     <>
       <header className="mb-6">
         <h1 className="text-[28px] font-semibold leading-tight">{t("discover.heading")}</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-          {t("discover.description")}
-        </p>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{t("discover.description")}</p>
       </header>
 
       {/* Filter card: same shape as the repositories/providers filter bars */}
-      <section
-        className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 rounded-xl border border-border bg-card p-4"
-        aria-label={t("discover.filters.ariaLabel")}
-      >
+      <section className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 rounded-xl border border-border bg-card p-4" aria-label={t("discover.filters.ariaLabel")}>
         <div className="relative min-w-0">
           <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
             <Search className="size-4" aria-hidden="true" />
@@ -130,9 +97,7 @@ export const DiscoverPageMain = ({
       </section>
 
       {/* Stale notice: browse-only, search has no generation to fall back to */}
-      {isStale ? (
-        <p className="mt-3 text-xs text-muted-foreground">{t("discover.staleNotice")}</p>
-      ) : null}
+      {isStale ? <p className="mt-3 text-xs text-muted-foreground">{t("discover.staleNotice")}</p> : null}
 
       {/* Search summary: what was matched, how, and whether it was cut off */}
       {isSearchMode && status === "success" ? (
@@ -142,45 +107,27 @@ export const DiscoverPageMain = ({
               query: searchResultQuery,
               count: searchCount
             })}
-            <span className="ml-2 text-xs">
-              {t(
-                searchType === "fuzzy"
-                  ? "discover.searchType.fuzzy"
-                  : "discover.searchType.semantic"
-              )}
-            </span>
+            <span className="ml-2 text-xs">{t(searchType === "fuzzy" ? "discover.searchType.fuzzy" : "discover.searchType.semantic")}</span>
           </p>
-          {searchTruncated ? (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              {t("discover.searchResults.truncated", { count: searchCount })}
-            </p>
-          ) : null}
+          {searchTruncated ? <p className="text-xs text-amber-600 dark:text-amber-400">{t("discover.searchResults.truncated", { count: searchCount })}</p> : null}
         </div>
       ) : null}
 
       {/* Content area */}
       {status === "loading" && skills.length === 0 ? (
         <div className="flex items-center justify-center py-20">
-          <p className="text-sm text-muted-foreground">
-            {t(isSearchMode ? "discover.searchResults.searching" : "discover.loading")}
-          </p>
+          <p className="text-sm text-muted-foreground">{t(isSearchMode ? "discover.searchResults.searching" : "discover.loading")}</p>
         </div>
       ) : status === "error" ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20">
-          <p className="max-w-md text-center text-sm text-destructive">
-            {t(resolvedErrorKey, { seconds: retryAfterSeconds ?? 0 })}
-          </p>
+          <p className="max-w-md text-center text-sm text-destructive">{t(resolvedErrorKey, { seconds: retryAfterSeconds ?? 0 })}</p>
           <Button type="button" variant="outline" onClick={onRetry}>
             {t("discover.retry")}
           </Button>
         </div>
       ) : skills.length === 0 ? (
         <div className="flex items-center justify-center py-20">
-          <p className="text-sm text-muted-foreground">
-            {isSearchMode
-              ? t("discover.searchResults.empty", { query: searchResultQuery })
-              : t("discover.empty")}
-          </p>
+          <p className="text-sm text-muted-foreground">{isSearchMode ? t("discover.searchResults.empty", { query: searchResultQuery }) : t("discover.empty")}</p>
         </div>
       ) : (
         <>
@@ -196,25 +143,13 @@ export const DiscoverPageMain = ({
             <Pagination className="mt-4">
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => canGoPrev && onPageChange(page - 1)}
-                    aria-disabled={!canGoPrev}
-                    className={!canGoPrev ? "pointer-events-none opacity-50" : undefined}
-                    aria-label={t("skills.pagination.previous")}
-                  />
+                  <PaginationPrevious onClick={() => canGoPrev && onPageChange(page - 1)} aria-disabled={!canGoPrev} className={!canGoPrev ? "pointer-events-none opacity-50" : undefined} aria-label={t("skills.pagination.previous")} />
                 </PaginationItem>
                 <PaginationItem>
-                  <span className="px-3 py-1.5 text-sm text-muted-foreground">
-                    {t("discover.pagination.pageInfo", { current: page + 1, total: pageCount })}
-                  </span>
+                  <span className="px-3 py-1.5 text-sm text-muted-foreground">{t("discover.pagination.pageInfo", { current: page + 1, total: pageCount })}</span>
                 </PaginationItem>
                 <PaginationItem>
-                  <PaginationNext
-                    onClick={() => canGoNext && onPageChange(page + 1)}
-                    aria-disabled={!canGoNext}
-                    className={!canGoNext ? "pointer-events-none opacity-50" : undefined}
-                    aria-label={t("skills.pagination.next")}
-                  />
+                  <PaginationNext onClick={() => canGoNext && onPageChange(page + 1)} aria-disabled={!canGoNext} className={!canGoNext ? "pointer-events-none opacity-50" : undefined} aria-label={t("skills.pagination.next")} />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>

@@ -1,25 +1,9 @@
 import { ipcMain } from "electron";
 
 import { createCatalogClient, type CatalogClient } from "../../core/catalog/catalog-client";
-import type {
-  CatalogManifestResult,
-  CatalogPageInput,
-  CatalogPageResult,
-  CatalogResult,
-  CatalogSearchInput,
-  CatalogSearchResult,
-  CatalogSearchType
-} from "../../core/catalog/catalog-types";
+import type { CatalogManifestResult, CatalogPageInput, CatalogPageResult, CatalogResult, CatalogSearchInput, CatalogSearchResult, CatalogSearchType } from "../../core/catalog/catalog-types";
 
-export type {
-  CatalogManifestResult,
-  CatalogPageInput,
-  CatalogPageResult,
-  CatalogResult,
-  CatalogSearchInput,
-  CatalogSearchResult,
-  CatalogSearchType
-};
+export type { CatalogManifestResult, CatalogPageInput, CatalogPageResult, CatalogResult, CatalogSearchInput, CatalogSearchResult, CatalogSearchType };
 
 const unknownFailure = (error: unknown): CatalogResult<never> => ({
   ok: false,
@@ -91,9 +75,7 @@ const parseSearchInput = (input: unknown): CatalogSearchInput | null => {
   return parsedInput;
 };
 
-export const getCatalogManifest = async (
-  client: CatalogClient
-): Promise<CatalogResult<CatalogManifestResult>> => {
+export const getCatalogManifest = async (client: CatalogClient): Promise<CatalogResult<CatalogManifestResult>> => {
   try {
     return await client.getManifest();
   } catch (error: unknown) {
@@ -103,10 +85,7 @@ export const getCatalogManifest = async (
   }
 };
 
-export const getCatalogPage = async (
-  client: CatalogClient,
-  input: unknown
-): Promise<CatalogResult<CatalogPageResult>> => {
+export const getCatalogPage = async (client: CatalogClient, input: unknown): Promise<CatalogResult<CatalogPageResult>> => {
   const parsedInput = parsePageInput(input);
 
   if (!parsedInput) {
@@ -125,10 +104,7 @@ export const getCatalogPage = async (
   }
 };
 
-export const searchCatalog = async (
-  client: CatalogClient,
-  input: unknown
-): Promise<CatalogResult<CatalogSearchResult>> => {
+export const searchCatalog = async (client: CatalogClient, input: unknown): Promise<CatalogResult<CatalogSearchResult>> => {
   const parsedInput = parseSearchInput(input);
 
   if (!parsedInput) {
@@ -152,17 +128,11 @@ export const registerCatalogIpc = (client: CatalogClient = createCatalogClient()
     return getCatalogManifest(client);
   });
 
-  ipcMain.handle(
-    "catalog:getPage",
-    (_event, input: unknown): Promise<CatalogResult<CatalogPageResult>> => {
-      return getCatalogPage(client, input);
-    }
-  );
+  ipcMain.handle("catalog:getPage", (_event, input: unknown): Promise<CatalogResult<CatalogPageResult>> => {
+    return getCatalogPage(client, input);
+  });
 
-  ipcMain.handle(
-    "catalog:search",
-    (_event, input: unknown): Promise<CatalogResult<CatalogSearchResult>> => {
-      return searchCatalog(client, input);
-    }
-  );
+  ipcMain.handle("catalog:search", (_event, input: unknown): Promise<CatalogResult<CatalogSearchResult>> => {
+    return searchCatalog(client, input);
+  });
 };

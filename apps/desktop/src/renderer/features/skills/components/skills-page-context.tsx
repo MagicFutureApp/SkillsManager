@@ -4,10 +4,7 @@ import type { SkillsPageState } from "../hooks/use-skills-page-state";
 
 const SkillsPageContext = React.createContext<SkillsPageState | null>(null);
 
-export const SkillsPageProvider = ({
-  children,
-  state
-}: React.PropsWithChildren<{ state: SkillsPageState }>) => {
+export const SkillsPageProvider = ({ children, state }: React.PropsWithChildren<{ state: SkillsPageState }>) => {
   return <SkillsPageContext.Provider value={state}>{children}</SkillsPageContext.Provider>;
 };
 

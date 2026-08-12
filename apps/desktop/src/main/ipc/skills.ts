@@ -3,13 +3,7 @@ import { ipcMain } from "electron";
 import { randomUUID } from "node:crypto";
 import { rm } from "node:fs/promises";
 
-import type {
-  RemoveSkillTargetPreferenceInput,
-  RemoveSkillTargetPreferenceResult,
-  SkillApiRecord,
-  UpdateSkillTargetPreferenceInput,
-  UpdateSkillTargetPreferenceResult
-} from "../../core/skills/skill-api";
+import type { RemoveSkillTargetPreferenceInput, RemoveSkillTargetPreferenceResult, SkillApiRecord, UpdateSkillTargetPreferenceInput, UpdateSkillTargetPreferenceResult } from "../../core/skills/skill-api";
 import { createSkillRepository } from "../../db/repositories/skillRepository";
 import { agentTargets, installInstances, skillTargetPreferences } from "../../db/schema";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
@@ -19,12 +13,7 @@ export type SkillsListResult = {
   skills: SkillApiRecord[];
 };
 
-export type {
-  RemoveSkillTargetPreferenceInput,
-  RemoveSkillTargetPreferenceResult,
-  UpdateSkillTargetPreferenceInput,
-  UpdateSkillTargetPreferenceResult
-};
+export type { RemoveSkillTargetPreferenceInput, RemoveSkillTargetPreferenceResult, UpdateSkillTargetPreferenceInput, UpdateSkillTargetPreferenceResult };
 
 export const getSkills = async (db: DbClient): Promise<SkillsListResult> => {
   const skillRepository = createSkillRepository(db);
@@ -34,10 +23,7 @@ export const getSkills = async (db: DbClient): Promise<SkillsListResult> => {
   };
 };
 
-export const setSkillTargetPreference = async (
-  db: DbClient,
-  input: UpdateSkillTargetPreferenceInput
-): Promise<UpdateSkillTargetPreferenceResult> => {
+export const setSkillTargetPreference = async (db: DbClient, input: UpdateSkillTargetPreferenceInput): Promise<UpdateSkillTargetPreferenceResult> => {
   const skillRepository = createSkillRepository(db);
 
   await skillRepository.setTargetPreference(normalizeUpdateSkillTargetPreferenceInput(input));
@@ -45,10 +31,7 @@ export const setSkillTargetPreference = async (
   return { success: true };
 };
 
-export const removeSkillTargetPreference = async (
-  db: DbClient,
-  input: RemoveSkillTargetPreferenceInput
-): Promise<RemoveSkillTargetPreferenceResult> => {
+export const removeSkillTargetPreference = async (db: DbClient, input: RemoveSkillTargetPreferenceInput): Promise<RemoveSkillTargetPreferenceResult> => {
   const normalizedInput = normalizeRemoveSkillTargetPreferenceInput(input);
   const installInstance = await getInstallInstanceForSkillTarget(db, normalizedInput);
   const updatedAt = new Date();
@@ -71,12 +54,7 @@ export const removeSkillTargetPreference = async (
   db.transaction((tx) => {
     if (normalizedInput.removeTargetPreference) {
       tx.delete(skillTargetPreferences)
-        .where(
-          and(
-            eq(skillTargetPreferences.skillUnitId, normalizedInput.skillUnitId),
-            eq(skillTargetPreferences.agentTargetId, normalizedInput.agentTargetId)
-          )
-        )
+        .where(and(eq(skillTargetPreferences.skillUnitId, normalizedInput.skillUnitId), eq(skillTargetPreferences.agentTargetId, normalizedInput.agentTargetId)))
         .run();
     } else {
       tx.insert(skillTargetPreferences)
@@ -100,12 +78,7 @@ export const removeSkillTargetPreference = async (
 
     if (normalizedInput.deleteInstalledFiles) {
       tx.delete(installInstances)
-        .where(
-          and(
-            eq(installInstances.skillUnitId, normalizedInput.skillUnitId),
-            eq(installInstances.agentTargetId, normalizedInput.agentTargetId)
-          )
-        )
+        .where(and(eq(installInstances.skillUnitId, normalizedInput.skillUnitId), eq(installInstances.agentTargetId, normalizedInput.agentTargetId)))
         .run();
     }
   });
@@ -121,30 +94,16 @@ export const registerSkillsIpc = (db: DbProvider): void => {
     return getSkills(resolveDb(db));
   });
 
-  ipcMain.handle(
-    "skills:setTargetPreference",
-    (
-      _event,
-      input: UpdateSkillTargetPreferenceInput
-    ): Promise<UpdateSkillTargetPreferenceResult> => {
-      return setSkillTargetPreference(resolveDb(db), input);
-    }
-  );
+  ipcMain.handle("skills:setTargetPreference", (_event, input: UpdateSkillTargetPreferenceInput): Promise<UpdateSkillTargetPreferenceResult> => {
+    return setSkillTargetPreference(resolveDb(db), input);
+  });
 
-  ipcMain.handle(
-    "skills:removeTargetPreference",
-    (
-      _event,
-      input: RemoveSkillTargetPreferenceInput
-    ): Promise<RemoveSkillTargetPreferenceResult> => {
-      return removeSkillTargetPreference(resolveDb(db), input);
-    }
-  );
+  ipcMain.handle("skills:removeTargetPreference", (_event, input: RemoveSkillTargetPreferenceInput): Promise<RemoveSkillTargetPreferenceResult> => {
+    return removeSkillTargetPreference(resolveDb(db), input);
+  });
 };
 
-const normalizeUpdateSkillTargetPreferenceInput = (
-  input: UpdateSkillTargetPreferenceInput
-): UpdateSkillTargetPreferenceInput => {
+const normalizeUpdateSkillTargetPreferenceInput = (input: UpdateSkillTargetPreferenceInput): UpdateSkillTargetPreferenceInput => {
   const skillUnitId = input.skillUnitId.trim();
   const agentTargetId = input.agentTargetId.trim();
 
@@ -159,9 +118,7 @@ const normalizeUpdateSkillTargetPreferenceInput = (
   };
 };
 
-const normalizeRemoveSkillTargetPreferenceInput = (
-  input: RemoveSkillTargetPreferenceInput
-): RemoveSkillTargetPreferenceInput => {
+const normalizeRemoveSkillTargetPreferenceInput = (input: RemoveSkillTargetPreferenceInput): RemoveSkillTargetPreferenceInput => {
   const skillUnitId = input.skillUnitId.trim();
   const agentTargetId = input.agentTargetId.trim();
 
@@ -177,21 +134,13 @@ const normalizeRemoveSkillTargetPreferenceInput = (
   };
 };
 
-const getInstallInstanceForSkillTarget = async (
-  db: DbClient,
-  input: Pick<RemoveSkillTargetPreferenceInput, "agentTargetId" | "skillUnitId">
-) => {
+const getInstallInstanceForSkillTarget = async (db: DbClient, input: Pick<RemoveSkillTargetPreferenceInput, "agentTargetId" | "skillUnitId">) => {
   const rows = await db
     .select({
       installedPath: installInstances.installedPath
     })
     .from(installInstances)
-    .where(
-      and(
-        eq(installInstances.skillUnitId, input.skillUnitId),
-        eq(installInstances.agentTargetId, input.agentTargetId)
-      )
-    )
+    .where(and(eq(installInstances.skillUnitId, input.skillUnitId), eq(installInstances.agentTargetId, input.agentTargetId)))
     .limit(1);
 
   return rows[0] ?? null;

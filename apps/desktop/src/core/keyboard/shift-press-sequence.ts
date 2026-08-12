@@ -6,10 +6,7 @@ type ShiftPressInput = {
   isAutoRepeat?: boolean;
 };
 
-export const createShiftPressSequenceHandler = (
-  onComplete: () => void,
-  now: () => number = Date.now
-) => {
+export const createShiftPressSequenceHandler = (onComplete: () => void, now: () => number = Date.now) => {
   let shiftPressCount = 0;
   let previousShiftPressAt = 0;
 

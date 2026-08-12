@@ -7,11 +7,7 @@ import { useShellStore } from "@/stores/shell-store";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import type { AppHealth } from "@/global";
 import type { TargetsListResult } from "@/global";
-import {
-  providerApiRecordsFixture,
-  repositoryApiRecordsFixture,
-  skillApiRecordsFixture
-} from "@/test/api-fixtures";
+import { providerApiRecordsFixture, repositoryApiRecordsFixture, skillApiRecordsFixture } from "@/test/api-fixtures";
 
 import { AppShell } from "./app-shell";
 
@@ -101,10 +97,7 @@ describe("AppShell", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("complementary", { name: "主导航" })).toHaveAttribute(
-        "data-collapsed",
-        "true"
-      );
+      expect(screen.getByRole("complementary", { name: "主导航" })).toHaveAttribute("data-collapsed", "true");
     });
   });
 
@@ -115,17 +108,9 @@ describe("AppShell", () => {
       </AppShell>
     );
 
-    expect(screen.getByTestId("app-titlebar-spacer")).toHaveClass(
-      "fixed",
-      "left-0",
-      "right-0",
-      "top-0",
-      "h-11"
-    );
+    expect(screen.getByTestId("app-titlebar-spacer")).toHaveClass("fixed", "left-0", "right-0", "top-0", "h-11");
     expect(screen.getByTestId("app-shell-layout")).toHaveClass("pt-11");
-    expect(screen.getByRole("complementary", { name: "主导航" })).toHaveClass(
-      "min-h-[calc(100svh-44px)]"
-    );
+    expect(screen.getByRole("complementary", { name: "主导航" })).toHaveClass("min-h-[calc(100svh-44px)]");
   });
 
   it("keeps the app identity clear of Windows window controls", async () => {
@@ -168,10 +153,7 @@ describe("AppShell", () => {
     );
 
     expect(screen.getByTestId("app-shell-layout")).toHaveClass("h-svh", "overflow-hidden", "pt-11");
-    expect(screen.getByTestId("app-shell-content")).toHaveClass(
-      "h-[calc(100svh-44px)]",
-      "overflow-y-auto"
-    );
+    expect(screen.getByTestId("app-shell-content")).toHaveClass("h-[calc(100svh-44px)]", "overflow-y-auto");
   });
 
   it("loads the application version from the Electron API for sidebar fallback text", async () => {
@@ -226,9 +208,7 @@ describe("AppShell", () => {
         targets: 3
       }
     });
-    const listRepositories = vi
-      .fn()
-      .mockResolvedValue({ repositories: repositoryApiRecordsFixture });
+    const listRepositories = vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture });
     const listSkills = vi.fn().mockResolvedValue({ skills: skillApiRecordsFixture });
     const listTargets = vi.fn().mockResolvedValue(targetsFixture);
     window.skillsManager = {
@@ -267,10 +247,7 @@ describe("AppShell", () => {
       </AppShell>
     );
 
-    expect(screen.getByRole("complementary", { name: "主导航" })).toHaveAttribute(
-      "data-collapsed",
-      "false"
-    );
+    expect(screen.getByRole("complementary", { name: "主导航" })).toHaveAttribute("data-collapsed", "false");
 
     act(() => {
       setViewportWidth(1228);
@@ -278,10 +255,7 @@ describe("AppShell", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole("complementary", { name: "主导航" })).toHaveAttribute(
-        "data-collapsed",
-        "true"
-      );
+      expect(screen.getByRole("complementary", { name: "主导航" })).toHaveAttribute("data-collapsed", "true");
     });
   });
 });

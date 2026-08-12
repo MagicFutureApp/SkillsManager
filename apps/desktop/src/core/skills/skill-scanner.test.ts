@@ -11,16 +11,8 @@ describe("scanSkillDirectory", () => {
 
     await mkdir(path.join(rootPath, "skills", "review-bot"), { recursive: true });
     await mkdir(path.join(rootPath, ".codex", "skills", "release-notes"), { recursive: true });
-    await writeFile(
-      path.join(rootPath, "skills", "review-bot", "SKILL.md"),
-      "# Review Bot\n\nReviews pull requests with concise, actionable feedback.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(rootPath, ".codex", "skills", "release-notes", "SKILL.md"),
-      "# Release Notes\n\nTurns commit history into readable release notes.\n",
-      "utf8"
-    );
+    await writeFile(path.join(rootPath, "skills", "review-bot", "SKILL.md"), "# Review Bot\n\nReviews pull requests with concise, actionable feedback.\n", "utf8");
+    await writeFile(path.join(rootPath, ".codex", "skills", "release-notes", "SKILL.md"), "# Release Notes\n\nTurns commit history into readable release notes.\n", "utf8");
 
     await expect(scanSkillDirectory(rootPath)).resolves.toEqual([
       {
@@ -50,35 +42,14 @@ describe("scanSkillDirectory", () => {
 
   it("ignores SKILL.md files under common dependency directories while scanning local project roots", async () => {
     const rootPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-scan-node-modules-"));
-    const dependencyDirectories = [
-      "node_modules/package-with-skill",
-      "vendor/package-with-skill",
-      ".venv/lib/python3.12/site-packages/package-with-skill",
-      ".cargo/registry/src/package-with-skill",
-      "target/package-with-skill",
-      ".gradle/caches/modules-2/files-2.1/package-with-skill",
-      ".kotlin/package-with-skill",
-      ".konan/package-with-skill",
-      ".dart_tool/package-with-skill",
-      "Pods/package-with-skill",
-      ".build/checkouts/package-with-skill",
-      ".terraform/providers/package-with-skill"
-    ];
+    const dependencyDirectories = ["node_modules/package-with-skill", "vendor/package-with-skill", ".venv/lib/python3.12/site-packages/package-with-skill", ".cargo/registry/src/package-with-skill", "target/package-with-skill", ".gradle/caches/modules-2/files-2.1/package-with-skill", ".kotlin/package-with-skill", ".konan/package-with-skill", ".dart_tool/package-with-skill", "Pods/package-with-skill", ".build/checkouts/package-with-skill", ".terraform/providers/package-with-skill"];
 
     await mkdir(path.join(rootPath, ".agents", "skills", "kanji-helper"), { recursive: true });
-    await writeFile(
-      path.join(rootPath, ".agents", "skills", "kanji-helper", "SKILL.md"),
-      "# Kanji Helper\n\nPractices kanji.\n",
-      "utf8"
-    );
+    await writeFile(path.join(rootPath, ".agents", "skills", "kanji-helper", "SKILL.md"), "# Kanji Helper\n\nPractices kanji.\n", "utf8");
 
     for (const dependencyDirectory of dependencyDirectories) {
       await mkdir(path.join(rootPath, dependencyDirectory), { recursive: true });
-      await writeFile(
-        path.join(rootPath, dependencyDirectory, "SKILL.md"),
-        "# Package Skill\n\nShould not be parsed from dependencies.\n",
-        "utf8"
-      );
+      await writeFile(path.join(rootPath, dependencyDirectory, "SKILL.md"), "# Package Skill\n\nShould not be parsed from dependencies.\n", "utf8");
     }
 
     await expect(scanSkillDirectory(rootPath)).resolves.toMatchObject([
@@ -93,21 +64,7 @@ describe("scanSkillDirectory", () => {
     const rootPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-scan-frontmatter-"));
 
     await mkdir(path.join(rootPath, "skills", "xlsx"), { recursive: true });
-    await writeFile(
-      path.join(rootPath, "skills", "xlsx", "SKILL.md"),
-      [
-        "---",
-        "name: xlsx",
-        'description: "Use this skill any time a spreadsheet file is the primary input or output."',
-        "license: Proprietary. LICENSE.txt has complete terms",
-        "---",
-        "",
-        "# Fallback Heading",
-        "",
-        "Fallback body description."
-      ].join("\n"),
-      "utf8"
-    );
+    await writeFile(path.join(rootPath, "skills", "xlsx", "SKILL.md"), ["---", "name: xlsx", 'description: "Use this skill any time a spreadsheet file is the primary input or output."', "license: Proprietary. LICENSE.txt has complete terms", "---", "", "# Fallback Heading", "", "Fallback body description."].join("\n"), "utf8");
 
     await expect(scanSkillDirectory(rootPath, ["skills/*/SKILL.md"])).resolves.toMatchObject([
       {
@@ -125,21 +82,9 @@ describe("scanSkillDirectory", () => {
     await mkdir(path.join(rootPath, "skills", "review-bot"), { recursive: true });
     await mkdir(path.join(rootPath, "skills", "release-notes"), { recursive: true });
     await mkdir(path.join(rootPath, "docs", "ignored"), { recursive: true });
-    await writeFile(
-      path.join(rootPath, "skills", "review-bot", "SKILL.md"),
-      "# Review Bot\n\nReviews pull requests.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(rootPath, "skills", "release-notes", "SKILL.md"),
-      "# Release Notes\n\nWrites release notes.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(rootPath, "docs", "ignored", "SKILL.md"),
-      "# Ignored\n\nOutside the configured discovery entry.\n",
-      "utf8"
-    );
+    await writeFile(path.join(rootPath, "skills", "review-bot", "SKILL.md"), "# Review Bot\n\nReviews pull requests.\n", "utf8");
+    await writeFile(path.join(rootPath, "skills", "release-notes", "SKILL.md"), "# Release Notes\n\nWrites release notes.\n", "utf8");
+    await writeFile(path.join(rootPath, "docs", "ignored", "SKILL.md"), "# Ignored\n\nOutside the configured discovery entry.\n", "utf8");
 
     await expect(scanSkillDirectory(rootPath, ["skills/*/SKILL.md"])).resolves.toMatchObject([
       {
@@ -160,21 +105,9 @@ describe("scanSkillDirectory", () => {
     await mkdir(path.join(rootPath, "skills", "xlsx"), { recursive: true });
     await mkdir(path.join(rootPath, "packs", "office", "word"), { recursive: true });
     await writeFile(path.join(rootPath, "SKILL.md"), "# Root\n\nRoot skill.\n", "utf8");
-    await writeFile(
-      path.join(rootPath, "root-child", "SKILL.md"),
-      "# Root Child\n\nOne level skill.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(rootPath, "skills", "xlsx", "SKILL.md"),
-      "# XLSX\n\nSpreadsheet skill.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(rootPath, "packs", "office", "word", "SKILL.md"),
-      "# Word\n\nDocument skill.\n",
-      "utf8"
-    );
+    await writeFile(path.join(rootPath, "root-child", "SKILL.md"), "# Root Child\n\nOne level skill.\n", "utf8");
+    await writeFile(path.join(rootPath, "skills", "xlsx", "SKILL.md"), "# XLSX\n\nSpreadsheet skill.\n", "utf8");
+    await writeFile(path.join(rootPath, "packs", "office", "word", "SKILL.md"), "# Word\n\nDocument skill.\n", "utf8");
 
     await expect(scanSkillDirectory(rootPath, ["**/SKILL.md"])).resolves.toMatchObject([
       { entryPath: "SKILL.md", name: "Root" },
@@ -191,30 +124,12 @@ describe("scanSkillDirectory", () => {
     await mkdir(path.join(rootPath, "skills", "pdf"), { recursive: true });
     await mkdir(path.join(rootPath, "skills", "xlsx"), { recursive: true });
     await mkdir(path.join(rootPath, "examples", "ignored"), { recursive: true });
-    await writeFile(
-      path.join(rootPath, "template", "SKILL.md"),
-      "# Template\n\nStarter.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(rootPath, "skills", "pdf", "SKILL.md"),
-      "# PDF\n\nPDF skill.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(rootPath, "skills", "xlsx", "SKILL.md"),
-      "# XLSX\n\nSpreadsheet skill.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(rootPath, "examples", "ignored", "SKILL.md"),
-      "# Ignored\n\nIgnored skill.\n",
-      "utf8"
-    );
+    await writeFile(path.join(rootPath, "template", "SKILL.md"), "# Template\n\nStarter.\n", "utf8");
+    await writeFile(path.join(rootPath, "skills", "pdf", "SKILL.md"), "# PDF\n\nPDF skill.\n", "utf8");
+    await writeFile(path.join(rootPath, "skills", "xlsx", "SKILL.md"), "# XLSX\n\nSpreadsheet skill.\n", "utf8");
+    await writeFile(path.join(rootPath, "examples", "ignored", "SKILL.md"), "# Ignored\n\nIgnored skill.\n", "utf8");
 
-    await expect(
-      scanSkillDirectory(rootPath, ["skills/*/SKILL.md", "template/SKILL.md"])
-    ).resolves.toMatchObject([
+    await expect(scanSkillDirectory(rootPath, ["skills/*/SKILL.md", "template/SKILL.md"])).resolves.toMatchObject([
       { entryPath: "skills/pdf/SKILL.md", name: "PDF" },
       { entryPath: "skills/xlsx/SKILL.md", name: "XLSX" },
       { entryPath: "template/SKILL.md", name: "Template" }
@@ -225,16 +140,8 @@ describe("scanSkillDirectory", () => {
     const rootPath = await mkdtemp(path.join(os.tmpdir(), "skills-manager-scan-root-"));
 
     await mkdir(path.join(rootPath, "skills", "ignored"), { recursive: true });
-    await writeFile(
-      path.join(rootPath, "SKILL.md"),
-      "# Root Skill\n\nA single-skill repository.\n",
-      "utf8"
-    );
-    await writeFile(
-      path.join(rootPath, "skills", "ignored", "SKILL.md"),
-      "# Ignored\n\nOutside the exact root entry.\n",
-      "utf8"
-    );
+    await writeFile(path.join(rootPath, "SKILL.md"), "# Root Skill\n\nA single-skill repository.\n", "utf8");
+    await writeFile(path.join(rootPath, "skills", "ignored", "SKILL.md"), "# Ignored\n\nOutside the exact root entry.\n", "utf8");
 
     await expect(scanSkillDirectory(rootPath, ["SKILL.md"])).resolves.toMatchObject([
       {

@@ -35,10 +35,7 @@ describe("inspectRepositorySource", () => {
       provider: "GitHub"
     });
     expect(fetchJson).toHaveBeenNthCalledWith(1, "https://api.github.com/repos/anthropics/skills");
-    expect(fetchJson).toHaveBeenNthCalledWith(
-      2,
-      "https://api.github.com/repos/anthropics/skills/git/trees/main?recursive=1"
-    );
+    expect(fetchJson).toHaveBeenNthCalledWith(2, "https://api.github.com/repos/anthropics/skills/git/trees/main?recursive=1");
   });
 
   it("returns root discovery for a single root skill", async () => {
@@ -47,9 +44,7 @@ describe("inspectRepositorySource", () => {
       .mockResolvedValueOnce({ default_branch: "main", description: "Read the news locally." })
       .mockResolvedValueOnce({ tree: [{ path: "SKILL.md", type: "blob" }] });
 
-    await expect(
-      inspectRepositorySource("git@github.com:sfkislev/the-news.git", { fetchJson })
-    ).resolves.toMatchObject({
+    await expect(inspectRepositorySource("git@github.com:sfkislev/the-news.git", { fetchJson })).resolves.toMatchObject({
       about: "Read the news locally.",
       name: "sfkislev/the-news",
       patterns: ["SKILL.md"],
@@ -63,9 +58,7 @@ describe("inspectRepositorySource", () => {
       .mockResolvedValueOnce({ default_branch: "main", description: "One Vercel skill." })
       .mockResolvedValueOnce({ tree: [{ path: "skills/find-skills/SKILL.md", type: "blob" }] });
 
-    await expect(
-      inspectRepositorySource("https://github.com/vercel-labs/skills", { fetchJson })
-    ).resolves.toMatchObject({
+    await expect(inspectRepositorySource("https://github.com/vercel-labs/skills", { fetchJson })).resolves.toMatchObject({
       name: "vercel-labs/skills",
       patterns: ["skills/*/SKILL.md"],
       provider: "GitHub"
@@ -83,9 +76,7 @@ describe("inspectRepositorySource", () => {
         ]
       });
 
-    await expect(
-      inspectRepositorySource("https://github.com/example/root-skills", { fetchJson })
-    ).resolves.toMatchObject({
+    await expect(inspectRepositorySource("https://github.com/example/root-skills", { fetchJson })).resolves.toMatchObject({
       patterns: ["*/SKILL.md"]
     });
   });
@@ -102,9 +93,7 @@ describe("inspectRepositorySource", () => {
         ]
       });
 
-    await expect(
-      inspectRepositorySource("https://github.com/anthropics/skills", { fetchJson })
-    ).resolves.toMatchObject({
+    await expect(inspectRepositorySource("https://github.com/anthropics/skills", { fetchJson })).resolves.toMatchObject({
       patterns: ["skills/*/SKILL.md", "template/SKILL.md"]
     });
   });
@@ -112,9 +101,7 @@ describe("inspectRepositorySource", () => {
   it("falls back to URL-only metadata when remote inspection is unavailable", async () => {
     const fetchJson = vi.fn().mockRejectedValue(new Error("offline"));
 
-    await expect(
-      inspectRepositorySource("https://gitlab.com/design/lab-skills.git", { fetchJson })
-    ).resolves.toEqual({
+    await expect(inspectRepositorySource("https://gitlab.com/design/lab-skills.git", { fetchJson })).resolves.toEqual({
       name: "design/lab-skills",
       provider: "GitLab"
     });
@@ -154,9 +141,7 @@ describe("inspectRepositorySource", () => {
       })
     );
 
-    await expect(inspectRepositorySource("https://github.com/anthropics/skills")).rejects.toThrow(
-      "GitHub API 访问频率已达上限，请在 2026-06-15T00:00:00.000Z 后重试。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。"
-    );
+    await expect(inspectRepositorySource("https://github.com/anthropics/skills")).rejects.toThrow("GitHub API 访问频率已达上限，请在 2026-06-15T00:00:00.000Z 后重试。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。");
   });
 
   it("returns GitHub permission guidance when repository metadata is inaccessible to the token", async () => {
@@ -172,9 +157,7 @@ describe("inspectRepositorySource", () => {
       })
     );
 
-    await expect(inspectRepositorySource("https://github.com/anthropics/skills")).rejects.toThrow(
-      "GitHub token 权限不足，需要 Metadata read 权限后才能解析这个来源。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。"
-    );
+    await expect(inspectRepositorySource("https://github.com/anthropics/skills")).rejects.toThrow("GitHub token 权限不足，需要 Metadata read 权限后才能解析这个来源。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。");
   });
 
   it("returns a network error and logs tree inspection failures in development", async () => {
@@ -227,9 +210,7 @@ describe("inspectRepositorySource", () => {
         })
     );
 
-    await expect(inspectRepositorySource("https://github.com/anthropics/skills")).rejects.toThrow(
-      "GitHub API 暂时限流，请约 60 秒后重试。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。"
-    );
+    await expect(inspectRepositorySource("https://github.com/anthropics/skills")).rejects.toThrow("GitHub API 暂时限流，请约 60 秒后重试。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。");
   });
 
   it("sends a bearer token to both GitHub metadata and tree requests when configured", async () => {
@@ -289,9 +270,7 @@ describe("inspectRepositorySource", () => {
         ]
       });
 
-    await expect(
-      inspectRepositorySource("https://github.com/example/no-skills", { fetchJson })
-    ).resolves.toMatchObject({
+    await expect(inspectRepositorySource("https://github.com/example/no-skills", { fetchJson })).resolves.toMatchObject({
       name: "example/no-skills",
       patterns: [],
       provider: "GitHub"
@@ -299,9 +278,7 @@ describe("inspectRepositorySource", () => {
   });
 
   it("accepts markdown links and host-only GitHub URLs", async () => {
-    const fetchJson = vi
-      .fn()
-      .mockResolvedValue({ default_branch: "main", description: "Markdown pasted repo." });
+    const fetchJson = vi.fn().mockResolvedValue({ default_branch: "main", description: "Markdown pasted repo." });
 
     await expect(
       inspectRepositorySource("[anthropics/skills](https://github.com/anthropics/skills)", {
@@ -312,9 +289,7 @@ describe("inspectRepositorySource", () => {
       provider: "GitHub"
     });
 
-    await expect(
-      inspectRepositorySource("github.com/vercel-labs/skills", { fetchJson })
-    ).resolves.toMatchObject({
+    await expect(inspectRepositorySource("github.com/vercel-labs/skills", { fetchJson })).resolves.toMatchObject({
       name: "vercel-labs/skills",
       provider: "GitHub"
     });

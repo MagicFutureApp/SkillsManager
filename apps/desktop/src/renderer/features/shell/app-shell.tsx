@@ -21,9 +21,7 @@ export const AppShell = ({ children }: AppShellProps) => {
   const activeRouteId = routeIdByPath[location.pathname] ?? "skills";
   const isSidebarAutoCollapsed = useShellStore((state) => state.isSidebarAutoCollapsed);
   const setActiveRouteId = useShellStore((state) => state.setActiveRouteId);
-  const setSidebarAutoCollapsedByWidth = useShellStore(
-    (state) => state.setSidebarAutoCollapsedByWidth
-  );
+  const setSidebarAutoCollapsedByWidth = useShellStore((state) => state.setSidebarAutoCollapsedByWidth);
   const shouldCollapseSidebar = isSidebarAutoCollapsed;
   const isMacOs = health?.platform === "darwin";
 
@@ -59,40 +57,15 @@ export const AppShell = ({ children }: AppShellProps) => {
 
   return (
     <>
-      <div
-        className={cn(
-          "fixed left-0 right-0 top-0 z-50 flex h-11 items-center border-b border-border bg-background",
-          isMacOs ? "justify-center px-[138px]" : "pl-4 pr-[138px]"
-        )}
-        data-testid="app-titlebar-spacer"
-        style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
-      >
+      <div className={cn("fixed left-0 right-0 top-0 z-50 flex h-11 items-center border-b border-border bg-background", isMacOs ? "justify-center px-[138px]" : "pl-4 pr-[138px]")} data-testid="app-titlebar-spacer" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
         <div className="flex min-w-0 items-center gap-2">
           <img src={skillsManagerMark} alt={APP_META.title} className="size-5 rounded-md" />
           <span className="truncate text-sm font-semibold">{APP_META.title}</span>
         </div>
       </div>
-      <div
-        className={cn(
-          "grid h-svh overflow-hidden bg-background pt-11 text-foreground transition-[grid-template-columns]",
-          shouldCollapseSidebar
-            ? "grid-cols-[64px_minmax(0,1fr)]"
-            : "grid-cols-[232px_minmax(0,1fr)]"
-        )}
-        data-testid="app-shell-layout"
-      >
-        <AppSidebar
-          activeRouteId={activeRouteId}
-          appVersion={appInfo?.version}
-          badgeCounts={badgeCounts}
-          isAutoCollapsed={isSidebarAutoCollapsed}
-          isCollapsed={shouldCollapseSidebar}
-          onNavigate={(routeId) => void navigate({ to: routePathById[routeId] })}
-        />
-        <main
-          className="h-[calc(100svh-44px)] min-w-0 overflow-y-auto"
-          data-testid="app-shell-content"
-        >
+      <div className={cn("grid h-svh overflow-hidden bg-background pt-11 text-foreground transition-[grid-template-columns]", shouldCollapseSidebar ? "grid-cols-[64px_minmax(0,1fr)]" : "grid-cols-[232px_minmax(0,1fr)]")} data-testid="app-shell-layout">
+        <AppSidebar activeRouteId={activeRouteId} appVersion={appInfo?.version} badgeCounts={badgeCounts} isAutoCollapsed={isSidebarAutoCollapsed} isCollapsed={shouldCollapseSidebar} onNavigate={(routeId) => void navigate({ to: routePathById[routeId] })} />
+        <main className="h-[calc(100svh-44px)] min-w-0 overflow-y-auto" data-testid="app-shell-content">
           {children}
           {health ? (
             <dl className="sr-only">

@@ -2,25 +2,9 @@ import { readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { dialog, ipcMain } from "electron";
 
-import type {
-  AgentTargetType,
-  RegisteredTargetRecord,
-  TargetDetectionStatus,
-  TargetScanCandidate,
-  TargetScanIssue,
-  TargetScanRecord
-} from "../../core/targets/target-api";
-import {
-  agentTargetDirectoryDefinitions,
-  joinTargetPath,
-  normalizeTargetPath,
-  scanRegisteredTargets,
-  scanSystemTargets
-} from "../../core/targets/target-scanner";
-import {
-  buildCustomDirectoryTargetId,
-  deriveCustomDirectoryTargetName
-} from "../../core/targets/target-utils";
+import type { AgentTargetType, RegisteredTargetRecord, TargetDetectionStatus, TargetScanCandidate, TargetScanIssue, TargetScanRecord } from "../../core/targets/target-api";
+import { agentTargetDirectoryDefinitions, joinTargetPath, normalizeTargetPath, scanRegisteredTargets, scanSystemTargets } from "../../core/targets/target-scanner";
+import { buildCustomDirectoryTargetId, deriveCustomDirectoryTargetName } from "../../core/targets/target-utils";
 import { createTargetRepository } from "../../db/repositories/targetRepository";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
 import { resolveSafeInstalledPath } from "../path-utils";
@@ -120,13 +104,7 @@ export const selectTargetDirectory = async (
   return result.filePaths[0] ?? null;
 };
 
-export const resolveSelectedTargetDirectory = async (
-  selectedPath: string,
-  {
-    isDirectory = pathIsDirectory,
-    readDirectory = readDirectoryNames
-  }: ResolveSelectedTargetDirectoryOperations = {}
-): Promise<SelectedTargetDirectoryResolution> => {
+export const resolveSelectedTargetDirectory = async (selectedPath: string, { isDirectory = pathIsDirectory, readDirectory = readDirectoryNames }: ResolveSelectedTargetDirectoryOperations = {}): Promise<SelectedTargetDirectoryResolution> => {
   const targetPath = normalizeTargetPath(selectedPath.trim());
 
   if (!targetPath) {
@@ -270,10 +248,7 @@ export const addSkillDirectoryTarget = async (
   return getTargets(db);
 };
 
-export const deleteTargets = async (
-  db: DbClient,
-  input: DeleteTargetsInput
-): Promise<TargetsListResult> => {
+export const deleteTargets = async (db: DbClient, input: DeleteTargetsInput): Promise<TargetsListResult> => {
   const targetIds = normalizeTargetIds(input.targetIds);
   const deleteInstalledFiles = Boolean(input.deleteInstalledFiles);
 
@@ -292,9 +267,7 @@ export const deleteTargets = async (
       })
     );
 
-    await Promise.all(
-      installedPaths.map((installedPath) => rm(installedPath, { force: true, recursive: true }))
-    );
+    await Promise.all(installedPaths.map((installedPath) => rm(installedPath, { force: true, recursive: true })));
   }
 
   await targetRepository.deleteTargets(targetIds);
@@ -348,12 +321,8 @@ export const rescanTargets = async (
   await targetRepository.saveScannedTargets(scannedTargets, scannedAt);
 
   const systemTargetKeys = new Set(scannedTargets.map(createTargetIdentityKey));
-  const registeredTargetCandidates = (await targetRepository.listScanCandidates()).filter(
-    (target) => !systemTargetKeys.has(createTargetIdentityKey(target))
-  );
-  const rescannedRegisteredTargets = await operations.scanRegisteredTargets(
-    registeredTargetCandidates
-  );
+  const registeredTargetCandidates = (await targetRepository.listScanCandidates()).filter((target) => !systemTargetKeys.has(createTargetIdentityKey(target)));
+  const rescannedRegisteredTargets = await operations.scanRegisteredTargets(registeredTargetCandidates);
 
   await targetRepository.saveScannedTargets(rescannedRegisteredTargets, scannedAt);
 
@@ -375,53 +344,28 @@ export const registerTargetsIpc = (db: DbProvider): void => {
   ipcMain.handle("targets:selectDirectory", (): Promise<string | null> => {
     return selectTargetDirectory();
   });
-  ipcMain.handle(
-    "targets:resolveSelectedDirectory",
-    (_event, selectedPath: string): Promise<SelectedTargetDirectoryResolution> => {
-      return resolveSelectedTargetDirectory(selectedPath);
-    }
-  );
-  ipcMain.handle(
-    "targets:addCustomDirectory",
-    (_event, input: AddCustomDirectoryTargetInput): Promise<TargetsListResult> => {
-      return addCustomDirectoryTarget(resolveDb(db), input);
-    }
-  );
-  ipcMain.handle(
-    "targets:addSkillDirectory",
-    (_event, input: AddSkillDirectoryTargetInput): Promise<TargetsListResult> => {
-      return addSkillDirectoryTarget(resolveDb(db), input);
-    }
-  );
-  ipcMain.handle(
-    "targets:updateCustomDirectory",
-    (_event, input: UpdateCustomDirectoryTargetInput): Promise<TargetsListResult> => {
-      return updateCustomDirectoryTarget(resolveDb(db), input);
-    }
-  );
-  ipcMain.handle(
-    "targets:delete",
-    (_event, input: DeleteTargetsInput): Promise<TargetsListResult> => {
-      return deleteTargets(resolveDb(db), input);
-    }
-  );
+  ipcMain.handle("targets:resolveSelectedDirectory", (_event, selectedPath: string): Promise<SelectedTargetDirectoryResolution> => {
+    return resolveSelectedTargetDirectory(selectedPath);
+  });
+  ipcMain.handle("targets:addCustomDirectory", (_event, input: AddCustomDirectoryTargetInput): Promise<TargetsListResult> => {
+    return addCustomDirectoryTarget(resolveDb(db), input);
+  });
+  ipcMain.handle("targets:addSkillDirectory", (_event, input: AddSkillDirectoryTargetInput): Promise<TargetsListResult> => {
+    return addSkillDirectoryTarget(resolveDb(db), input);
+  });
+  ipcMain.handle("targets:updateCustomDirectory", (_event, input: UpdateCustomDirectoryTargetInput): Promise<TargetsListResult> => {
+    return updateCustomDirectoryTarget(resolveDb(db), input);
+  });
+  ipcMain.handle("targets:delete", (_event, input: DeleteTargetsInput): Promise<TargetsListResult> => {
+    return deleteTargets(resolveDb(db), input);
+  });
 };
 
 const normalizeTargetIds = (targetIds: string[]): string[] => {
   return Array.from(new Set(targetIds.map((targetId) => targetId.trim()).filter(Boolean)));
 };
 
-const createTargetDirectoryAgentTypeResolution = ({
-  basePath,
-  customDirectoryName,
-  selectedAgentType,
-  targetPath
-}: {
-  basePath: string;
-  customDirectoryName?: string;
-  selectedAgentType?: string;
-  targetPath?: string;
-}): SelectedTargetDirectoryResolution => ({
+const createTargetDirectoryAgentTypeResolution = ({ basePath, customDirectoryName, selectedAgentType, targetPath }: { basePath: string; customDirectoryName?: string; selectedAgentType?: string; targetPath?: string }): SelectedTargetDirectoryResolution => ({
   basePath,
   ...(customDirectoryName !== undefined ? { customDirectoryName } : {}),
   options: createTargetDirectoryAgentOptions(basePath),
@@ -440,9 +384,7 @@ const createTargetDirectoryAgentOptions = (basePath: string): TargetDirectoryAge
 };
 
 const getKnownAgentDirectoryDefinition = (directoryName: string) => {
-  return agentTargetDirectoryDefinitions.find(
-    (definition) => definition.directoryName === directoryName
-  );
+  return agentTargetDirectoryDefinitions.find((definition) => definition.directoryName === directoryName);
 };
 
 const isCustomAgentDirectoryName = (directoryName: string): boolean => {
@@ -451,20 +393,13 @@ const isCustomAgentDirectoryName = (directoryName: string): boolean => {
 
 const prioritizeTargetDirectoryNames = (directoryNames: string[]): string[] => {
   const uniqueDirectoryNames = Array.from(new Set(directoryNames));
-  const knownDirectoryNames = agentTargetDirectoryDefinitions
-    .map((definition) => definition.directoryName)
-    .filter((directoryName) => uniqueDirectoryNames.includes(directoryName));
-  const remainingDirectoryNames = uniqueDirectoryNames
-    .filter((directoryName) => !knownDirectoryNames.includes(directoryName))
-    .sort((left, right) => left.localeCompare(right));
+  const knownDirectoryNames = agentTargetDirectoryDefinitions.map((definition) => definition.directoryName).filter((directoryName) => uniqueDirectoryNames.includes(directoryName));
+  const remainingDirectoryNames = uniqueDirectoryNames.filter((directoryName) => !knownDirectoryNames.includes(directoryName)).sort((left, right) => left.localeCompare(right));
 
   return [...knownDirectoryNames, ...remainingDirectoryNames];
 };
 
-const safeReadDirectory = async (
-  directoryPath: string,
-  readDirectory: (directoryPath: string) => Promise<string[]>
-): Promise<string[]> => {
+const safeReadDirectory = async (directoryPath: string, readDirectory: (directoryPath: string) => Promise<string[]>): Promise<string[]> => {
   try {
     return await readDirectory(directoryPath);
   } catch {
@@ -509,14 +444,9 @@ const getPathDirname = (targetPath: string): string => {
   return path.dirname(targetPath);
 };
 
-const normalizeCustomDirectoryTargetInput = (
-  input: AddCustomDirectoryTargetInput
-): { name: string; targetPath: string } => {
+const normalizeCustomDirectoryTargetInput = (input: AddCustomDirectoryTargetInput): { name: string; targetPath: string } => {
   const targetPath = typeof input === "string" ? input.trim() : input.targetPath.trim();
-  const name =
-    typeof input === "string"
-      ? deriveCustomDirectoryTargetName(targetPath)
-      : input.name.trim() || deriveCustomDirectoryTargetName(targetPath);
+  const name = typeof input === "string" ? deriveCustomDirectoryTargetName(targetPath) : input.name.trim() || deriveCustomDirectoryTargetName(targetPath);
 
   if (!targetPath || !name) {
     throw new Error("Target name and directory are required.");

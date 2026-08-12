@@ -7,31 +7,13 @@ import type { TargetScope, TargetStatus } from "./targets-page-data";
 export const TargetScopeBadge = ({ scope }: { scope: TargetScope }) => {
   const { t } = useTranslation();
 
-  return (
-    <span
-      className={cn(
-        "inline-flex min-h-6 w-max items-center rounded-full border px-2 font-mono text-xs",
-        scopeClassName[scope]
-      )}
-    >
-      {t(`targets.scope.${scope}`)}
-    </span>
-  );
+  return <span className={cn("inline-flex min-h-6 w-max items-center rounded-full border px-2 font-mono text-xs", scopeClassName[scope])}>{t(`targets.scope.${scope}`)}</span>;
 };
 
 export const TargetStatusBadge = ({ status }: { status: TargetStatus }) => {
   const { t } = useTranslation();
 
-  return (
-    <span
-      className={cn(
-        "inline-flex min-h-6 items-center rounded-full border px-2 text-xs",
-        statusClassName[status]
-      )}
-    >
-      {t(`targets.status.${status}`)}
-    </span>
-  );
+  return <span className={cn("inline-flex min-h-6 items-center rounded-full border px-2 text-xs", statusClassName[status])}>{t(`targets.status.${status}`)}</span>;
 };
 
 const statusClassName: Record<TargetStatus, string> = {

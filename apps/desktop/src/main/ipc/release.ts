@@ -25,11 +25,7 @@ const isReleaseManifest = (value: unknown): value is ReleaseManifestShape => {
 
   const candidate = value as Partial<ReleaseManifestShape>;
 
-  return (
-    candidate.schemaVersion === 1 &&
-    typeof candidate.version === "string" &&
-    candidate.version.length > 0
-  );
+  return candidate.schemaVersion === 1 && typeof candidate.version === "string" && candidate.version.length > 0;
 };
 
 const platformFromProcess = (): ReleasePlatform => {
@@ -43,10 +39,7 @@ const platformFromProcess = (): ReleasePlatform => {
   }
 };
 
-export const getLatestRelease = async (
-  fetchImpl: typeof fetch = fetch,
-  manifestUrl: string = RELEASE_MANIFEST_URL
-): Promise<LatestReleaseInfo | null> => {
+export const getLatestRelease = async (fetchImpl: typeof fetch = fetch, manifestUrl: string = RELEASE_MANIFEST_URL): Promise<LatestReleaseInfo | null> => {
   const response = await fetchImpl(manifestUrl, {
     headers: { Accept: "application/json" }
   });

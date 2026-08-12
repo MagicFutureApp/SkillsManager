@@ -8,17 +8,6 @@ type SkillsPaginationFooterProps = {
   pagination: PaginationState;
 };
 
-export const SkillsPaginationFooter = ({
-  colSpan,
-  onPageChange,
-  pagination
-}: SkillsPaginationFooterProps) => {
-  return (
-    <DataTablePaginationFooter
-      colSpan={colSpan}
-      labelKeyPrefix="skills.pagination"
-      onPageChange={onPageChange}
-      pagination={pagination}
-    />
-  );
+export const SkillsPaginationFooter = ({ colSpan, onPageChange, pagination }: SkillsPaginationFooterProps) => {
+  return <DataTablePaginationFooter colSpan={colSpan} labelKeyPrefix="skills.pagination" onPageChange={onPageChange} pagination={pagination} />;
 };

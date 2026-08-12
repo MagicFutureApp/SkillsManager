@@ -46,11 +46,7 @@ export const parseMainWindowState = (valueJson: string): MainWindowState | null 
   }
 };
 
-export const resolveMainWindowPlacement = ({
-  displays,
-  fallbackDisplay,
-  savedState
-}: ResolveMainWindowPlacementInput): MainWindowPlacement => {
+export const resolveMainWindowPlacement = ({ displays, fallbackDisplay, savedState }: ResolveMainWindowPlacementInput): MainWindowPlacement => {
   if (!savedState) {
     return {
       bounds: createPercentageBounds(fallbackDisplay.workArea),
@@ -58,9 +54,7 @@ export const resolveMainWindowPlacement = ({
     };
   }
 
-  const savedDisplay =
-    displays.find((display) => display.id === savedState.displayId) ??
-    findOverlappingDisplay(displays, savedState.bounds);
+  const savedDisplay = displays.find((display) => display.id === savedState.displayId) ?? findOverlappingDisplay(displays, savedState.bounds);
 
   if (!savedDisplay) {
     return {
@@ -76,16 +70,8 @@ export const resolveMainWindowPlacement = ({
 };
 
 const createPercentageBounds = (workArea: Rectangle): Rectangle => {
-  const width = clampDimension(
-    Math.floor(workArea.width * DEFAULT_WINDOW_SCALE),
-    WINDOW_MIN_WIDTH,
-    workArea.width
-  );
-  const height = clampDimension(
-    Math.floor(workArea.height * DEFAULT_WINDOW_SCALE),
-    WINDOW_MIN_HEIGHT,
-    workArea.height
-  );
+  const width = clampDimension(Math.floor(workArea.width * DEFAULT_WINDOW_SCALE), WINDOW_MIN_WIDTH, workArea.width);
+  const height = clampDimension(Math.floor(workArea.height * DEFAULT_WINDOW_SCALE), WINDOW_MIN_HEIGHT, workArea.height);
 
   return {
     x: workArea.x + Math.floor((workArea.width - width) / 2),
@@ -107,16 +93,11 @@ const clampBoundsToWorkArea = (bounds: Rectangle, workArea: Rectangle): Rectangl
   };
 };
 
-const clampDimension = (value: number, minimum: number, maximum: number): number =>
-  Math.min(maximum, Math.max(minimum, Math.round(value)));
+const clampDimension = (value: number, minimum: number, maximum: number): number => Math.min(maximum, Math.max(minimum, Math.round(value)));
 
-const clampCoordinate = (value: number, minimum: number, maximum: number): number =>
-  Math.min(maximum, Math.max(minimum, Math.round(value)));
+const clampCoordinate = (value: number, minimum: number, maximum: number): number => Math.min(maximum, Math.max(minimum, Math.round(value)));
 
-const findOverlappingDisplay = (
-  displays: WindowDisplay[],
-  bounds: Rectangle
-): WindowDisplay | undefined => {
+const findOverlappingDisplay = (displays: WindowDisplay[], bounds: Rectangle): WindowDisplay | undefined => {
   let largestOverlap = 0;
   let matchingDisplay: WindowDisplay | undefined;
 
@@ -132,14 +113,8 @@ const findOverlappingDisplay = (
 };
 
 const getIntersectionArea = (first: Rectangle, second: Rectangle): number => {
-  const width = Math.max(
-    0,
-    Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x)
-  );
-  const height = Math.max(
-    0,
-    Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y)
-  );
+  const width = Math.max(0, Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x));
+  const height = Math.max(0, Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y));
 
   return width * height;
 };
@@ -149,23 +124,11 @@ const isMainWindowState = (value: unknown): value is MainWindowState => {
     return false;
   }
 
-  return (
-    isFiniteNumber(value.displayId) &&
-    typeof value.isMaximized === "boolean" &&
-    value.bounds.width > 0 &&
-    value.bounds.height > 0
-  );
+  return isFiniteNumber(value.displayId) && typeof value.isMaximized === "boolean" && value.bounds.width > 0 && value.bounds.height > 0;
 };
 
-const isRectangle = (value: unknown): value is Rectangle =>
-  isRecord(value) &&
-  isFiniteNumber(value.x) &&
-  isFiniteNumber(value.y) &&
-  isFiniteNumber(value.width) &&
-  isFiniteNumber(value.height);
+const isRectangle = (value: unknown): value is Rectangle => isRecord(value) && isFiniteNumber(value.x) && isFiniteNumber(value.y) && isFiniteNumber(value.width) && isFiniteNumber(value.height);
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
-const isFiniteNumber = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value);
+const isFiniteNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);

@@ -3,10 +3,7 @@ import React from "react";
 
 const ProvidersPageContext = React.createContext<ProvidersPageState | null>(null);
 
-export const ProvidersPageProvider = ({
-  children,
-  state
-}: React.PropsWithChildren<{ state: ProvidersPageState }>) => {
+export const ProvidersPageProvider = ({ children, state }: React.PropsWithChildren<{ state: ProvidersPageState }>) => {
   return <ProvidersPageContext.Provider value={state}>{children}</ProvidersPageContext.Provider>;
 };
 

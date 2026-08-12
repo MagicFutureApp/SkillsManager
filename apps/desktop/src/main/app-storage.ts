@@ -29,10 +29,7 @@ type CreateAppDbRuntimeInput = BuildAppStoragePathsInput & {
   createClient?: typeof createDbClient;
 };
 
-export const buildAppStoragePaths = ({
-  dataDirectory,
-  homeDirectory = os.homedir()
-}: BuildAppStoragePathsInput): AppStoragePaths => {
+export const buildAppStoragePaths = ({ dataDirectory, homeDirectory = os.homedir() }: BuildAppStoragePathsInput): AppStoragePaths => {
   return {
     dataDirectory,
     databasePath: path.join(dataDirectory, "skills-manager.sqlite"),
@@ -40,11 +37,7 @@ export const buildAppStoragePaths = ({
   };
 };
 
-export const createAppDbRuntime = ({
-  createClient = createDbClient,
-  dataDirectory,
-  homeDirectory
-}: CreateAppDbRuntimeInput): AppDbRuntime => {
+export const createAppDbRuntime = ({ createClient = createDbClient, dataDirectory, homeDirectory }: CreateAppDbRuntimeInput): AppDbRuntime => {
   const paths = buildAppStoragePaths({ dataDirectory, homeDirectory });
   let db = createDatabase(paths, createClient);
 
@@ -64,11 +57,7 @@ export const createAppDbRuntime = ({
     async resetDatabase() {
       db.$client.close();
 
-      await Promise.all(
-        [paths.databasePath, `${paths.databasePath}-wal`, `${paths.databasePath}-shm`].map(
-          (filePath) => rm(filePath, { force: true })
-        )
-      );
+      await Promise.all([paths.databasePath, `${paths.databasePath}-wal`, `${paths.databasePath}-shm`].map((filePath) => rm(filePath, { force: true })));
 
       db = createDatabase(paths, createClient);
 

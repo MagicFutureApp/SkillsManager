@@ -1,14 +1,6 @@
 import { Form } from "@base-ui/react/form";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogClose,
-  DialogDescription,
-  DialogPopup,
-  DialogPortal,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Dialog, DialogBackdrop, DialogClose, DialogDescription, DialogPopup, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import React from "react";
@@ -42,10 +34,7 @@ export const TargetAddDialog = ({ description, state, title }: TargetAddDialogPr
   });
 
   return (
-    <Dialog
-      open={state.isAddTargetDialogOpen}
-      onOpenChange={(nextOpen) => !nextOpen && state.closeAddTargetDialog()}
-    >
+    <Dialog open={state.isAddTargetDialogOpen} onOpenChange={(nextOpen) => !nextOpen && state.closeAddTargetDialog()}>
       <DialogPortal>
         <DialogBackdrop />
         <DialogPopup>
@@ -55,18 +44,7 @@ export const TargetAddDialog = ({ description, state, title }: TargetAddDialogPr
                 <DialogTitle>{title}</DialogTitle>
                 <DialogDescription>{description}</DialogDescription>
               </div>
-              <DialogClose
-                render={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={state.isSavingTarget}
-                  />
-                }
-              >
-                {t("targets.modal.close")}
-              </DialogClose>
+              <DialogClose render={<Button type="button" variant="outline" size="sm" disabled={state.isSavingTarget} />}>{t("targets.modal.close")}</DialogClose>
             </div>
 
             <div className="grid gap-3">
@@ -86,22 +64,14 @@ export const TargetAddDialog = ({ description, state, title }: TargetAddDialogPr
 
               <Field>
                 <FieldLabel>{t("targets.modal.name")}</FieldLabel>
-                <Input
-                  disabled={state.isSavingTarget}
-                  value={state.addTargetName}
-                  onValueChange={state.setPendingTargetName}
-                />
+                <Input disabled={state.isSavingTarget} value={state.addTargetName} onValueChange={state.setPendingTargetName} />
               </Field>
             </div>
 
             {errorMessage ? <p className="mt-3 text-sm text-destructive">{errorMessage}</p> : null}
 
             <div className="mt-4 flex justify-end gap-2">
-              <DialogClose
-                render={<Button type="button" variant="outline" disabled={state.isSavingTarget} />}
-              >
-                {t("targets.modal.cancel")}
-              </DialogClose>
+              <DialogClose render={<Button type="button" variant="outline" disabled={state.isSavingTarget} />}>{t("targets.modal.cancel")}</DialogClose>
               <Button type="submit" disabled={state.isSavingTarget}>
                 {t("targets.modal.save")}
               </Button>

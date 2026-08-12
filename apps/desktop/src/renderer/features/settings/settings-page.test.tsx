@@ -34,8 +34,7 @@ describe("SettingsPage", () => {
         github: { hasToken: false }
       }),
       getAppStoragePaths: vi.fn().mockResolvedValue({
-        databasePath:
-          "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
+        databasePath: "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
         localCachePath: "/Users/andrew/.skills-manager/cache"
       }),
       getAppSettings: vi.fn().mockResolvedValue({
@@ -57,8 +56,7 @@ describe("SettingsPage", () => {
           github: { hasToken: false }
         },
         storage: {
-          databasePath:
-            "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
+          databasePath: "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite",
           localCachePath: "/Users/andrew/.skills-manager/cache"
         }
       }),
@@ -81,20 +79,12 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(tokenInput).toHaveAttribute("placeholder", "********"));
     expect(screen.queryByText("已配置")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "凭证管理", level: 2 })).toBeInTheDocument();
-    expect(
-      screen.getByText("管理 Skills Manager 访问代码托管平台所需的凭证。")
-    ).toBeInTheDocument();
+    expect(screen.getByText("管理 Skills Manager 访问代码托管平台所需的凭证。")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "GitHub token" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "GitHub token", level: 3 })).toBeInTheDocument();
-    expect(
-      screen.queryByText("用于解析 GitHub repo metadata 和 tree API，避免未认证请求的低频率限制。")
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("当前 token 不会回显，输入新 token 后保存即可替换。")
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("建议使用 fine-grained token，并授予 Metadata read 与 Contents read。")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("用于解析 GitHub repo metadata 和 tree API，避免未认证请求的低频率限制。")).not.toBeInTheDocument();
+    expect(screen.queryByText("当前 token 不会回显，输入新 token 后保存即可替换。")).not.toBeInTheDocument();
+    expect(screen.queryByText("建议使用 fine-grained token，并授予 Metadata read 与 Contents read。")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "查看 GitHub token 创建帮助" })).toBeInTheDocument();
     expect(window.skillsManager?.getAppSettings).toHaveBeenCalled();
   });
@@ -120,46 +110,20 @@ describe("SettingsPage", () => {
     expect(main).not.toHaveAttribute("aria-labelledby");
     expect(main).toHaveClass("h-[calc(100svh-44px)]", "overflow-y-auto");
     expect(settingsLayout).toHaveClass("h-full", "overflow-hidden");
-    expect(
-      screen.queryByRole("heading", { name: "GitHub API token", level: 1 })
-    ).not.toBeInTheDocument();
-    expect(
-      within(main).queryByText(
-        "管理 GitHub API 访问凭据和本地扫描相关设置。GitHub token 仅保存在本机设置中，不会回显到界面。"
-      )
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "GitHub API token", level: 1 })).not.toBeInTheDocument();
+    expect(within(main).queryByText("管理 GitHub API 访问凭据和本地扫描相关设置。GitHub token 仅保存在本机设置中，不会回显到界面。")).not.toBeInTheDocument();
     expect(settingsSidebar).toHaveClass("sticky", "h-[calc(100svh-44px)]");
-    expect(within(settingsNavigation).getByRole("link", { name: "凭证管理" })).toHaveAttribute(
-      "href",
-      "#/settings#github-token"
-    );
-    expect(within(settingsNavigation).getByRole("link", { name: "技能分发" })).toHaveAttribute(
-      "href",
-      "#/settings#skill-distribution"
-    );
-    expect(within(settingsNavigation).getByRole("link", { name: "本地存储" })).toHaveAttribute(
-      "href",
-      "#/settings#local-storage"
-    );
-    expect(
-      within(settingsNavigation).queryByRole("link", { name: "如何创建 GitHub token" })
-    ).not.toBeInTheDocument();
-    expect(
-      within(settingsNavigation).queryByRole("link", { name: "数据重置" })
-    ).not.toBeInTheDocument();
-    expect(within(settingsNavigation).getByRole("link", { name: "关于" })).toHaveAttribute(
-      "href",
-      "#/settings#settings-about"
-    );
+    expect(within(settingsNavigation).getByRole("link", { name: "凭证管理" })).toHaveAttribute("href", "#/settings#github-token");
+    expect(within(settingsNavigation).getByRole("link", { name: "技能分发" })).toHaveAttribute("href", "#/settings#skill-distribution");
+    expect(within(settingsNavigation).getByRole("link", { name: "本地存储" })).toHaveAttribute("href", "#/settings#local-storage");
+    expect(within(settingsNavigation).queryByRole("link", { name: "如何创建 GitHub token" })).not.toBeInTheDocument();
+    expect(within(settingsNavigation).queryByRole("link", { name: "数据重置" })).not.toBeInTheDocument();
+    expect(within(settingsNavigation).getByRole("link", { name: "关于" })).toHaveAttribute("href", "#/settings#settings-about");
     expect(screen.queryByRole("heading", { name: "凭据状态" })).not.toBeInTheDocument();
     expect(screen.queryByText("安全提示")).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("保存后的 token 不会回显到界面，也不会离开本机应用设置。")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("保存后的 token 不会回显到界面，也不会离开本机应用设置。")).not.toBeInTheDocument();
     expect(within(main).getByRole("heading", { name: "凭证管理", level: 2 })).toBeInTheDocument();
-    expect(
-      within(main).getByRole("heading", { name: "GitHub token", level: 3 })
-    ).toBeInTheDocument();
+    expect(within(main).getByRole("heading", { name: "GitHub token", level: 3 })).toBeInTheDocument();
     expect(within(main).getByLabelText("GitHub token", { selector: "input" })).toBeInTheDocument();
     expect(within(main).queryByRole("heading", { name: "数据重置" })).not.toBeInTheDocument();
 
@@ -178,16 +142,11 @@ describe("SettingsPage", () => {
       fireEvent.keyDown(window, { key: "Shift" });
     }
 
-    expect(
-      within(settingsNavigation).queryByRole("link", { name: "数据重置" })
-    ).not.toBeInTheDocument();
+    expect(within(settingsNavigation).queryByRole("link", { name: "数据重置" })).not.toBeInTheDocument();
 
     fireEvent.keyDown(window, { key: "Shift" });
 
-    expect(within(settingsNavigation).getByRole("link", { name: "数据重置" })).toHaveAttribute(
-      "href",
-      "#/settings#settings-data-reset"
-    );
+    expect(within(settingsNavigation).getByRole("link", { name: "数据重置" })).toHaveAttribute("href", "#/settings#settings-data-reset");
   });
 
   it("shows an about section with the logo and app version", async () => {
@@ -197,13 +156,7 @@ describe("SettingsPage", () => {
     await screen.findByRole("main");
     const aboutSection = screen.getByRole("region", { name: "关于" });
 
-    expect(aboutSection).toHaveClass(
-      "flex",
-      "min-h-[calc(100svh-100px)]",
-      "items-center",
-      "justify-center",
-      "text-center"
-    );
+    expect(aboutSection).toHaveClass("flex", "min-h-[calc(100svh-100px)]", "items-center", "justify-center", "text-center");
     expect(aboutSection).not.toHaveClass("rounded-xl", "border", "border-border", "bg-card");
     const skillsManagerMark = within(aboutSection).getByRole("img", {
       name: "Skills Manager logo"
@@ -236,12 +189,10 @@ describe("SettingsPage", () => {
   });
 
   it("shows a newer-version prompt when the latest release is higher than the current version", async () => {
-    window.skillsManager!.getLatestRelease = vi
-      .fn()
-      .mockResolvedValue({
-        version: "1.2.3",
-        downloadUrl: "https://github.com/MagicFutureApp/SkillsManager/releases/download/v1.2.3/skills-manager-win.exe"
-      });
+    window.skillsManager!.getLatestRelease = vi.fn().mockResolvedValue({
+      version: "1.2.3",
+      downloadUrl: "https://github.com/MagicFutureApp/SkillsManager/releases/download/v1.2.3/skills-manager-win.exe"
+    });
     window.history.replaceState(null, "", "/#/settings#settings-about");
     render(<SettingsPage />);
 
@@ -254,15 +205,11 @@ describe("SettingsPage", () => {
 
     fireEvent.click(newVersionButton);
 
-    expect(window.skillsManager?.openExternalUrl).toHaveBeenCalledWith(
-      "https://github.com/MagicFutureApp/SkillsManager/releases/download/v1.2.3/skills-manager-win.exe"
-    );
+    expect(window.skillsManager?.openExternalUrl).toHaveBeenCalledWith("https://github.com/MagicFutureApp/SkillsManager/releases/download/v1.2.3/skills-manager-win.exe");
   });
 
   it("falls back to the official site when the newer release carries no download URL", async () => {
-    window.skillsManager!.getLatestRelease = vi
-      .fn()
-      .mockResolvedValue({ version: "1.2.3", downloadUrl: null });
+    window.skillsManager!.getLatestRelease = vi.fn().mockResolvedValue({ version: "1.2.3", downloadUrl: null });
     window.history.replaceState(null, "", "/#/settings#settings-about");
     render(<SettingsPage />);
 
@@ -329,9 +276,7 @@ describe("SettingsPage", () => {
     fireEvent.click(within(settingsNavigation).getByRole("link", { name: "关于" }));
 
     expect(within(main).getByRole("region", { name: "关于" })).toBeInTheDocument();
-    expect(
-      within(main).queryByRole("heading", { name: "GitHub API token" })
-    ).not.toBeInTheDocument();
+    expect(within(main).queryByRole("heading", { name: "GitHub API token" })).not.toBeInTheDocument();
     expect(within(main).queryByRole("heading", { name: "数据重置" })).not.toBeInTheDocument();
 
     revealDataReset();
@@ -350,9 +295,7 @@ describe("SettingsPage", () => {
     expect(saveButton.querySelector("svg")).not.toBeInTheDocument();
     fireEvent.click(saveButton);
 
-    await waitFor(() =>
-      expect(window.skillsManager?.saveGitHubToken).toHaveBeenCalledWith("github_pat_new")
-    );
+    await waitFor(() => expect(window.skillsManager?.saveGitHubToken).toHaveBeenCalledWith("github_pat_new"));
     expect(tokenInput).toHaveValue("");
     expect(screen.getByText("已保存 GitHub token。")).toBeInTheDocument();
   });
@@ -367,9 +310,7 @@ describe("SettingsPage", () => {
 
     await waitFor(() => expect(window.skillsManager?.clearGitHubToken).toHaveBeenCalled());
     expect(tokenInput).toHaveValue("");
-    await waitFor(() =>
-      expect(tokenInput).toHaveAttribute("placeholder", "请输入 GitHub Token")
-    );
+    await waitFor(() => expect(tokenInput).toHaveAttribute("placeholder", "请输入 GitHub Token"));
   });
 
   it("shows copyable local cache and database paths", async () => {
@@ -379,11 +320,7 @@ describe("SettingsPage", () => {
     clickSettingsNavigationLink("本地存储");
 
     expect(await screen.findByText("/Users/andrew/.skills-manager/cache")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite"
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText("/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite")).toBeInTheDocument();
 
     const copyPathButtons = screen.getAllByRole("button", { name: "复制路径" });
 
@@ -393,9 +330,7 @@ describe("SettingsPage", () => {
     expect(writeText).toHaveBeenCalledWith("/Users/andrew/.skills-manager/cache");
 
     fireEvent.click(copyPathButtons[1]);
-    expect(writeText).toHaveBeenCalledWith(
-      "/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite"
-    );
+    expect(writeText).toHaveBeenCalledWith("/Users/andrew/Library/Application Support/Skills Manager/skills-manager.sqlite");
   });
 
   it("shows automatic distribution disabled by default and saves switch changes", async () => {
@@ -429,9 +364,7 @@ describe("SettingsPage", () => {
     fireEvent.click(await screen.findByRole("button", { name: "重建本地数据库" }));
 
     const dialog = await screen.findByRole("alertdialog", { name: "重建本地数据库？" });
-    expect(dialog).toHaveTextContent(
-      "会清空本地索引、来源、Skills 和应用设置，但不会删除已安装到 agent 目标目录的文件，也不会清空本地缓存目录。"
-    );
+    expect(dialog).toHaveTextContent("会清空本地索引、来源、Skills 和应用设置，但不会删除已安装到 agent 目标目录的文件，也不会清空本地缓存目录。");
     expect(window.skillsManager?.resetLocalDatabase).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "确认重建" }));

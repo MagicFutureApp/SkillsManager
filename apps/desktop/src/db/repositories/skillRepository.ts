@@ -1,11 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
-import type {
-  SkillApiRecord,
-  SkillApiStatus,
-  UpdateSkillTargetPreferenceInput
-} from "../../core/skills/skill-api";
+import type { SkillApiRecord, SkillApiStatus, UpdateSkillTargetPreferenceInput } from "../../core/skills/skill-api";
 import { parseSkillMetadataSnapshot, toSkillKey } from "../../core/skills/skill-utils";
 import type { createDbClient } from "../client";
 import { repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";

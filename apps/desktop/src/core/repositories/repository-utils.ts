@@ -1,11 +1,4 @@
-import type {
-  RepositoryScanSummary,
-  RepositorySyncAddedSkill,
-  RepositorySyncChangedSkill,
-  RepositorySyncDistributionSummary,
-  RepositorySyncRemovedSkill,
-  RepositorySyncSummary
-} from "./repository-api";
+import type { RepositoryScanSummary, RepositorySyncAddedSkill, RepositorySyncChangedSkill, RepositorySyncDistributionSummary, RepositorySyncRemovedSkill, RepositorySyncSummary } from "./repository-api";
 
 export const EMPTY_REPOSITORY_SCAN_SUMMARY: RepositoryScanSummary = {
   added: 0,
@@ -44,10 +37,7 @@ export const normalizeDiscoveryEntries = (entry: string): string[] => {
     .filter(Boolean);
 };
 
-export const normalizeRepositoryScanSummary = (
-  scan: unknown,
-  fallback: RepositoryScanSummary = EMPTY_REPOSITORY_SCAN_SUMMARY
-): RepositoryScanSummary => {
+export const normalizeRepositoryScanSummary = (scan: unknown, fallback: RepositoryScanSummary = EMPTY_REPOSITORY_SCAN_SUMMARY): RepositoryScanSummary => {
   if (!scan || typeof scan !== "object") {
     return fallback;
   }
@@ -85,9 +75,7 @@ export const parseRepositorySyncSummaryJson = (summaryJson: string): RepositoryS
         changed: readChangedSkills(scanRecord.changed),
         counts: normalizeRepositoryScanSummary(extractRepositoryScanSummary(parsed)),
         removed: readRemovedSkills(scanRecord.removed),
-        warnings: Array.isArray(scanRecord.warnings)
-          ? scanRecord.warnings.filter((warning): warning is string => typeof warning === "string")
-          : []
+        warnings: Array.isArray(scanRecord.warnings) ? scanRecord.warnings.filter((warning): warning is string => typeof warning === "string") : []
       }
     };
   } catch {
@@ -119,16 +107,13 @@ const extractRepositoryScanSummary = (value: unknown): unknown => {
   return scan ?? value;
 };
 
-const normalizeRepositoryDistributionSummary = (
-  value: unknown
-): RepositorySyncDistributionSummary => {
+const normalizeRepositoryDistributionSummary = (value: unknown): RepositorySyncDistributionSummary => {
   if (!isRecord(value)) {
     return EMPTY_REPOSITORY_SYNC_DISTRIBUTION_SUMMARY;
   }
 
   return {
-    autoDistributionEnabled:
-      typeof value.autoDistributionEnabled === "boolean" ? value.autoDistributionEnabled : false,
+    autoDistributionEnabled: typeof value.autoDistributionEnabled === "boolean" ? value.autoDistributionEnabled : false,
     blocked: readNumber(value.blocked),
     conflicts: readNumber(value.conflicts),
     eligible: readNumber(value.eligible),
@@ -164,34 +149,15 @@ const readRemovedSkills = (value: unknown): RepositorySyncRemovedSkill[] => {
 };
 
 const isAddedSkill = (value: unknown): value is RepositorySyncAddedSkill => {
-  return (
-    isRecord(value) &&
-    typeof value.commitSha === "string" &&
-    typeof value.name === "string" &&
-    typeof value.skillKey === "string" &&
-    typeof value.skillUnitId === "string"
-  );
+  return isRecord(value) && typeof value.commitSha === "string" && typeof value.name === "string" && typeof value.skillKey === "string" && typeof value.skillUnitId === "string";
 };
 
 const isChangedSkill = (value: unknown): value is RepositorySyncChangedSkill => {
-  return (
-    isRecord(value) &&
-    typeof value.commitSha === "string" &&
-    typeof value.name === "string" &&
-    (value.previousCommitSha === null || typeof value.previousCommitSha === "string") &&
-    typeof value.skillKey === "string" &&
-    typeof value.skillUnitId === "string"
-  );
+  return isRecord(value) && typeof value.commitSha === "string" && typeof value.name === "string" && (value.previousCommitSha === null || typeof value.previousCommitSha === "string") && typeof value.skillKey === "string" && typeof value.skillUnitId === "string";
 };
 
 const isRemovedSkill = (value: unknown): value is RepositorySyncRemovedSkill => {
-  return (
-    isRecord(value) &&
-    typeof value.name === "string" &&
-    (value.previousCommitSha === null || typeof value.previousCommitSha === "string") &&
-    typeof value.skillKey === "string" &&
-    typeof value.skillUnitId === "string"
-  );
+  return isRecord(value) && typeof value.name === "string" && (value.previousCommitSha === null || typeof value.previousCommitSha === "string") && typeof value.skillKey === "string" && typeof value.skillUnitId === "string";
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
@@ -202,10 +168,7 @@ const readNumber = (value: unknown): number => {
   return typeof value === "number" ? value : 0;
 };
 
-export const formatRepositoryDateTime = (
-  isoDate: string | null | undefined,
-  timeZone = "Asia/Shanghai"
-): string => {
+export const formatRepositoryDateTime = (isoDate: string | null | undefined, timeZone = "Asia/Shanghai"): string => {
   if (!isoDate) {
     return "--";
   }

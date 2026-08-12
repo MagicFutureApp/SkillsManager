@@ -76,10 +76,7 @@ export const getDistributionSettings = async (db: DbClient): Promise<Distributio
   }
 };
 
-export const updateDistributionSettings = async (
-  db: DbClient,
-  settings: Partial<DistributionSettings>
-): Promise<AppSettingsResult> => {
+export const updateDistributionSettings = async (db: DbClient, settings: Partial<DistributionSettings>): Promise<AppSettingsResult> => {
   const nextSettings: DistributionSettings = {
     autoDistributeOnSync: settings.autoDistributeOnSync === true
   };
@@ -114,9 +111,7 @@ export const getAppStoragePaths = (paths: AppStoragePaths): AppStoragePathsResul
   };
 };
 
-export const resetLocalDatabase = async (
-  runtime: Pick<AppDbRuntime, "getDb" | "resetDatabase">
-): Promise<ResetLocalDatabaseResult> => {
+export const resetLocalDatabase = async (runtime: Pick<AppDbRuntime, "getDb" | "resetDatabase">): Promise<ResetLocalDatabaseResult> => {
   const paths = await runtime.resetDatabase();
 
   return {
@@ -148,10 +143,7 @@ export const buildExternalUrlAllowedHostnames = (appBaseUrl: string): Set<string
 
 const EXTERNAL_URL_ALLOWED_HOSTNAMES = buildExternalUrlAllowedHostnames(OFFICIAL_SITE_URL);
 
-export const openExternalUrl = async (
-  url: string,
-  operations: OpenExternalOperations = shell
-): Promise<void> => {
+export const openExternalUrl = async (url: string, operations: OpenExternalOperations = shell): Promise<void> => {
   let parsedUrl: URL;
 
   try {
@@ -196,10 +188,7 @@ export const resolveAppUrl = (kind: unknown, urls: AppUrls = APP_URLS): string =
   return url;
 };
 
-export const openAppUrl = async (
-  kind: unknown,
-  operations: OpenExternalOperations = shell
-): Promise<void> => {
+export const openAppUrl = async (kind: unknown, operations: OpenExternalOperations = shell): Promise<void> => {
   await openExternalUrl(resolveAppUrl(kind), operations);
 };
 
@@ -216,23 +205,17 @@ export const registerSettingsIpc = (runtime: AppDbRuntime): void => {
     return resetLocalDatabase(runtime);
   });
 
-  ipcMain.handle(
-    "settings:saveGitHubToken",
-    (_event, token: string): Promise<AppSettingsResult> => {
-      return saveGitHubToken(runtime.getDb(), token);
-    }
-  );
+  ipcMain.handle("settings:saveGitHubToken", (_event, token: string): Promise<AppSettingsResult> => {
+    return saveGitHubToken(runtime.getDb(), token);
+  });
 
   ipcMain.handle("settings:clearGitHubToken", (): Promise<AppSettingsResult> => {
     return clearGitHubToken(runtime.getDb());
   });
 
-  ipcMain.handle(
-    "settings:updateDistributionSettings",
-    (_event, settings: Partial<DistributionSettings>): Promise<AppSettingsResult> => {
-      return updateDistributionSettings(runtime.getDb(), settings);
-    }
-  );
+  ipcMain.handle("settings:updateDistributionSettings", (_event, settings: Partial<DistributionSettings>): Promise<AppSettingsResult> => {
+    return updateDistributionSettings(runtime.getDb(), settings);
+  });
 
   ipcMain.handle("settings:openExternalUrl", (_event, url: string): Promise<void> => {
     return openExternalUrl(url);

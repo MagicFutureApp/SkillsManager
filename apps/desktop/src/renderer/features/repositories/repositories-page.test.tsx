@@ -19,10 +19,7 @@ type RepositorySyncProgressCallback = (event: {
   status: "completed" | "syncing";
 }) => void;
 
-const renderRepositoriesPage = async (
-  locale: "zh-CN" | "en-US" = "zh-CN",
-  initialRepositoryName = "Team skills repository"
-) => {
+const renderRepositoriesPage = async (locale: "zh-CN" | "en-US" = "zh-CN", initialRepositoryName = "Team skills repository") => {
   const i18n = await createI18nInstance(locale);
   const skillsManager = window.skillsManager;
 
@@ -40,9 +37,7 @@ const renderRepositoriesPage = async (
     getRepositoryDeletePreview: skillsManager?.getRepositoryDeletePreview,
     inspectRepositorySource: skillsManager?.inspectRepositorySource,
     listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
-    listRepositories:
-      skillsManager?.listRepositories ??
-      vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+    listRepositories: skillsManager?.listRepositories ?? vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
     openRepositoryLocation: skillsManager?.openRepositoryLocation,
     onRepositorySyncProgress: skillsManager?.onRepositorySyncProgress,
     selectLocalRepositoryPath: skillsManager?.selectLocalRepositoryPath,
@@ -81,10 +76,7 @@ const expectOnlyGitHubAndLocalProviderOptions = async () => {
 
 const getRepositorySyncButton = (repositoryName: string) => {
   return screen.getByLabelText((_content, element) => {
-    return (
-      element?.tagName.toLowerCase() === "button" &&
-      element.getAttribute("aria-label")?.startsWith(`${repositoryName} `) === true
-    );
+    return element?.tagName.toLowerCase() === "button" && element.getAttribute("aria-label")?.startsWith(`${repositoryName} `) === true;
   });
 };
 
@@ -133,9 +125,7 @@ describe("RepositoriesPage", () => {
     expect(pageHeader).not.toBeNull();
     expect(within(pageHeader as HTMLElement).queryByText("Sources")).not.toBeInTheDocument();
     expect(screen.getByText("管理 Git 和其他来源的 Skills。")).toBeInTheDocument();
-    expect(screen.getByLabelText("来源筛选")).toHaveClass(
-      "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]"
-    );
+    expect(screen.getByLabelText("来源筛选")).toHaveClass("grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]");
     expect(screen.getByLabelText("搜索")).toBeInTheDocument();
     expect(screen.getByLabelText("类型")).toBeInTheDocument();
     expect(screen.getByLabelText("状态")).toBeInTheDocument();
@@ -162,13 +152,8 @@ describe("RepositoriesPage", () => {
     expect(screen.getByRole("button", { name: "同步" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "新增" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "强制重新扫描" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Team skills repository" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
-    expect(screen.getByRole("button", { name: "Team skills repository" }).textContent).toBe(
-      "Team skills repository"
-    );
+    expect(screen.getByRole("button", { name: "Team skills repository" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("button", { name: "Team skills repository" }).textContent).toBe("Team skills repository");
     const sourceTable = within(screen.getByRole("main")).getByRole("table");
     const sourceTableBody = sourceTable.querySelector("[data-slot='table-body']");
     const sourceHeaderCells = within(sourceTable).getAllByRole("columnheader");
@@ -177,9 +162,7 @@ describe("RepositoriesPage", () => {
 
     expect(sourceTable.closest("section")).toHaveClass("flex-1", "min-h-0", "overflow-hidden");
     expect(sourceTableBody).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
-    expect(sourceTableBody).toContainElement(
-      screen.getByRole("button", { name: "Team skills repository" })
-    );
+    expect(sourceTableBody).toContainElement(screen.getByRole("button", { name: "Team skills repository" }));
     expect(sourceHeaderCells[0]).toHaveClass("w-10");
     expect(sourceBodyCells[0]).toHaveClass("w-10");
     expect(sourceHeaderCells[2]).toHaveClass("w-24");
@@ -192,13 +175,9 @@ describe("RepositoriesPage", () => {
     expect(sourceBodyCells[5]).toHaveClass("w-12");
     expect(sourceHeaderCells[6]).toHaveClass("w-16");
     expect(sourceBodyCells[6]).toHaveClass("w-16");
-    expect(
-      within(sourceTableBody as HTMLElement).queryByText("git@github.com:team/skills.git")
-    ).not.toBeInTheDocument();
+    expect(within(sourceTableBody as HTMLElement).queryByText("git@github.com:team/skills.git")).not.toBeInTheDocument();
     expect(within(sourceTable).getByRole("columnheader", { name: "来源" })).toBeInTheDocument();
-    expect(sourceTableBody).not.toContainElement(
-      within(sourceTable).getByRole("columnheader", { name: "来源" })
-    );
+    expect(sourceTableBody).not.toContainElement(within(sourceTable).getByRole("columnheader", { name: "来源" }));
     expect(within(sourceTable).getByRole("columnheader", { name: "类型" })).toBeInTheDocument();
     expect(within(sourceTable).getByRole("columnheader", { name: "状态" })).toBeInTheDocument();
     expect(within(sourceTable).getByRole("columnheader", { name: "技能" })).toBeInTheDocument();
@@ -208,9 +187,7 @@ describe("RepositoriesPage", () => {
     expect(within(screen.getByRole("main")).getAllByText("就绪").length).toBeGreaterThan(0);
     expect(within(screen.getByRole("main")).queryByText("ready")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Team skills repository" })).toBeInTheDocument();
-    expect(
-      within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" })
-    ).toBeInTheDocument();
+    expect(within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" })).toBeInTheDocument();
     const deleteButton = within(screen.getByLabelText("来源详情")).getByRole("button", {
       name: "删除"
     });
@@ -218,15 +195,9 @@ describe("RepositoriesPage", () => {
     expect(screen.getByText("同步影响")).toBeInTheDocument();
     expect(within(screen.getByLabelText("来源详情")).getByText("新增技能")).toBeInTheDocument();
     expect(within(screen.getByLabelText("来源详情")).getByText("移除技能")).toBeInTheDocument();
-    expect(
-      within(screen.getByLabelText("来源详情")).queryByText("新增 skill unit")
-    ).not.toBeInTheDocument();
-    expect(
-      within(screen.getByLabelText("来源详情")).queryByText("移除 skill unit")
-    ).not.toBeInTheDocument();
-    expect(
-      within(screen.getByLabelText("来源详情")).queryByText("元数据变更")
-    ).not.toBeInTheDocument();
+    expect(within(screen.getByLabelText("来源详情")).queryByText("新增 skill unit")).not.toBeInTheDocument();
+    expect(within(screen.getByLabelText("来源详情")).queryByText("移除 skill unit")).not.toBeInTheDocument();
+    expect(within(screen.getByLabelText("来源详情")).queryByText("元数据变更")).not.toBeInTheDocument();
   });
 
   it("filters sources by provider and status", async () => {
@@ -234,9 +205,7 @@ describe("RepositoriesPage", () => {
 
     await selectOption("类型", "Local");
     expect(screen.getByRole("button", { name: "Local development skills" })).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Team skills repository" })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Team skills repository" })).not.toBeInTheDocument();
 
     await selectOption("状态", "需复核");
     expect(screen.getByText("没有匹配的来源。调整搜索或筛选条件。")).toBeInTheDocument();
@@ -253,9 +222,7 @@ describe("RepositoriesPage", () => {
 
   it("paginates large source lists after sorting and limits select-all to the current page", async () => {
     window.skillsManager = {
-      listRepositories: vi
-        .fn()
-        .mockResolvedValue({ repositories: createPagedRepositoryRecords(25) })
+      listRepositories: vi.fn().mockResolvedValue({ repositories: createPagedRepositoryRecords(25) })
     } as unknown as NonNullable<typeof window.skillsManager>;
 
     await renderRepositoriesPage("zh-CN", "Paged Source 01");
@@ -316,9 +283,7 @@ describe("RepositoriesPage", () => {
 
     fireEvent.change(searchField, { target: { value: "gitlab.com:design" } });
     expect(screen.getByRole("button", { name: "Design lab prompts" })).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Team skills repository" })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Team skills repository" })).not.toBeInTheDocument();
 
     fireEvent.change(searchField, { target: { value: "系统 Git 凭据" } });
     expect(screen.getByRole("button", { name: "Team skills repository" })).toBeInTheDocument();
@@ -331,14 +296,10 @@ describe("RepositoriesPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Local development skills" }));
 
     const detail = screen.getByLabelText("来源详情");
-    expect(
-      within(detail).getByRole("heading", { name: "Local development skills" })
-    ).toBeInTheDocument();
+    expect(within(detail).getByRole("heading", { name: "Local development skills" })).toBeInTheDocument();
     expect(within(detail).getAllByText("D:/workspace/local-skills").length).toBeGreaterThan(0);
     expect(within(detail).getByText("开发中的本机仓库，不需要 clone。")).toBeInTheDocument();
-    expect(
-      within(detail).getByText("agents/skills/*/SKILL.md, skills/*/SKILL.md")
-    ).toBeInTheDocument();
+    expect(within(detail).getByText("agents/skills/*/SKILL.md, skills/*/SKILL.md")).toBeInTheDocument();
     expect(within(detail).getByText("Local")).toBeInTheDocument();
     expect(within(detail).queryByText("分支")).not.toBeInTheDocument();
     expect(within(detail).queryByText("最后 commit")).not.toBeInTheDocument();
@@ -410,9 +371,7 @@ describe("RepositoriesPage", () => {
     await renderRepositoriesPage();
 
     const detail = screen.getByLabelText("来源详情");
-    const distributionSection = within(detail)
-      .getByRole("heading", { name: "分发摘要" })
-      .closest("section") as HTMLElement;
+    const distributionSection = within(detail).getByRole("heading", { name: "分发摘要" }).closest("section") as HTMLElement;
     const addedTile = within(detail).getByRole("button", { name: /新增技能/ });
     const changedTile = within(detail).getByRole("button", { name: /变更技能/ });
 
@@ -433,9 +392,7 @@ describe("RepositoriesPage", () => {
 
     const controlledPanelId = changedTile.getAttribute("aria-controls");
     const syncDetailsPanel = document.getElementById(controlledPanelId as string);
-    const changedTileBox = changedTile.closest(
-      "[data-sync-impact-item='changed']"
-    ) as HTMLElement | null;
+    const changedTileBox = changedTile.closest("[data-sync-impact-item='changed']") as HTMLElement | null;
 
     expect(controlledPanelId).toBeTruthy();
     expect(syncDetailsPanel).not.toBeNull();
@@ -447,22 +404,12 @@ describe("RepositoriesPage", () => {
     expect(within(syncDetailsPanel as HTMLElement).queryByText("同步明细")).not.toBeInTheDocument();
     expect(within(syncDetailsPanel as HTMLElement).queryByText("变更技能")).not.toBeInTheDocument();
     expect(within(syncDetailsPanel as HTMLElement).getByText("Design Helper")).toBeInTheDocument();
-    expect(
-      within(syncDetailsPanel as HTMLElement).queryByText("design-helper")
-    ).not.toBeInTheDocument();
+    expect(within(syncDetailsPanel as HTMLElement).queryByText("design-helper")).not.toBeInTheDocument();
     expect(within(syncDetailsPanel as HTMLElement).queryByText("新增技能")).not.toBeInTheDocument();
-    expect(
-      within(syncDetailsPanel as HTMLElement).queryByText("Review Bot")
-    ).not.toBeInTheDocument();
+    expect(within(syncDetailsPanel as HTMLElement).queryByText("Review Bot")).not.toBeInTheDocument();
     expect(within(syncDetailsPanel as HTMLElement).queryByText("移除技能")).not.toBeInTheDocument();
-    expect(
-      within(syncDetailsPanel as HTMLElement).queryByText("Legacy Helper")
-    ).not.toBeInTheDocument();
-    expect(
-      within(syncDetailsPanel as HTMLElement).queryByText(
-        "Ignored duplicate skill id: design-helper"
-      )
-    ).not.toBeInTheDocument();
+    expect(within(syncDetailsPanel as HTMLElement).queryByText("Legacy Helper")).not.toBeInTheDocument();
+    expect(within(syncDetailsPanel as HTMLElement).queryByText("Ignored duplicate skill id: design-helper")).not.toBeInTheDocument();
 
     fireEvent.click(changedTile);
 
@@ -475,19 +422,11 @@ describe("RepositoriesPage", () => {
 
     expect(addedPanelId).toBeTruthy();
     expect(addedDetailsPanel).not.toBeNull();
-    expect(
-      within(addedDetailsPanel as HTMLElement).queryByText("新增技能")
-    ).not.toBeInTheDocument();
+    expect(within(addedDetailsPanel as HTMLElement).queryByText("新增技能")).not.toBeInTheDocument();
     expect(within(addedDetailsPanel as HTMLElement).getByText("Review Bot")).toBeInTheDocument();
-    expect(
-      within(addedDetailsPanel as HTMLElement).queryByText("skills-review-bot")
-    ).not.toBeInTheDocument();
-    expect(
-      within(addedDetailsPanel as HTMLElement).queryByText("变更技能")
-    ).not.toBeInTheDocument();
-    expect(
-      within(addedDetailsPanel as HTMLElement).queryByText("Design Helper")
-    ).not.toBeInTheDocument();
+    expect(within(addedDetailsPanel as HTMLElement).queryByText("skills-review-bot")).not.toBeInTheDocument();
+    expect(within(addedDetailsPanel as HTMLElement).queryByText("变更技能")).not.toBeInTheDocument();
+    expect(within(addedDetailsPanel as HTMLElement).queryByText("Design Helper")).not.toBeInTheDocument();
     expect(within(distributionSection).getByText("自动分发")).toBeInTheDocument();
     expect(within(distributionSection).getByText("已开启")).toBeInTheDocument();
     expect(within(distributionSection).getByText("可分发")).toBeInTheDocument();
@@ -540,9 +479,7 @@ describe("RepositoriesPage", () => {
 
     const detail = screen.getByLabelText("来源详情");
 
-    fireEvent.click(
-      within(detail).getByRole("button", { name: "打开 git@github.com:team/skills.git" })
-    );
+    fireEvent.click(within(detail).getByRole("button", { name: "打开 git@github.com:team/skills.git" }));
     expect(openRepositoryLocation).toHaveBeenCalledWith("git@github.com:team/skills.git");
 
     fireEvent.click(screen.getByRole("button", { name: "Local development skills" }));
@@ -574,10 +511,7 @@ describe("RepositoriesPage", () => {
         }
       ]
     });
-    const listRepositories = vi
-      .fn()
-      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
-      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
+    const listRepositories = vi.fn().mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture }).mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
 
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
@@ -597,11 +531,7 @@ describe("RepositoriesPage", () => {
     const dialog = await screen.findByRole("alertdialog", { name: "本地路径同步确认" });
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(syncRepositories).not.toHaveBeenCalled();
-    expect(
-      within(dialog).getByText(
-        "本地路径同步会复制文件到 Skills Manager 的统一本地缓存目录。旧地址的文件需要用户手动删除。是否继续？"
-      )
-    ).toBeInTheDocument();
+    expect(within(dialog).getByText("本地路径同步会复制文件到 Skills Manager 的统一本地缓存目录。旧地址的文件需要用户手动删除。是否继续？")).toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole("button", { name: "确定" }));
 
@@ -650,10 +580,7 @@ describe("RepositoriesPage", () => {
         }
       ]
     });
-    const listRepositories = vi
-      .fn()
-      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
-      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
+    const listRepositories = vi.fn().mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture }).mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
 
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
@@ -671,11 +598,7 @@ describe("RepositoriesPage", () => {
 
     await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
     expect(listRepositories).toHaveBeenCalledTimes(2);
-    expect(
-      await screen.findByLabelText(
-        "Team skills repository 同步完成。已入库 12 个 Skills。新增 0，更新 1，移除 0，警告 0。"
-      )
-    ).toBeInTheDocument();
+    expect(await screen.findByLabelText("Team skills repository 同步完成。已入库 12 个 Skills。新增 0，更新 1，移除 0，警告 0。")).toBeInTheDocument();
     expect(screen.getByLabelText("选择 Team skills repository")).not.toBeChecked();
   });
 
@@ -704,9 +627,7 @@ describe("RepositoriesPage", () => {
     };
     await renderRepositoriesPage();
 
-    expect(
-      screen.getByLabelText("Team skills repository 最后一次同步失败。没有权限访问这个 Git 来源。")
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Team skills repository 最后一次同步失败。没有权限访问这个 Git 来源。")).toBeInTheDocument();
   });
 
   it("shows an animated per-source sync indicator while a source is syncing", async () => {
@@ -733,17 +654,12 @@ describe("RepositoriesPage", () => {
     fireEvent.click(screen.getByLabelText("选择 Local development skills"));
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
     fireEvent.click(
-      within(await screen.findByRole("alertdialog", { name: "本地路径同步确认" })).getByRole(
-        "button",
-        {
-          name: "确定"
-        }
-      )
+      within(await screen.findByRole("alertdialog", { name: "本地路径同步确认" })).getByRole("button", {
+        name: "确定"
+      })
     );
 
-    const indicator = await screen.findByLabelText(
-      "Local development skills 正在同步。正在复制或拉取来源，并扫描 SKILL.md。缓存目录 D:/workspace/local-skills"
-    );
+    const indicator = await screen.findByLabelText("Local development skills 正在同步。正在复制或拉取来源，并扫描 SKILL.md。缓存目录 D:/workspace/local-skills");
     expect(indicator).not.toHaveClass("animate-spin");
     expect(indicator).not.toBeDisabled();
     expect(indicator).toHaveAttribute("aria-disabled", "true");
@@ -775,10 +691,7 @@ describe("RepositoriesPage", () => {
       progressCallback = callback;
       return vi.fn();
     });
-    const listRepositories = vi
-      .fn()
-      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
-      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
+    const listRepositories = vi.fn().mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture }).mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
 
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
@@ -824,12 +737,8 @@ describe("RepositoriesPage", () => {
     const reviewRow = within(dialog).getByText("Review Bot").closest("li") as HTMLElement;
     const designRow = within(dialog).getByText("Design Helper").closest("li") as HTMLElement;
 
-    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass(
-      "animate-spin"
-    );
-    expect(
-      within(designRow).getByLabelText("Design Helper 同步中").querySelector("svg")
-    ).toHaveClass("animate-spin");
+    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass("animate-spin");
+    expect(within(designRow).getByLabelText("Design Helper 同步中").querySelector("svg")).toHaveClass("animate-spin");
 
     act(() => {
       progressCallback({
@@ -844,23 +753,15 @@ describe("RepositoriesPage", () => {
       });
     });
 
-    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass(
-      "animate-spin"
-    );
-    expect(
-      within(designRow).getByLabelText("Design Helper 同步中").querySelector("svg")
-    ).toHaveClass("animate-spin");
+    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass("animate-spin");
+    expect(within(designRow).getByLabelText("Design Helper 同步中").querySelector("svg")).toHaveClass("animate-spin");
 
     act(() => {
       vi.advanceTimersByTime(1000);
     });
 
-    expect(
-      within(reviewRow).getByLabelText("Review Bot 完成").querySelector("svg")
-    ).not.toHaveClass("animate-spin");
-    expect(
-      within(designRow).getByLabelText("Design Helper 同步中").querySelector("svg")
-    ).toHaveClass("animate-spin");
+    expect(within(reviewRow).getByLabelText("Review Bot 完成").querySelector("svg")).not.toHaveClass("animate-spin");
+    expect(within(designRow).getByLabelText("Design Helper 同步中").querySelector("svg")).toHaveClass("animate-spin");
 
     await act(async () => {
       progressCallback({
@@ -952,23 +853,17 @@ describe("RepositoriesPage", () => {
       });
     });
 
-    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass(
-      "animate-spin"
-    );
+    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass("animate-spin");
 
     act(() => {
       vi.advanceTimersByTime(999);
     });
-    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass(
-      "animate-spin"
-    );
+    expect(within(reviewRow).getByLabelText("Review Bot 同步中").querySelector("svg")).toHaveClass("animate-spin");
 
     act(() => {
       vi.advanceTimersByTime(1);
     });
-    expect(
-      within(reviewRow).getByLabelText("Review Bot 完成").querySelector("svg")
-    ).not.toHaveClass("animate-spin");
+    expect(within(reviewRow).getByLabelText("Review Bot 完成").querySelector("svg")).not.toHaveClass("animate-spin");
   });
 
   it("keeps batch sync available and skips sources that are already syncing", async () => {
@@ -1006,9 +901,7 @@ describe("RepositoriesPage", () => {
     await renderRepositoriesPage();
 
     fireEvent.click(getRepositorySyncButton("Team skills repository"));
-    await screen.findByLabelText(
-      "Team skills repository 正在同步。正在复制或拉取来源，并扫描 SKILL.md。缓存目录 ~/.skills-manager/cache/team-skills"
-    );
+    await screen.findByLabelText("Team skills repository 正在同步。正在复制或拉取来源，并扫描 SKILL.md。缓存目录 ~/.skills-manager/cache/team-skills");
 
     fireEvent.click(screen.getByLabelText("选择 Team skills repository"));
     fireEvent.click(screen.getByLabelText("选择 Design lab prompts"));
@@ -1019,11 +912,7 @@ describe("RepositoriesPage", () => {
     await waitFor(() => expect(syncRepositories).toHaveBeenCalledTimes(2));
     expect(syncRepositories).toHaveBeenNthCalledWith(1, ["team-skills"]);
     expect(syncRepositories).toHaveBeenNthCalledWith(2, ["design-lab"]);
-    expect(
-      await screen.findByLabelText(
-        "Design lab prompts 同步完成。已入库 7 个 Skills。新增 0，更新 1，移除 0，警告 0。"
-      )
-    ).toBeInTheDocument();
+    expect(await screen.findByLabelText("Design lab prompts 同步完成。已入库 7 个 Skills。新增 0，更新 1，移除 0，警告 0。")).toBeInTheDocument();
 
     resolveSync({
       results: [
@@ -1066,19 +955,12 @@ describe("RepositoriesPage", () => {
     fireEvent.click(screen.getByLabelText("选择 Local development skills"));
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
     fireEvent.click(
-      within(await screen.findByRole("alertdialog", { name: "本地路径同步确认" })).getByRole(
-        "button",
-        {
-          name: "确定"
-        }
-      )
+      within(await screen.findByRole("alertdialog", { name: "本地路径同步确认" })).getByRole("button", {
+        name: "确定"
+      })
     );
 
-    expect(
-      await screen.findByLabelText(
-        "Local development skills 同步完成。已入库 1 个 Skills。新增 1，更新 0，移除 0，警告 0。"
-      )
-    ).toBeInTheDocument();
+    expect(await screen.findByLabelText("Local development skills 同步完成。已入库 1 个 Skills。新增 1，更新 0，移除 0，警告 0。")).toBeInTheDocument();
   });
 
   it("keeps a failed per-source sync indicator with the error message", async () => {
@@ -1099,22 +981,16 @@ describe("RepositoriesPage", () => {
     fireEvent.click(screen.getByLabelText("选择 Local development skills"));
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
     fireEvent.click(
-      within(await screen.findByRole("alertdialog", { name: "本地路径同步确认" })).getByRole(
-        "button",
-        {
-          name: "确定"
-        }
-      )
+      within(await screen.findByRole("alertdialog", { name: "本地路径同步确认" })).getByRole("button", {
+        name: "确定"
+      })
     );
 
-    expect(
-      await screen.findByLabelText("Local development skills 同步失败。Permission denied")
-    ).toBeInTheDocument();
+    expect(await screen.findByLabelText("Local development skills 同步失败。Permission denied")).toBeInTheDocument();
   });
 
   it("shows the friendly failure from a per-source sync result", async () => {
-    const friendlyMessage =
-      "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。";
+    const friendlyMessage = "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。";
     const syncRepositories = vi.fn().mockResolvedValue({
       results: [
         {
@@ -1146,9 +1022,7 @@ describe("RepositoriesPage", () => {
     fireEvent.click(screen.getByLabelText("选择 Team skills repository"));
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
 
-    expect(
-      await screen.findByLabelText(`Team skills repository 同步失败。${friendlyMessage}`)
-    ).toBeInTheDocument();
+    expect(await screen.findByLabelText(`Team skills repository 同步失败。${friendlyMessage}`)).toBeInTheDocument();
     expect(screen.queryByText("RPC failed")).not.toBeInTheDocument();
   });
 
@@ -1185,10 +1059,7 @@ describe("RepositoriesPage", () => {
           }
         : repository
     );
-    const listRepositories = vi
-      .fn()
-      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
-      .mockResolvedValueOnce({ repositories: updatedRepositories });
+    const listRepositories = vi.fn().mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture }).mockResolvedValueOnce({ repositories: updatedRepositories });
 
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
@@ -1219,9 +1090,7 @@ describe("RepositoriesPage", () => {
       })
     );
     expect(listRepositories).toHaveBeenCalledTimes(2);
-    expect(
-      await screen.findByRole("switch", { name: "启用 skills.sh market index" })
-    ).toHaveAttribute("aria-checked", "true");
+    expect(await screen.findByRole("switch", { name: "启用 skills.sh market index" })).toHaveAttribute("aria-checked", "true");
     expect(within(screen.getByLabelText("来源详情")).getByText("是")).toBeInTheDocument();
   });
 
@@ -1301,21 +1170,12 @@ describe("RepositoriesPage", () => {
     const patternsField = within(dialog).getByLabelText("发现入口");
     expect(remoteUrlField).toHaveClass("h-10");
     expect(browseButton).toHaveClass("h-10");
-    expect(remoteUrlField.compareDocumentPosition(nameField)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
+    expect(remoteUrlField.compareDocumentPosition(nameField)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(nameField.compareDocumentPosition(providerField)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(providerField.compareDocumentPosition(branchField)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
-    expect(branchField.compareDocumentPosition(patternsField)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
+    expect(providerField.compareDocumentPosition(branchField)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(branchField.compareDocumentPosition(patternsField)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(patternsField).toHaveValue("");
-    expect(patternsField).toHaveAttribute(
-      "placeholder",
-      "例: **/SKILL.md、skills/*/SKILL.md 或 SKILL.md"
-    );
+    expect(patternsField).toHaveAttribute("placeholder", "例: **/SKILL.md、skills/*/SKILL.md 或 SKILL.md");
     expect(within(dialog).queryByText("缓存目录")).not.toBeInTheDocument();
     fireEvent.change(within(dialog).getByLabelText("名称"), {
       target: { value: "huashu-design" }
@@ -1386,10 +1246,7 @@ describe("RepositoriesPage", () => {
           }
         : repository
     );
-    const listRepositories = vi
-      .fn()
-      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
-      .mockResolvedValueOnce({ repositories: updatedRepositories });
+    const listRepositories = vi.fn().mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture }).mockResolvedValueOnce({ repositories: updatedRepositories });
 
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
@@ -1403,9 +1260,7 @@ describe("RepositoriesPage", () => {
     };
     await renderRepositoriesPage();
 
-    fireEvent.click(
-      within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" })
-    );
+    fireEvent.click(within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" }));
     const dialog = screen.getByRole("dialog", { name: "编辑来源" });
     fireEvent.change(within(dialog).getByLabelText("名称"), {
       target: { value: "Team skills edited" }
@@ -1436,10 +1291,7 @@ describe("RepositoriesPage", () => {
       })
     );
     expect(listRepositories).toHaveBeenCalledTimes(2);
-    expect(await screen.findByRole("button", { name: "Team skills edited" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
+    expect(await screen.findByRole("button", { name: "Team skills edited" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("heading", { name: "Team skills edited" })).toBeInTheDocument();
   });
 
@@ -1456,9 +1308,7 @@ describe("RepositoriesPage", () => {
   it("only offers GitHub and Local when editing a source", async () => {
     await renderRepositoriesPage();
 
-    fireEvent.click(
-      within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" })
-    );
+    fireEvent.click(within(screen.getByLabelText("来源详情")).getByRole("button", { name: "编辑" }));
     const dialog = screen.getByRole("dialog", { name: "编辑来源" });
     fireEvent.click(within(dialog).getByLabelText("来源类型"));
 
@@ -1492,9 +1342,7 @@ describe("RepositoriesPage", () => {
       .fn()
       .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
       .mockResolvedValueOnce({
-        repositories: repositoryApiRecordsFixture.filter(
-          (repository) => repository.id !== "team-skills"
-        )
+        repositories: repositoryApiRecordsFixture.filter((repository) => repository.id !== "team-skills")
       });
 
     window.skillsManager = {
@@ -1515,11 +1363,7 @@ describe("RepositoriesPage", () => {
 
     const dialog = await screen.findByRole("dialog", { name: "删除来源" });
     expect(getRepositoryDeletePreview).toHaveBeenCalledWith("team-skills");
-    expect(
-      within(dialog).getByText(
-        "会删除此来源对应的 Skills 记录和来源同步到本地的缓存文件。不会删除已经同步到 Codex、Claude Code、Gemini CLI 或自定义目标目录的文件。"
-      )
-    ).toBeInTheDocument();
+    expect(within(dialog).getByText("会删除此来源对应的 Skills 记录和来源同步到本地的缓存文件。不会删除已经同步到 Codex、Claude Code、Gemini CLI 或自定义目标目录的文件。")).toBeInTheDocument();
     expect(within(dialog).getByText("review-bot")).toBeInTheDocument();
     expect(within(dialog).getByText("skills/review-bot/SKILL.md")).toBeInTheDocument();
     expect(within(dialog).getByText("release-notes")).toBeInTheDocument();
@@ -1528,13 +1372,8 @@ describe("RepositoriesPage", () => {
 
     await waitFor(() => expect(deleteRepository).toHaveBeenCalledWith("team-skills"));
     expect(listRepositories).toHaveBeenCalledTimes(2);
-    expect(
-      screen.queryByRole("button", { name: "Team skills repository" })
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Local development skills" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
+    expect(screen.queryByRole("button", { name: "Team skills repository" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Local development skills" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("closes the source modal with Escape", async () => {
@@ -1577,12 +1416,8 @@ describe("RepositoriesPage", () => {
     expect(await within(dialog).findByDisplayValue("anthropics/skills")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("来源类型")).toHaveTextContent("GitHub");
     expect(within(dialog).getByLabelText("分支")).toHaveValue("main");
-    expect(within(dialog).getByLabelText("发现入口")).toHaveValue(
-      "skills/*/SKILL.md, template/SKILL.md"
-    );
-    expect(within(dialog).getByLabelText("备注")).toHaveValue(
-      "Composable Claude skills from Anthropic."
-    );
+    expect(within(dialog).getByLabelText("发现入口")).toHaveValue("skills/*/SKILL.md, template/SKILL.md");
+    expect(within(dialog).getByLabelText("备注")).toHaveValue("Composable Claude skills from Anthropic.");
     expect(inspectRepositorySource).toHaveBeenCalledWith("https://github.com/anthropics/skills");
   });
 
@@ -1743,8 +1578,7 @@ describe("RepositoriesPage", () => {
   });
 
   it("shows GitHub token setup guidance when source inspection returns an API error", async () => {
-    const apiError =
-      "GitHub API 访问频率已达上限，请稍后重试。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。";
+    const apiError = "GitHub API 访问频率已达上限，请稍后重试。 请前往“设置 > 凭证管理”配置 GitHub Token 后重试。";
     const inspectRepositorySource = vi.fn().mockRejectedValue(new Error(apiError));
     window.skillsManager = {
       ...(window.skillsManager ?? {}),
@@ -1771,9 +1605,7 @@ describe("RepositoriesPage", () => {
   it("renders English UI copy when initialized with en-US", async () => {
     await renderRepositoriesPage("en-US");
 
-    expect(
-      screen.getByRole("heading", { name: "Manage sources and scan results" })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Manage sources and scan results" })).toBeInTheDocument();
     expect(screen.getByLabelText("Source filters")).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "Source details" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();

@@ -8,15 +8,7 @@ import "../../i18n/react-i18n";
 
 import { DiscoverPage } from "./discover-page";
 import { DISCOVER_SEARCH_DEBOUNCE_MS } from "./hooks/use-discover-page-state";
-import type {
-  CatalogErrorCode,
-  CatalogPageInput,
-  CatalogPageResult,
-  CatalogResult,
-  CatalogSearchInput,
-  CatalogSearchResult,
-  CatalogSkill
-} from "../../../core/catalog/catalog-types";
+import type { CatalogErrorCode, CatalogPageInput, CatalogPageResult, CatalogResult, CatalogSearchInput, CatalogSearchResult, CatalogSkill } from "../../../core/catalog/catalog-types";
 
 const makeSkill = (id: string, name: string, url: string): CatalogSkill => ({
   id,
@@ -35,9 +27,7 @@ const makeWellKnownSkill = (id: string, name: string, url: string): CatalogSkill
   sourceType: "well-known"
 });
 
-const successResult = (
-  overrides: Partial<CatalogPageResult> = {}
-): CatalogResult<CatalogPageResult> => ({
+const successResult = (overrides: Partial<CatalogPageResult> = {}): CatalogResult<CatalogPageResult> => ({
   ok: true,
   data: {
     page: 0,
@@ -58,9 +48,7 @@ const failureResult = (code: CatalogErrorCode): CatalogResult<CatalogPageResult>
   error: { code, message: `failed: ${code}` }
 });
 
-const searchSuccess = (
-  overrides: Partial<CatalogSearchResult> = {}
-): CatalogResult<CatalogSearchResult> => ({
+const searchSuccess = (overrides: Partial<CatalogSearchResult> = {}): CatalogResult<CatalogSearchResult> => ({
   ok: true,
   data: {
     query: "react hooks",
@@ -72,18 +60,12 @@ const searchSuccess = (
   }
 });
 
-const searchFailure = (
-  code: CatalogErrorCode,
-  retryAfterSeconds?: number
-): CatalogResult<CatalogSearchResult> => ({
+const searchFailure = (code: CatalogErrorCode, retryAfterSeconds?: number): CatalogResult<CatalogSearchResult> => ({
   ok: false,
   error: { code, message: `failed: ${code}`, retryAfterSeconds }
 });
 
-const setupWindow = (options: {
-  getCatalogPageImpl?: (input: CatalogPageInput) => Promise<CatalogResult<CatalogPageResult>>;
-  searchCatalogImpl?: (input: CatalogSearchInput) => Promise<CatalogResult<CatalogSearchResult>>;
-}) => {
+const setupWindow = (options: { getCatalogPageImpl?: (input: CatalogPageInput) => Promise<CatalogResult<CatalogPageResult>>; searchCatalogImpl?: (input: CatalogSearchInput) => Promise<CatalogResult<CatalogSearchResult>> }) => {
   const getCatalogPage = vi.fn(options.getCatalogPageImpl ?? (async () => successResult()));
   const searchCatalog = vi.fn(options.searchCatalogImpl ?? (async () => searchSuccess()));
   const openExternalUrl = vi.fn().mockResolvedValue(undefined);
@@ -219,8 +201,7 @@ describe("DiscoverPage", () => {
 
   it("renders the well-known source type as a localized badge, not the raw wire value", async () => {
     setupWindow({
-      getCatalogPageImpl: async () =>
-        successResult({ skills: [makeWellKnownSkill("a", "Alpha", "https://skills.sh/a")] })
+      getCatalogPageImpl: async () => successResult({ skills: [makeWellKnownSkill("a", "Alpha", "https://skills.sh/a")] })
     });
 
     render(<DiscoverPage />);
@@ -408,8 +389,7 @@ describe("DiscoverPage", () => {
 
   it("renders the search summary with the match count and matching strategy", async () => {
     setupWindow({
-      searchCatalogImpl: async () =>
-        searchSuccess({ query: "react hooks", count: 1, searchType: "fuzzy" })
+      searchCatalogImpl: async () => searchSuccess({ query: "react hooks", count: 1, searchType: "fuzzy" })
     });
 
     render(<DiscoverPage />);
@@ -444,8 +424,7 @@ describe("DiscoverPage", () => {
 
   it("renders the search-specific empty state with the query", async () => {
     setupWindow({
-      searchCatalogImpl: async () =>
-        searchSuccess({ query: "zzzz qqqq", skills: [], count: 0, truncated: false })
+      searchCatalogImpl: async () => searchSuccess({ query: "zzzz qqqq", skills: [], count: 0, truncated: false })
     });
 
     render(<DiscoverPage />);

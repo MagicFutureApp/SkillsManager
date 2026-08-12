@@ -52,17 +52,8 @@ type RepositoryDetailProps = {
   onOpenLocation: (location: string) => void;
 };
 
-export const RepositoryDetail = ({
-  copy,
-  repository,
-  onCopyCachePath,
-  onDelete,
-  onEdit,
-  onOpenLocation
-}: RepositoryDetailProps) => {
-  const [activeSyncDetailGroups, setActiveSyncDetailGroups] = React.useState<SyncDetailGroupKey[]>(
-    []
-  );
+export const RepositoryDetail = ({ copy, repository, onCopyCachePath, onDelete, onEdit, onOpenLocation }: RepositoryDetailProps) => {
+  const [activeSyncDetailGroups, setActiveSyncDetailGroups] = React.useState<SyncDetailGroupKey[]>([]);
   const lastSyncSummary = repository?.lastSyncSummary ?? null;
   const scanDetails = lastSyncSummary?.scan;
   const scanRows = repository
@@ -88,24 +79,10 @@ export const RepositoryDetail = ({
       ]
     : [];
   const distribution = lastSyncSummary?.distribution;
-  const hasDistributionSummary = distribution
-    ? distribution.autoDistributionEnabled ||
-      distribution.eligible > 0 ||
-      distribution.installed > 0 ||
-      distribution.updated > 0 ||
-      distribution.skipped > 0 ||
-      distribution.conflicts > 0 ||
-      distribution.blocked > 0 ||
-      distribution.failed > 0
-    : false;
+  const hasDistributionSummary = distribution ? distribution.autoDistributionEnabled || distribution.eligible > 0 || distribution.installed > 0 || distribution.updated > 0 || distribution.skipped > 0 || distribution.conflicts > 0 || distribution.blocked > 0 || distribution.failed > 0 : false;
   const distributionRows = distribution
     ? ([
-        [
-          copy.autoDistribution,
-          distribution.autoDistributionEnabled
-            ? copy.autoDistributionEnabled
-            : copy.autoDistributionDisabled
-        ],
+        [copy.autoDistribution, distribution.autoDistributionEnabled ? copy.autoDistributionEnabled : copy.autoDistributionDisabled],
         [copy.distributionEligible, distribution.eligible],
         [copy.distributionInstalled, distribution.installed],
         [copy.distributionUpdated, distribution.updated],
@@ -125,12 +102,8 @@ export const RepositoryDetail = ({
   return (
     <>
       <section className="rounded-xl border border-border bg-card p-4">
-        <h2 className="text-xl font-semibold">
-          {repository ? repository.name : copy.defaultTitle}
-        </h2>
-        {detailDescription ? (
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">{detailDescription}</p>
-        ) : null}
+        <h2 className="text-xl font-semibold">{repository ? repository.name : copy.defaultTitle}</h2>
+        {detailDescription ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{detailDescription}</p> : null}
         <div className="mt-4 flex flex-wrap gap-2">
           <Button type="button" variant="outline" disabled={!repository} onClick={onEdit}>
             {copy.edit}
@@ -149,30 +122,15 @@ export const RepositoryDetail = ({
         {repository ? (
           <div className="mt-3 grid gap-2">
             <DetailRow label={copy.provider} value={repository.provider} />
-            <DetailRow
-              label={copy.remoteUrl}
-              value={repository.remoteUrl}
-              mono
-              breakMode="all"
-              openLabel={copy.openLocation(repository.remoteUrl)}
-              onOpen={() => onOpenLocation(repository.remoteUrl)}
-            />
+            <DetailRow label={copy.remoteUrl} value={repository.remoteUrl} mono breakMode="all" openLabel={copy.openLocation(repository.remoteUrl)} onOpen={() => onOpenLocation(repository.remoteUrl)} />
             {!isLocalRepository ? (
               <>
                 <DetailRow label={copy.branch} value={repository.branch} mono breakMode="all" />
-                <DetailRow
-                  label={copy.lastCommit}
-                  value={repository.lastCommit}
-                  mono
-                  breakMode="all"
-                />
+                <DetailRow label={copy.lastCommit} value={repository.lastCommit} mono breakMode="all" />
               </>
             ) : null}
             <DetailRow label={copy.lastScan} value={repository.lastScanTime} />
-            <DetailRow
-              label={copy.enabled}
-              value={repository.enabled ? copy.enabledYes : copy.enabledNo}
-            />
+            <DetailRow label={copy.enabled} value={repository.enabled ? copy.enabledYes : copy.enabledNo} />
             <DetailRow label={copy.patterns} value={repository.patterns.join(", ")} mono />
           </div>
         ) : null}
@@ -180,40 +138,23 @@ export const RepositoryDetail = ({
 
       <section className="rounded-xl border border-border bg-card p-4">
         <h3 className="font-semibold">{copy.scanHeading}</h3>
-        <Accordion.Root<SyncDetailGroupKey>
-          value={activeSyncDetailGroups}
-          onValueChange={(value) => setActiveSyncDetailGroups(value)}
-          className="mt-3 grid gap-2"
-        >
+        <Accordion.Root<SyncDetailGroupKey> value={activeSyncDetailGroups} onValueChange={(value) => setActiveSyncDetailGroups(value)} className="mt-3 grid gap-2">
           {scanRows.map((group) => {
             const canShowDetails = group.skills.length > 0 && group.value > 0;
             const content = (
               <>
                 <span>
                   <strong className="block text-sm">{group.label}</strong>
-                  <span className="text-xs text-muted-foreground">
-                    {repository?.lastScanTime ?? "--"}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{repository?.lastScanTime ?? "--"}</span>
                 </span>
                 <span className="font-mono text-sm">{group.value}</span>
               </>
             );
 
             return canShowDetails ? (
-              <Accordion.Item
-                key={group.key}
-                value={group.key}
-                data-sync-impact-item={group.key}
-                className="overflow-hidden rounded-lg border border-border bg-muted/40"
-              >
+              <Accordion.Item key={group.key} value={group.key} data-sync-impact-item={group.key} className="overflow-hidden rounded-lg border border-border bg-muted/40">
                 <Accordion.Header className="contents">
-                  <Accordion.Trigger
-                    title={copy.scanDetailsAction}
-                    className={cn(
-                      "grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 p-3 text-left outline-none transition-colors",
-                      "cursor-pointer hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
-                    )}
-                  >
+                  <Accordion.Trigger title={copy.scanDetailsAction} className={cn("grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 p-3 text-left outline-none transition-colors", "cursor-pointer hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50")}>
                     {content}
                     <ListTree className="size-4 text-muted-foreground" aria-hidden="true" />
                   </Accordion.Trigger>
@@ -231,10 +172,7 @@ export const RepositoryDetail = ({
                 </Accordion.Panel>
               </Accordion.Item>
             ) : (
-              <div
-                key={group.key}
-                className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3"
-              >
+              <div key={group.key} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3">
                 {content}
                 <ListTree className="size-4 text-muted-foreground" aria-hidden="true" />
               </div>
@@ -248,10 +186,7 @@ export const RepositoryDetail = ({
           <h3 className="font-semibold">{copy.distributionHeading}</h3>
           <div className="mt-3 grid gap-2">
             {distributionRows.map(([label, value]) => (
-              <div
-                key={label}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3"
-              >
+              <div key={label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-muted/40 p-3">
                 <strong className="block text-sm">{label}</strong>
                 <span className="font-mono text-sm">{value}</span>
               </div>

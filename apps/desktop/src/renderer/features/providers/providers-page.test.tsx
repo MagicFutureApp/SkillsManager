@@ -58,17 +58,13 @@ describe("ProvidersPage", () => {
     expect(screen.getByLabelText("筛选 Provider")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "GitHub" })).toHaveAttribute("aria-selected", "true");
     const providerTable = within(screen.getByRole("main")).getByRole("table");
-    expect(
-      within(providerTable).getByRole("columnheader", { name: "Provider" })
-    ).toBeInTheDocument();
+    expect(within(providerTable).getByRole("columnheader", { name: "Provider" })).toBeInTheDocument();
     expect(within(providerTable).getByRole("columnheader", { name: "认证" })).toBeInTheDocument();
     expect(within(providerTable).getByRole("columnheader", { name: "状态" })).toBeInTheDocument();
     expect(within(providerTable).getByRole("columnheader", { name: "连接" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "GitHub" })).toBeInTheDocument();
     expect(screen.getByText("默认发现规则")).toBeInTheDocument();
-    expect(
-      within(screen.getByLabelText("Provider 详情")).getByText("系统 Git 凭据")
-    ).toBeInTheDocument();
+    expect(within(screen.getByLabelText("Provider 详情")).getByText("系统 Git 凭据")).toBeInTheDocument();
   });
 
   it("filters providers by provider type and status", async () => {
@@ -98,9 +94,7 @@ describe("ProvidersPage", () => {
 
     fireEvent.click(screen.getByText("Local filesystem"));
 
-    expect(
-      within(screen.getByLabelText("Provider 详情")).getByRole("heading", { name: "Local Git" })
-    ).toBeInTheDocument();
+    expect(within(screen.getByLabelText("Provider 详情")).getByRole("heading", { name: "Local Git" })).toBeInTheDocument();
   });
 
   it("connects and disconnects the selected provider through page actions", async () => {
@@ -123,9 +117,7 @@ describe("ProvidersPage", () => {
   it("renders English UI copy when initialized with en-US", async () => {
     await renderProvidersPage("en-US");
 
-    expect(
-      screen.getByRole("heading", { name: "Manage providers and connection diagnostics" })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Manage providers and connection diagnostics" })).toBeInTheDocument();
     expect(screen.getByLabelText("Provider filters")).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "Provider details" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Run diagnostics" })).toBeInTheDocument();

@@ -4,8 +4,7 @@ import path from "node:path";
 import { APP_META, WINDOW_MIN_HEIGHT, WINDOW_MIN_WIDTH } from "../core/app-constants";
 import { getAppIconPath } from "./tray-icon";
 
-export const getMainWindowHtmlPath = (mainDirname: string): string =>
-  path.join(mainDirname, "..", "..", "renderer", "index.html");
+export const getMainWindowHtmlPath = (mainDirname: string): string => path.join(mainDirname, "..", "..", "renderer", "index.html");
 
 export const buildMainWindowOptions = (mainDirname: string): BrowserWindowConstructorOptions => ({
   minWidth: WINDOW_MIN_WIDTH,
@@ -33,9 +32,7 @@ export const buildMainWindowOptions = (mainDirname: string): BrowserWindowConstr
   }
 });
 
-export const disableWindowMenuBar = (
-  window: Pick<BrowserWindow, "setMenu" | "setMenuBarVisibility">
-): void => {
+export const disableWindowMenuBar = (window: Pick<BrowserWindow, "setMenu" | "setMenuBarVisibility">): void => {
   window.setMenu(null);
   window.setMenuBarVisibility(false);
 };

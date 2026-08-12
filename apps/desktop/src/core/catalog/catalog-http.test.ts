@@ -1,25 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  buildManifestUrl,
-  buildPageUrl,
-  buildSearchUrl,
-  CATALOG_SEARCH_DEFAULT_LIMIT,
-  CATALOG_SEARCH_MAX_LIMIT,
-  CATALOG_SEARCH_MIN_LIMIT,
-  CatalogHttpError,
-  DEFAULT_RETRY_AFTER_SECONDS,
-  fetchCatalogManifest,
-  fetchCatalogPage,
-  fetchCatalogSearch,
-  isValidSearchOwner,
-  MAX_RETRY_AFTER_SECONDS,
-  MIN_RETRY_AFTER_SECONDS,
-  normalizeCatalogSearch,
-  normalizeSearchQuery,
-  parseRetryAfterSeconds,
-  resolveSearchLimit
-} from "./catalog-http";
+import { buildManifestUrl, buildPageUrl, buildSearchUrl, CATALOG_SEARCH_DEFAULT_LIMIT, CATALOG_SEARCH_MAX_LIMIT, CATALOG_SEARCH_MIN_LIMIT, CatalogHttpError, DEFAULT_RETRY_AFTER_SECONDS, fetchCatalogManifest, fetchCatalogPage, fetchCatalogSearch, isValidSearchOwner, MAX_RETRY_AFTER_SECONDS, MIN_RETRY_AFTER_SECONDS, normalizeCatalogSearch, normalizeSearchQuery, parseRetryAfterSeconds, resolveSearchLimit } from "./catalog-http";
 
 const BASE_URL = "https://catalog.example.dev";
 
@@ -31,9 +12,7 @@ type FakeResponseInit = {
 
 const createResponse = (init: FakeResponseInit = {}): Response => {
   const status = init.status ?? 200;
-  const headers = new Map(
-    Object.entries(init.headers ?? {}).map(([key, value]) => [key.toLowerCase(), value])
-  );
+  const headers = new Map(Object.entries(init.headers ?? {}).map(([key, value]) => [key.toLowerCase(), value]));
 
   return {
     ok: status >= 200 && status < 300,
@@ -45,9 +24,7 @@ const createResponse = (init: FakeResponseInit = {}): Response => {
   } as unknown as Response;
 };
 
-const createFetchStub = (
-  handler: (url: string, callIndex: number) => Promise<Response> | Response
-) => {
+const createFetchStub = (handler: (url: string, callIndex: number) => Promise<Response> | Response) => {
   const urls: string[] = [];
   const mock = vi.fn(async (input: unknown): Promise<Response> => {
     const url = String(input);
@@ -87,18 +64,12 @@ describe("catalog URL building", () => {
   });
 
   it("normalizes trailing slashes on the base URL", () => {
-    expect(buildManifestUrl("https://catalog.example.dev///")).toBe(
-      "https://catalog.example.dev/v1/catalog"
-    );
-    expect(buildPageUrl("https://catalog.example.dev/", "gen-1", 2)).toBe(
-      "https://catalog.example.dev/v1/catalog/gen-1/pages/2"
-    );
+    expect(buildManifestUrl("https://catalog.example.dev///")).toBe("https://catalog.example.dev/v1/catalog");
+    expect(buildPageUrl("https://catalog.example.dev/", "gen-1", 2)).toBe("https://catalog.example.dev/v1/catalog/gen-1/pages/2");
   });
 
   it("percent-encodes the generation segment", () => {
-    expect(buildPageUrl(BASE_URL, "gen/../evil 1", 0)).toBe(
-      "https://catalog.example.dev/v1/catalog/gen%2F..%2Fevil%201/pages/0"
-    );
+    expect(buildPageUrl(BASE_URL, "gen/../evil 1", 0)).toBe("https://catalog.example.dev/v1/catalog/gen%2F..%2Fevil%201/pages/0");
   });
 });
 
@@ -125,9 +96,7 @@ describe("parseRetryAfterSeconds", () => {
 
 describe("fetchCatalogManifest", () => {
   it("returns a normalized manifest on 200", async () => {
-    const { fetchImpl, urls } = createFetchStub(() =>
-      createResponse({ json: () => Promise.resolve(manifestPayload) })
-    );
+    const { fetchImpl, urls } = createFetchStub(() => createResponse({ json: () => Promise.resolve(manifestPayload) }));
 
     const manifest = await fetchCatalogManifest({ baseUrl: BASE_URL, fetchImpl, timeoutMs: 5000 });
 
@@ -137,9 +106,7 @@ describe("fetchCatalogManifest", () => {
   });
 
   it("maps 202 to a warming error carrying the retry-after delay", async () => {
-    const { fetchImpl } = createFetchStub(() =>
-      createResponse({ status: 202, headers: { "retry-after": "4" } })
-    );
+    const { fetchImpl } = createFetchStub(() => createResponse({ status: 202, headers: { "retry-after": "4" } }));
 
     const error = await fetchCatalogManifest({
       baseUrl: BASE_URL,
@@ -155,9 +122,7 @@ describe("fetchCatalogManifest", () => {
   it("maps other non-2xx statuses to network errors", async () => {
     const { fetchImpl } = createFetchStub(() => createResponse({ status: 500 }));
 
-    await expect(
-      fetchCatalogManifest({ baseUrl: BASE_URL, fetchImpl, timeoutMs: 5000 })
-    ).rejects.toMatchObject({ code: "network" });
+    await expect(fetchCatalogManifest({ baseUrl: BASE_URL, fetchImpl, timeoutMs: 5000 })).rejects.toMatchObject({ code: "network" });
   });
 
   it("maps a rejected fetch to a network error", async () => {
@@ -165,19 +130,13 @@ describe("fetchCatalogManifest", () => {
       throw new Error("ECONNREFUSED");
     });
 
-    await expect(
-      fetchCatalogManifest({ baseUrl: BASE_URL, fetchImpl, timeoutMs: 5000 })
-    ).rejects.toMatchObject({ code: "network" });
+    await expect(fetchCatalogManifest({ baseUrl: BASE_URL, fetchImpl, timeoutMs: 5000 })).rejects.toMatchObject({ code: "network" });
   });
 
   it("rejects a manifest without a usable current generation", async () => {
-    const { fetchImpl } = createFetchStub(() =>
-      createResponse({ json: () => Promise.resolve({ schemaVersion: 1 }) })
-    );
+    const { fetchImpl } = createFetchStub(() => createResponse({ json: () => Promise.resolve({ schemaVersion: 1 }) }));
 
-    await expect(
-      fetchCatalogManifest({ baseUrl: BASE_URL, fetchImpl, timeoutMs: 5000 })
-    ).rejects.toMatchObject({ code: "invalid-response" });
+    await expect(fetchCatalogManifest({ baseUrl: BASE_URL, fetchImpl, timeoutMs: 5000 })).rejects.toMatchObject({ code: "invalid-response" });
   });
 
   it("drops a malformed previous snapshot instead of failing the whole manifest", async () => {
@@ -269,9 +228,7 @@ describe("fetchCatalogPage", () => {
   });
 
   it("rejects a payload whose data field is not an array", async () => {
-    const { fetchImpl } = createFetchStub(() =>
-      createResponse({ json: () => Promise.resolve({ data: "nope" }) })
-    );
+    const { fetchImpl } = createFetchStub(() => createResponse({ json: () => Promise.resolve({ data: "nope" }) }));
 
     await expect(
       fetchCatalogPage({
@@ -369,30 +326,20 @@ describe("search input helpers", () => {
 
 describe("buildSearchUrl", () => {
   it("encodes the query and appends the limit", () => {
-    expect(buildSearchUrl(BASE_URL, { query: "react native", limit: 50 })).toBe(
-      `${BASE_URL}/v1/catalog/search?q=react%20native&limit=50`
-    );
+    expect(buildSearchUrl(BASE_URL, { query: "react native", limit: 50 })).toBe(`${BASE_URL}/v1/catalog/search?q=react%20native&limit=50`);
   });
 
   it("encodes characters that would otherwise break the query string", () => {
-    expect(buildSearchUrl(BASE_URL, { query: "a&b=c?d#e", limit: 10 })).toBe(
-      `${BASE_URL}/v1/catalog/search?q=a%26b%3Dc%3Fd%23e&limit=10`
-    );
+    expect(buildSearchUrl(BASE_URL, { query: "a&b=c?d#e", limit: 10 })).toBe(`${BASE_URL}/v1/catalog/search?q=a%26b%3Dc%3Fd%23e&limit=10`);
   });
 
   it("appends the owner only when one is provided", () => {
-    expect(buildSearchUrl(BASE_URL, { query: "react", limit: 50, owner: "expo" })).toBe(
-      `${BASE_URL}/v1/catalog/search?q=react&limit=50&owner=expo`
-    );
-    expect(buildSearchUrl(BASE_URL, { query: "react", limit: 50, owner: "" })).toBe(
-      `${BASE_URL}/v1/catalog/search?q=react&limit=50`
-    );
+    expect(buildSearchUrl(BASE_URL, { query: "react", limit: 50, owner: "expo" })).toBe(`${BASE_URL}/v1/catalog/search?q=react&limit=50&owner=expo`);
+    expect(buildSearchUrl(BASE_URL, { query: "react", limit: 50, owner: "" })).toBe(`${BASE_URL}/v1/catalog/search?q=react&limit=50`);
   });
 
   it("normalizes a base URL with trailing slashes", () => {
-    expect(buildSearchUrl(`${BASE_URL}///`, { query: "react", limit: 50 })).toBe(
-      `${BASE_URL}/v1/catalog/search?q=react&limit=50`
-    );
+    expect(buildSearchUrl(`${BASE_URL}///`, { query: "react", limit: 50 })).toBe(`${BASE_URL}/v1/catalog/search?q=react&limit=50`);
   });
 });
 
@@ -417,22 +364,14 @@ describe("normalizeCatalogSearch", () => {
 
   it("treats any unknown searchType as semantic", () => {
     expect(normalizeCatalogSearch({ data: [], searchType: "fuzzy" }).searchType).toBe("fuzzy");
-    expect(normalizeCatalogSearch({ data: [], searchType: "semantic" }).searchType).toBe(
-      "semantic"
-    );
-    expect(normalizeCatalogSearch({ data: [], searchType: "telepathic" }).searchType).toBe(
-      "semantic"
-    );
+    expect(normalizeCatalogSearch({ data: [], searchType: "semantic" }).searchType).toBe("semantic");
+    expect(normalizeCatalogSearch({ data: [], searchType: "telepathic" }).searchType).toBe("semantic");
     expect(normalizeCatalogSearch({ data: [] }).searchType).toBe("semantic");
   });
 
   it("keeps isDuplicate only when upstream sets it to true", () => {
     const payload = normalizeCatalogSearch({
-      data: [
-        { id: "fork", isDuplicate: true },
-        { id: "original" },
-        { id: "falsy", isDuplicate: false }
-      ],
+      data: [{ id: "fork", isDuplicate: true }, { id: "original" }, { id: "falsy", isDuplicate: false }],
       searchType: "fuzzy"
     });
 
@@ -505,9 +444,7 @@ describe("fetchCatalogSearch", () => {
   });
 
   it("classifies a 429 as rate-limited and carries the clamped Retry-After", async () => {
-    const { fetchImpl } = createFetchStub(() =>
-      createResponse({ status: 429, headers: { "retry-after": "3" } })
-    );
+    const { fetchImpl } = createFetchStub(() => createResponse({ status: 429, headers: { "retry-after": "3" } }));
 
     await expect(
       fetchCatalogSearch({
@@ -521,9 +458,7 @@ describe("fetchCatalogSearch", () => {
   });
 
   it("clamps an absurd Retry-After on a 429", async () => {
-    const { fetchImpl } = createFetchStub(() =>
-      createResponse({ status: 429, headers: { "retry-after": "999" } })
-    );
+    const { fetchImpl } = createFetchStub(() => createResponse({ status: 429, headers: { "retry-after": "999" } }));
 
     await expect(
       fetchCatalogSearch({
@@ -551,9 +486,7 @@ describe("fetchCatalogSearch", () => {
   });
 
   it("classifies a malformed JSON body as invalid-response", async () => {
-    const { fetchImpl } = createFetchStub(() =>
-      createResponse({ json: () => Promise.reject(new Error("not json")) })
-    );
+    const { fetchImpl } = createFetchStub(() => createResponse({ json: () => Promise.reject(new Error("not json")) }));
 
     await expect(
       fetchCatalogSearch({

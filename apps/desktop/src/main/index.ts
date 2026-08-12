@@ -15,17 +15,8 @@ import { registerCatalogIpc } from "./ipc/catalog";
 import { getMainMessages } from "./i18n/main-messages";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut";
 import { createTrayIconImage } from "./tray-icon";
-import {
-  loadMainWindowState,
-  resolveMainWindowPlacement,
-  saveMainWindowState
-} from "./window-state";
-import {
-  buildMainWindowOptions,
-  denyExternalWindowOpen,
-  disableWindowMenuBar,
-  getMainWindowHtmlPath
-} from "./window-menu";
+import { loadMainWindowState, resolveMainWindowPlacement, saveMainWindowState } from "./window-state";
+import { buildMainWindowOptions, denyExternalWindowOpen, disableWindowMenuBar, getMainWindowHtmlPath } from "./window-menu";
 import { APP_META } from "../core/app-constants";
 import { createRepositoryRepository } from "../db/repositories/repositoryRepository";
 

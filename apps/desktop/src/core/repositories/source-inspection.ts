@@ -38,8 +38,7 @@ type DeriveSkillPatternOptions = {
   singleTopLevelSkillDirectoryAsGlob?: boolean;
 };
 
-const GITHUB_TOKEN_SETUP_GUIDANCE =
-  "请前往“设置 > 凭证管理”配置 GitHub Token 后重试。";
+const GITHUB_TOKEN_SETUP_GUIDANCE = "请前往“设置 > 凭证管理”配置 GitHub Token 后重试。";
 
 const defaultFetchJson = async (url: string, githubToken?: string): Promise<unknown> => {
   const response = await fetch(url, {
@@ -64,10 +63,7 @@ const defaultFetchJson = async (url: string, githubToken?: string): Promise<unkn
   return response.json() as Promise<unknown>;
 };
 
-export const inspectRepositorySource = async (
-  remoteUrl: string,
-  options: InspectOptions = {}
-): Promise<RepositorySourceInspection> => {
+export const inspectRepositorySource = async (remoteUrl: string, options: InspectOptions = {}): Promise<RepositorySourceInspection> => {
   const parsedUrl = parseSourceUrl(remoteUrl);
 
   if (!parsedUrl) {
@@ -83,15 +79,12 @@ export const inspectRepositorySource = async (
     return fallback;
   }
 
-  const fetchJson =
-    options.fetchJson ?? ((url: string) => defaultFetchJson(url, options.githubToken));
+  const fetchJson = options.fetchJson ?? ((url: string) => defaultFetchJson(url, options.githubToken));
 
   let repository: { about?: string; branch?: string };
 
   try {
-    repository = parseGitHubRepositoryResponse(
-      await fetchJson(`https://api.github.com/repos/${parsedUrl.owner}/${parsedUrl.repo}`)
-    );
+    repository = parseGitHubRepositoryResponse(await fetchJson(`https://api.github.com/repos/${parsedUrl.owner}/${parsedUrl.repo}`));
   } catch (error) {
     logDevelopmentInspectionError({
       error,
@@ -106,11 +99,7 @@ export const inspectRepositorySource = async (
   const branch = repository.branch ?? "main";
 
   try {
-    const tree = parseGitHubTreeResponse(
-      await fetchJson(
-        `https://api.github.com/repos/${parsedUrl.owner}/${parsedUrl.repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`
-      )
-    );
+    const tree = parseGitHubTreeResponse(await fetchJson(`https://api.github.com/repos/${parsedUrl.owner}/${parsedUrl.repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`));
 
     return {
       ...fallback,
@@ -131,9 +120,7 @@ export const inspectRepositorySource = async (
 };
 
 class RepositorySourceInspectionNetworkError extends Error {
-  constructor(
-    message = "网络连接中断，暂时无法解析这个 GitHub 来源。请稍后重试，或检查代理/VPN 后再新增。"
-  ) {
+  constructor(message = "网络连接中断，暂时无法解析这个 GitHub 来源。请稍后重试，或检查代理/VPN 后再新增。") {
     super(message);
     this.name = "RepositorySourceInspectionNetworkError";
   }
@@ -146,21 +133,7 @@ class GitHubApiHttpError extends Error {
   readonly retryAfter?: string;
   readonly status: number;
 
-  constructor({
-    acceptedPermissions,
-    message,
-    rateLimitRemaining,
-    rateLimitReset,
-    retryAfter,
-    status
-  }: {
-    acceptedPermissions?: string;
-    message?: string;
-    rateLimitRemaining?: string;
-    rateLimitReset?: string;
-    retryAfter?: string;
-    status: number;
-  }) {
+  constructor({ acceptedPermissions, message, rateLimitRemaining, rateLimitReset, retryAfter, status }: { acceptedPermissions?: string; message?: string; rateLimitRemaining?: string; rateLimitReset?: string; retryAfter?: string; status: number }) {
     super(message || `GitHub API request failed with status ${status}.`);
     this.acceptedPermissions = acceptedPermissions;
     this.name = "GitHubApiHttpError";
@@ -175,11 +148,7 @@ const readGitHubErrorMessage = async (response: Response): Promise<string | unde
   try {
     const body = (await response.json()) as unknown;
 
-    if (
-      body &&
-      typeof body === "object" &&
-      typeof (body as { message?: unknown }).message === "string"
-    ) {
+    if (body && typeof body === "object" && typeof (body as { message?: unknown }).message === "string") {
       return (body as { message: string }).message;
     }
   } catch {
@@ -189,9 +158,7 @@ const readGitHubErrorMessage = async (response: Response): Promise<string | unde
   return undefined;
 };
 
-const toRepositorySourceInspectionError = (
-  error: unknown
-): RepositorySourceInspectionNetworkError => {
+const toRepositorySourceInspectionError = (error: unknown): RepositorySourceInspectionNetworkError => {
   if (error instanceof GitHubApiHttpError) {
     return new RepositorySourceInspectionNetworkError(toGitHubApiUserMessage(error));
   }
@@ -243,17 +210,7 @@ const isGitHubPermissionError = (error: GitHubApiHttpError): boolean => {
   return /resource not accessible/i.test(error.message);
 };
 
-const logDevelopmentInspectionError = ({
-  error,
-  message,
-  options,
-  remoteUrl
-}: {
-  error: unknown;
-  message: string;
-  options: InspectOptions;
-  remoteUrl: string;
-}): void => {
+const logDevelopmentInspectionError = ({ error, message, options, remoteUrl }: { error: unknown; message: string; options: InspectOptions; remoteUrl: string }): void => {
   if (!options.isDevelopment) {
     return;
   }
@@ -295,11 +252,7 @@ const normalizeSourceInput = (remoteUrl: string): string => {
   return extractedUrl;
 };
 
-const buildParsedSourceUrl = (
-  host: string,
-  owner: string,
-  repo: string
-): ParsedSourceUrl | null => {
+const buildParsedSourceUrl = (host: string, owner: string, repo: string): ParsedSourceUrl | null => {
   const provider = providerByHost(host);
 
   if (!provider) {
@@ -354,18 +307,11 @@ const parseGitHubTreeResponse = (response: unknown): string[] => {
 
   const tree = (response as GitHubTreeResponse).tree ?? [];
 
-  return tree
-    .filter((entry) => entry.type === "blob" && typeof entry.path === "string")
-    .map((entry) => entry.path as string);
+  return tree.filter((entry) => entry.type === "blob" && typeof entry.path === "string").map((entry) => entry.path as string);
 };
 
-export const deriveSkillPatterns = (
-  paths: string[],
-  options: DeriveSkillPatternOptions = {}
-): string[] => {
-  const skillPaths = Array.from(
-    new Set(paths.filter((path) => path === "SKILL.md" || path.endsWith("/SKILL.md")))
-  ).sort();
+export const deriveSkillPatterns = (paths: string[], options: DeriveSkillPatternOptions = {}): string[] => {
+  const skillPaths = Array.from(new Set(paths.filter((path) => path === "SKILL.md" || path.endsWith("/SKILL.md")))).sort();
 
   if (skillPaths.length === 0) {
     return [];
@@ -373,20 +319,9 @@ export const deriveSkillPatterns = (
 
   const rootSkillPatterns = skillPaths.filter((path) => path === "SKILL.md");
   const topLevelSkillPaths = skillPaths.filter((path) => path.split("/").length === 2);
-  const nestedSkillPatterns = Array.from(
-    new Set(
-      skillPaths
-        .filter((path) => path.split("/").length > 2)
-        .map((path) => `${path.split("/").slice(0, -2).join("/")}/*/SKILL.md`)
-    )
-  );
+  const nestedSkillPatterns = Array.from(new Set(skillPaths.filter((path) => path.split("/").length > 2).map((path) => `${path.split("/").slice(0, -2).join("/")}/*/SKILL.md`)));
 
-  if (
-    !rootSkillPatterns.length &&
-    !nestedSkillPatterns.length &&
-    (topLevelSkillPaths.length > 1 ||
-      (options.singleTopLevelSkillDirectoryAsGlob && topLevelSkillPaths.length === 1))
-  ) {
+  if (!rootSkillPatterns.length && !nestedSkillPatterns.length && (topLevelSkillPaths.length > 1 || (options.singleTopLevelSkillDirectoryAsGlob && topLevelSkillPaths.length === 1))) {
     return ["*/SKILL.md"];
   }
 

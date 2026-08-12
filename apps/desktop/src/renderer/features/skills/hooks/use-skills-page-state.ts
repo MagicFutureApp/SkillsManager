@@ -1,31 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type {
-  DistributionExecuteInput,
-  DistributionExecuteResult,
-  DistributionPreviewInput,
-  DistributionPreviewResult,
-  TargetsListResult
-} from "@/global";
-import {
-  clampPageNumber,
-  createPaginationState,
-  DEFAULT_PAGE_SIZE,
-  getPagedItems,
-  type PaginationState
-} from "@/lib/pagination";
-import {
-  adaptSkillRecord,
-  adaptTargetOption,
-  filterSkills,
-  getSkillRepositoryOptions,
-  getTargetOptionsForSkill,
-  getSelectedSkillsDistributionState,
-  type Skill,
-  type SkillRepositoryFilter,
-  type SkillSort,
-  type TargetOption
-} from "../components/skills-page-data";
+import type { DistributionExecuteInput, DistributionExecuteResult, DistributionPreviewInput, DistributionPreviewResult, TargetsListResult } from "@/global";
+import { clampPageNumber, createPaginationState, DEFAULT_PAGE_SIZE, getPagedItems, type PaginationState } from "@/lib/pagination";
+import { adaptSkillRecord, adaptTargetOption, filterSkills, getSkillRepositoryOptions, getTargetOptionsForSkill, getSelectedSkillsDistributionState, type Skill, type SkillRepositoryFilter, type SkillSort, type TargetOption } from "../components/skills-page-data";
 import { useTargetAddDialogState } from "../../targets/hooks/use-target-add-dialog-state";
 
 export const useSkillsPageState = () => {
@@ -33,24 +10,14 @@ export const useSkillsPageState = () => {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [distributionNoticeKey, setDistributionNoticeKey] = useState<string | null>(null);
-  const [distributionExecuteResult, setDistributionExecuteResult] =
-    useState<DistributionExecuteResult | null>(null);
-  const [distributionPreview, setDistributionPreview] = useState<DistributionPreviewResult | null>(
-    null
-  );
+  const [distributionExecuteResult, setDistributionExecuteResult] = useState<DistributionExecuteResult | null>(null);
+  const [distributionPreview, setDistributionPreview] = useState<DistributionPreviewResult | null>(null);
   const [distributionConfirmDialogOpen, setDistributionConfirmDialogOpen] = useState(false);
-  const [distributionConflictResolutions, setDistributionConflictResolutions] = useState<
-    Record<string, DistributionConflictResolution>
-  >({});
-  const [distributionRuntimeOverwriteResolutions, setDistributionRuntimeOverwriteResolutions] =
-    useState<Record<string, boolean>>({});
-  const [distributionExecutionItemStatuses, setDistributionExecutionItemStatuses] = useState<
-    Record<string, DistributionExecutionItemStatus>
-  >({});
+  const [distributionConflictResolutions, setDistributionConflictResolutions] = useState<Record<string, DistributionConflictResolution>>({});
+  const [distributionRuntimeOverwriteResolutions, setDistributionRuntimeOverwriteResolutions] = useState<Record<string, boolean>>({});
+  const [distributionExecutionItemStatuses, setDistributionExecutionItemStatuses] = useState<Record<string, DistributionExecutionItemStatus>>({});
   const [pendingDistribution, setPendingDistribution] = useState<PendingDistribution | null>(null);
-  const [pendingTargetRemoval, setPendingTargetRemoval] = useState<PendingTargetRemoval | null>(
-    null
-  );
+  const [pendingTargetRemoval, setPendingTargetRemoval] = useState<PendingTargetRemoval | null>(null);
   const [query, setQuery] = useState("");
   const [repositoryFilter, setRepositoryFilter] = useState<SkillRepositoryFilter>("all");
   const [isDistributionExecuting, setIsDistributionExecuting] = useState(false);
@@ -141,14 +108,12 @@ export const useSkillsPageState = () => {
     setRepositoryFilter("all");
   }, [repositoryFilter, repositoryOptions]);
 
-  const selectedSkill =
-    visibleSkills.find((skill) => skill.id === selectedSkillId) ?? visibleSkills[0] ?? null;
+  const selectedSkill = visibleSkills.find((skill) => skill.id === selectedSkillId) ?? visibleSkills[0] ?? null;
   const selectedSkillTargetOptions = useMemo(() => {
     return getTargetOptionsForSkill(targetOptions, selectedSkill);
   }, [selectedSkill, targetOptions]);
   const addTargetDialog = useTargetAddDialogState<TargetsListResult>({
-    isSaveAvailable: () =>
-      Boolean(selectedSkill) && Boolean(window.skillsManager?.addSkillDirectoryTarget),
+    isSaveAvailable: () => Boolean(selectedSkill) && Boolean(window.skillsManager?.addSkillDirectoryTarget),
     onSaved: (result) => {
       if (!selectedSkill) {
         return;
@@ -176,8 +141,7 @@ export const useSkillsPageState = () => {
   const visibleIds = visibleSkills.map((skill) => skill.id);
   const checkedSkills = skills.filter((skill) => checkedIds.has(skill.id));
   const visibleCheckedCount = visibleIds.filter((id) => checkedIds.has(id)).length;
-  const visibleAllChecked =
-    visibleSkills.length > 0 && visibleCheckedCount === visibleSkills.length;
+  const visibleAllChecked = visibleSkills.length > 0 && visibleCheckedCount === visibleSkills.length;
   const visibleSomeChecked = visibleCheckedCount > 0;
   const checkedCount = checkedIds.size;
   const checkedDistributionState = getSelectedSkillsDistributionState(checkedSkills);
@@ -225,10 +189,7 @@ export const useSkillsPageState = () => {
     setDistributionNoticeKey(key);
   };
 
-  const startDistribution = async (
-    skillUnitIds: string[],
-    triggerSource: DistributionPreviewInput["triggerSource"]
-  ) => {
+  const startDistribution = async (skillUnitIds: string[], triggerSource: DistributionPreviewInput["triggerSource"]) => {
     const nextSkillUnitIds = Array.from(new Set(skillUnitIds.filter(Boolean)));
 
     if (!nextSkillUnitIds.length) {
@@ -300,10 +261,7 @@ export const useSkillsPageState = () => {
     setDistributionRuntimeOverwriteResolutions({});
   };
 
-  const setDistributionConflictResolution = (
-    previewItemId: string,
-    resolution: DistributionConflictResolution
-  ) => {
+  const setDistributionConflictResolution = (previewItemId: string, resolution: DistributionConflictResolution) => {
     setDistributionConflictResolutions((currentResolutions) => ({
       ...currentResolutions,
       [previewItemId]: resolution
@@ -337,9 +295,7 @@ export const useSkillsPageState = () => {
     const startedAt = Date.now();
     const previewItems = distributionPreview.items;
 
-    setDistributionExecutionItemStatuses(
-      createLoadingDistributionExecutionItemStatuses(previewItems)
-    );
+    setDistributionExecutionItemStatuses(createLoadingDistributionExecutionItemStatuses(previewItems));
 
     try {
       const result = await executeDistribution({
@@ -353,19 +309,14 @@ export const useSkillsPageState = () => {
       });
 
       scheduleDistributionExecutionCompletion({
-        getResultStatuses: () =>
-          createResultDistributionExecutionItemStatuses(previewItems, result.items),
+        getResultStatuses: () => createResultDistributionExecutionItemStatuses(previewItems, result.items),
         onFinish: () => setDistributionExecuteResult(result),
         previewItems,
         startedAt
       });
     } catch (error) {
       scheduleDistributionExecutionCompletion({
-        getResultStatuses: () =>
-          createFailedDistributionExecutionItemStatuses(
-            previewItems,
-            stringifyDistributionError(error)
-          ),
+        getResultStatuses: () => createFailedDistributionExecutionItemStatuses(previewItems, stringifyDistributionError(error)),
         onFinish: () => showDistributionNotice("skills.actions.distributionFailedStatus"),
         previewItems,
         startedAt
@@ -373,17 +324,7 @@ export const useSkillsPageState = () => {
     }
   };
 
-  const scheduleDistributionExecutionCompletion = ({
-    getResultStatuses,
-    onFinish,
-    previewItems,
-    startedAt
-  }: {
-    getResultStatuses: () => Record<string, DistributionExecutionItemStatus>;
-    onFinish: () => void;
-    previewItems: DistributionPreviewResult["items"];
-    startedAt: number;
-  }) => {
+  const scheduleDistributionExecutionCompletion = ({ getResultStatuses, onFinish, previewItems, startedAt }: { getResultStatuses: () => Record<string, DistributionExecutionItemStatus>; onFinish: () => void; previewItems: DistributionPreviewResult["items"]; startedAt: number }) => {
     const elapsedMs = Date.now() - startedAt;
     const completeDelayMs = Math.max(0, MIN_DISTRIBUTION_ITEM_LOADING_MS - elapsedMs);
     const finishDelayMs = Math.max(0, MIN_DISTRIBUTION_DIALOG_OPEN_MS - elapsedMs);
@@ -432,9 +373,7 @@ export const useSkillsPageState = () => {
           return skill;
         }
 
-        const nextTargets = enabled
-          ? Array.from(new Set([...skill.targets, targetId]))
-          : skill.targets.filter((id) => id !== targetId);
+        const nextTargets = enabled ? Array.from(new Set([...skill.targets, targetId])) : skill.targets.filter((id) => id !== targetId);
 
         return {
           ...skill,
@@ -470,13 +409,7 @@ export const useSkillsPageState = () => {
     setPendingTargetRemoval(null);
   };
 
-  const confirmTargetRemoval = async ({
-    deleteInstalledFiles,
-    removeTargetPreference
-  }: {
-    deleteInstalledFiles: boolean;
-    removeTargetPreference: boolean;
-  }) => {
+  const confirmTargetRemoval = async ({ deleteInstalledFiles, removeTargetPreference }: { deleteInstalledFiles: boolean; removeTargetPreference: boolean }) => {
     if (!pendingTargetRemoval || isTargetRemovalExecuting) {
       return;
     }
@@ -512,15 +445,7 @@ export const useSkillsPageState = () => {
     }
   };
 
-  const removeSkillTargetLocally = ({
-    removeTargetPreference,
-    skillId,
-    targetId
-  }: {
-    removeTargetPreference: boolean;
-    skillId: string;
-    targetId: string;
-  }) => {
+  const removeSkillTargetLocally = ({ removeTargetPreference, skillId, targetId }: { removeTargetPreference: boolean; skillId: string; targetId: string }) => {
     setSkills((currentSkills) => {
       return currentSkills.map((skill) => {
         if (skill.id !== skillId) {
@@ -542,11 +467,7 @@ export const useSkillsPageState = () => {
         return {
           ...target,
           selectedSkillIds: target.selectedSkillIds.filter((id) => id !== skillId),
-          skillPreferenceIds: removeTargetPreference
-            ? target.skillPreferenceIds.filter((id) => id !== skillId)
-            : target.skillPreferenceIds.includes(skillId)
-              ? target.skillPreferenceIds
-              : [...target.skillPreferenceIds, skillId]
+          skillPreferenceIds: removeTargetPreference ? target.skillPreferenceIds.filter((id) => id !== skillId) : target.skillPreferenceIds.includes(skillId) ? target.skillPreferenceIds : [...target.skillPreferenceIds, skillId]
         };
       });
     });
@@ -562,9 +483,7 @@ export const useSkillsPageState = () => {
       skillId: string;
     }
   ) => {
-    const nextTargets = (result.registeredTargets ?? [])
-      .filter((target) => target.enabled)
-      .map(adaptTargetOption);
+    const nextTargets = (result.registeredTargets ?? []).filter((target) => target.enabled).map(adaptTargetOption);
     const nextSelectedSkillTargets = nextTargets
       .filter((target) => {
         if (target.scope === "global") {
@@ -654,25 +573,16 @@ const loadSkillsPageData = async (): Promise<{
   skills: Skill[];
   targetOptions: TargetOption[];
 }> => {
-  const [skillsResult, targetsResult] = await Promise.all([
-    window.skillsManager?.listSkills?.(),
-    window.skillsManager?.listTargets?.()
-  ]);
+  const [skillsResult, targetsResult] = await Promise.all([window.skillsManager?.listSkills?.(), window.skillsManager?.listTargets?.()]);
 
   return {
     skills: (skillsResult?.skills ?? []).map(adaptSkillRecord),
-    targetOptions: (targetsResult?.registeredTargets ?? [])
-      .filter((target) => target.enabled)
-      .map(adaptTargetOption)
+    targetOptions: (targetsResult?.registeredTargets ?? []).filter((target) => target.enabled).map(adaptTargetOption)
   };
 };
 
-type DistributionConflictResolution = NonNullable<
-  DistributionPreviewResult["items"][number]["defaultResolution"]
->;
-type DistributionExecuteConflictResolution = NonNullable<
-  DistributionExecuteInput["conflictResolutions"]
->[number];
+type DistributionConflictResolution = NonNullable<DistributionPreviewResult["items"][number]["defaultResolution"]>;
+type DistributionExecuteConflictResolution = NonNullable<DistributionExecuteInput["conflictResolutions"]>[number];
 
 type PendingDistribution = {
   skillUnitIds: string[];
@@ -705,9 +615,7 @@ type DistributionExecutionItemStatus =
 const MIN_DISTRIBUTION_ITEM_LOADING_MS = 1000;
 const MIN_DISTRIBUTION_DIALOG_OPEN_MS = 2000;
 
-const createLoadingDistributionExecutionItemStatuses = (
-  items: DistributionPreviewResult["items"]
-): Record<string, DistributionExecutionItemStatus> => {
+const createLoadingDistributionExecutionItemStatuses = (items: DistributionPreviewResult["items"]): Record<string, DistributionExecutionItemStatus> => {
   return Object.fromEntries(
     items.map((item) => [
       item.id,
@@ -720,18 +628,12 @@ const createLoadingDistributionExecutionItemStatuses = (
   );
 };
 
-const createResultDistributionExecutionItemStatuses = (
-  previewItems: DistributionPreviewResult["items"],
-  resultItems: DistributionExecuteItemResult[]
-): Record<string, DistributionExecutionItemStatus> => {
-  const resultItemsByKey = new Map(
-    resultItems.map((item) => [createDistributionResultItemKey(item), item])
-  );
+const createResultDistributionExecutionItemStatuses = (previewItems: DistributionPreviewResult["items"], resultItems: DistributionExecuteItemResult[]): Record<string, DistributionExecutionItemStatus> => {
+  const resultItemsByKey = new Map(resultItems.map((item) => [createDistributionResultItemKey(item), item]));
 
   return Object.fromEntries(
     previewItems.map((previewItem, index) => {
-      const resultItem =
-        resultItems[index] ?? resultItemsByKey.get(createDistributionResultItemKey(previewItem));
+      const resultItem = resultItems[index] ?? resultItemsByKey.get(createDistributionResultItemKey(previewItem));
 
       return [
         previewItem.id,
@@ -751,10 +653,7 @@ const createResultDistributionExecutionItemStatuses = (
   );
 };
 
-const createFailedDistributionExecutionItemStatuses = (
-  previewItems: DistributionPreviewResult["items"],
-  errorMessage: string
-): Record<string, DistributionExecutionItemStatus> => {
+const createFailedDistributionExecutionItemStatuses = (previewItems: DistributionPreviewResult["items"], errorMessage: string): Record<string, DistributionExecutionItemStatus> => {
   return Object.fromEntries(
     previewItems.map((item) => [
       item.id,
@@ -767,51 +666,27 @@ const createFailedDistributionExecutionItemStatuses = (
   );
 };
 
-const createDistributionResultItemKey = ({
-  agentTargetId,
-  skillUnitId,
-  targetPath
-}: Pick<DistributionExecuteItemResult, "agentTargetId" | "skillUnitId" | "targetPath">): string => {
+const createDistributionResultItemKey = ({ agentTargetId, skillUnitId, targetPath }: Pick<DistributionExecuteItemResult, "agentTargetId" | "skillUnitId" | "targetPath">): string => {
   return `${skillUnitId}\u0000${agentTargetId}\u0000${targetPath}`;
 };
 
-const createDistributionExecuteConflictResolutions = ({
-  previewConflictResolutions,
-  previewItems,
-  runtimeOverwriteResolutions
-}: {
-  previewConflictResolutions: Record<string, DistributionConflictResolution>;
-  previewItems: DistributionPreviewResult["items"];
-  runtimeOverwriteResolutions: Record<string, boolean>;
-}): DistributionExecuteConflictResolution[] => {
+const createDistributionExecuteConflictResolutions = ({ previewConflictResolutions, previewItems, runtimeOverwriteResolutions }: { previewConflictResolutions: Record<string, DistributionConflictResolution>; previewItems: DistributionPreviewResult["items"]; runtimeOverwriteResolutions: Record<string, boolean> }): DistributionExecuteConflictResolution[] => {
   const resolutionsByPreviewItemId = new Map<string, DistributionExecuteConflictResolution>();
 
   previewItems.forEach((item) => {
     if (item.action === "conflict") {
-      resolutionsByPreviewItemId.set(
-        item.id,
-        createDistributionExecuteConflictResolution(
-          item,
-          previewConflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite"
-        )
-      );
+      resolutionsByPreviewItemId.set(item.id, createDistributionExecuteConflictResolution(item, previewConflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite"));
     }
 
     if (runtimeOverwriteResolutions[item.id]) {
-      resolutionsByPreviewItemId.set(
-        item.id,
-        createDistributionExecuteConflictResolution(item, "overwrite")
-      );
+      resolutionsByPreviewItemId.set(item.id, createDistributionExecuteConflictResolution(item, "overwrite"));
     }
   });
 
   return Array.from(resolutionsByPreviewItemId.values());
 };
 
-const createDistributionExecuteConflictResolution = (
-  item: DistributionPreviewResult["items"][number],
-  resolution: DistributionConflictResolution
-): DistributionExecuteConflictResolution => {
+const createDistributionExecuteConflictResolution = (item: DistributionPreviewResult["items"][number], resolution: DistributionConflictResolution): DistributionExecuteConflictResolution => {
   return {
     agentTargetId: item.agentTargetId,
     previewItemId: item.id,
@@ -837,12 +712,6 @@ const stringifyDistributionError = (error: unknown): string => {
   }
 };
 
-const createDefaultConflictResolutions = (
-  preview: DistributionPreviewResult
-): Record<string, DistributionConflictResolution> => {
-  return Object.fromEntries(
-    preview.items
-      .filter((item) => item.action === "conflict")
-      .map((item) => [item.id, item.defaultResolution ?? "overwrite"])
-  );
+const createDefaultConflictResolutions = (preview: DistributionPreviewResult): Record<string, DistributionConflictResolution> => {
+  return Object.fromEntries(preview.items.filter((item) => item.action === "conflict").map((item) => [item.id, item.defaultResolution ?? "overwrite"]));
 };

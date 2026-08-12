@@ -8,11 +8,5 @@ export const TargetsPageModal = () => {
   const { t } = useTranslation();
   const page = useTargetsPageContext();
 
-  return (
-    <TargetAddDialog
-      description={t("targets.modal.description")}
-      state={page.addTargetDialog}
-      title={t("targets.modal.title")}
-    />
-  );
+  return <TargetAddDialog description={t("targets.modal.description")} state={page.addTargetDialog} title={t("targets.modal.title")} />;
 };

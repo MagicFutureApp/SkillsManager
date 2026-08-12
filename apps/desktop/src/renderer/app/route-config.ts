@@ -11,6 +11,4 @@ export const routePathById: Record<AppRouteId, string> = {
   settings: "/settings"
 };
 
-export const routeIdByPath: Record<string, AppRouteId> = Object.fromEntries(
-  routeIds.map((routeId) => [routePathById[routeId], routeId])
-) as Record<string, AppRouteId>;
+export const routeIdByPath: Record<string, AppRouteId> = Object.fromEntries(routeIds.map((routeId) => [routePathById[routeId], routeId])) as Record<string, AppRouteId>;

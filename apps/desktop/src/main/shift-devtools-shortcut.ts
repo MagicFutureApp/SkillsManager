@@ -2,10 +2,7 @@ import { createShiftPressSequenceHandler } from "../core/keyboard/shift-press-se
 
 type DevToolsShortcutWindow = {
   webContents: {
-    on: (
-      eventName: "before-input-event",
-      listener: (event: Electron.Event, input: Electron.Input) => void
-    ) => unknown;
+    on: (eventName: "before-input-event", listener: (event: Electron.Event, input: Electron.Input) => void) => unknown;
     openDevTools: () => void;
   };
 };

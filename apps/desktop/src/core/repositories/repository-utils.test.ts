@@ -1,28 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  buildRepositoryCachePath,
-  formatRepositoryDateTime,
-  normalizeDiscoveryEntries,
-  normalizeRepositoryScanSummary,
-  parseRepositoryScanSummaryJson,
-  slugifyRepositoryName
-} from "./repository-utils";
+import { buildRepositoryCachePath, formatRepositoryDateTime, normalizeDiscoveryEntries, normalizeRepositoryScanSummary, parseRepositoryScanSummaryJson, slugifyRepositoryName } from "./repository-utils";
 
 describe("repository utils", () => {
   it("normalizes names into reusable repository slugs and cache paths", () => {
     expect(slugifyRepositoryName(" Team Skills / Design Lab ")).toBe("team-skills-design-lab");
-    expect(buildRepositoryCachePath(" Team Skills / Design Lab ")).toBe(
-      "~/.skills-manager/cache/team-skills-design-lab"
-    );
+    expect(buildRepositoryCachePath(" Team Skills / Design Lab ")).toBe("~/.skills-manager/cache/team-skills-design-lab");
     expect(buildRepositoryCachePath("!!!")).toBe("~/.skills-manager/cache/repository");
   });
 
   it("normalizes discovery entries from form and persisted values", () => {
-    expect(normalizeDiscoveryEntries(" skills/*/SKILL.md,\n.codex/skills/*/SKILL.md ")).toEqual([
-      "skills/*/SKILL.md",
-      ".codex/skills/*/SKILL.md"
-    ]);
+    expect(normalizeDiscoveryEntries(" skills/*/SKILL.md,\n.codex/skills/*/SKILL.md ")).toEqual(["skills/*/SKILL.md", ".codex/skills/*/SKILL.md"]);
     expect(normalizeDiscoveryEntries("")).toEqual([]);
   });
 
@@ -42,9 +30,7 @@ describe("repository utils", () => {
   });
 
   it("parses persisted scan summaries from sync run JSON", () => {
-    expect(
-      parseRepositoryScanSummaryJson(JSON.stringify({ added: 2, changed: 0, removed: 1 }))
-    ).toEqual({
+    expect(parseRepositoryScanSummaryJson(JSON.stringify({ added: 2, changed: 0, removed: 1 }))).toEqual({
       added: 2,
       changed: 0,
       removed: 1,

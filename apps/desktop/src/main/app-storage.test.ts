@@ -42,12 +42,8 @@ describe("app storage runtime", () => {
 
     await runtime.resetDatabase();
 
-    await expect(readFileIfExists(`${paths.databasePath}-wal`)).resolves.not.toEqual(
-      Buffer.from("stale wal")
-    );
-    await expect(readFileIfExists(`${paths.databasePath}-shm`)).resolves.not.toEqual(
-      Buffer.from("stale shm")
-    );
+    await expect(readFileIfExists(`${paths.databasePath}-wal`)).resolves.not.toEqual(Buffer.from("stale wal"));
+    await expect(readFileIfExists(`${paths.databasePath}-shm`)).resolves.not.toEqual(Buffer.from("stale shm"));
     await expect(runtime.getDb().select().from(appSettings)).resolves.toEqual([]);
 
     runtime.close();

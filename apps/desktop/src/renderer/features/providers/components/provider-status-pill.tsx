@@ -9,14 +9,5 @@ const statusClassName: Record<ProviderConnectionStatus, string> = {
 };
 
 export const ProviderStatusPill = ({ status }: { status: ProviderConnectionStatus }) => {
-  return (
-    <span
-      className={cn(
-        "inline-flex min-h-6 w-max items-center rounded-full border px-2 font-mono text-xs",
-        statusClassName[status]
-      )}
-    >
-      {status}
-    </span>
-  );
+  return <span className={cn("inline-flex min-h-6 w-max items-center rounded-full border px-2 font-mono text-xs", statusClassName[status])}>{status}</span>;
 };

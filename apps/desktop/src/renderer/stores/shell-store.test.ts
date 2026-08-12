@@ -18,9 +18,7 @@ describe("useShellStore", () => {
 
     expect(useShellStore.getState().isSidebarAutoCollapsed).toBe(true);
 
-    useShellStore
-      .getState()
-      .setSidebarAutoCollapsedByWidth(MAIN_MINI_WIDTH + SIDEBAR_EXPAND_WIDTH + 1);
+    useShellStore.getState().setSidebarAutoCollapsedByWidth(MAIN_MINI_WIDTH + SIDEBAR_EXPAND_WIDTH + 1);
 
     expect(useShellStore.getState().isSidebarAutoCollapsed).toBe(false);
   });

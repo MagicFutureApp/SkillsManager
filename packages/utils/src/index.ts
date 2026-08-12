@@ -27,12 +27,4 @@ export { clamp } from "./clamp";
 export { isRecord } from "./is-record";
 export { isValidEmail } from "./is-valid-email";
 export { isNewerVersion, parseVersionSegments } from "./version";
-export {
-  isValidSearchOwner,
-  normalizeSearchQuery,
-  SEARCH_DEFAULT_LIMIT,
-  SEARCH_MAX_LIMIT,
-  SEARCH_MAX_QUERY_LENGTH,
-  SEARCH_MIN_LIMIT,
-  SEARCH_MIN_QUERY_LENGTH
-} from "./search";
+export { isValidSearchOwner, normalizeSearchQuery, SEARCH_DEFAULT_LIMIT, SEARCH_MAX_LIMIT, SEARCH_MAX_QUERY_LENGTH, SEARCH_MIN_LIMIT, SEARCH_MIN_QUERY_LENGTH } from "./search";

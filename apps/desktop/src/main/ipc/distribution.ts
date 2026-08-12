@@ -3,17 +3,7 @@ import { randomUUID } from "node:crypto";
 import { cp, mkdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 
-import type {
-  DistributionExecuteInput,
-  DistributionExecuteConflictResolution,
-  DistributionExecuteItemResult,
-  DistributionExecuteResult,
-  DistributionOperationType,
-  DistributionPreviewInput,
-  DistributionPreviewResult,
-  DistributionPreviewItem,
-  DistributionPreviewTriggerSource
-} from "../../core/distribution/distribution-api";
+import type { DistributionExecuteInput, DistributionExecuteConflictResolution, DistributionExecuteItemResult, DistributionExecuteResult, DistributionOperationType, DistributionPreviewInput, DistributionPreviewResult, DistributionPreviewItem, DistributionPreviewTriggerSource } from "../../core/distribution/distribution-api";
 import { createDistributionRepository } from "../../db/repositories/distributionRepository";
 import { installInstances } from "../../db/schema";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
@@ -33,36 +23,20 @@ type DistributionExecuteOperations = DistributionPreviewOperations & {
   removePath: (candidatePath: string) => Promise<void>;
 };
 
-export type {
-  DistributionExecuteInput,
-  DistributionExecuteResult,
-  DistributionPreviewInput,
-  DistributionPreviewResult
-};
+export type { DistributionExecuteInput, DistributionExecuteResult, DistributionPreviewInput, DistributionPreviewResult };
 
-export const previewDistribution = async (
-  db: DbClient,
-  input: DistributionPreviewInput,
-  operations: Partial<DistributionPreviewOperations> = defaultPreviewOperations
-): Promise<DistributionPreviewResult> => {
+export const previewDistribution = async (db: DbClient, input: DistributionPreviewInput, operations: Partial<DistributionPreviewOperations> = defaultPreviewOperations): Promise<DistributionPreviewResult> => {
   const previewOperations: DistributionPreviewOperations = {
     ...defaultPreviewOperations,
     ...operations
   };
   const distributionRepository = createDistributionRepository(db);
-  const preview = await distributionRepository.createPreview(
-    normalizeDistributionPreviewInput(input),
-    previewOperations.now()
-  );
+  const preview = await distributionRepository.createPreview(normalizeDistributionPreviewInput(input), previewOperations.now());
 
   return reconcileSkippedPreviewItems(preview, previewOperations);
 };
 
-export const executeDistribution = async (
-  db: DbClient,
-  input: DistributionExecuteInput,
-  operations: Partial<DistributionExecuteOperations> = defaultExecuteOperations
-): Promise<DistributionExecuteResult> => {
+export const executeDistribution = async (db: DbClient, input: DistributionExecuteInput, operations: Partial<DistributionExecuteOperations> = defaultExecuteOperations): Promise<DistributionExecuteResult> => {
   const executeOperations: DistributionExecuteOperations = {
     ...defaultExecuteOperations,
     ...operations
@@ -108,27 +82,17 @@ export const executeDistribution = async (
 };
 
 export const registerDistributionIpc = (db: DbProvider): void => {
-  ipcMain.handle(
-    "distribution:preview",
-    (_event, input: DistributionPreviewInput): Promise<DistributionPreviewResult> => {
-      return previewDistribution(resolveDb(db), input);
-    }
-  );
+  ipcMain.handle("distribution:preview", (_event, input: DistributionPreviewInput): Promise<DistributionPreviewResult> => {
+    return previewDistribution(resolveDb(db), input);
+  });
 
-  ipcMain.handle(
-    "distribution:execute",
-    (_event, input: DistributionExecuteInput): Promise<DistributionExecuteResult> => {
-      return executeDistribution(resolveDb(db), input);
-    }
-  );
+  ipcMain.handle("distribution:execute", (_event, input: DistributionExecuteInput): Promise<DistributionExecuteResult> => {
+    return executeDistribution(resolveDb(db), input);
+  });
 };
 
-const normalizeDistributionPreviewInput = (
-  input: DistributionPreviewInput
-): DistributionPreviewInput => {
-  const skillUnitIds = Array.from(
-    new Set((input.skillUnitIds ?? []).map((id) => id.trim()).filter(Boolean))
-  );
+const normalizeDistributionPreviewInput = (input: DistributionPreviewInput): DistributionPreviewInput => {
+  const skillUnitIds = Array.from(new Set((input.skillUnitIds ?? []).map((id) => id.trim()).filter(Boolean)));
 
   if (!skillUnitIds.length) {
     throw new Error("At least one skill is required.");
@@ -140,9 +104,7 @@ const normalizeDistributionPreviewInput = (
   };
 };
 
-const normalizeTriggerSource = (
-  triggerSource: DistributionPreviewTriggerSource
-): DistributionPreviewTriggerSource => {
+const normalizeTriggerSource = (triggerSource: DistributionPreviewTriggerSource): DistributionPreviewTriggerSource => {
   if (triggerSource === "post_sync" || triggerSource === "skills_bulk") {
     return triggerSource;
   }
@@ -150,9 +112,7 @@ const normalizeTriggerSource = (
   return "skill_detail";
 };
 
-const normalizeDistributionExecuteInput = (
-  input: DistributionExecuteInput
-): DistributionExecuteInput => {
+const normalizeDistributionExecuteInput = (input: DistributionExecuteInput): DistributionExecuteInput => {
   return {
     conflictResolutions: (input.conflictResolutions ?? [])
       .map(
@@ -164,9 +124,7 @@ const normalizeDistributionExecuteInput = (
           targetPath: resolution.targetPath.trim()
         })
       )
-      .filter(
-        (resolution) => resolution.skillUnitId && resolution.agentTargetId && resolution.targetPath
-      ),
+      .filter((resolution) => resolution.skillUnitId && resolution.agentTargetId && resolution.targetPath),
     skillUnitIds: normalizeDistributionPreviewInput({
       skillUnitIds: input.skillUnitIds,
       triggerSource: input.triggerSource ?? "skills_bulk"
@@ -175,21 +133,7 @@ const normalizeDistributionExecuteInput = (
   };
 };
 
-const executePreviewItem = async ({
-  conflictResolutions,
-  db,
-  item,
-  now,
-  operations,
-  seenTargetPaths
-}: {
-  conflictResolutions: Map<string, "overwrite" | "skip">;
-  db: DbClient;
-  item: DistributionPreviewItem;
-  now: Date;
-  operations: DistributionExecuteOperations;
-  seenTargetPaths: Set<string>;
-}): Promise<DistributionExecuteItemResult> => {
+const executePreviewItem = async ({ conflictResolutions, db, item, now, operations, seenTargetPaths }: { conflictResolutions: Map<string, "overwrite" | "skip">; db: DbClient; item: DistributionPreviewItem; now: Date; operations: DistributionExecuteOperations; seenTargetPaths: Set<string> }): Promise<DistributionExecuteItemResult> => {
   let filesystemItem = resolvePreviewItemFilesystemPaths(item);
 
   if (filesystemItem.action === "skip") {
@@ -203,11 +147,7 @@ const executePreviewItem = async ({
   }
 
   if (filesystemItem.action === "blocked") {
-    return createItemResult(
-      filesystemItem,
-      "blocked",
-      filesystemItem.reason ?? "Distribution item is blocked."
-    );
+    return createItemResult(filesystemItem, "blocked", filesystemItem.reason ?? "Distribution item is blocked.");
   }
 
   const validation = await validateWritableItem(filesystemItem, operations, seenTargetPaths);
@@ -218,15 +158,8 @@ const executePreviewItem = async ({
 
   const resolution = resolveConflictResolution(filesystemItem, conflictResolutions);
 
-  if (
-    (filesystemItem.action === "conflict" || validation.result === "conflict") &&
-    resolution !== "overwrite"
-  ) {
-    return createItemResult(
-      filesystemItem,
-      "conflict",
-      validation.message ?? filesystemItem.reason
-    );
+  if ((filesystemItem.action === "conflict" || validation.result === "conflict") && resolution !== "overwrite") {
+    return createItemResult(filesystemItem, "conflict", validation.message ?? filesystemItem.reason);
   }
 
   try {
@@ -239,11 +172,7 @@ const executePreviewItem = async ({
     await operations.copyDirectory(filesystemItem.sourcePath, filesystemItem.targetPath);
     await upsertInstallInstance(db, filesystemItem, now, "installed", null);
 
-    return createItemResult(
-      filesystemItem,
-      filesystemItem.action === "update" ? "updated" : "installed",
-      null
-    );
+    return createItemResult(filesystemItem, filesystemItem.action === "update" ? "updated" : "installed", null);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Distribution failed.";
 
@@ -255,10 +184,7 @@ const executePreviewItem = async ({
 
 const missingInstalledSkillReason = "Installed skill files are missing from the target.";
 
-const reconcileSkippedPreviewItems = async (
-  preview: DistributionPreviewResult,
-  operations: DistributionPathInspectionOperations
-): Promise<DistributionPreviewResult> => {
+const reconcileSkippedPreviewItems = async (preview: DistributionPreviewResult, operations: DistributionPathInspectionOperations): Promise<DistributionPreviewResult> => {
   const items = await Promise.all(
     preview.items.map(async (item) => {
       if (item.action !== "skip") {
@@ -266,10 +192,7 @@ const reconcileSkippedPreviewItems = async (
       }
 
       const filesystemItem = resolvePreviewItemFilesystemPaths(item);
-      const missingFilesAction = await resolveMissingInstalledSkillAction(
-        filesystemItem,
-        operations
-      );
+      const missingFilesAction = await resolveMissingInstalledSkillAction(filesystemItem, operations);
 
       return missingFilesAction ? createMissingInstalledSkillItem(item, missingFilesAction) : item;
     })
@@ -282,38 +205,26 @@ const reconcileSkippedPreviewItems = async (
   return rebuildPreviewDerivedState(preview, items);
 };
 
-const resolveMissingInstalledSkillAction = async (
-  item: DistributionPreviewItem,
-  operations: DistributionPathInspectionOperations
-): Promise<"install" | "update" | null> => {
+const resolveMissingInstalledSkillAction = async (item: DistributionPreviewItem, operations: DistributionPathInspectionOperations): Promise<"install" | "update" | null> => {
   if (!(await operations.pathExists(item.targetPath))) {
     return "install";
   }
 
-  if (
-    !(await operations.isDirectory(item.targetPath)) ||
-    !(await operations.isFile(path.join(item.targetPath, "SKILL.md")))
-  ) {
+  if (!(await operations.isDirectory(item.targetPath)) || !(await operations.isFile(path.join(item.targetPath, "SKILL.md")))) {
     return "update";
   }
 
   return null;
 };
 
-const createMissingInstalledSkillItem = (
-  item: DistributionPreviewItem,
-  action: "install" | "update"
-): DistributionPreviewItem => ({
+const createMissingInstalledSkillItem = (item: DistributionPreviewItem, action: "install" | "update"): DistributionPreviewItem => ({
   ...item,
   action,
   reason: missingInstalledSkillReason,
   status: "pending"
 });
 
-const rebuildPreviewDerivedState = (
-  preview: DistributionPreviewResult,
-  items: DistributionPreviewItem[]
-): DistributionPreviewResult => {
+const rebuildPreviewDerivedState = (preview: DistributionPreviewResult, items: DistributionPreviewItem[]): DistributionPreviewResult => {
   const actionCounts = {
     blocked: countPreviewActions(items, "blocked"),
     conflict: countPreviewActions(items, "conflict"),
@@ -334,28 +245,15 @@ const rebuildPreviewDerivedState = (
   };
 };
 
-const countPreviewActions = (
-  items: DistributionPreviewItem[],
-  action: DistributionPreviewItem["action"]
-): number => items.filter((item) => item.action === action).length;
+const countPreviewActions = (items: DistributionPreviewItem[], action: DistributionPreviewItem["action"]): number => items.filter((item) => item.action === action).length;
 
-const resolvePreviewOperationType = (
-  items: DistributionPreviewItem[]
-): DistributionOperationType => {
-  const writingActions = new Set(
-    items
-      .map((item) => item.action)
-      .filter(
-        (action): action is "install" | "update" => action === "install" || action === "update"
-      )
-  );
+const resolvePreviewOperationType = (items: DistributionPreviewItem[]): DistributionOperationType => {
+  const writingActions = new Set(items.map((item) => item.action).filter((action): action is "install" | "update" => action === "install" || action === "update"));
 
   return writingActions.size === 1 ? Array.from(writingActions)[0] : "mixed";
 };
 
-const resolvePreviewItemFilesystemPaths = (
-  item: DistributionPreviewItem
-): DistributionPreviewItem => {
+const resolvePreviewItemFilesystemPaths = (item: DistributionPreviewItem): DistributionPreviewItem => {
   return {
     ...item,
     sourcePath: expandHomePath(item.sourcePath),
@@ -367,11 +265,7 @@ const resolvePreviewItemFilesystemPaths = (
   };
 };
 
-const validateWritableItem = async (
-  item: DistributionPreviewItem,
-  operations: DistributionExecuteOperations,
-  seenTargetPaths: Set<string>
-): Promise<{ message: string | null; result: "blocked" | "conflict" | "ready" }> => {
+const validateWritableItem = async (item: DistributionPreviewItem, operations: DistributionExecuteOperations, seenTargetPaths: Set<string>): Promise<{ message: string | null; result: "blocked" | "conflict" | "ready" }> => {
   if (!item.sourcePath || !item.targetPath || !item.targetSnapshot.path) {
     return { message: "Source and target paths are required.", result: "blocked" };
   }
@@ -384,10 +278,7 @@ const validateWritableItem = async (
     return { message: "Target path cannot be the target root.", result: "blocked" };
   }
 
-  if (
-    isSameOrChildPath(normalizedSourcePath, normalizedTargetPath) ||
-    isSameOrChildPath(normalizedTargetPath, normalizedSourcePath)
-  ) {
+  if (isSameOrChildPath(normalizedSourcePath, normalizedTargetPath) || isSameOrChildPath(normalizedTargetPath, normalizedSourcePath)) {
     return { message: "Source and target paths cannot contain each other.", result: "blocked" };
   }
 
@@ -397,10 +288,7 @@ const validateWritableItem = async (
 
   seenTargetPaths.add(normalizedTargetPath);
 
-  if (
-    !(await operations.pathExists(item.sourcePath)) ||
-    !(await operations.isDirectory(item.sourcePath))
-  ) {
+  if (!(await operations.pathExists(item.sourcePath)) || !(await operations.isDirectory(item.sourcePath))) {
     return { message: "Source skill directory is missing.", result: "blocked" };
   }
 
@@ -414,13 +302,7 @@ const validateWritableItem = async (
   return { message: null, result: "ready" };
 };
 
-const upsertInstallInstance = async (
-  db: DbClient,
-  item: DistributionPreviewItem,
-  now: Date,
-  status: "failed" | "installed",
-  lastError: string | null
-): Promise<void> => {
+const upsertInstallInstance = async (db: DbClient, item: DistributionPreviewItem, now: Date, status: "failed" | "installed", lastError: string | null): Promise<void> => {
   await db
     .insert(installInstances)
     .values({
@@ -450,9 +332,7 @@ const upsertInstallInstance = async (
     });
 };
 
-const buildConflictResolutionMap = (
-  resolutions: NonNullable<DistributionExecuteInput["conflictResolutions"]>
-): Map<string, "overwrite" | "skip"> => {
+const buildConflictResolutionMap = (resolutions: NonNullable<DistributionExecuteInput["conflictResolutions"]>): Map<string, "overwrite" | "skip"> => {
   const resolutionsByKey = new Map<string, "overwrite" | "skip">();
 
   resolutions.forEach((resolution) => {
@@ -462,31 +342,17 @@ const buildConflictResolutionMap = (
       resolutionsByKey.set(`preview:${resolution.previewItemId}`, value);
     }
 
-    resolutionsByKey.set(
-      createResolutionKey(resolution.skillUnitId, resolution.agentTargetId, resolution.targetPath),
-      value
-    );
+    resolutionsByKey.set(createResolutionKey(resolution.skillUnitId, resolution.agentTargetId, resolution.targetPath), value);
   });
 
   return resolutionsByKey;
 };
 
-const resolveConflictResolution = (
-  item: DistributionPreviewItem,
-  resolutions: Map<string, "overwrite" | "skip">
-): "overwrite" | "skip" => {
-  return (
-    resolutions.get(`preview:${item.id}`) ??
-    resolutions.get(createResolutionKey(item.skillUnitId, item.agentTargetId, item.targetPath)) ??
-    "skip"
-  );
+const resolveConflictResolution = (item: DistributionPreviewItem, resolutions: Map<string, "overwrite" | "skip">): "overwrite" | "skip" => {
+  return resolutions.get(`preview:${item.id}`) ?? resolutions.get(createResolutionKey(item.skillUnitId, item.agentTargetId, item.targetPath)) ?? "skip";
 };
 
-const createResolutionKey = (
-  skillUnitId: string,
-  agentTargetId: string,
-  targetPath: string
-): string => {
+const createResolutionKey = (skillUnitId: string, agentTargetId: string, targetPath: string): string => {
   return `${skillUnitId}\u0000${agentTargetId}\u0000${normalizeFilesystemPath(targetPath)}`;
 };
 
@@ -499,10 +365,7 @@ const createEmptyExecuteSummary = () => ({
   updated: 0
 });
 
-const incrementExecuteSummary = (
-  summary: ReturnType<typeof createEmptyExecuteSummary>,
-  result: DistributionExecuteItemResult["result"]
-): void => {
+const incrementExecuteSummary = (summary: ReturnType<typeof createEmptyExecuteSummary>, result: DistributionExecuteItemResult["result"]): void => {
   if (result === "blocked") {
     summary.blocked += 1;
   } else if (result === "conflict") {
@@ -518,11 +381,7 @@ const incrementExecuteSummary = (
   }
 };
 
-const createItemResult = (
-  item: DistributionPreviewItem,
-  result: DistributionExecuteItemResult["result"],
-  errorMessage: string | null
-): DistributionExecuteItemResult => {
+const createItemResult = (item: DistributionPreviewItem, result: DistributionExecuteItemResult["result"], errorMessage: string | null): DistributionExecuteItemResult => {
   return {
     action: item.action,
     agentTargetId: item.agentTargetId,

@@ -1,13 +1,4 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import React from "react";
 
 type RepositoryLocalSyncConfirmDialogProps = {
@@ -22,12 +13,7 @@ type RepositoryLocalSyncConfirmDialogProps = {
   onConfirm: () => void;
 };
 
-export const RepositoryLocalSyncConfirmDialog = ({
-  copy,
-  open,
-  onClose,
-  onConfirm
-}: RepositoryLocalSyncConfirmDialogProps) => {
+export const RepositoryLocalSyncConfirmDialog = ({ copy, open, onClose, onConfirm }: RepositoryLocalSyncConfirmDialogProps) => {
   if (!open) {
     return null;
   }

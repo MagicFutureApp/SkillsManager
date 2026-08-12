@@ -12,11 +12,7 @@ export const ProvidersPage = () => {
 
   return (
     <ProvidersPageProvider state={page}>
-      <PageLayout
-        Main={ProvidersPageMain}
-        Sider={ProvidersPageSider}
-        siderLabel={t("providers.detail.ariaLabel")}
-      />
+      <PageLayout Main={ProvidersPageMain} Sider={ProvidersPageSider} siderLabel={t("providers.detail.ariaLabel")} />
     </ProvidersPageProvider>
   );
 };

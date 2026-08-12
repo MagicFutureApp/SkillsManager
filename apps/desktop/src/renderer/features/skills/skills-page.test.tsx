@@ -8,24 +8,16 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SkillsPage } from "./skills-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import { skillApiRecordsFixture } from "@/test/api-fixtures";
-import type {
-  DistributionExecuteResult,
-  DistributionPreviewResult,
-  TargetsListResult
-} from "@/global";
+import type { DistributionExecuteResult, DistributionPreviewResult, TargetsListResult } from "@/global";
 import type { SkillApiRecord } from "../../../core/skills/skill-api";
 
 const mockDescriptionOverflow = (overflowingText: string) => {
-  const clientHeightSpy = vi
-    .spyOn(HTMLElement.prototype, "clientHeight", "get")
-    .mockImplementation(function clientHeight(this: HTMLElement) {
-      return this.textContent === overflowingText ? 120 : 96;
-    });
-  const scrollHeightSpy = vi
-    .spyOn(HTMLElement.prototype, "scrollHeight", "get")
-    .mockImplementation(function scrollHeight(this: HTMLElement) {
-      return this.textContent === overflowingText ? 180 : 96;
-    });
+  const clientHeightSpy = vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockImplementation(function clientHeight(this: HTMLElement) {
+    return this.textContent === overflowingText ? 120 : 96;
+  });
+  const scrollHeightSpy = vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockImplementation(function scrollHeight(this: HTMLElement) {
+    return this.textContent === overflowingText ? 180 : 96;
+  });
 
   return () => {
     clientHeightSpy.mockRestore();
@@ -208,8 +200,7 @@ const distributionFailedExecuteFixture: DistributionExecuteResult = {
     {
       action: "install",
       agentTargetId: "codex",
-      errorMessage:
-        "EPERM: operation not permitted, copyfile '/Users/test/source' -> '/Users/test/.codex/skills/skills-review-bot'",
+      errorMessage: "EPERM: operation not permitted, copyfile '/Users/test/source' -> '/Users/test/.codex/skills/skills-review-bot'",
       result: "failed",
       skillUnitId: "team-skills__skills-review-bot",
       targetPath: "/Users/test/.codex/skills/skills-review-bot"
@@ -346,36 +337,22 @@ describe("SkillsPage", () => {
   });
 
   it("renders layout slots inside the page main and sider containers", () => {
-    render(
-      <PageLayout
-        Main={() => <div data-testid="skills-layout-main-slot">Main slot</div>}
-        Sider={() => <div data-testid="skills-layout-sider-slot">Sider slot</div>}
-        siderLabel="Skill detail"
-      />
-    );
+    render(<PageLayout Main={() => <div data-testid="skills-layout-main-slot">Main slot</div>} Sider={() => <div data-testid="skills-layout-sider-slot">Sider slot</div>} siderLabel="Skill detail" />);
 
-    expect(screen.getByRole("main")).toContainElement(
-      screen.getByTestId("skills-layout-main-slot")
-    );
-    expect(screen.getByRole("complementary", { name: "Skill detail" })).toContainElement(
-      screen.getByTestId("skills-layout-sider-slot")
-    );
+    expect(screen.getByRole("main")).toContainElement(screen.getByTestId("skills-layout-main-slot"));
+    expect(screen.getByRole("complementary", { name: "Skill detail" })).toContainElement(screen.getByTestId("skills-layout-sider-slot"));
   });
 
   it("renders an empty skills surface without demo skill data", async () => {
     await renderSkillsPage();
 
-    expect(screen.getByLabelText("技能筛选")).toHaveClass(
-      "grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]"
-    );
+    expect(screen.getByLabelText("技能筛选")).toHaveClass("grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]");
     expect(screen.getByText("来源", { selector: "label" })).toBeInTheDocument();
     const skillsTable = within(screen.getByRole("main")).getByRole("table");
     expect(within(skillsTable).getByRole("columnheader", { name: "技能" })).toBeInTheDocument();
     expect(within(skillsTable).getByRole("columnheader", { name: "来源" })).toBeInTheDocument();
     expect(within(skillsTable).getByRole("columnheader", { name: "目标" })).toBeInTheDocument();
-    expect(
-      within(skillsTable).queryByRole("columnheader", { name: "启用" })
-    ).not.toBeInTheDocument();
+    expect(within(skillsTable).queryByRole("columnheader", { name: "启用" })).not.toBeInTheDocument();
     expect(within(skillsTable).getByRole("columnheader", { name: "操作" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "新增" })).not.toBeInTheDocument();
     const pageHeading = screen.getByRole("heading", { name: "技能分发" });
@@ -388,17 +365,13 @@ describe("SkillsPage", () => {
     expect(screen.getByText("暂无已索引技能。")).toHaveClass("text-center");
     expect(screen.getByRole("heading", { name: "请选择技能" })).toBeInTheDocument();
     expect(screen.queryByText("从来源分发并扫描后，这里会显示技能详情。")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "分发当前技能（暂未实现）" })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "分发当前技能（暂未实现）" })).not.toBeInTheDocument();
   });
 
   it("renders English UI copy when initialized with en-US", async () => {
     await renderSkillsPage({ locale: "en-US" });
 
-    expect(
-      screen.getByRole("heading", { name: "Browse and Distribute Skills" })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Browse and Distribute Skills" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Add skill" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Distribute selected skills" })).toBeInTheDocument();
     expect(screen.getByLabelText("Skill filters")).toBeInTheDocument();
@@ -447,12 +420,8 @@ describe("SkillsPage", () => {
     const firstSkillRow = skillsTableBody?.querySelector("tr");
 
     expect(firstSkillRow).not.toBeNull();
-    expect(
-      within(firstSkillRow as HTMLElement).getByRole("button", { name: "Alpha Helper" })
-    ).toBeInTheDocument();
-    expect(
-      within(screen.getByLabelText("技能详情")).getByRole("heading", { name: "Alpha Helper" })
-    ).toBeInTheDocument();
+    expect(within(firstSkillRow as HTMLElement).getByRole("button", { name: "Alpha Helper" })).toBeInTheDocument();
+    expect(within(screen.getByLabelText("技能详情")).getByRole("heading", { name: "Alpha Helper" })).toBeInTheDocument();
   });
 
   it("renders indexed skills returned by the Electron API", async () => {
@@ -477,9 +446,7 @@ describe("SkillsPage", () => {
     expect(skillHeaderCells[4]).toHaveClass("w-18", "text-center");
     expect(skillBodyCells[4]).toHaveClass("w-18", "text-center");
     expect(skillButton.textContent).toBe("Review Bot");
-    expect(
-      within(skillsTableBody as HTMLElement).queryByText("skills-review-bot")
-    ).not.toBeInTheDocument();
+    expect(within(skillsTableBody as HTMLElement).queryByText("skills-review-bot")).not.toBeInTheDocument();
     expect(screen.getAllByText("skills-review-bot").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Team skills repository").length).toBeGreaterThan(0);
     expect(within(screen.getByRole("main")).queryByText("版本")).not.toBeInTheDocument();
@@ -488,21 +455,13 @@ describe("SkillsPage", () => {
     expect(within(screen.getByRole("main")).queryByText("ready")).not.toBeInTheDocument();
     expect(within(screen.getByLabelText("技能详情")).getByText("8f2c91a")).toBeInTheDocument();
     expect(within(screen.getByLabelText("技能详情")).getByText("Review Bot")).toBeInTheDocument();
-    expect(
-      within(screen.getByLabelText("技能详情")).getByText(
-        "Reviews pull requests with concise, actionable feedback."
-      )
-    ).toHaveClass("mt-3");
+    expect(within(screen.getByLabelText("技能详情")).getByText("Reviews pull requests with concise, actionable feedback.")).toHaveClass("mt-3");
     const syncTargetsTitle = screen.getByText("分发目标");
     expect(syncTargetsTitle).toBeInTheDocument();
     expect(syncTargetsTitle.parentElement).toHaveClass("flex", "items-center", "justify-between");
     expect(screen.getByRole("button", { name: "新增目标" })).toBeInTheDocument();
     expect(screen.queryByText("0 / 2")).not.toBeInTheDocument();
-    expect(
-      screen.queryByText(
-        "选择默认分发范围；点击分发后会直接按确认弹窗中的选择 copy 到目标目录。"
-      )
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("选择默认分发范围；点击分发后会直接按确认弹窗中的选择 copy 到目标目录。")).not.toBeInTheDocument();
     expect(screen.queryByText("同步目标")).not.toBeInTheDocument();
     const skillDetail = screen.getByLabelText("技能详情");
     const distributeButton = within(skillDetail).getByRole("button", { name: "分发当前技能" });
@@ -516,11 +475,7 @@ describe("SkillsPage", () => {
   });
 
   it("line-clamps long selected skill descriptions and exposes the full text through a tooltip", async () => {
-    const longDescription =
-      Array.from(
-        { length: 8 },
-        (_, index) => `Line ${index + 1} keeps the selected skill detail readable.`
-      ).join(" ") + " This extra detail should stay available in the hover tooltip.";
+    const longDescription = Array.from({ length: 8 }, (_, index) => `Line ${index + 1} keeps the selected skill detail readable.`).join(" ") + " This extra detail should stay available in the hover tooltip.";
     const restoreDescriptionOverflowMock = mockDescriptionOverflow(longDescription);
     const skills: SkillApiRecord[] = [
       {
@@ -583,9 +538,7 @@ describe("SkillsPage", () => {
     await screen.findByRole("button", { name: "Review Bot" });
 
     const skillDetail = screen.getByLabelText("技能详情");
-    const description = within(skillDetail).getByText(
-      "Short descriptions stay as plain detail text."
-    );
+    const description = within(skillDetail).getByText("Short descriptions stay as plain detail text.");
 
     expect(description).not.toHaveAttribute("data-slot", "tooltip-trigger");
     expect(description).toHaveClass("line-clamp-5");
@@ -809,24 +762,14 @@ describe("SkillsPage", () => {
     expect(within(cancelDialog).getByText("Review Bot")).toBeInTheDocument();
     expect(within(cancelDialog).getByText("Team workspace")).toBeInTheDocument();
     expect(within(cancelDialog).getByText("/Users/test/team/.codex/skills")).toBeInTheDocument();
-    expect(
-      within(cancelDialog).queryByText(
-        "取消勾选后会保留这个目标偏好，并清理这个 skill 的同步记录。"
-      )
-    ).not.toBeInTheDocument();
-    expect(
-      within(cancelDialog).queryByText("是否同时删除这个目标目录中由当前 skill 分发出来的文件？")
-    ).not.toBeInTheDocument();
+    expect(within(cancelDialog).queryByText("取消勾选后会保留这个目标偏好，并清理这个 skill 的同步记录。")).not.toBeInTheDocument();
+    expect(within(cancelDialog).queryByText("是否同时删除这个目标目录中由当前 skill 分发出来的文件？")).not.toBeInTheDocument();
     const removalOptions = within(cancelDialog).getByRole("group", { name: "分发目标操作" });
     expect(removalOptions).toHaveClass("flex", "flex-wrap");
     expect(within(cancelDialog).queryByLabelText("删除此分发目标")).not.toBeInTheDocument();
     expect(within(cancelDialog).getByLabelText("删除技能文件")).not.toBeChecked();
-    expect(
-      within(cancelDialog).queryByRole("button", { name: "仅取消勾选" })
-    ).not.toBeInTheDocument();
-    expect(
-      within(cancelDialog).queryByRole("button", { name: "删除文件并取消" })
-    ).not.toBeInTheDocument();
+    expect(within(cancelDialog).queryByRole("button", { name: "仅取消勾选" })).not.toBeInTheDocument();
+    expect(within(cancelDialog).queryByRole("button", { name: "删除文件并取消" })).not.toBeInTheDocument();
     expect(within(cancelDialog).getByRole("button", { name: "取消" })).toBeInTheDocument();
     expect(within(cancelDialog).getByRole("button", { name: "确定" })).toBeEnabled();
     fireEvent.click(within(cancelDialog).getByRole("button", { name: "关闭" }));
@@ -988,11 +931,7 @@ describe("SkillsPage", () => {
     fireEvent.click(targetCheckbox);
     const confirmDialog = await screen.findByRole("dialog", { name: "分发目标" });
 
-    expect(
-      within(confirmDialog).getByText(
-        "确定后会解除此 Skill 与目标的分发关系；也可同时删除目标或已分发的 Skill 文件。"
-      )
-    ).toBeInTheDocument();
+    expect(within(confirmDialog).getByText("确定后会解除此 Skill 与目标的分发关系；也可同时删除目标或已分发的 Skill 文件。")).toBeInTheDocument();
     expect(within(confirmDialog).getByLabelText("删除此分发目标")).not.toBeChecked();
     expect(within(confirmDialog).getByLabelText("删除技能文件")).not.toBeChecked();
     const confirmButton = within(confirmDialog).getByRole("button", { name: "确定" });
@@ -1084,12 +1023,7 @@ describe("SkillsPage", () => {
         }
       ]
     };
-    const {
-      addSkillDirectoryTarget,
-      removeSkillTargetPreference,
-      resolveSelectedTargetDirectory,
-      selectTargetDirectory
-    } = await renderSkillsPage({ skills, targets: { registeredTargets: [] } });
+    const { addSkillDirectoryTarget, removeSkillTargetPreference, resolveSelectedTargetDirectory, selectTargetDirectory } = await renderSkillsPage({ skills, targets: { registeredTargets: [] } });
 
     addSkillDirectoryTarget.mockResolvedValueOnce(addedTargets);
     selectTargetDirectory.mockResolvedValueOnce("/Users/test/project");
@@ -1128,13 +1062,8 @@ describe("SkillsPage", () => {
       expect(selectTargetDirectory).toHaveBeenCalledOnce();
       expect(resolveSelectedTargetDirectory).toHaveBeenCalledWith("/Users/test/project");
       expect(within(addDialog).getByText("确认 agent 类型")).toBeInTheDocument();
-      expect(within(addDialog).getByRole("radio", { name: "Claude Code" })).toHaveAttribute(
-        "aria-checked",
-        "true"
-      );
-      expect(within(addDialog).getByLabelText("本机路径")).toHaveValue(
-        "/Users/test/project/.claude/skills"
-      );
+      expect(within(addDialog).getByRole("radio", { name: "Claude Code" })).toHaveAttribute("aria-checked", "true");
+      expect(within(addDialog).getByLabelText("本机路径")).toHaveValue("/Users/test/project/.claude/skills");
       expect(within(addDialog).getByLabelText("名称")).toHaveValue("project");
     });
 
@@ -1224,9 +1153,7 @@ describe("SkillsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Review Bot" }));
     fireEvent.click(within(screen.getByRole("main")).getByText("Design lab prompts"));
 
-    expect(
-      within(screen.getByLabelText("技能详情")).getByText("Design Helper")
-    ).toBeInTheDocument();
+    expect(within(screen.getByLabelText("技能详情")).getByText("Design Helper")).toBeInTheDocument();
   });
 
   it("sorts skills by name and repository", async () => {
@@ -1234,15 +1161,9 @@ describe("SkillsPage", () => {
     await screen.findByRole("button", { name: "Review Bot" });
 
     let rows = screen.getAllByRole("button", {
-      name: (name, element) =>
-        element.tagName.toLowerCase() === "button" &&
-        ["Design Helper", "Release Notes", "Review Bot"].includes(name)
+      name: (name, element) => element.tagName.toLowerCase() === "button" && ["Design Helper", "Release Notes", "Review Bot"].includes(name)
     });
-    expect(rows.map((button) => button.getAttribute("aria-label"))).toEqual([
-      "Design Helper",
-      "Release Notes",
-      "Review Bot"
-    ]);
+    expect(rows.map((button) => button.getAttribute("aria-label"))).toEqual(["Design Helper", "Release Notes", "Review Bot"]);
 
     fireEvent.pointerDown(screen.getByLabelText("排序"), { pointerType: "mouse" });
     fireEvent.mouseDown(screen.getByLabelText("排序"), { button: 0 });
@@ -1252,15 +1173,9 @@ describe("SkillsPage", () => {
     fireEvent.click(repositorySortOption);
 
     rows = screen.getAllByRole("button", {
-      name: (name, element) =>
-        element.tagName.toLowerCase() === "button" &&
-        ["Design Helper", "Release Notes", "Review Bot"].includes(name)
+      name: (name, element) => element.tagName.toLowerCase() === "button" && ["Design Helper", "Release Notes", "Review Bot"].includes(name)
     });
-    expect(rows.map((button) => button.getAttribute("aria-label"))).toEqual([
-      "Design Helper",
-      "Release Notes",
-      "Review Bot"
-    ]);
+    expect(rows.map((button) => button.getAttribute("aria-label"))).toEqual(["Design Helper", "Release Notes", "Review Bot"]);
   });
 
   it("paginates large skill lists after filtering and limits select-all to the current page", async () => {
@@ -1374,9 +1289,7 @@ describe("SkillsPage", () => {
     expect(await screen.findByRole("button", { name: "Paged Skill 21" })).toBeInTheDocument();
     const skillDetail = screen.getByLabelText("技能详情");
 
-    expect(
-      within(skillDetail).getByRole("heading", { name: "Paged Skill 21" })
-    ).toBeInTheDocument();
+    expect(within(skillDetail).getByRole("heading", { name: "Paged Skill 21" })).toBeInTheDocument();
 
     fireEvent.click(within(skillDetail).getByRole("button", { name: "分发当前技能" }));
 
@@ -1473,10 +1386,7 @@ describe("SkillsPage", () => {
     expect(designRowDistributeButton).toHaveAttribute("title", "准备分发");
 
     fireEvent.click(screen.getByRole("button", { name: "Design Helper" }));
-    const selectedDetailDistributeButton = within(screen.getByLabelText("技能详情")).getByRole(
-      "button",
-      { name: "分发当前技能" }
-    );
+    const selectedDetailDistributeButton = within(screen.getByLabelText("技能详情")).getByRole("button", { name: "分发当前技能" });
     expect(selectedDetailDistributeButton).toBeEnabled();
     expect(selectedDetailDistributeButton).toHaveAttribute("title", "准备分发");
   });
@@ -1502,17 +1412,11 @@ describe("SkillsPage", () => {
     await screen.findByRole("button", { name: "Review Bot" });
 
     const skillDetail = screen.getByLabelText("技能详情");
-    const summarySection = within(skillDetail)
-      .getByRole("heading", { name: "Review Bot" })
-      .closest("section") as HTMLElement;
+    const summarySection = within(skillDetail).getByRole("heading", { name: "Review Bot" }).closest("section") as HTMLElement;
 
-    expect(
-      within(skillDetail).queryByRole("heading", { name: "确认分发" })
-    ).not.toBeInTheDocument();
+    expect(within(skillDetail).queryByRole("heading", { name: "确认分发" })).not.toBeInTheDocument();
     expect(within(summarySection).queryByRole("button", { name: "预览" })).not.toBeInTheDocument();
-    expect(
-      within(summarySection).getByRole("button", { name: "分发当前技能" })
-    ).toBeInTheDocument();
+    expect(within(summarySection).getByRole("button", { name: "分发当前技能" })).toBeInTheDocument();
 
     fireEvent.click(within(summarySection).getByRole("button", { name: "分发当前技能" }));
 
@@ -1526,9 +1430,7 @@ describe("SkillsPage", () => {
 
     expect(within(confirmDialog).getByText("Codex")).toBeInTheDocument();
     expect(within(confirmDialog).getByText("安装")).toBeInTheDocument();
-    expect(
-      within(confirmDialog).getByText("/Users/test/.codex/skills/skills-review-bot")
-    ).toBeInTheDocument();
+    expect(within(confirmDialog).getByText("/Users/test/.codex/skills/skills-review-bot")).toBeInTheDocument();
 
     vi.useFakeTimers();
     fireEvent.click(within(confirmDialog).getByRole("button", { name: "确认分发" }));
@@ -1552,9 +1454,7 @@ describe("SkillsPage", () => {
 
     fireEvent.click(within(completedDialog).getByRole("button", { name: "确定" }));
     expect(screen.queryByRole("dialog", { name: "确认分发" })).not.toBeInTheDocument();
-    expect(
-      within(skillDetail).queryByRole("heading", { name: "确认分发" })
-    ).not.toBeInTheDocument();
+    expect(within(skillDetail).queryByRole("heading", { name: "确认分发" })).not.toBeInTheDocument();
   });
 
   it("keeps distribution rows loading for one second and enables manual close after two seconds", async () => {
@@ -1585,35 +1485,17 @@ describe("SkillsPage", () => {
     );
 
     const confirmDialog = await screen.findByRole("dialog", { name: "确认分发" });
-    const initialItem = within(confirmDialog).getByTestId(
-      "distribution-preview-item-preview-item-1"
-    );
+    const initialItem = within(confirmDialog).getByTestId("distribution-preview-item-preview-item-1");
     const initialTargetName = within(initialItem).getByText("Codex");
-    const initialTargetPath = within(initialItem).getByText(
-      "/Users/test/.codex/skills/skills-review-bot"
-    );
+    const initialTargetPath = within(initialItem).getByText("/Users/test/.codex/skills/skills-review-bot");
     const initialReason = within(initialItem).getByText("Skill is not installed on this target.");
-    const initialStatusSlot = within(initialItem).getByTestId(
-      "distribution-status-slot-preview-item-1"
-    );
-    const initialOverwriteSlot = within(confirmDialog).getByTestId(
-      "runtime-overwrite-slot-preview-item-1"
-    );
+    const initialStatusSlot = within(initialItem).getByTestId("distribution-status-slot-preview-item-1");
+    const initialOverwriteSlot = within(confirmDialog).getByTestId("runtime-overwrite-slot-preview-item-1");
 
-    expect(initialItem).toHaveClass(
-      "grid",
-      "grid-cols-[minmax(0,1fr)_auto]",
-      "gap-x-3",
-      "gap-y-1",
-      "px-3",
-      "py-2"
-    );
+    expect(initialItem).toHaveClass("grid", "grid-cols-[minmax(0,1fr)_auto]", "gap-x-3", "gap-y-1", "px-3", "py-2");
     expect(initialTargetName).toHaveClass("col-start-1", "row-start-1", "truncate", "leading-5");
     expect(initialTargetPath).toHaveClass("col-start-1", "row-start-2", "truncate", "leading-4");
-    expect(initialTargetPath).toHaveAttribute(
-      "title",
-      "/Users/test/.codex/skills/skills-review-bot"
-    );
+    expect(initialTargetPath).toHaveAttribute("title", "/Users/test/.codex/skills/skills-review-bot");
     expect(initialStatusSlot.parentElement).toBe(initialItem);
     expect(initialStatusSlot).toHaveClass("col-start-2", "row-start-1", "h-6", "w-24");
     expect(initialStatusSlot.querySelector('[role="status"]')).toBeNull();
@@ -1645,25 +1527,19 @@ describe("SkillsPage", () => {
     act(() => {
       vi.advanceTimersByTime(999);
     });
-    expect(within(executingDialog).getByLabelText("Codex 分发中").querySelector("svg")).toHaveClass(
-      "animate-spin"
-    );
+    expect(within(executingDialog).getByLabelText("Codex 分发中").querySelector("svg")).toHaveClass("animate-spin");
 
     act(() => {
       vi.advanceTimersByTime(1);
     });
-    expect(
-      within(executingDialog).getByLabelText("Codex 安装完成").querySelector("svg")
-    ).not.toHaveClass("animate-spin");
+    expect(within(executingDialog).getByLabelText("Codex 安装完成").querySelector("svg")).not.toHaveClass("animate-spin");
 
     act(() => {
       vi.advanceTimersByTime(999);
     });
     expect(screen.getByRole("dialog", { name: "确认分发" })).toBeInTheDocument();
     expect(within(executingDialog).getByRole("button", { name: "分发中" })).toBeDisabled();
-    expect(
-      screen.queryByText("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("分发完成：安装 1，更新 0，跳过 0，冲突 0，阻止 0，失败 0。")).not.toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(1);
@@ -1728,9 +1604,7 @@ describe("SkillsPage", () => {
     fireEvent.mouseOver(failedIndicator);
     fireEvent.focus(failedIndicator);
 
-    expect(
-      await screen.findByText("目标目录没有写入权限，请检查目录权限后重试。")
-    ).toBeInTheDocument();
+    expect(await screen.findByText("目标目录没有写入权限，请检查目录权限后重试。")).toBeInTheDocument();
   });
 
   it("allows overwriting a runtime target-path conflict from the confirmation dialog", async () => {
@@ -1753,9 +1627,7 @@ describe("SkillsPage", () => {
     const { executeDistribution } = await renderSkillsPage({ skills });
 
     executeDistribution.mockReset();
-    executeDistribution
-      .mockResolvedValueOnce(distributionRuntimeConflictExecuteFixture)
-      .mockResolvedValueOnce(distributionExecuteFixture);
+    executeDistribution.mockResolvedValueOnce(distributionRuntimeConflictExecuteFixture).mockResolvedValueOnce(distributionExecuteFixture);
 
     await screen.findByRole("button", { name: "Review Bot" });
     fireEvent.click(

@@ -35,28 +35,14 @@ type LatestReleaseHintProps = {
   onOpenDownload: () => void;
 };
 
-export const LatestReleaseHint = ({
-  isChecking,
-  latestRelease,
-  currentVersion,
-  onOpenDownload
-}: LatestReleaseHintProps): React.JSX.Element | null => {
+export const LatestReleaseHint = ({ isChecking, latestRelease, currentVersion, onOpenDownload }: LatestReleaseHintProps): React.JSX.Element | null => {
   if (isChecking) {
     return <p className="mt-2 text-xs text-muted-foreground">正在检查新版本…</p>;
   }
 
-  if (
-    latestRelease?.version &&
-    currentVersion &&
-    isNewerVersion(latestRelease.version, currentVersion)
-  ) {
+  if (latestRelease?.version && currentVersion && isNewerVersion(latestRelease.version, currentVersion)) {
     return (
-      <button
-        type="button"
-        onClick={onOpenDownload}
-        aria-label={`发现新版本 v${latestRelease.version}，点击前往下载`}
-        className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:underline"
-      >
+      <button type="button" onClick={onOpenDownload} aria-label={`发现新版本 v${latestRelease.version}，点击前往下载`} className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-semibold text-foreground outline-none transition-colors hover:bg-muted focus-visible:underline">
         <PackageCheck className="size-3.5 text-primary" aria-hidden="true" />
         新版本 v{latestRelease.version} 点击下载
       </button>

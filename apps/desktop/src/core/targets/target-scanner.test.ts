@@ -4,14 +4,7 @@ import { scanSystemTargets } from "./target-scanner";
 
 describe("scanSystemTargets", () => {
   it("detects conventional agent target directories and CLI executables", async () => {
-    const existingPaths = new Set([
-      "/Users/test/.codex",
-      "/Users/test/.codex/skills",
-      "/Users/test/.claude",
-      "/Users/test/.claude/skills",
-      "/usr/local/bin/codex",
-      "/opt/homebrew/bin/claude"
-    ]);
+    const existingPaths = new Set(["/Users/test/.codex", "/Users/test/.codex/skills", "/Users/test/.claude", "/Users/test/.claude/skills", "/usr/local/bin/codex", "/opt/homebrew/bin/claude"]);
 
     const targets = await scanSystemTargets({
       canWrite: async (candidatePath) => candidatePath !== "/Users/test/.gemini/skills",
@@ -42,27 +35,11 @@ describe("scanSystemTargets", () => {
         type: "gemini-cli"
       }
     ]);
-    expect(Object.keys(targets[0] ?? {}).sort()).toEqual([
-      "detectionMessage",
-      "id",
-      "name",
-      "normalizedPath",
-      "path",
-      "status",
-      "type"
-    ]);
+    expect(Object.keys(targets[0] ?? {}).sort()).toEqual(["detectionMessage", "id", "name", "normalizedPath", "path", "status", "type"]);
   });
 
   it("checks app installation before directory existence and write access", async () => {
-    const existingPaths = new Set([
-      "/Users/test/.codex",
-      "/Users/test/.codex/skills",
-      "/Users/test/.claude",
-      "/Users/test/.claude/skills",
-      "/usr/local/bin/codex",
-      "/usr/local/bin/claude",
-      "/usr/local/bin/gemini"
-    ]);
+    const existingPaths = new Set(["/Users/test/.codex", "/Users/test/.codex/skills", "/Users/test/.claude", "/Users/test/.claude/skills", "/usr/local/bin/codex", "/usr/local/bin/claude", "/usr/local/bin/gemini"]);
 
     const targets = await scanSystemTargets({
       canWrite: async (candidatePath) => candidatePath !== "/Users/test/.claude/skills",

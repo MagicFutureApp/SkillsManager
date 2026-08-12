@@ -2,13 +2,7 @@ export type RepositoryScanStatus = "pending" | "ready" | "review" | "failed";
 export type RepositoryLastSyncStatus = "failed" | "interrupted" | "running" | "success";
 export type RepositorySyncItemStatus = Exclude<RepositoryScanStatus, "pending"> | "skipped";
 
-export type RepositoryProviderName =
-  | "Bitbucket"
-  | "Gitea"
-  | "GitHub"
-  | "GitLab"
-  | "Local"
-  | "skills.sh";
+export type RepositoryProviderName = "Bitbucket" | "Gitea" | "GitHub" | "GitLab" | "Local" | "skills.sh";
 
 export type RepositoryScanSummary = {
   added: number;
@@ -59,14 +53,7 @@ export type RepositorySyncSummary = {
   scan: RepositorySyncScanDetail;
 };
 
-export type RepositorySyncFailureCategory =
-  | "auth"
-  | "filesystem"
-  | "git"
-  | "network"
-  | "not-a-skill"
-  | "source-not-found"
-  | "unknown";
+export type RepositorySyncFailureCategory = "auth" | "filesystem" | "git" | "network" | "not-a-skill" | "source-not-found" | "unknown";
 
 export type RepositorySyncFailure = {
   category: RepositorySyncFailureCategory;

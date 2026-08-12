@@ -1,30 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
-import {
-  adaptTargets,
-  filterTargets,
-  type TargetIssue,
-  type TargetSort,
-  type TargetViewModel
-} from "../components/targets-page-data";
+import { adaptTargets, filterTargets, type TargetIssue, type TargetSort, type TargetViewModel } from "../components/targets-page-data";
 import type { RegisteredTargetRecord } from "../../../../core/targets/target-api";
 import type { TargetDirectoryAgentOption, TargetsListResult } from "@/global";
-import {
-  clampPageNumber,
-  createPaginationState,
-  DEFAULT_PAGE_SIZE,
-  getPagedItems,
-  type PaginationState
-} from "@/lib/pagination";
-import {
-  createEditableTargetAgentDirectory,
-  customTargetAgentType,
-  deriveTargetNameFromPath,
-  joinTargetPathSegments,
-  normalizeCustomTargetAgentDirectoryName,
-  useTargetAddDialogState,
-  type PendingTargetAgentDirectory
-} from "./use-target-add-dialog-state";
+import { clampPageNumber, createPaginationState, DEFAULT_PAGE_SIZE, getPagedItems, type PaginationState } from "@/lib/pagination";
+import { createEditableTargetAgentDirectory, customTargetAgentType, deriveTargetNameFromPath, joinTargetPathSegments, normalizeCustomTargetAgentDirectoryName, useTargetAddDialogState, type PendingTargetAgentDirectory } from "./use-target-add-dialog-state";
 
 type TargetsResultLike = {
   registeredTargets?: RegisteredTargetRecord[];
@@ -45,8 +25,7 @@ export const useTargetsPageState = () => {
   const [isEditTargetDialogOpen, setIsEditTargetDialogOpen] = useState(false);
   const [isSavingEditTarget, setIsSavingEditTarget] = useState(false);
   const [customTargetAgentDirectoryName, setCustomTargetAgentDirectoryNameValue] = useState("");
-  const [pendingTargetAgentDirectory, setPendingTargetAgentDirectory] =
-    useState<PendingTargetAgentDirectory | null>(null);
+  const [pendingTargetAgentDirectory, setPendingTargetAgentDirectory] = useState<PendingTargetAgentDirectory | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [query, setQuery] = useState("");
   const [hasLoadedTargets, setHasLoadedTargets] = useState(false);
@@ -90,17 +69,13 @@ export const useTargetsPageState = () => {
 
       return nextTargets[0]?.id ?? null;
     });
-    setPendingDeleteTargetIds((currentIds) =>
-      currentIds.filter((targetId) => nextTargetIds.has(targetId))
-    );
+    setPendingDeleteTargetIds((currentIds) => currentIds.filter((targetId) => nextTargetIds.has(targetId)));
   };
 
   const addTargetDialog = useTargetAddDialogState<TargetsListResult>({
     isSaveAvailable: () => Boolean(window.skillsManager?.addCustomDirectoryTarget),
     onSaved: (result, input) => {
-      const addedTarget = result?.registeredTargets.find(
-        (target) => target.path === input.targetPath
-      );
+      const addedTarget = result?.registeredTargets.find((target) => target.path === input.targetPath);
 
       applyTargetsResult(result, addedTarget?.id);
     },
@@ -126,8 +101,7 @@ export const useTargetsPageState = () => {
 
     try {
       const rescanResult = await window.skillsManager?.rescanTargets?.();
-      const result: TargetsResultLike | undefined =
-        rescanResult ?? (await window.skillsManager?.listTargets?.());
+      const result: TargetsResultLike | undefined = rescanResult ?? (await window.skillsManager?.listTargets?.());
 
       applyTargetsResult(result);
       nextScanIssues = rescanResult?.scanIssues ?? [];
@@ -154,10 +128,7 @@ export const useTargetsPageState = () => {
     });
   };
 
-  const applyEditCustomTargetAgentDirectoryName = (
-    directoryName: string,
-    pendingDirectory: PendingTargetAgentDirectory | null = pendingTargetAgentDirectory
-  ) => {
+  const applyEditCustomTargetAgentDirectoryName = (directoryName: string, pendingDirectory: PendingTargetAgentDirectory | null = pendingTargetAgentDirectory) => {
     if (!pendingDirectory) {
       return;
     }
@@ -171,9 +142,7 @@ export const useTargetsPageState = () => {
       return;
     }
 
-    applyResolvedEditTargetPath(
-      joinTargetPathSegments(pendingDirectory.basePath, normalizedDirectoryName, "skills")
-    );
+    applyResolvedEditTargetPath(joinTargetPathSegments(pendingDirectory.basePath, normalizedDirectoryName, "skills"));
   };
 
   const selectEditCustomTargetAgentDirectoryOption = () => {
@@ -219,9 +188,7 @@ export const useTargetsPageState = () => {
         return currentName;
       }
 
-      return deriveTargetNameFromPath(
-        resolution.targetPath ?? resolution.options[0]?.targetPath ?? resolution.basePath
-      );
+      return deriveTargetNameFromPath(resolution.targetPath ?? resolution.options[0]?.targetPath ?? resolution.basePath);
     });
   };
 
@@ -346,10 +313,7 @@ export const useTargetsPageState = () => {
     const name = editTargetName.trim();
     const targetPath = editTargetPath.trim();
 
-    if (
-      selectedTargetAgentType === customTargetAgentType &&
-      !normalizeCustomTargetAgentDirectoryName(customTargetAgentDirectoryName)
-    ) {
+    if (selectedTargetAgentType === customTargetAgentType && !normalizeCustomTargetAgentDirectoryName(customTargetAgentDirectoryName)) {
       setEditTargetError("customAgentDirectoryRequired");
       return;
     }
@@ -389,11 +353,7 @@ export const useTargetsPageState = () => {
     }
   };
 
-  const confirmDeleteTargets = async ({
-    deleteInstalledFiles
-  }: {
-    deleteInstalledFiles: boolean;
-  }) => {
+  const confirmDeleteTargets = async ({ deleteInstalledFiles }: { deleteInstalledFiles: boolean }) => {
     const targetIds = normalizeTargetIds(pendingDeleteTargetIds);
 
     if (!targetIds.length) {
@@ -485,13 +445,10 @@ export const useTargetsPageState = () => {
   const visibleDeletableTargets = visibleTargets.filter((target) => target.deletable);
   const visibleDeletableIds = visibleDeletableTargets.map((target) => target.id);
   const visibleCheckedCount = visibleDeletableIds.filter((id) => checkedIds.has(id)).length;
-  const visibleAllChecked =
-    visibleDeletableTargets.length > 0 && visibleCheckedCount === visibleDeletableTargets.length;
+  const visibleAllChecked = visibleDeletableTargets.length > 0 && visibleCheckedCount === visibleDeletableTargets.length;
   const visibleSomeChecked = visibleCheckedCount > 0;
   const checkedCount = checkedIds.size;
-  const pendingDeleteTargets = pendingDeleteTargetIds
-    .map((targetId) => targets.find((target) => target.id === targetId))
-    .filter((target): target is TargetViewModel => Boolean(target));
+  const pendingDeleteTargets = pendingDeleteTargetIds.map((targetId) => targets.find((target) => target.id === targetId)).filter((target): target is TargetViewModel => Boolean(target));
   const copySelectedTargetPath = () => {
     if (!selectedTarget) {
       return;

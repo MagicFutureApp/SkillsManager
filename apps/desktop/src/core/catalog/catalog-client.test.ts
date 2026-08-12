@@ -1,21 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  CATALOG_MAX_CACHED_PAGES,
-  CATALOG_MAX_CACHED_SEARCHES,
-  CATALOG_GENERATION_TTL_MS,
-  CATALOG_SEARCH_CACHE_TTL_MS,
-  createCatalogClient,
-  selectActiveGeneration,
-  type CatalogClientOptions
-} from "./catalog-client";
+import { CATALOG_MAX_CACHED_PAGES, CATALOG_MAX_CACHED_SEARCHES, CATALOG_GENERATION_TTL_MS, CATALOG_SEARCH_CACHE_TTL_MS, createCatalogClient, selectActiveGeneration, type CatalogClientOptions } from "./catalog-client";
 import type { CatalogGenerationInfo, CatalogManifest, CatalogSnapshot } from "./catalog-types";
 
 const BASE_URL = "https://catalog.example.dev";
 const MANIFEST_URL = `${BASE_URL}/v1/catalog`;
 
-const pageUrl = (generation: string, page: number): string =>
-  `${MANIFEST_URL}/${generation}/pages/${page}`;
+const pageUrl = (generation: string, page: number): string => `${MANIFEST_URL}/${generation}/pages/${page}`;
 
 type ResponseSpec = {
   status?: number;
@@ -24,10 +15,7 @@ type ResponseSpec = {
   throws?: Error;
 };
 
-const snapshot = (
-  generation: string,
-  overrides: Partial<CatalogSnapshot> = {}
-): CatalogSnapshot => ({
+const snapshot = (generation: string, overrides: Partial<CatalogSnapshot> = {}): CatalogSnapshot => ({
   generation,
   generatedAt: "2026-08-04T00:00:00.000Z",
   pageCount: 4,
@@ -37,8 +25,7 @@ const snapshot = (
   ...overrides
 });
 
-const manifestBody = (current: CatalogSnapshot, previous?: CatalogSnapshot): unknown =>
-  previous ? { schemaVersion: 1, current, previous } : { schemaVersion: 1, current };
+const manifestBody = (current: CatalogSnapshot, previous?: CatalogSnapshot): unknown => (previous ? { schemaVersion: 1, current, previous } : { schemaVersion: 1, current });
 
 const pageBody = (page: number, total: number, ids: string[]): unknown => ({
   data: ids.map((id) => ({
@@ -56,9 +43,7 @@ const pageBody = (page: number, total: number, ids: string[]): unknown => ({
 
 const toResponse = (spec: ResponseSpec): Response => {
   const status = spec.status ?? 200;
-  const headers = new Map(
-    Object.entries(spec.headers ?? {}).map(([key, value]) => [key.toLowerCase(), value])
-  );
+  const headers = new Map(Object.entries(spec.headers ?? {}).map(([key, value]) => [key.toLowerCase(), value]));
 
   return {
     ok: status >= 200 && status < 300,
@@ -99,10 +84,7 @@ type Harness = {
   client: ReturnType<typeof createCatalogClient>;
 };
 
-const createHarness = (
-  handler: (url: string, callIndex: number) => ResponseSpec,
-  overrides: CatalogClientOptions = {}
-): Harness => {
+const createHarness = (handler: (url: string, callIndex: number) => ResponseSpec, overrides: CatalogClientOptions = {}): Harness => {
   const { urls, fetchImpl } = createFetchStub(handler);
   const sleep = createSleepMock();
   let currentTime = 1_000_000;
@@ -275,12 +257,7 @@ describe("createCatalogClient - happy path", () => {
     await harness.client.getPage({ page: 0 });
     await harness.client.getPage({ page: 0, forceRefresh: true });
 
-    expect(harness.urls).toEqual([
-      MANIFEST_URL,
-      pageUrl("gen-a", 0),
-      MANIFEST_URL,
-      pageUrl("gen-a", 0)
-    ]);
+    expect(harness.urls).toEqual([MANIFEST_URL, pageUrl("gen-a", 0), MANIFEST_URL, pageUrl("gen-a", 0)]);
   });
 
   it("returns the locked generation from getManifest", async () => {
@@ -341,9 +318,7 @@ describe("createCatalogClient - warming (202)", () => {
 
       pageCalls += 1;
 
-      return pageCalls === 1
-        ? { status: 202, headers: { "retry-after": "1" } }
-        : { body: pageBody(0, 100, ["alpha"]) };
+      return pageCalls === 1 ? { status: 202, headers: { "retry-after": "1" } } : { body: pageBody(0, 100, ["alpha"]) };
     });
 
     await expect(harness.client.getPage({ page: 0 })).resolves.toMatchObject({ ok: true });
@@ -357,10 +332,7 @@ describe("createCatalogClient - unavailable (503) fallback", () => {
     createHarness((url) => {
       if (url === MANIFEST_URL) {
         return {
-          body: manifestBody(
-            snapshot("gen-a", { pageCount: 4, total: 2000 }),
-            snapshot("gen-prev", { pageCount: 3, total: 1500 })
-          )
+          body: manifestBody(snapshot("gen-a", { pageCount: 4, total: 2000 }), snapshot("gen-prev", { pageCount: 3, total: 1500 }))
         };
       }
 
@@ -420,9 +392,7 @@ describe("createCatalogClient - unavailable (503) fallback", () => {
   });
 
   it("fails with unavailable when there is no previous generation", async () => {
-    const harness = createHarness((url) =>
-      url === MANIFEST_URL ? { body: manifestBody(snapshot("gen-a")) } : { status: 503 }
-    );
+    const harness = createHarness((url) => (url === MANIFEST_URL ? { body: manifestBody(snapshot("gen-a")) } : { status: 503 }));
 
     await expect(harness.client.getPage({ page: 0 })).resolves.toMatchObject({
       ok: false,
@@ -452,18 +422,11 @@ describe("createCatalogClient - not found (404) self-healing", () => {
     if (!result.ok) return;
 
     expect(result.data.generation.generation).toBe("gen-new");
-    expect(harness.urls).toEqual([
-      MANIFEST_URL,
-      pageUrl("gen-old", 1),
-      MANIFEST_URL,
-      pageUrl("gen-new", 1)
-    ]);
+    expect(harness.urls).toEqual([MANIFEST_URL, pageUrl("gen-old", 1), MANIFEST_URL, pageUrl("gen-new", 1)]);
   });
 
   it("stops after a single manifest refresh when the page stays missing", async () => {
-    const harness = createHarness((url) =>
-      url === MANIFEST_URL ? { body: manifestBody(snapshot("gen-a")) } : { status: 404 }
-    );
+    const harness = createHarness((url) => (url === MANIFEST_URL ? { body: manifestBody(snapshot("gen-a")) } : { status: 404 }));
 
     await expect(harness.client.getPage({ page: 9 })).resolves.toMatchObject({
       ok: false,
@@ -496,13 +459,7 @@ describe("createCatalogClient - caching and concurrency", () => {
     harness.advanceTime(CATALOG_GENERATION_TTL_MS + 1);
     await harness.client.getPage({ page: 2 });
 
-    expect(harness.urls).toEqual([
-      MANIFEST_URL,
-      pageUrl("gen-a", 0),
-      pageUrl("gen-a", 1),
-      MANIFEST_URL,
-      pageUrl("gen-a", 2)
-    ]);
+    expect(harness.urls).toEqual([MANIFEST_URL, pageUrl("gen-a", 0), pageUrl("gen-a", 1), MANIFEST_URL, pageUrl("gen-a", 2)]);
   });
 
   it("evicts the oldest page once the cache is full", async () => {
@@ -524,10 +481,7 @@ describe("createCatalogClient - caching and concurrency", () => {
   it("issues a single manifest request for concurrent page loads", async () => {
     const harness = createPagingHarness();
 
-    const [first, second] = await Promise.all([
-      harness.client.getPage({ page: 0 }),
-      harness.client.getPage({ page: 1 })
-    ]);
+    const [first, second] = await Promise.all([harness.client.getPage({ page: 0 }), harness.client.getPage({ page: 1 })]);
 
     expect(first.ok).toBe(true);
     expect(second.ok).toBe(true);
@@ -580,9 +534,7 @@ describe("createCatalogClient - failure classification", () => {
 });
 
 describe("createCatalogClient.search", () => {
-  const searchUrl = (query: string, limit = 50, owner?: string): string =>
-    `${BASE_URL}/v1/catalog/search?q=${encodeURIComponent(query)}&limit=${limit}` +
-    (owner ? `&owner=${encodeURIComponent(owner)}` : "");
+  const searchUrl = (query: string, limit = 50, owner?: string): string => `${BASE_URL}/v1/catalog/search?q=${encodeURIComponent(query)}&limit=${limit}` + (owner ? `&owner=${encodeURIComponent(owner)}` : "");
 
   const searchBody = (ids: string[], overrides: Record<string, unknown> = {}): unknown => ({
     data: ids.map((id) => ({
@@ -670,11 +622,7 @@ describe("createCatalogClient.search", () => {
     await harness.client.search({ query: "react", limit: 500 });
     await harness.client.search({ query: "react" });
 
-    expect(harness.urls).toEqual([
-      searchUrl("react", 1),
-      searchUrl("react", 200),
-      searchUrl("react", 50)
-    ]);
+    expect(harness.urls).toEqual([searchUrl("react", 1), searchUrl("react", 200), searchUrl("react", 50)]);
   });
 
   it("lowercases the owner filter and forwards it", async () => {
@@ -690,9 +638,7 @@ describe("createCatalogClient.search", () => {
     const harness = createHarness(() => {
       calls += 1;
 
-      return calls === 1
-        ? { status: 429, headers: { "retry-after": "3" } }
-        : { body: searchBody(["one"]) };
+      return calls === 1 ? { status: 429, headers: { "retry-after": "3" } } : { body: searchBody(["one"]) };
     });
 
     const result = await harness.client.search({ query: "react" });
@@ -729,11 +675,7 @@ describe("createCatalogClient.search", () => {
   });
 
   it("reports a 503 as unavailable without any generation fallback", async () => {
-    const harness = createHarness((url) =>
-      url.includes("/v1/catalog/search")
-        ? { status: 503 }
-        : { body: manifestBody(snapshot("gen-a")) }
-    );
+    const harness = createHarness((url) => (url.includes("/v1/catalog/search") ? { status: 503 } : { body: manifestBody(snapshot("gen-a")) }));
 
     const result = await harness.client.search({ query: "react" });
 
@@ -869,11 +811,7 @@ describe("createCatalogClient.search", () => {
     await harness.client.search({ query: "react", owner: "expo" });
     await harness.client.search({ query: "react" });
 
-    expect(harness.urls).toEqual([
-      searchUrl("react"),
-      searchUrl("react", 10),
-      searchUrl("react", 50, "expo")
-    ]);
+    expect(harness.urls).toEqual([searchUrl("react"), searchUrl("react", 10), searchUrl("react", 50, "expo")]);
   });
 
   it("evicts the least recently used entry beyond the cache capacity", async () => {

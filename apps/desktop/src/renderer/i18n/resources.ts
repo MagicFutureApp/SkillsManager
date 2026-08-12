@@ -97,8 +97,7 @@ export const resources = {
           distributionFailedStatus: "分发失败。",
           targetRemovalFailedStatus: "取消分发目标失败。请检查目标目录权限后重试。",
           targetRemovalUnavailableStatus: "取消分发目标接口暂不可用。",
-          distributionCompletedStatus:
-            "分发完成：安装 {{installed}}，更新 {{updated}}，跳过 {{skipped}}，冲突 {{conflicts}}，阻止 {{blocked}}，失败 {{failed}}。",
+          distributionCompletedStatus: "分发完成：安装 {{installed}}，更新 {{updated}}，跳过 {{skipped}}，冲突 {{conflicts}}，阻止 {{blocked}}，失败 {{failed}}。",
           distributionPreviewFailedStatus: "分发预览失败。",
           cancel: "取消",
           close: "关闭",
@@ -147,8 +146,7 @@ export const resources = {
           ariaLabel: "技能详情",
           emptyTitle: "请选择技能",
           syncTargets: "分发目标",
-          syncTargetsDescription:
-            "选择默认分发范围；点击分发后会直接按确认弹窗中的选择 copy 到目标目录。",
+          syncTargetsDescription: "选择默认分发范围；点击分发后会直接按确认弹窗中的选择 copy 到目标目录。",
           chooseTarget: "选择 {{name}}",
           details: "详情",
           skillId: "Skill ID",
@@ -169,8 +167,7 @@ export const resources = {
           deleteFiles: "删除文件并取消",
           deleteQuestion: "是否同时删除这个目标目录中由当前 skill 分发出来的文件？",
           deleteSkillFiles: "删除技能文件",
-          description:
-            "确定后会解除此 Skill 与目标的分发关系；也可同时删除目标或已分发的 Skill 文件。",
+          description: "确定后会解除此 Skill 与目标的分发关系；也可同时删除目标或已分发的 Skill 文件。",
           keepFiles: "仅取消勾选",
           options: "分发目标操作",
           removeTarget: "删除此分发目标",
@@ -345,8 +342,7 @@ export const resources = {
       providers: {
         pageLabel: "Provider",
         heading: "管理 Provider 与连接诊断",
-        description:
-          "Provider 是系统预定义的连接入口。用户只负责连接、取消连接和验证访问能力；来源屏幕只负责具体缓存、同步与扫描结果。",
+        description: "Provider 是系统预定义的连接入口。用户只负责连接、取消连接和验证访问能力；来源屏幕只负责具体缓存、同步与扫描结果。",
         empty: "没有匹配的 Provider。调整筛选条件。",
         actions: {
           connect: "连接",
@@ -484,8 +480,7 @@ export const resources = {
           cachePath: "来源本地缓存",
           cancel: "取消",
           confirm: "确认删除",
-          description:
-            "会删除此来源对应的 Skills 记录和来源同步到本地的缓存文件。不会删除已经同步到 Codex、Claude Code、Gemini CLI 或自定义目标目录的文件。",
+          description: "会删除此来源对应的 Skills 记录和来源同步到本地的缓存文件。不会删除已经同步到 Codex、Claude Code、Gemini CLI 或自定义目标目录的文件。",
           emptySkills: "此来源当前没有已索引的 Skills 记录。",
           loading: "正在读取需要删除的 Skills...",
           skillsHeading: "将删除的 Skills",
@@ -494,8 +489,7 @@ export const resources = {
         localSyncDialog: {
           cancel: "取消",
           confirm: "确定",
-          description:
-            "本地路径同步会复制文件到 Skills Manager 的统一本地缓存目录。旧地址的文件需要用户手动删除。是否继续？",
+          description: "本地路径同步会复制文件到 Skills Manager 的统一本地缓存目录。旧地址的文件需要用户手动删除。是否继续？",
           title: "本地路径同步确认"
         },
         syncProgress: {
@@ -607,8 +601,7 @@ export const resources = {
           close: "Close",
           install: "Install",
           installComingSoon: "Coming soon",
-          installHint:
-            "Installing from Discover is coming soon. For now, open the source page in your browser."
+          installHint: "Installing from Discover is coming soon. For now, open the source page in your browser."
         },
         pagination: {
           pageInfo: "Page {{current}} of {{total}}"
@@ -617,8 +610,7 @@ export const resources = {
       skills: {
         pageLabel: "Skills",
         heading: "Browse and Distribute Skills",
-        description:
-          "Each skill comes from repository scan results. Choose distribution targets and copy skills into place.",
+        description: "Each skill comes from repository scan results. Choose distribution targets and copy skills into place.",
         empty: "No indexed skills yet.",
         actions: {
           sync: "Distribute",
@@ -633,11 +625,9 @@ export const resources = {
           distributionUnavailableStatus: "Distribution is unavailable.",
           distributionEmptyStatus: "There are no items to distribute.",
           distributionFailedStatus: "Distribution failed.",
-          targetRemovalFailedStatus:
-            "Failed to remove the distribution target. Check target permissions and try again.",
+          targetRemovalFailedStatus: "Failed to remove the distribution target. Check target permissions and try again.",
           targetRemovalUnavailableStatus: "Removing distribution targets is unavailable.",
-          distributionCompletedStatus:
-            "Distribution finished: installed {{installed}}, updated {{updated}}, skipped {{skipped}}, conflicts {{conflicts}}, blocked {{blocked}}, failed {{failed}}.",
+          distributionCompletedStatus: "Distribution finished: installed {{installed}}, updated {{updated}}, skipped {{skipped}}, conflicts {{conflicts}}, blocked {{blocked}}, failed {{failed}}.",
           distributionPreviewFailedStatus: "Distribution preview failed.",
           cancel: "Cancel",
           close: "Close",
@@ -686,8 +676,7 @@ export const resources = {
           ariaLabel: "Skill details",
           emptyTitle: "Select a skill",
           syncTargets: "Distribution targets",
-          syncTargetsDescription:
-            "Choose the default distribution scope. Distribution copies skills according to the confirmation dialog.",
+          syncTargetsDescription: "Choose the default distribution scope. Distribution copies skills according to the confirmation dialog.",
           chooseTarget: "Choose {{name}}",
           details: "Details",
           skillId: "Skill ID",
@@ -700,18 +689,15 @@ export const resources = {
           customDirectory: "Custom directory"
         },
         addTargetModal: {
-          description:
-            "Choose a local directory and name it as a distribution target for the current skill."
+          description: "Choose a local directory and name it as a distribution target for the current skill."
         },
         targetRemoval: {
           cancel: "Cancel",
           confirm: "OK",
           deleteFiles: "Delete files and remove",
-          deleteQuestion:
-            "Also delete the files distributed by this skill from the target directory?",
+          deleteQuestion: "Also delete the files distributed by this skill from the target directory?",
           deleteSkillFiles: "Delete skill files",
-          description:
-            "Confirming removes this Skill's target link; you can also delete the target or distributed Skill files.",
+          description: "Confirming removes this Skill's target link; you can also delete the target or distributed Skill files.",
           keepFiles: "Remove only",
           options: "Distribution target actions",
           removeTarget: "Remove this distribution target",
@@ -743,16 +729,13 @@ export const resources = {
           errors: {
             duplicateTarget: "This distribution includes the same target path more than once.",
             generic: "Distribution failed. Check the target directory and try again.",
-            missingPath:
-              "The source or target path is missing. Sync the source and check the target.",
+            missingPath: "The source or target path is missing. Sync the source and check the target.",
             missingSourceOrTarget: "The source or target directory is incomplete.",
             nestedPaths: "The source and target directories cannot contain each other.",
             noSpace: "There is not enough disk space. Free space and try again.",
             permission: "The target directory is not writable. Check permissions and try again.",
-            targetRoot:
-              "The target path cannot be the target root. Choose a specific skill directory.",
-            unownedTarget:
-              "The target path already exists and is not managed by this skill. Clean it up or choose overwrite.",
+            targetRoot: "The target path cannot be the target root. Choose a specific skill directory.",
+            unownedTarget: "The target path already exists and is not managed by this skill. Clean it up or choose overwrite.",
             withMessage: "Distribution failed: {{message}}"
           },
           actions: {
@@ -771,8 +754,7 @@ export const resources = {
       targets: {
         pageLabel: "Targets",
         heading: "Manage targets",
-        description:
-          "Scan local agent directories and summarize local targets selected from the Skills page.",
+        description: "Scan local agent directories and summarize local targets selected from the Skills page.",
         empty: "No matching targets. Adjust the search.",
         actions: {
           addTarget: "Add",
@@ -829,8 +811,7 @@ export const resources = {
         },
         scanIssues: {
           confirm: "OK",
-          description:
-            "Check these target paths or application installation state. The scan result has been saved to the local database.",
+          description: "Check these target paths or application installation state. The scan result has been saved to the local database.",
           title: "Target scan found issues"
         },
         scanLoading: {
@@ -839,8 +820,7 @@ export const resources = {
         },
         modal: {
           agentType: "Confirm agent type",
-          agentTypeDescription:
-            "No skills directory was found. Choose which agent directory to normalize into.",
+          agentTypeDescription: "No skills directory was found. Choose which agent directory to normalize into.",
           browse: "Browse",
           cancel: "Cancel",
           close: "Close",
@@ -863,8 +843,7 @@ export const resources = {
           close: "Close",
           confirm: "Delete",
           deleteSkillFiles: "Delete skill files",
-          description:
-            "By default, only target records are deleted. Check the option to also delete matching Skills files in the target folders.",
+          description: "By default, only target records are deleted. Check the option to also delete matching Skills files in the target folders.",
           options: "Target deletion options",
           target: "Target",
           title: "Delete target"
@@ -893,8 +872,7 @@ export const resources = {
       providers: {
         pageLabel: "Provider",
         heading: "Manage providers and connection diagnostics",
-        description:
-          "Providers are predefined connection entry points. Users connect, disconnect, and validate access here; source sync and scan results stay on the source screen.",
+        description: "Providers are predefined connection entry points. Users connect, disconnect, and validate access here; source sync and scan results stay on the source screen.",
         empty: "No matching providers. Adjust the filters.",
         actions: {
           connect: "Connect",
@@ -926,8 +904,7 @@ export const resources = {
           connectionConfig: "Connection config",
           defaultRules: "Default discovery rules",
           discoveryStrategy: "Discovery strategy",
-          emptyDescription:
-            "Auth mode, default discovery rules, and access diagnostics appear here.",
+          emptyDescription: "Auth mode, default discovery rules, and access diagnostics appear here.",
           emptyTitle: "Choose a provider",
           enabled: "Enabled",
           notConnected: "not connected",
@@ -939,8 +916,7 @@ export const resources = {
       repositories: {
         pageLabel: "Sources",
         heading: "Manage sources and scan results",
-        description:
-          "After registering Git or marketplace sources, the app records branches and commits, and writes scanned skill units into the local index.",
+        description: "After registering Git or marketplace sources, the app records branches and commits, and writes scanned skill units into the local index.",
         empty: "No matching sources. Adjust the search or filters.",
         actions: {
           addRepository: "Add",
@@ -1034,8 +1010,7 @@ export const resources = {
           cachePath: "Source cache",
           cancel: "Cancel",
           confirm: "Delete",
-          description:
-            "This deletes the source's Skills records and locally synced source cache. It does not delete files already synced to Codex, Claude Code, Gemini CLI, or custom target folders.",
+          description: "This deletes the source's Skills records and locally synced source cache. It does not delete files already synced to Codex, Claude Code, Gemini CLI, or custom target folders.",
           emptySkills: "This source has no indexed Skills records.",
           loading: "Loading Skills to delete...",
           skillsHeading: "Skills to delete",
@@ -1044,8 +1019,7 @@ export const resources = {
         localSyncDialog: {
           cancel: "Cancel",
           confirm: "OK",
-          description:
-            "Local path sync copies files into Skills Manager's unified local cache. Files at the old path must be removed manually. Continue?",
+          description: "Local path sync copies files into Skills Manager's unified local cache. Files at the old path must be removed manually. Continue?",
           title: "Local path sync confirmation"
         },
         syncProgress: {
@@ -1068,8 +1042,7 @@ export const resources = {
           editDescription: "Update source registration. Saving does not sync or write targets.",
           editTitle: "Edit source",
           name: "Name",
-          newDescription:
-            "Saving only adds the source to the local registry. Sync and scan stay manual.",
+          newDescription: "Saving only adds the source to the local registry. Sync and scan stay manual.",
           newTitle: "Add source",
           note: "Note",
           patterns: "Discovery entries",
@@ -1078,8 +1051,7 @@ export const resources = {
           remoteUrl: "URL / local path",
           requiredError: "Name and URL / local path are required.",
           save: "Save source",
-          sourceInspectionError:
-            "Source metadata could not be inspected. You can continue manually.",
+          sourceInspectionError: "Source metadata could not be inspected. You can continue manually.",
           sourceInspectionLoading: "Inspecting source metadata..."
         },
         scan: {

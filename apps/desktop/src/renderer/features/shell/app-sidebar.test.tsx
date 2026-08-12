@@ -54,10 +54,7 @@ describe("AppSidebar", () => {
   it("uses compact navigation when the sidebar is collapsed", async () => {
     await renderSidebar({ isCollapsed: true });
 
-    expect(screen.getByRole("complementary", { name: "主导航" })).toHaveAttribute(
-      "data-collapsed",
-      "true"
-    );
+    expect(screen.getByRole("complementary", { name: "主导航" })).toHaveAttribute("data-collapsed", "true");
     expect(screen.queryByText("Local-first desktop")).not.toBeInTheDocument();
     expect(screen.queryByText("工作区")).not.toBeInTheDocument();
     expect(screen.queryByText("系统")).not.toBeInTheDocument();
@@ -71,15 +68,11 @@ describe("AppSidebar", () => {
 
     const sidebar = screen.getByRole("complementary", { name: "主导航" });
 
-    const badges = Array.from(sidebar.querySelectorAll('[data-slot="badge"]')).map((badge) =>
-      badge.textContent?.trim()
-    );
+    const badges = Array.from(sidebar.querySelectorAll('[data-slot="badge"]')).map((badge) => badge.textContent?.trim());
 
     expect(badges).toEqual(["5", "37", "4", "8"]);
     expect(screen.getByRole("button", { name: "技能" })).not.toHaveAttribute("title");
-    expect(
-      sidebar.querySelector('[data-slot="tooltip-trigger"][aria-label="Skills Manager"]')
-    ).toBeTruthy();
+    expect(sidebar.querySelector('[data-slot="tooltip-trigger"][aria-label="Skills Manager"]')).toBeTruthy();
   });
 
   it("renders sidebar navigation badges only for non-zero counts", async () => {
@@ -87,9 +80,7 @@ describe("AppSidebar", () => {
 
     const sidebar = screen.getByRole("complementary", { name: "主导航" });
 
-    const badges = Array.from(sidebar.querySelectorAll('[data-slot="badge"]')).map((badge) =>
-      badge.textContent?.trim()
-    );
+    const badges = Array.from(sidebar.querySelectorAll('[data-slot="badge"]')).map((badge) => badge.textContent?.trim());
 
     expect(badges).toEqual(["5", "37", "4", "8"]);
     expect(screen.getByRole("button", { name: "技能" })).toHaveTextContent("37");
@@ -138,9 +129,7 @@ describe("AppSidebar", () => {
 
 describe("shellNavigationGroups", () => {
   it("defines route ids for visible workspace and system navigation", () => {
-    const visibleRouteIds = shellNavigationGroups.flatMap((group) =>
-      group.items.filter((item) => !item.hidden).map((item) => item.routeId)
-    );
+    const visibleRouteIds = shellNavigationGroups.flatMap((group) => group.items.filter((item) => !item.hidden).map((item) => item.routeId));
 
     expect(visibleRouteIds).toEqual(["repositories", "skills", "targets", "settings"]);
   });

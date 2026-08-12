@@ -1,12 +1,4 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -35,9 +27,7 @@ export const TargetsScanIssuesDialog = () => {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <strong className="block truncate text-sm">{issue.name}</strong>
-                  <span className="mt-1 block truncate font-mono text-xs text-muted-foreground">
-                    {issue.path}
-                  </span>
+                  <span className="mt-1 block truncate font-mono text-xs text-muted-foreground">{issue.path}</span>
                 </div>
                 <TargetStatusBadge status={issue.status} />
               </div>
@@ -46,9 +36,7 @@ export const TargetsScanIssuesDialog = () => {
           ))}
         </div>
         <AlertDialogFooter>
-          <AlertDialogAction onClick={() => page.setScanIssues([])}>
-            {t("targets.scanIssues.confirm")}
-          </AlertDialogAction>
+          <AlertDialogAction onClick={() => page.setScanIssues([])}>{t("targets.scanIssues.confirm")}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

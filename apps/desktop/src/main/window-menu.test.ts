@@ -1,12 +1,7 @@
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  buildMainWindowOptions,
-  denyExternalWindowOpen,
-  disableWindowMenuBar,
-  getMainWindowHtmlPath
-} from "./window-menu";
+import { buildMainWindowOptions, denyExternalWindowOpen, disableWindowMenuBar, getMainWindowHtmlPath } from "./window-menu";
 
 describe("main window menu bar", () => {
   it("leaves the initial size to the resolved window placement", () => {
@@ -44,9 +39,7 @@ describe("main window menu bar", () => {
   });
 
   it("resolves the packaged renderer entry from the compiled main directory", () => {
-    expect(getMainWindowHtmlPath(path.join("dist", "main", "main"))).toBe(
-      path.normalize(path.join("dist", "renderer", "index.html"))
-    );
+    expect(getMainWindowHtmlPath(path.join("dist", "main", "main"))).toBe(path.normalize(path.join("dist", "renderer", "index.html")));
   });
 
   it("removes the menu from an existing browser window", () => {

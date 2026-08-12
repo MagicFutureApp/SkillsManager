@@ -4,10 +4,7 @@ import type { TargetsPageState } from "../hooks/use-targets-page-state";
 
 const TargetsPageContext = createContext<TargetsPageState | null>(null);
 
-export const TargetsPageProvider = ({
-  children,
-  state
-}: React.PropsWithChildren<{ state: TargetsPageState }>) => {
+export const TargetsPageProvider = ({ children, state }: React.PropsWithChildren<{ state: TargetsPageState }>) => {
   return <TargetsPageContext.Provider value={state}>{children}</TargetsPageContext.Provider>;
 };
 

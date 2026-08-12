@@ -1,32 +1,6 @@
 import { CATALOG_BASE_URL } from "../app-constants";
-import {
-  CATALOG_SEARCH_MAX_QUERY_LENGTH,
-  CATALOG_SEARCH_MIN_QUERY_LENGTH,
-  CatalogHttpError,
-  DEFAULT_RETRY_AFTER_SECONDS,
-  fetchCatalogManifest,
-  fetchCatalogPage,
-  fetchCatalogSearch,
-  isCatalogHttpError,
-  isValidSearchOwner,
-  normalizeCatalogBaseUrl,
-  normalizeSearchQuery,
-  resolveSearchLimit,
-  type CatalogSearchPayload
-} from "./catalog-http";
-import type {
-  CatalogFailure,
-  CatalogGenerationInfo,
-  CatalogManifest,
-  CatalogManifestResult,
-  CatalogPage,
-  CatalogPageInput,
-  CatalogPageResult,
-  CatalogResult,
-  CatalogSearchInput,
-  CatalogSearchResult,
-  CatalogSnapshot
-} from "./catalog-types";
+import { CATALOG_SEARCH_MAX_QUERY_LENGTH, CATALOG_SEARCH_MIN_QUERY_LENGTH, CatalogHttpError, DEFAULT_RETRY_AFTER_SECONDS, fetchCatalogManifest, fetchCatalogPage, fetchCatalogSearch, isCatalogHttpError, isValidSearchOwner, normalizeCatalogBaseUrl, normalizeSearchQuery, resolveSearchLimit, type CatalogSearchPayload } from "./catalog-http";
+import type { CatalogFailure, CatalogGenerationInfo, CatalogManifest, CatalogManifestResult, CatalogPage, CatalogPageInput, CatalogPageResult, CatalogResult, CatalogSearchInput, CatalogSearchResult, CatalogSnapshot } from "./catalog-types";
 
 /** Client side generation TTL. Deliberately much shorter than the server side 6h rotation. */
 export const CATALOG_GENERATION_TTL_MS = 5 * 60_000;
@@ -91,10 +65,7 @@ type SearchCacheEntry = {
   fetchedAt: number;
 };
 
-const toGenerationInfo = (
-  snapshot: CatalogSnapshot,
-  isFallback: boolean
-): CatalogGenerationInfo => ({
+const toGenerationInfo = (snapshot: CatalogSnapshot, isFallback: boolean): CatalogGenerationInfo => ({
   generation: snapshot.generation,
   generatedAt: snapshot.generatedAt,
   pageCount: snapshot.pageCount,
@@ -109,17 +80,10 @@ const toGenerationInfo = (
  * to one generation"), but the moment the server drops that snapshot we return
  * to `current` instead of getting stuck on a generation that no longer exists.
  */
-export const selectActiveGeneration = (
-  manifest: CatalogManifest,
-  previousActive: CatalogGenerationInfo | null
-): CatalogGenerationInfo => {
+export const selectActiveGeneration = (manifest: CatalogManifest, previousActive: CatalogGenerationInfo | null): CatalogGenerationInfo => {
   const previousSnapshot = manifest.previous;
 
-  if (
-    previousActive?.isFallback &&
-    previousSnapshot &&
-    previousSnapshot.generation === previousActive.generation
-  ) {
+  if (previousActive?.isFallback && previousSnapshot && previousSnapshot.generation === previousActive.generation) {
     return toGenerationInfo(previousSnapshot, true);
   }
 
@@ -235,11 +199,7 @@ export const createCatalogClient = (options: CatalogClientOptions = {}): Catalog
     for (;;) {
       assertBudget(budget);
 
-      if (
-        activeGeneration &&
-        cachedManifest &&
-        now() - manifestFetchedAt < CATALOG_GENERATION_TTL_MS
-      ) {
+      if (activeGeneration && cachedManifest && now() - manifestFetchedAt < CATALOG_GENERATION_TTL_MS) {
         return activeGeneration;
       }
 
@@ -248,11 +208,7 @@ export const createCatalogClient = (options: CatalogClientOptions = {}): Catalog
       try {
         manifest = await loadManifest();
       } catch (error: unknown) {
-        if (
-          isCatalogHttpError(error) &&
-          error.code === "warming" &&
-          budget.warmingAttemptsLeft > 0
-        ) {
+        if (isCatalogHttpError(error) && error.code === "warming" && budget.warmingAttemptsLeft > 0) {
           budget.warmingAttemptsLeft -= 1;
           await waitForRetry(error.retryAfterSeconds);
           continue;
@@ -274,10 +230,7 @@ export const createCatalogClient = (options: CatalogClientOptions = {}): Catalog
   };
 
   /** `pagination.total` is more authoritative than the manifest total (see spec A3). */
-  const applyPageTotal = (
-    generation: CatalogGenerationInfo,
-    total: number
-  ): CatalogGenerationInfo => {
+  const applyPageTotal = (generation: CatalogGenerationInfo, total: number): CatalogGenerationInfo => {
     if (!Number.isFinite(total) || total < 0 || total === generation.total) {
       return generation;
     }
@@ -347,11 +300,7 @@ export const createCatalogClient = (options: CatalogClientOptions = {}): Catalog
     }
   };
 
-  const toSearchResult = (
-    payload: CatalogSearchPayload,
-    query: string,
-    limit: number
-  ): CatalogSearchResult => ({
+  const toSearchResult = (payload: CatalogSearchPayload, query: string, limit: number): CatalogSearchResult => ({
     query: payload.query === "" ? query : payload.query,
     skills: payload.data,
     searchType: payload.searchType,
@@ -362,10 +311,7 @@ export const createCatalogClient = (options: CatalogClientOptions = {}): Catalog
   const search = async (input: CatalogSearchInput): Promise<CatalogResult<CatalogSearchResult>> => {
     const query = normalizeSearchQuery(typeof input?.query === "string" ? input.query : "");
 
-    if (
-      query.length < CATALOG_SEARCH_MIN_QUERY_LENGTH ||
-      query.length > CATALOG_SEARCH_MAX_QUERY_LENGTH
-    ) {
+    if (query.length < CATALOG_SEARCH_MIN_QUERY_LENGTH || query.length > CATALOG_SEARCH_MAX_QUERY_LENGTH) {
       return {
         ok: false,
         error: {
@@ -441,9 +387,7 @@ export const createCatalogClient = (options: CatalogClientOptions = {}): Catalog
     }
   };
 
-  const getManifest = async (
-    manifestOptions: { forceRefresh?: boolean } = {}
-  ): Promise<CatalogResult<CatalogManifestResult>> => {
+  const getManifest = async (manifestOptions: { forceRefresh?: boolean } = {}): Promise<CatalogResult<CatalogManifestResult>> => {
     const budget = createBudget();
 
     if (manifestOptions.forceRefresh === true) {

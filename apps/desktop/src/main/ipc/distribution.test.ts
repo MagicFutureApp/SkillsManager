@@ -5,14 +5,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { createDbClient } from "../../db/client";
-import {
-  agentTargets,
-  installInstances,
-  repositories,
-  skillTargetPreferences,
-  skillUnits,
-  skillVersions
-} from "../../db/schema";
+import { agentTargets, installInstances, repositories, skillTargetPreferences, skillUnits, skillVersions } from "../../db/schema";
 import { executeDistribution, previewDistribution } from "./distribution";
 
 describe("distribution IPC handlers", () => {
@@ -79,9 +72,7 @@ describe("distribution IPC handlers", () => {
       { now: () => createdAt }
     );
 
-    await expect(readFile(path.join(targetPath, "review-bot", "SKILL.md"), "utf8")).resolves.toBe(
-      "# Review Bot\n"
-    );
+    await expect(readFile(path.join(targetPath, "review-bot", "SKILL.md"), "utf8")).resolves.toBe("# Review Bot\n");
     expect(result.summary).toMatchObject({
       failed: 0,
       installed: 1,
@@ -173,9 +164,7 @@ describe("distribution IPC handlers", () => {
 
     expect(result.preview.items).toEqual([expect.objectContaining({ action: "skip" })]);
     expect(result.summary).toMatchObject({ installed: 1, skipped: 0 });
-    expect(result.items).toEqual([
-      expect.objectContaining({ action: "install", result: "installed" })
-    ]);
+    expect(result.items).toEqual([expect.objectContaining({ action: "install", result: "installed" })]);
     expect(copiedPaths).toEqual([{ sourcePath, targetPath }]);
   });
 
@@ -184,13 +173,7 @@ describe("distribution IPC handlers", () => {
     const createdAt = new Date("2026-07-02T00:00:00.000Z");
     const workspace = await mkdtemp(path.join(os.tmpdir(), "skills-manager-home-cache-"));
     const targetPath = path.join(workspace, "target");
-    const expectedSourcePath = path.join(
-      os.homedir(),
-      ".skills-manager",
-      "cache",
-      "team-skills",
-      "review-bot"
-    );
+    const expectedSourcePath = path.join(os.homedir(), ".skills-manager", "cache", "team-skills", "review-bot");
     const copiedPaths: Array<{ sourcePath: string; targetPath: string }> = [];
 
     await seedPreviewFixture(db, createdAt, {
@@ -264,9 +247,7 @@ describe("distribution IPC handlers", () => {
       },
       { now: () => createdAt }
     );
-    await expect(readFile(path.join(conflictingPath, "SKILL.md"), "utf8")).resolves.toBe(
-      "# Existing\n"
-    );
+    await expect(readFile(path.join(conflictingPath, "SKILL.md"), "utf8")).resolves.toBe("# Existing\n");
 
     const overwriteResult = await executeDistribution(
       db,
@@ -284,9 +265,7 @@ describe("distribution IPC handlers", () => {
       { now: () => createdAt }
     );
 
-    await expect(readFile(path.join(conflictingPath, "SKILL.md"), "utf8")).resolves.toBe(
-      "# Review Bot\n"
-    );
+    await expect(readFile(path.join(conflictingPath, "SKILL.md"), "utf8")).resolves.toBe("# Review Bot\n");
     expect(overwriteResult.summary).toMatchObject({
       conflicts: 0,
       installed: 1
@@ -354,11 +333,7 @@ const seedPreviewFixture = async (
   });
 };
 
-const seedInstalledFixture = async (
-  db: ReturnType<typeof createDbClient>,
-  createdAt: Date,
-  targetRoot: string
-): Promise<void> => {
+const seedInstalledFixture = async (db: ReturnType<typeof createDbClient>, createdAt: Date, targetRoot: string): Promise<void> => {
   await db.insert(installInstances).values({
     agentTargetId: "target-codex",
     id: "install-review",

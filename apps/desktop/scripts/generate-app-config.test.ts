@@ -3,16 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-import {
-  canonicalizeAppConfigUrl,
-  findInvalidAppConfigKeys,
-  findMissingAppConfigKeys,
-  generateAppConfig,
-  isStrictMode,
-  isValidAppConfigUrl,
-  readAppConfigValues,
-  renderAppConfigModule
-} from "./generate-app-config";
+import { canonicalizeAppConfigUrl, findInvalidAppConfigKeys, findMissingAppConfigKeys, generateAppConfig, isStrictMode, isValidAppConfigUrl, readAppConfigValues, renderAppConfigModule } from "./generate-app-config";
 
 vi.mock("node:fs");
 
@@ -218,10 +209,7 @@ describe("generateAppConfig", () => {
   });
 
   it("writes empty strings for malformed values on a non-strict run instead of baking them", () => {
-    const exitCode = generateAppConfig(
-      { SKILLS_MANAGER_BASE_URL: "htpp://example.app", SKILLS_MANAGER_CATALOG_BASE_URL: "not-a-url" },
-      []
-    );
+    const exitCode = generateAppConfig({ SKILLS_MANAGER_BASE_URL: "htpp://example.app", SKILLS_MANAGER_CATALOG_BASE_URL: "not-a-url" }, []);
 
     expect(exitCode).toBe(0);
     const content = mockedWriteFileSync.mock.calls[0][1] as string;
@@ -232,10 +220,7 @@ describe("generateAppConfig", () => {
   it("fails with exit 1 when a required value is missing under strict mode", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-    const exitCode = generateAppConfig(
-      { SKILLS_MANAGER_BASE_URL: "", SKILLS_MANAGER_CATALOG_BASE_URL: "https://catalog.example.dev" },
-      ["--strict"]
-    );
+    const exitCode = generateAppConfig({ SKILLS_MANAGER_BASE_URL: "", SKILLS_MANAGER_CATALOG_BASE_URL: "https://catalog.example.dev" }, ["--strict"]);
 
     expect(exitCode).toBe(1);
     expect(mockedWriteFileSync).not.toHaveBeenCalled();
@@ -247,10 +232,7 @@ describe("generateAppConfig", () => {
   it("fails with exit 1 when a required value is not a valid https URL under strict mode", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-    const exitCode = generateAppConfig(
-      { SKILLS_MANAGER_BASE_URL: "sk.magicfuture.app", SKILLS_MANAGER_CATALOG_BASE_URL: "http://catalog.example.dev" },
-      ["--strict"]
-    );
+    const exitCode = generateAppConfig({ SKILLS_MANAGER_BASE_URL: "sk.magicfuture.app", SKILLS_MANAGER_CATALOG_BASE_URL: "http://catalog.example.dev" }, ["--strict"]);
 
     expect(exitCode).toBe(1);
     expect(mockedWriteFileSync).not.toHaveBeenCalled();

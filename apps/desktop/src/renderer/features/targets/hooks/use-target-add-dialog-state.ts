@@ -46,11 +46,7 @@ export const editableTargetAgentDirectoryDefinitions = [
   { directoryName: ".gemini", name: "Gemini CLI", type: "gemini-cli" }
 ] satisfies Array<Omit<TargetDirectoryAgentOption, "targetPath">>;
 
-export const useTargetAddDialogState = <TResult>({
-  isSaveAvailable,
-  onSaved,
-  saveTarget
-}: UseTargetAddDialogStateOptions<TResult>): TargetAddDialogState => {
+export const useTargetAddDialogState = <TResult>({ isSaveAvailable, onSaved, saveTarget }: UseTargetAddDialogStateOptions<TResult>): TargetAddDialogState => {
   const [addTargetError, setAddTargetError] = useState("");
   const [addTargetName, setAddTargetName] = useState("");
   const [addTargetPath, setAddTargetPath] = useState("");
@@ -58,8 +54,7 @@ export const useTargetAddDialogState = <TResult>({
   const [isAddTargetDialogOpen, setIsAddTargetDialogOpen] = useState(false);
   const [isSavingTarget, setIsSavingTarget] = useState(false);
   const [isTargetNameDirty, setIsTargetNameDirty] = useState(false);
-  const [pendingTargetAgentDirectory, setPendingTargetAgentDirectory] =
-    useState<PendingTargetAgentDirectory | null>(null);
+  const [pendingTargetAgentDirectory, setPendingTargetAgentDirectory] = useState<PendingTargetAgentDirectory | null>(null);
   const [selectedTargetAgentType, setSelectedTargetAgentType] = useState<string | null>(null);
 
   const resetTargetForm = () => {
@@ -103,10 +98,7 @@ export const useTargetAddDialogState = <TResult>({
     });
   };
 
-  const applyCustomTargetAgentDirectoryName = (
-    directoryName: string,
-    pendingDirectory: PendingTargetAgentDirectory | null = pendingTargetAgentDirectory
-  ) => {
+  const applyCustomTargetAgentDirectoryName = (directoryName: string, pendingDirectory: PendingTargetAgentDirectory | null = pendingTargetAgentDirectory) => {
     if (!pendingDirectory) {
       return;
     }
@@ -120,9 +112,7 @@ export const useTargetAddDialogState = <TResult>({
       return;
     }
 
-    applyResolvedTargetPath(
-      joinTargetPathSegments(pendingDirectory.basePath, normalizedDirectoryName, "skills")
-    );
+    applyResolvedTargetPath(joinTargetPathSegments(pendingDirectory.basePath, normalizedDirectoryName, "skills"));
   };
 
   const selectCustomTargetAgentDirectoryOption = () => {
@@ -168,9 +158,7 @@ export const useTargetAddDialogState = <TResult>({
         return currentName;
       }
 
-      return deriveTargetNameFromPath(
-        resolution.targetPath ?? resolution.options[0]?.targetPath ?? resolution.basePath
-      );
+      return deriveTargetNameFromPath(resolution.targetPath ?? resolution.options[0]?.targetPath ?? resolution.basePath);
     });
   };
 
@@ -189,10 +177,7 @@ export const useTargetAddDialogState = <TResult>({
     const name = addTargetName.trim();
     const targetPath = addTargetPath.trim();
 
-    if (
-      selectedTargetAgentType === customTargetAgentType &&
-      !normalizeCustomTargetAgentDirectoryName(customTargetAgentDirectoryName)
-    ) {
+    if (selectedTargetAgentType === customTargetAgentType && !normalizeCustomTargetAgentDirectoryName(customTargetAgentDirectoryName)) {
       setAddTargetError("customAgentDirectoryRequired");
       return;
     }
@@ -254,13 +239,10 @@ export const deriveTargetNameFromPath = (targetPath: string): string => {
 export const createEditableTargetAgentDirectory = (targetPath: string) => {
   const normalizedPath = targetPath.trim().replace(/[\\/]+$/g, "");
   const lastSegment = getLastPathSegment(normalizedPath);
-  const agentDirectoryPath =
-    lastSegment === "skills" ? getPathDirname(normalizedPath) : normalizedPath;
+  const agentDirectoryPath = lastSegment === "skills" ? getPathDirname(normalizedPath) : normalizedPath;
   const agentDirectoryName = getLastPathSegment(agentDirectoryPath);
   const basePath = getPathDirname(agentDirectoryPath) || normalizedPath;
-  const knownDefinition = editableTargetAgentDirectoryDefinitions.find(
-    (definition) => definition.directoryName === agentDirectoryName
-  );
+  const knownDefinition = editableTargetAgentDirectoryDefinitions.find((definition) => definition.directoryName === agentDirectoryName);
 
   return {
     basePath,

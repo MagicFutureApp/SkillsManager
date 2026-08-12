@@ -1,10 +1,4 @@
-import {
-  providerFilterOptions,
-  providerStatusOptions,
-  type ProviderFilter,
-  type ProviderSort,
-  type ProviderStatusFilter
-} from "./provider-data";
+import { providerFilterOptions, providerStatusOptions, type ProviderFilter, type ProviderSort, type ProviderStatusFilter } from "./provider-data";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, type SelectOption } from "@/components/ui/select";
 import React from "react";
@@ -49,20 +43,9 @@ const providerSortOptions = (copy: ProviderFiltersProps["copy"]): SelectOption<P
   { value: "provider", label: copy.sortProvider }
 ];
 
-export const ProviderFilters = ({
-  copy,
-  provider,
-  sort,
-  status,
-  onProviderChange,
-  onSortChange,
-  onStatusChange
-}: ProviderFiltersProps) => {
+export const ProviderFilters = ({ copy, provider, sort, status, onProviderChange, onSortChange, onStatusChange }: ProviderFiltersProps) => {
   return (
-    <section
-      className="grid grid-cols-3 items-end gap-3 rounded-xl border border-border bg-card p-4 max-[860px]:grid-cols-1"
-      aria-label={copy.ariaLabel}
-    >
+    <section className="grid grid-cols-3 items-end gap-3 rounded-xl border border-border bg-card p-4 max-[860px]:grid-cols-1" aria-label={copy.ariaLabel}>
       <FilterField label={copy.provider}>
         <Select value={provider} options={providerFilterOptions} onValueChange={onProviderChange} />
       </FilterField>

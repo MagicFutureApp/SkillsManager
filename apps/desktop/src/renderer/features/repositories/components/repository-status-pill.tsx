@@ -13,14 +13,5 @@ const statusClassName: Record<RepositoryScanStatus, string> = {
 export const RepositoryStatusPill = ({ status }: { status: RepositoryScanStatus }) => {
   const { t } = useTranslation();
 
-  return (
-    <span
-      className={cn(
-        "inline-flex min-h-6 w-max items-center rounded-full border px-2 text-xs",
-        statusClassName[status]
-      )}
-    >
-      {t(`repositories.status.${status}`)}
-    </span>
-  );
+  return <span className={cn("inline-flex min-h-6 w-max items-center rounded-full border px-2 text-xs", statusClassName[status])}>{t(`repositories.status.${status}`)}</span>;
 };

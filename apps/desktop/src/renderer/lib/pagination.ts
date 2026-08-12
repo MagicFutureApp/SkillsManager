@@ -11,15 +11,7 @@ export type PaginationState = {
   totalPages: number;
 };
 
-export const createPaginationState = ({
-  currentPage,
-  pageSize = DEFAULT_PAGE_SIZE,
-  totalItems
-}: {
-  currentPage: number;
-  pageSize?: number;
-  totalItems: number;
-}): PaginationState => {
+export const createPaginationState = ({ currentPage, pageSize = DEFAULT_PAGE_SIZE, totalItems }: { currentPage: number; pageSize?: number; totalItems: number }): PaginationState => {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const currentPageNumber = clampPageNumber(currentPage, totalPages);
   const startIndex = totalItems === 0 ? 0 : (currentPageNumber - 1) * pageSize + 1;

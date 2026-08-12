@@ -13,14 +13,7 @@ describe("renderer Vite configuration", () => {
   it("uses relative local resource URLs in the renderer HTML", () => {
     const html = readFileSync("src/renderer/index.html", "utf8");
     const document = new DOMParser().parseFromString(html, "text/html");
-    const resourceUrls = [
-      ...Array.from(document.querySelectorAll<HTMLLinkElement>("link[href]"), (element) =>
-        element.getAttribute("href")
-      ),
-      ...Array.from(document.querySelectorAll<HTMLScriptElement>("script[src]"), (element) =>
-        element.getAttribute("src")
-      )
-    ];
+    const resourceUrls = [...Array.from(document.querySelectorAll<HTMLLinkElement>("link[href]"), (element) => element.getAttribute("href")), ...Array.from(document.querySelectorAll<HTMLScriptElement>("script[src]"), (element) => element.getAttribute("src"))];
 
     expect(resourceUrls).not.toContainEqual(expect.stringMatching(/^\//));
   });

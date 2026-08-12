@@ -15,17 +15,11 @@ export type NavigationBadgeCountsResult = {
   counts: NavigationBadgeCounts;
 };
 
-export const getNavigationBadgeCounts = async (
-  db: DbClient
-): Promise<NavigationBadgeCountsResult> => {
+export const getNavigationBadgeCounts = async (db: DbClient): Promise<NavigationBadgeCountsResult> => {
   const repositoryRepository = createRepositoryRepository(db);
   const skillRepository = createSkillRepository(db);
   const targetRepository = createTargetRepository(db);
-  const [repositoryCount, skillCount, targetCount] = await Promise.all([
-    repositoryRepository.count(),
-    skillRepository.count(),
-    targetRepository.count()
-  ]);
+  const [repositoryCount, skillCount, targetCount] = await Promise.all([repositoryRepository.count(), skillRepository.count(), targetRepository.count()]);
 
   return {
     counts: {

@@ -1,14 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  APP_META,
-  CATALOG_BASE_URL,
-  MAIN_MINI_WIDTH,
-  SIDEBAR_AUTO_COLLAPSE_WIDTH,
-  SIDEBAR_COLLAPSE_WIDTH,
-  SIDEBAR_EXPAND_WIDTH,
-  WINDOW_MIN_WIDTH
-} from "./app-constants";
+import { APP_META, CATALOG_BASE_URL, MAIN_MINI_WIDTH, SIDEBAR_AUTO_COLLAPSE_WIDTH, SIDEBAR_COLLAPSE_WIDTH, SIDEBAR_EXPAND_WIDTH, WINDOW_MIN_WIDTH } from "./app-constants";
 
 describe("app constants", () => {
   it("keeps shell and window widths derived from one source", () => {

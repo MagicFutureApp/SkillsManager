@@ -3,13 +3,8 @@ import React from "react";
 
 const RepositoriesPageContext = React.createContext<RepositoriesPageState | null>(null);
 
-export const RepositoriesPageProvider = ({
-  children,
-  state
-}: React.PropsWithChildren<{ state: RepositoriesPageState }>) => {
-  return (
-    <RepositoriesPageContext.Provider value={state}>{children}</RepositoriesPageContext.Provider>
-  );
+export const RepositoriesPageProvider = ({ children, state }: React.PropsWithChildren<{ state: RepositoriesPageState }>) => {
+  return <RepositoriesPageContext.Provider value={state}>{children}</RepositoriesPageContext.Provider>;
 };
 
 export const useRepositoriesPageContext = () => {

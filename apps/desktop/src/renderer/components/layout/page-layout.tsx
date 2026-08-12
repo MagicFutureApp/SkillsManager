@@ -13,10 +13,7 @@ export const PageLayout = ({ Main, Sider, siderLabel }: PageLayoutProps) => {
         <Main />
       </main>
 
-      <aside
-        className="grid min-h-0 content-start gap-3 overflow-y-auto border-l border-border bg-card px-5 py-6"
-        aria-label={siderLabel}
-      >
+      <aside className="grid min-h-0 content-start gap-3 overflow-y-auto border-l border-border bg-card px-5 py-6" aria-label={siderLabel}>
         <Sider />
       </aside>
     </div>

@@ -5,28 +5,14 @@ import os from "node:os";
 import path from "node:path";
 import { minimatch } from "minimatch";
 import { createRepositoryRepository } from "../../db/repositories/repositoryRepository";
-import {
-  deriveSkillPatterns,
-  inspectRepositorySource
-} from "../../core/repositories/source-inspection";
+import { deriveSkillPatterns, inspectRepositorySource } from "../../core/repositories/source-inspection";
 import { scanSkillDirectory } from "../../core/skills/skill-scanner";
 import { resolveDb, type DbClient, type DbProvider } from "./db-provider";
 import { getDistributionSettings, getGitHubToken } from "./settings";
 import { executeDistribution } from "./distribution";
 import { expandHomePath } from "../path-utils";
 import type { RepositorySourceInspection } from "../../core/repositories/source-inspection";
-import type {
-  CreateRepositoryInput,
-  DeleteRepositoryResult,
-  RepositoryApiRecord,
-  RepositoryDeletePreview,
-  RepositorySyncFailure,
-  RepositorySyncFailureCategory,
-  RepositorySyncDistributionSummary,
-  RepositorySyncProgressEvent,
-  RepositorySyncResultItem,
-  UpdateRepositoryInput
-} from "../../core/repositories/repository-api";
+import type { CreateRepositoryInput, DeleteRepositoryResult, RepositoryApiRecord, RepositoryDeletePreview, RepositorySyncFailure, RepositorySyncFailureCategory, RepositorySyncDistributionSummary, RepositorySyncProgressEvent, RepositorySyncResultItem, UpdateRepositoryInput } from "../../core/repositories/repository-api";
 
 export type RepositoriesListResult = {
   repositories: RepositoryApiRecord[];
@@ -57,9 +43,7 @@ type RepositorySyncOperations = {
   copyLocalSource: (sourcePath: string, cachePath: string) => Promise<void>;
   ensureGitRepository: (remoteUrl: string, cachePath: string, branch: string) => Promise<void>;
   logDirectory?: string;
-  materializeSourceCache?: (
-    input: SourceCacheMaterializationInput
-  ) => Promise<SourceCacheMaterializationResult>;
+  materializeSourceCache?: (input: SourceCacheMaterializationInput) => Promise<SourceCacheMaterializationResult>;
   onProgress?: (event: RepositorySyncProgressEvent) => void;
   resolveCommitSha: (cachePath: string) => Promise<string>;
 };
@@ -88,30 +72,19 @@ export const getRepositories = async (db: DbClient): Promise<RepositoriesListRes
   };
 };
 
-export const createRepository = async (
-  db: DbClient,
-  input: CreateRepositoryInput
-): Promise<RepositoryApiRecord> => {
+export const createRepository = async (db: DbClient, input: CreateRepositoryInput): Promise<RepositoryApiRecord> => {
   const repositoryRepository = createRepositoryRepository(db);
 
   return repositoryRepository.create(normalizeCreateRepositoryInput(input));
 };
 
-export const updateRepository = async (
-  db: DbClient,
-  repositoryId: string,
-  input: UpdateRepositoryInput
-): Promise<RepositoryApiRecord> => {
+export const updateRepository = async (db: DbClient, repositoryId: string, input: UpdateRepositoryInput): Promise<RepositoryApiRecord> => {
   const repositoryRepository = createRepositoryRepository(db);
 
   return repositoryRepository.update(repositoryId, normalizeUpdateRepositoryInput(input));
 };
 
-export const deleteRepository = async (
-  db: DbClient,
-  repositoryId: string,
-  files: RepositoryFileOperations = { removeLocalCache: removeRepositoryLocalCache }
-): Promise<DeleteRepositoryResult> => {
+export const deleteRepository = async (db: DbClient, repositoryId: string, files: RepositoryFileOperations = { removeLocalCache: removeRepositoryLocalCache }): Promise<DeleteRepositoryResult> => {
   const repositoryRepository = createRepositoryRepository(db);
   const preview = await repositoryRepository.getDeletePreview(repositoryId);
 
@@ -120,10 +93,7 @@ export const deleteRepository = async (
   return repositoryRepository.delete(repositoryId);
 };
 
-export const getRepositoryDeletePreview = async (
-  db: DbClient,
-  repositoryId: string
-): Promise<RepositoryDeletePreview> => {
+export const getRepositoryDeletePreview = async (db: DbClient, repositoryId: string): Promise<RepositoryDeletePreview> => {
   const repositoryRepository = createRepositoryRepository(db);
 
   return repositoryRepository.getDeletePreview(repositoryId);
@@ -139,9 +109,7 @@ export const inspectRepositorySourceWithSettings = async (
   }
 ): Promise<RepositorySourceInspection> => {
   if (isLocalPath(remoteUrl)) {
-    return (operations.inspectLocalSource ?? inspectLocalRepositorySource)(
-      expandHomePath(remoteUrl)
-    );
+    return (operations.inspectLocalSource ?? inspectLocalRepositorySource)(expandHomePath(remoteUrl));
   }
 
   return operations.inspectSource(remoteUrl, {
@@ -192,16 +160,10 @@ export const openRepositoryLocation = async (
   await operations.openExternal(toRepositoryWebUrl(normalizedLocation));
 };
 
-export const syncRepositories = async (
-  db: DbClient,
-  repositoryIds: string[],
-  operations: RepositorySyncOperations = defaultSyncOperations
-): Promise<RepositoriesSyncResult> => {
+export const syncRepositories = async (db: DbClient, repositoryIds: string[], operations: RepositorySyncOperations = defaultSyncOperations): Promise<RepositoriesSyncResult> => {
   const repositoryRepository = createRepositoryRepository(db);
   const repositoriesResult = await getRepositories(db);
-  const repositoriesById = new Map(
-    repositoriesResult.repositories.map((repository) => [repository.id, repository])
-  );
+  const repositoriesById = new Map(repositoriesResult.repositories.map((repository) => [repository.id, repository]));
   const results: RepositoriesSyncResult["results"] = [];
 
   for (const repositoryId of repositoryIds) {
@@ -224,11 +186,7 @@ export const syncRepositories = async (
     const remoteUrl = expandHomePath(repository.remoteUrl);
     const discoveryEntries = getRepositoryDiscoveryEntries(repository.configJson);
     const hasSourceCacheMaterializer = Boolean(operations.materializeSourceCache);
-    const sourcePath = isLocalPath(repository.remoteUrl)
-      ? remoteUrl
-      : hasSourceCacheMaterializer
-        ? buildRepositorySourceWorktreePath(cachePath)
-        : cachePath;
+    const sourcePath = isLocalPath(repository.remoteUrl) ? remoteUrl : hasSourceCacheMaterializer ? buildRepositorySourceWorktreePath(cachePath) : cachePath;
     let scanDiscoveryEntries = discoveryEntries;
 
     try {
@@ -289,9 +247,7 @@ export const syncRepositories = async (
       const distributionSettings = await getDistributionSettings(db);
 
       if (distributionSettings.autoDistributeOnSync) {
-        const skillUnitIds = discoveredSkills.map((skill) =>
-          buildSkillUnitId(repositoryId, skill.skillKey)
-        );
+        const skillUnitIds = discoveredSkills.map((skill) => buildSkillUnitId(repositoryId, skill.skillKey));
         const distributionResult = await executeDistribution(db, {
           skillUnitIds,
           triggerSource: "post_sync"
@@ -336,40 +292,25 @@ export const registerRepositoriesIpc = (db: DbProvider): void => {
     return getRepositories(resolveDb(db));
   });
 
-  ipcMain.handle(
-    "repositories:create",
-    (_event, input: CreateRepositoryInput): Promise<RepositoryApiRecord> => {
-      return createRepository(resolveDb(db), input);
-    }
-  );
+  ipcMain.handle("repositories:create", (_event, input: CreateRepositoryInput): Promise<RepositoryApiRecord> => {
+    return createRepository(resolveDb(db), input);
+  });
 
-  ipcMain.handle(
-    "repositories:update",
-    (_event, repositoryId: string, input: UpdateRepositoryInput): Promise<RepositoryApiRecord> => {
-      return updateRepository(resolveDb(db), repositoryId, input);
-    }
-  );
+  ipcMain.handle("repositories:update", (_event, repositoryId: string, input: UpdateRepositoryInput): Promise<RepositoryApiRecord> => {
+    return updateRepository(resolveDb(db), repositoryId, input);
+  });
 
-  ipcMain.handle(
-    "repositories:delete",
-    (_event, repositoryId: string): Promise<DeleteRepositoryResult> => {
-      return deleteRepository(resolveDb(db), repositoryId);
-    }
-  );
+  ipcMain.handle("repositories:delete", (_event, repositoryId: string): Promise<DeleteRepositoryResult> => {
+    return deleteRepository(resolveDb(db), repositoryId);
+  });
 
-  ipcMain.handle(
-    "repositories:getDeletePreview",
-    (_event, repositoryId: string): Promise<RepositoryDeletePreview> => {
-      return getRepositoryDeletePreview(resolveDb(db), repositoryId);
-    }
-  );
+  ipcMain.handle("repositories:getDeletePreview", (_event, repositoryId: string): Promise<RepositoryDeletePreview> => {
+    return getRepositoryDeletePreview(resolveDb(db), repositoryId);
+  });
 
-  ipcMain.handle(
-    "repositories:inspectSource",
-    async (_event, remoteUrl: string): Promise<RepositorySourceInspection> => {
-      return inspectRepositorySourceWithSettings(resolveDb(db), remoteUrl);
-    }
-  );
+  ipcMain.handle("repositories:inspectSource", async (_event, remoteUrl: string): Promise<RepositorySourceInspection> => {
+    return inspectRepositorySourceWithSettings(resolveDb(db), remoteUrl);
+  });
 
   ipcMain.handle("repositories:selectLocalPath", (): Promise<string | null> => {
     return selectLocalRepositoryPath();
@@ -379,17 +320,14 @@ export const registerRepositoriesIpc = (db: DbProvider): void => {
     return openRepositoryLocation(location);
   });
 
-  ipcMain.handle(
-    "repositories:sync",
-    (event, repositoryIds: string[]): Promise<RepositoriesSyncResult> => {
-      return syncRepositories(resolveDb(db), repositoryIds, {
-        ...defaultSyncOperations,
-        onProgress: (progressEvent) => {
-          event.sender.send("repositories:syncProgress", progressEvent);
-        }
-      });
-    }
-  );
+  ipcMain.handle("repositories:sync", (event, repositoryIds: string[]): Promise<RepositoriesSyncResult> => {
+    return syncRepositories(resolveDb(db), repositoryIds, {
+      ...defaultSyncOperations,
+      onProgress: (progressEvent) => {
+        event.sender.send("repositories:syncProgress", progressEvent);
+      }
+    });
+  });
 
   ipcMain.handle("repositories:resolveCachePath", (_event, cachePath: string): Promise<string> => {
     return Promise.resolve(expandHomePath(cachePath));
@@ -437,9 +375,7 @@ const removeRepositoryLocalCache = async (localCachePath: string): Promise<void>
   await rm(expandHomePath(localCachePath), { force: true, recursive: true });
 };
 
-const inspectLocalRepositorySource = async (
-  sourcePath: string
-): Promise<RepositorySourceInspection> => {
+const inspectLocalRepositorySource = async (sourcePath: string): Promise<RepositorySourceInspection> => {
   const discoveredSkills = await scanSkillDirectory(sourcePath);
 
   return {
@@ -490,15 +426,7 @@ const defaultSyncOperations: RepositorySyncOperations = {
   }
 };
 
-async function materializeSourceCacheFromDiscoveryEntries({
-  cachePath,
-  discoveryEntries,
-  onProgress,
-  repositoryId,
-  repositoryName,
-  sourceFolderName,
-  sourcePath
-}: SourceCacheMaterializationInput): Promise<SourceCacheMaterializationResult> {
+async function materializeSourceCacheFromDiscoveryEntries({ cachePath, discoveryEntries, onProgress, repositoryId, repositoryName, sourceFolderName, sourcePath }: SourceCacheMaterializationInput): Promise<SourceCacheMaterializationResult> {
   const normalizedDiscoveryEntries = normalizeSkillDiscoveryEntries(discoveryEntries);
 
   await rm(cachePath, { force: true, recursive: true });
@@ -543,16 +471,12 @@ async function materializeSourceCacheFromDiscoveryEntries({
       },
       status: "syncing"
     });
-    await cp(
-      toAbsoluteSourceRootPath(sourcePath, skill.rootPath),
-      path.join(cachePath, ...destinationRootPath.split("/")),
-      {
-        dereference: false,
-        filter: shouldCopySourceCachePath,
-        force: true,
-        recursive: true
-      }
-    );
+    await cp(toAbsoluteSourceRootPath(sourcePath, skill.rootPath), path.join(cachePath, ...destinationRootPath.split("/")), {
+      dereference: false,
+      filter: shouldCopySourceCachePath,
+      force: true,
+      recursive: true
+    });
     onProgress?.({
       repositoryId,
       repositoryName,
@@ -571,24 +495,14 @@ async function materializeSourceCacheFromDiscoveryEntries({
 }
 
 const normalizeSkillDiscoveryEntries = (entries: string[]): string[] => {
-  return entries
-    .map((entry) => toPosixPath(entry).trim().replace(/^\.\//, ""))
-    .filter((entry) => entry.endsWith("SKILL.md"));
+  return entries.map((entry) => toPosixPath(entry).trim().replace(/^\.\//, "")).filter((entry) => entry.endsWith("SKILL.md"));
 };
 
 const matchingDiscoveryEntry = (entryPath: string, discoveryEntries: string[]): string => {
   return discoveryEntries.find((entry) => minimatch(entryPath, entry, { dot: true })) ?? entryPath;
 };
 
-const getMaterializedSkillRootPath = ({
-  discoveryEntry,
-  rootPath,
-  sourceFolderName
-}: {
-  discoveryEntry: string;
-  rootPath: string;
-  sourceFolderName: string;
-}): string => {
+const getMaterializedSkillRootPath = ({ discoveryEntry, rootPath, sourceFolderName }: { discoveryEntry: string; rootPath: string; sourceFolderName: string }): string => {
   if (rootPath === ".") {
     return sanitizePathSegment(sourceFolderName) || "repository";
   }
@@ -670,14 +584,7 @@ const deriveSourceFolderName = (remoteUrl: string, fallbackPath: string): string
 };
 
 const isLocalPath = (value: string): boolean => {
-  return (
-    value === "~" ||
-    value.startsWith("~/") ||
-    value.startsWith(`~${path.sep}`) ||
-    /^[A-Za-z]:[\\/]/.test(value) ||
-    value.startsWith("/") ||
-    value.startsWith(".")
-  );
+  return value === "~" || value.startsWith("~/") || value.startsWith(`~${path.sep}`) || /^[A-Za-z]:[\\/]/.test(value) || value.startsWith("/") || value.startsWith(".");
 };
 
 const toRepositoryWebUrl = (location: string): string => {
@@ -725,9 +632,7 @@ const getRepositoryDiscoveryEntries = (configJson: string): string[] => {
   try {
     const parsed = JSON.parse(configJson) as { patterns?: unknown };
 
-    return Array.isArray(parsed.patterns)
-      ? parsed.patterns.filter((pattern): pattern is string => typeof pattern === "string")
-      : [];
+    return Array.isArray(parsed.patterns) ? parsed.patterns.filter((pattern): pattern is string => typeof pattern === "string") : [];
   } catch {
     return [];
   }
@@ -780,13 +685,7 @@ const toRepositoryDistributionSummary = (
     autoDistributionEnabled,
     blocked: summary.blocked,
     conflicts: summary.conflicts,
-    eligible:
-      summary.installed +
-      summary.updated +
-      summary.skipped +
-      summary.conflicts +
-      summary.blocked +
-      summary.failed,
+    eligible: summary.installed + summary.updated + summary.skipped + summary.conflicts + summary.blocked + summary.failed,
     failed: summary.failed,
     installed: summary.installed,
     skipped: summary.skipped,
@@ -801,19 +700,7 @@ class EmptySkillSourceError extends Error {
   }
 }
 
-const buildSyncFailure = async ({
-  cachePath,
-  error,
-  logDirectory,
-  remoteUrl,
-  repositoryId
-}: {
-  cachePath: string;
-  error: unknown;
-  logDirectory?: string;
-  remoteUrl: string;
-  repositoryId: string;
-}): Promise<RepositorySyncFailure> => {
+const buildSyncFailure = async ({ cachePath, error, logDirectory, remoteUrl, repositoryId }: { cachePath: string; error: unknown; logDirectory?: string; remoteUrl: string; repositoryId: string }): Promise<RepositorySyncFailure> => {
   const rawError = stringifySyncError(error);
   const category = categorizeSyncError(error, rawError);
   const message = friendlySyncErrorMessage(category);
@@ -842,41 +729,15 @@ const categorizeSyncError = (error: unknown, rawError: string): RepositorySyncFa
     return "not-a-skill";
   }
 
-  if (
-    normalized.includes("authentication failed") ||
-    normalized.includes("permission denied (publickey)") ||
-    normalized.includes("could not read from remote repository") ||
-    normalized.includes("repository not found") ||
-    normalized.includes("access denied")
-  ) {
+  if (normalized.includes("authentication failed") || normalized.includes("permission denied (publickey)") || normalized.includes("could not read from remote repository") || normalized.includes("repository not found") || normalized.includes("access denied")) {
     return "auth";
   }
 
-  if (
-    normalized.includes("connection reset") ||
-    normalized.includes("early eof") ||
-    normalized.includes("unexpected disconnect") ||
-    normalized.includes("could not resolve host") ||
-    normalized.includes("failed to connect") ||
-    normalized.includes("network is unreachable") ||
-    normalized.includes("operation timed out")
-  ) {
+  if (normalized.includes("connection reset") || normalized.includes("early eof") || normalized.includes("unexpected disconnect") || normalized.includes("could not resolve host") || normalized.includes("failed to connect") || normalized.includes("network is unreachable") || normalized.includes("operation timed out")) {
     return "network";
   }
 
-  if (
-    errorCode === "EACCES" ||
-    errorCode === "EPERM" ||
-    errorCode === "ENOENT" ||
-    errorCode === "ENOSPC" ||
-    normalized.includes("eacces") ||
-    normalized.includes("eperm") ||
-    normalized.includes("enoent") ||
-    normalized.includes("enospc") ||
-    normalized.includes("permission denied") ||
-    normalized.includes("no such file or directory") ||
-    normalized.includes("read-only file system")
-  ) {
+  if (errorCode === "EACCES" || errorCode === "EPERM" || errorCode === "ENOENT" || errorCode === "ENOSPC" || normalized.includes("eacces") || normalized.includes("eperm") || normalized.includes("enoent") || normalized.includes("enospc") || normalized.includes("permission denied") || normalized.includes("no such file or directory") || normalized.includes("read-only file system")) {
     return "filesystem";
   }
 
@@ -915,47 +776,14 @@ const friendlySyncErrorMessage = (category: RepositorySyncFailureCategory): stri
   return "同步失败。请稍后重试，或查看同步日志了解详细原因。";
 };
 
-const writeSyncErrorLog = async ({
-  cachePath,
-  category,
-  message,
-  rawError,
-  remoteUrl,
-  repositoryId,
-  rootDirectory
-}: {
-  cachePath: string;
-  category: RepositorySyncFailureCategory;
-  message: string;
-  rawError: string;
-  remoteUrl: string;
-  repositoryId: string;
-  rootDirectory?: string;
-}): Promise<string | null> => {
+const writeSyncErrorLog = async ({ cachePath, category, message, rawError, remoteUrl, repositoryId, rootDirectory }: { cachePath: string; category: RepositorySyncFailureCategory; message: string; rawError: string; remoteUrl: string; repositoryId: string; rootDirectory?: string }): Promise<string | null> => {
   try {
     const directory = rootDirectory ?? path.join(os.homedir(), ".skills-manager", "logs", "sync");
     const timestamp = new Date().toISOString();
-    const logPath = path.join(
-      directory,
-      `${sanitizeLogFileName(repositoryId)}-${timestamp.replace(/[:.]/g, "-")}.log`
-    );
+    const logPath = path.join(directory, `${sanitizeLogFileName(repositoryId)}-${timestamp.replace(/[:.]/g, "-")}.log`);
 
     await mkdir(directory, { recursive: true });
-    await writeFile(
-      logPath,
-      [
-        `timestamp: ${timestamp}`,
-        `repositoryId: ${repositoryId}`,
-        `remoteUrl: ${remoteUrl}`,
-        `cachePath: ${cachePath}`,
-        `category: ${category}`,
-        `friendlyMessage: ${message}`,
-        "",
-        "rawError:",
-        rawError
-      ].join("\n"),
-      "utf8"
-    );
+    await writeFile(logPath, [`timestamp: ${timestamp}`, `repositoryId: ${repositoryId}`, `remoteUrl: ${remoteUrl}`, `cachePath: ${cachePath}`, `category: ${category}`, `friendlyMessage: ${message}`, "", "rawError:", rawError].join("\n"), "utf8");
 
     return logPath;
   } catch {

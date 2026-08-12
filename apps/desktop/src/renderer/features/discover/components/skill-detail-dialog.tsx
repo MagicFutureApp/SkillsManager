@@ -1,14 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogClose,
-  DialogDescription,
-  DialogPopup,
-  DialogPortal,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Dialog, DialogBackdrop, DialogClose, DialogDescription, DialogPopup, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import type { CatalogSkill } from "@/global";
 import { Download, ExternalLink } from "lucide-react";
 import React from "react";
@@ -62,14 +54,10 @@ export const SkillDetailDialog = ({ skill, onClose, onOpenExternal }: SkillDetai
 
           {/* Always-visible explanation: a disabled button cannot host a tooltip
               (base button sets `disabled:pointer-events-none`). */}
-          <p className="mt-4 text-xs leading-5 text-muted-foreground">
-            {t("discover.detail.installHint")}
-          </p>
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">{t("discover.detail.installHint")}</p>
 
           <div className="mt-4 flex items-center justify-end gap-2">
-            <DialogClose render={<Button type="button" variant="outline" />}>
-              {t("discover.detail.close")}
-            </DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>{t("discover.detail.close")}</DialogClose>
             {skill.url ? (
               <Button type="button" variant="outline" onClick={() => onOpenExternal(skill.url)}>
                 <ExternalLink data-icon="inline-start" />

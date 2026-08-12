@@ -3,15 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { CreateRepositoryInput } from "../../core/repositories/repository-api";
 import type { DiscoveredSkill } from "../../core/skills/skill-scanner";
 import { createDbClient } from "../client";
-import {
-  agentTargets,
-  installInstances,
-  providers,
-  repositories,
-  skillTargetPreferences,
-  skillUnits,
-  skillVersions
-} from "../schema";
+import { agentTargets, installInstances, providers, repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";
 import { createRepositoryRepository } from "./repositoryRepository";
 
 describe("createRepositoryRepository", () => {
@@ -714,26 +706,24 @@ describe("createRepositoryRepository", () => {
       skillUnits: 2,
       status: "ready"
     });
-    await expect(db.select().from(skillUnits).orderBy(skillUnits.entryPath)).resolves.toMatchObject(
-      [
-        {
-          description: "Writes release notes.",
-          entryPath: "skills/release-notes/SKILL.md",
-          id: "repo-1__skills-release-notes",
-          license: "Proprietary",
-          name: "Release Notes",
-          repositoryId: "repo-1"
-        },
-        {
-          description: "Reviews pull requests.",
-          entryPath: "skills/review-bot/SKILL.md",
-          id: "repo-1__skills-review-bot",
-          license: "MIT",
-          name: "Review Bot",
-          repositoryId: "repo-1"
-        }
-      ]
-    );
+    await expect(db.select().from(skillUnits).orderBy(skillUnits.entryPath)).resolves.toMatchObject([
+      {
+        description: "Writes release notes.",
+        entryPath: "skills/release-notes/SKILL.md",
+        id: "repo-1__skills-release-notes",
+        license: "Proprietary",
+        name: "Release Notes",
+        repositoryId: "repo-1"
+      },
+      {
+        description: "Reviews pull requests.",
+        entryPath: "skills/review-bot/SKILL.md",
+        id: "repo-1__skills-review-bot",
+        license: "MIT",
+        name: "Review Bot",
+        repositoryId: "repo-1"
+      }
+    ]);
     await expect(db.select().from(skillVersions).orderBy(skillVersions.id)).resolves.toMatchObject([
       {
         commitSha: "abcdef123456",
@@ -993,8 +983,7 @@ describe("createRepositoryRepository", () => {
     const [repository] = await repositoryRepository.list();
     expect(repository?.lastSync).toMatchObject({
       endCommitSha: null,
-      errorMessage:
-        "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。",
+      errorMessage: "网络连接中断，暂时无法同步这个 Git 来源。请稍后重试，或检查代理/VPN 后再同步。",
       logPath: "/tmp/sync.log",
       startCommitSha: "before-sha",
       status: "failed"

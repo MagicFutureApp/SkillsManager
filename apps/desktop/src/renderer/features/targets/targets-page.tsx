@@ -18,11 +18,7 @@ export const TargetsPage = () => {
 
   return (
     <TargetsPageProvider state={page}>
-      <PageLayout
-        Main={TargetsPageMain}
-        Sider={TargetsPageSider}
-        siderLabel={t("targets.detail.ariaLabel")}
-      />
+      <PageLayout Main={TargetsPageMain} Sider={TargetsPageSider} siderLabel={t("targets.detail.ariaLabel")} />
       <TargetsPageModal />
       <TargetsEditDialog />
       <TargetsDeleteDialog />

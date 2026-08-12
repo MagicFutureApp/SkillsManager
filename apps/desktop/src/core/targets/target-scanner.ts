@@ -3,13 +3,7 @@ import { constants } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import type {
-  AgentTargetType,
-  SystemTargetRecord,
-  TargetDetectionStatus,
-  TargetScanCandidate,
-  TargetScanRecord
-} from "./target-api";
+import type { AgentTargetType, SystemTargetRecord, TargetDetectionStatus, TargetScanCandidate, TargetScanRecord } from "./target-api";
 
 type RuntimePlatform = NodeJS.Platform;
 
@@ -38,22 +32,13 @@ export type ScanTargetPathOptions = {
   isDirectory?: (candidatePath: string) => Promise<boolean>;
 };
 
-export const scanSystemTargets = async ({
-  canWrite = pathCanWrite,
-  exists = pathExists,
-  homeDir = os.homedir(),
-  isDirectory = pathIsDirectory,
-  pathEnv = process.env.PATH ?? "",
-  platform = process.platform
-}: ScanSystemTargetsOptions = {}): Promise<SystemTargetRecord[]> => {
+export const scanSystemTargets = async ({ canWrite = pathCanWrite, exists = pathExists, homeDir = os.homedir(), isDirectory = pathIsDirectory, pathEnv = process.env.PATH ?? "", platform = process.platform }: ScanSystemTargetsOptions = {}): Promise<SystemTargetRecord[]> => {
   const pathEntries = splitPathEnv(pathEnv, platform);
 
   return Promise.all(
     agentTargetDirectoryDefinitions.map(async (definition) => {
       const targetPath = definition.path(homeDir);
-      const detectedCommandPath = definition.command
-        ? await findExecutablePath(definition.command, pathEntries, exists, platform)
-        : null;
+      const detectedCommandPath = definition.command ? await findExecutablePath(definition.command, pathEntries, exists, platform) : null;
       const directoryExists = await exists(definition.directory(homeDir));
       const appInstalled = Boolean(detectedCommandPath) || directoryExists;
       const scannedTarget = await scanSystemTargetPath(
@@ -71,37 +56,21 @@ export const scanSystemTargets = async ({
       return {
         ...scannedTarget,
         status: appInstalled ? scannedTarget.status : "app-missing",
-        detectionMessage: appInstalled
-          ? scannedTarget.detectionMessage
-          : "Application is not installed.",
+        detectionMessage: appInstalled ? scannedTarget.detectionMessage : "Application is not installed.",
         type: definition.type
       };
     })
   );
 };
 
-export const scanRegisteredTargets = async (
-  targets: TargetScanCandidate[],
-  options: ScanTargetPathOptions = {}
-): Promise<TargetScanRecord[]> => {
+export const scanRegisteredTargets = async (targets: TargetScanCandidate[], options: ScanTargetPathOptions = {}): Promise<TargetScanRecord[]> => {
   return Promise.all(targets.map((target) => scanTargetPath(target, options)));
 };
 
-export const scanTargetPath = async (
-  target: TargetScanCandidate,
-  {
-    canWrite = pathCanWrite,
-    exists = pathExists,
-    isDirectory = pathIsDirectory
-  }: ScanTargetPathOptions = {}
-): Promise<TargetScanRecord> => {
+export const scanTargetPath = async (target: TargetScanCandidate, { canWrite = pathCanWrite, exists = pathExists, isDirectory = pathIsDirectory }: ScanTargetPathOptions = {}): Promise<TargetScanRecord> => {
   try {
     if (!(await exists(target.path))) {
-      return toScannedTarget(
-        target,
-        "path-missing",
-        "Application is installed, but the target directory does not exist."
-      );
+      return toScannedTarget(target, "path-missing", "Application is installed, but the target directory does not exist.");
     }
 
     if (!(await isDirectory(target.path))) {
@@ -109,28 +78,16 @@ export const scanTargetPath = async (
     }
 
     if (!(await canWrite(target.path))) {
-      return toScannedTarget(
-        target,
-        "not-writable",
-        "Target directory exists but is not writable."
-      );
+      return toScannedTarget(target, "not-writable", "Target directory exists but is not writable.");
     }
 
     return toScannedTarget(target, "detected", "Target directory exists and is writable.");
   } catch (error) {
-    return toScannedTarget(
-      target,
-      "scan-error",
-      error instanceof Error ? error.message : "Target scan failed."
-    );
+    return toScannedTarget(target, "scan-error", error instanceof Error ? error.message : "Target scan failed.");
   }
 };
 
-const scanSystemTargetPath = async (
-  target: TargetScanCandidate,
-  agentConfigDirectory: string,
-  options: Required<ScanTargetPathOptions>
-): Promise<TargetScanRecord> => {
+const scanSystemTargetPath = async (target: TargetScanCandidate, agentConfigDirectory: string, options: Required<ScanTargetPathOptions>): Promise<TargetScanRecord> => {
   const scannedTarget = await scanTargetPath(target, options);
 
   if (scannedTarget.status !== "path-missing") {
@@ -146,26 +103,14 @@ const scanSystemTargetPath = async (
   }
 
   if (!(await options.canWrite(agentConfigDirectory))) {
-    return toScannedTarget(
-      target,
-      "not-writable",
-      "Agent config directory exists but is not writable."
-    );
+    return toScannedTarget(target, "not-writable", "Agent config directory exists but is not writable.");
   }
 
-  return toScannedTarget(
-    target,
-    "detected",
-    "Agent config directory exists and can contain the skills directory."
-  );
+  return toScannedTarget(target, "detected", "Agent config directory exists and can contain the skills directory.");
 };
 
 export const normalizeTargetPath = (targetPath: string): string => {
-  const normalized = /^[A-Za-z]:[\\/]/.test(targetPath)
-    ? path.win32.normalize(targetPath)
-    : targetPath.startsWith("/")
-      ? path.posix.normalize(targetPath)
-      : path.normalize(targetPath);
+  const normalized = /^[A-Za-z]:[\\/]/.test(targetPath) ? path.win32.normalize(targetPath) : targetPath.startsWith("/") ? path.posix.normalize(targetPath) : path.normalize(targetPath);
 
   return normalized.replace(/[\\/]+$/, "");
 };
@@ -182,11 +127,7 @@ export const joinTargetPath = (homeDir: string, ...segments: string[]): string =
   return path.join(homeDir, ...segments);
 };
 
-const toScannedTarget = (
-  target: TargetScanCandidate,
-  status: TargetDetectionStatus,
-  detectionMessage: string
-): TargetScanRecord => {
+const toScannedTarget = (target: TargetScanCandidate, status: TargetDetectionStatus, detectionMessage: string): TargetScanRecord => {
   return {
     ...target,
     detectionMessage,
@@ -233,21 +174,12 @@ const splitPathEnv = (pathEnv: string, platform: RuntimePlatform): string[] => {
     .filter(Boolean);
 };
 
-const findExecutablePath = async (
-  command: string,
-  pathEntries: string[],
-  exists: (candidatePath: string) => Promise<boolean>,
-  platform: RuntimePlatform
-): Promise<string | null> => {
-  const commandNames =
-    platform === "win32" ? [command, `${command}.cmd`, `${command}.exe`] : [command];
+const findExecutablePath = async (command: string, pathEntries: string[], exists: (candidatePath: string) => Promise<boolean>, platform: RuntimePlatform): Promise<string | null> => {
+  const commandNames = platform === "win32" ? [command, `${command}.cmd`, `${command}.exe`] : [command];
 
   for (const pathEntry of pathEntries) {
     for (const commandName of commandNames) {
-      const candidatePath =
-        platform === "win32"
-          ? path.win32.join(pathEntry, commandName)
-          : path.posix.join(pathEntry, commandName);
+      const candidatePath = platform === "win32" ? path.win32.join(pathEntry, commandName) : path.posix.join(pathEntry, commandName);
 
       if (await exists(candidatePath)) {
         return candidatePath;

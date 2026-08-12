@@ -20,10 +20,7 @@ export const SkillCard = ({ skill, onOpenDetail }: SkillCardProps) => {
         <h2 className="min-w-0 truncate text-sm font-semibold text-foreground" title={skill.name}>
           {skill.name}
         </h2>
-        <span
-          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs tabular-nums text-muted-foreground"
-          title={`${skill.installs.toLocaleString()} installs`}
-        >
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs tabular-nums text-muted-foreground" title={`${skill.installs.toLocaleString()} installs`}>
           <Download className="size-3" aria-hidden="true" />
           {formatCompact(skill.installs)}
         </span>
@@ -47,12 +44,7 @@ export const SkillCard = ({ skill, onOpenDetail }: SkillCardProps) => {
 
       {/* Stretched trigger: the card's only interactive element, so there is no
           nested-click conflict and the card is a single tab stop. */}
-      <button
-        type="button"
-        onClick={() => onOpenDetail(skill)}
-        aria-label={t("discover.card.openDetailAria", { name: skill.name })}
-        className="absolute inset-0 cursor-pointer rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-      />
+      <button type="button" onClick={() => onOpenDetail(skill)} aria-label={t("discover.card.openDetailAria", { name: skill.name })} className="absolute inset-0 cursor-pointer rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50" />
     </article>
   );
 };

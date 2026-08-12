@@ -1,13 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  MAIN_WINDOW_STATE_SETTING_KEY,
-  loadMainWindowState,
-  parseMainWindowState,
-  resolveMainWindowPlacement,
-  saveMainWindowState,
-  type WindowDisplay
-} from "./window-state";
+import { MAIN_WINDOW_STATE_SETTING_KEY, loadMainWindowState, parseMainWindowState, resolveMainWindowPlacement, saveMainWindowState, type WindowDisplay } from "./window-state";
 
 const appSettings = vi.hoisted(() => ({
   get: vi.fn(),

@@ -1,25 +1,6 @@
-import {
-  adaptRepositoryRecords,
-  createDefaultRepositories,
-  filterRepositories,
-  type RepositoryFormValues,
-  type RepositoryProviderFilter,
-  type RepositorySort,
-  type RepositoryStatusFilter,
-  type RepositoryViewModel
-} from "../components/repository-data";
-import type {
-  RepositoriesSyncProgressEvent,
-  RepositoriesSyncResult,
-  RepositoryDeletePreview
-} from "@/global";
-import {
-  clampPageNumber,
-  createPaginationState,
-  DEFAULT_PAGE_SIZE,
-  getPagedItems,
-  type PaginationState
-} from "@/lib/pagination";
+import { adaptRepositoryRecords, createDefaultRepositories, filterRepositories, type RepositoryFormValues, type RepositoryProviderFilter, type RepositorySort, type RepositoryStatusFilter, type RepositoryViewModel } from "../components/repository-data";
+import type { RepositoriesSyncProgressEvent, RepositoriesSyncResult, RepositoryDeletePreview } from "@/global";
+import { clampPageNumber, createPaginationState, DEFAULT_PAGE_SIZE, getPagedItems, type PaginationState } from "@/lib/pagination";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export type RepositorySyncState =
@@ -53,9 +34,7 @@ export type RepositorySyncProgressDialogState = {
 const MIN_SYNC_PROGRESS_ITEM_DURATION_MS = 1000;
 
 export const useRepositoriesPageState = () => {
-  const [repositories, setRepositories] = useState<RepositoryViewModel[]>(() =>
-    createDefaultRepositories()
-  );
+  const [repositories, setRepositories] = useState<RepositoryViewModel[]>(() => createDefaultRepositories());
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [editingRepositoryId, setEditingRepositoryId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
@@ -70,18 +49,13 @@ export const useRepositoriesPageState = () => {
   const [modalError, setModalError] = useState("");
   const [providerFilter, setProviderFilter] = useState<RepositoryProviderFilter>("all");
   const [query, setQuery] = useState("");
-  const [repositorySyncStates, setRepositorySyncStates] = useState<
-    Record<string, RepositorySyncState>
-  >({});
-  const [syncProgressDialog, setSyncProgressDialog] =
-    useState<RepositorySyncProgressDialogState | null>(null);
+  const [repositorySyncStates, setRepositorySyncStates] = useState<Record<string, RepositorySyncState>>({});
+  const [syncProgressDialog, setSyncProgressDialog] = useState<RepositorySyncProgressDialogState | null>(null);
   const progressItemRepositoryIdsRef = useRef<Map<string, string>>(new Map());
   const progressItemStartedAtRef = useRef<Map<string, number>>(new Map());
   const progressItemCompletionTimeoutsRef = useRef<Map<string, number>>(new Map());
   const syncProgressFinishTimeoutRef = useRef<number | null>(null);
-  const [selectedRepositoryId, setSelectedRepositoryId] = useState<string | null>(
-    () => repositories[0]?.id ?? null
-  );
+  const [selectedRepositoryId, setSelectedRepositoryId] = useState<string | null>(() => repositories[0]?.id ?? null);
   const [sort, setSort] = useState<RepositorySort>("name");
   const [statusFilter, setStatusFilter] = useState<RepositoryStatusFilter>("all");
 
@@ -91,9 +65,7 @@ export const useRepositoriesPageState = () => {
     void loadRepositories().then((nextRepositories) => {
       if (isMounted) {
         setRepositories(nextRepositories);
-        setSelectedRepositoryId(
-          (currentRepositoryId) => currentRepositoryId ?? nextRepositories[0]?.id ?? null
-        );
+        setSelectedRepositoryId((currentRepositoryId) => currentRepositoryId ?? nextRepositories[0]?.id ?? null);
       }
     });
 
@@ -119,9 +91,7 @@ export const useRepositoriesPageState = () => {
 
       if (!progressItemStartedAtRef.current.has(itemId)) {
         progressItemStartedAtRef.current.set(itemId, startedAt);
-        setSyncProgressDialog((currentDialog) =>
-          upsertSyncProgressEvent(currentDialog, { ...event, status: "syncing" })
-        );
+        setSyncProgressDialog((currentDialog) => upsertSyncProgressEvent(currentDialog, { ...event, status: "syncing" }));
       }
 
       const remainingDuration = getRemainingSyncProgressDuration(startedAt, Date.now());
@@ -133,10 +103,7 @@ export const useRepositoriesPageState = () => {
       clearProgressItemCompletionTimeout(itemId, progressItemCompletionTimeoutsRef.current);
 
       if (remainingDuration > 0) {
-        progressItemCompletionTimeoutsRef.current.set(
-          itemId,
-          window.setTimeout(completeItem, remainingDuration)
-        );
+        progressItemCompletionTimeoutsRef.current.set(itemId, window.setTimeout(completeItem, remainingDuration));
         return;
       }
 
@@ -145,10 +112,7 @@ export const useRepositoriesPageState = () => {
 
     return () => {
       unsubscribe?.();
-      clearSyncProgressTimeouts(
-        progressItemCompletionTimeoutsRef.current,
-        syncProgressFinishTimeoutRef
-      );
+      clearSyncProgressTimeouts(progressItemCompletionTimeoutsRef.current, syncProgressFinishTimeoutRef);
     };
   }, []);
 
@@ -158,9 +122,7 @@ export const useRepositoriesPageState = () => {
     }
 
     const timeoutId = window.setTimeout(() => {
-      setSyncProgressDialog((currentDialog) =>
-        currentDialog?.id === syncProgressDialog.id ? null : currentDialog
-      );
+      setSyncProgressDialog((currentDialog) => (currentDialog?.id === syncProgressDialog.id ? null : currentDialog));
     }, 3000);
 
     return () => window.clearTimeout(timeoutId);
@@ -201,10 +163,7 @@ export const useRepositoriesPageState = () => {
     }
 
     setSelectedRepositoryId((currentRepositoryId) => {
-      if (
-        currentRepositoryId &&
-        visibleRepositories.some((repository) => repository.id === currentRepositoryId)
-      ) {
+      if (currentRepositoryId && visibleRepositories.some((repository) => repository.id === currentRepositoryId)) {
         return currentRepositoryId;
       }
 
@@ -212,14 +171,11 @@ export const useRepositoriesPageState = () => {
     });
   }, [visibleRepositories]);
 
-  const selectedRepository =
-    visibleRepositories.find((repository) => repository.id === selectedRepositoryId) ?? null;
-  const editingRepository =
-    repositories.find((repository) => repository.id === editingRepositoryId) ?? null;
+  const selectedRepository = visibleRepositories.find((repository) => repository.id === selectedRepositoryId) ?? null;
+  const editingRepository = repositories.find((repository) => repository.id === editingRepositoryId) ?? null;
   const visibleIds = visibleRepositories.map((repository) => repository.id);
   const visibleCheckedCount = visibleIds.filter((id) => checkedIds.has(id)).length;
-  const visibleAllChecked =
-    visibleRepositories.length > 0 && visibleCheckedCount === visibleRepositories.length;
+  const visibleAllChecked = visibleRepositories.length > 0 && visibleCheckedCount === visibleRepositories.length;
   const visibleSomeChecked = visibleCheckedCount > 0;
   const hasCheckedRepositories = checkedIds.size > 0;
   const syncingRepositoryIds = useMemo(() => {
@@ -230,19 +186,12 @@ export const useRepositoriesPageState = () => {
     );
   }, [repositorySyncStates]);
 
-  const updateRepository = (
-    repositoryId: string | null,
-    updater: (repository: RepositoryViewModel) => RepositoryViewModel
-  ) => {
+  const updateRepository = (repositoryId: string | null, updater: (repository: RepositoryViewModel) => RepositoryViewModel) => {
     if (!repositoryId) {
       return;
     }
 
-    setRepositories((currentRepositories) =>
-      currentRepositories.map((repository) =>
-        repository.id === repositoryId ? updater(repository) : repository
-      )
-    );
+    setRepositories((currentRepositories) => currentRepositories.map((repository) => (repository.id === repositoryId ? updater(repository) : repository)));
   };
 
   const getSyncTargetRepositories = (repositoryIds: string[]) => {
@@ -250,9 +199,7 @@ export const useRepositoriesPageState = () => {
       return [];
     }
 
-    const targetIdSet = new Set(
-      repositoryIds.filter((repositoryId) => !syncingRepositoryIds.has(repositoryId))
-    );
+    const targetIdSet = new Set(repositoryIds.filter((repositoryId) => !syncingRepositoryIds.has(repositoryId)));
 
     if (!targetIdSet.size) {
       return [];
@@ -285,9 +232,7 @@ export const useRepositoriesPageState = () => {
 
     const targetIdSet = new Set(targetRepositories.map((repository) => repository.id));
     const targetRepositoryIds = targetRepositories.map((repository) => repository.id);
-    const nextSelectedRepositoryId = targetIdSet.has(selectedRepositoryId ?? "")
-      ? selectedRepositoryId
-      : (targetRepositoryIds[0] ?? null);
+    const nextSelectedRepositoryId = targetIdSet.has(selectedRepositoryId ?? "") ? selectedRepositoryId : (targetRepositoryIds[0] ?? null);
 
     clearSyncProgressFinishTimeout(syncProgressFinishTimeoutRef);
     setSyncProgressDialog(createSyncProgressDialog(targetRepositories));
@@ -311,9 +256,7 @@ export const useRepositoriesPageState = () => {
 
       const syncResult = await window.skillsManager.syncRepositories(targetRepositoryIds);
       const nextRepositories = await loadRepositories();
-      const resultByRepositoryId = new Map(
-        syncResult.results.map((result) => [result.repositoryId, result])
-      );
+      const resultByRepositoryId = new Map(syncResult.results.map((result) => [result.repositoryId, result]));
 
       setSelectedRepositoryId(nextSelectedRepositoryId);
       setRepositories(nextRepositories);
@@ -359,9 +302,7 @@ export const useRepositoriesPageState = () => {
     } catch (error) {
       const message = error instanceof Error ? error.message : "未知错误。";
 
-      setSyncProgressDialog((currentDialog) =>
-        failSyncProgressDialog(currentDialog, targetRepositories)
-      );
+      setSyncProgressDialog((currentDialog) => failSyncProgressDialog(currentDialog, targetRepositories));
       setRepositorySyncStates((currentStates) => {
         const nextStates = { ...currentStates };
 
@@ -389,22 +330,11 @@ export const useRepositoriesPageState = () => {
   };
 
   const closeSyncProgressDialog = () => {
-    clearSyncProgressTimeouts(
-      progressItemCompletionTimeoutsRef.current,
-      syncProgressFinishTimeoutRef
-    );
+    clearSyncProgressTimeouts(progressItemCompletionTimeoutsRef.current, syncProgressFinishTimeoutRef);
     setSyncProgressDialog(null);
   };
 
-  const finishSyncProgressDialog = ({
-    repositories,
-    repositoryIds,
-    resultByRepositoryId
-  }: {
-    repositories: RepositoryViewModel[];
-    repositoryIds: string[];
-    resultByRepositoryId: Map<string, Awaited<RepositoriesSyncResult>["results"][number]>;
-  }) => {
+  const finishSyncProgressDialog = ({ repositories, repositoryIds, resultByRepositoryId }: { repositories: RepositoryViewModel[]; repositoryIds: string[]; resultByRepositoryId: Map<string, Awaited<RepositoriesSyncResult>["results"][number]> }) => {
     clearSyncProgressFinishTimeout(syncProgressFinishTimeoutRef);
 
     const remainingDuration = getRemainingSyncProgressDurationForRepositories({
@@ -627,9 +557,7 @@ export const useRepositoriesPageState = () => {
       return;
     }
 
-    const absolutePath = await window.skillsManager?.resolveRepositoryCachePath?.(
-      selectedRepository.cachePath
-    );
+    const absolutePath = await window.skillsManager?.resolveRepositoryCachePath?.(selectedRepository.cachePath);
 
     void navigator.clipboard?.writeText(absolutePath ?? selectedRepository.cachePath);
   };
@@ -734,9 +662,7 @@ const loadRepositories = async (): Promise<RepositoryViewModel[]> => {
   return adaptRepositoryRecords(result?.repositories ?? []);
 };
 
-const loadRepositoryDeletePreview = async (
-  repositoryId: string
-): Promise<RepositoryDeletePreview> => {
+const loadRepositoryDeletePreview = async (repositoryId: string): Promise<RepositoryDeletePreview> => {
   if (!window.skillsManager?.getRepositoryDeletePreview) {
     throw new Error("删除预览接口不可用。");
   }
@@ -744,10 +670,7 @@ const loadRepositoryDeletePreview = async (
   return window.skillsManager.getRepositoryDeletePreview(repositoryId);
 };
 
-const persistRepositoryEnabled = async (
-  repository: RepositoryViewModel,
-  enabled: boolean
-): Promise<void> => {
+const persistRepositoryEnabled = async (repository: RepositoryViewModel, enabled: boolean): Promise<void> => {
   if (!window.skillsManager?.updateRepository) {
     throw new Error("保存来源接口不可用。");
   }
@@ -768,15 +691,12 @@ const buildSyncingMessage = (repository: RepositoryViewModel): string => {
 };
 
 const buildSyncResultMessage = (result: Awaited<RepositoriesSyncResult>["results"][number]) => {
-  const skillSummary =
-    result.skillUnits > 0 ? `已入库 ${result.skillUnits} 个 Skills。` : "未发现可入库的 Skills。";
+  const skillSummary = result.skillUnits > 0 ? `已入库 ${result.skillUnits} 个 Skills。` : "未发现可入库的 Skills。";
 
   return `同步完成。${skillSummary}新增 ${result.scan.added}，更新 ${result.scan.changed}，移除 ${result.scan.removed}，警告 ${result.scan.warnings}。`;
 };
 
-const createSyncProgressDialog = (
-  repositories: Array<Pick<RepositoryViewModel, "id" | "name">>
-): RepositorySyncProgressDialogState => {
+const createSyncProgressDialog = (repositories: Array<Pick<RepositoryViewModel, "id" | "name">>): RepositorySyncProgressDialogState => {
   return {
     id: Date.now(),
     repositories: repositories.map(createSyncProgressRepository),
@@ -784,9 +704,7 @@ const createSyncProgressDialog = (
   };
 };
 
-const createSyncProgressRepository = (
-  repository: Pick<RepositoryViewModel, "id" | "name">
-): RepositorySyncProgressRepository => {
+const createSyncProgressRepository = (repository: Pick<RepositoryViewModel, "id" | "name">): RepositorySyncProgressRepository => {
   return {
     items: [],
     repositoryId: repository.id,
@@ -794,10 +712,7 @@ const createSyncProgressRepository = (
   };
 };
 
-const upsertSyncProgressEvent = (
-  dialog: RepositorySyncProgressDialogState | null,
-  event: RepositoriesSyncProgressEvent
-): RepositorySyncProgressDialogState => {
+const upsertSyncProgressEvent = (dialog: RepositorySyncProgressDialogState | null, event: RepositoriesSyncProgressEvent): RepositorySyncProgressDialogState => {
   const nextDialog =
     dialog ??
     createSyncProgressDialog([
@@ -823,63 +738,39 @@ const upsertSyncProgressEvent = (
   };
 };
 
-const completeSyncProgressDialog = ({
-  dialog,
-  repositories,
-  repositoryIds,
-  resultByRepositoryId
-}: {
-  dialog: RepositorySyncProgressDialogState | null;
-  repositories: RepositoryViewModel[];
-  repositoryIds: string[];
-  resultByRepositoryId: Map<string, Awaited<RepositoriesSyncResult>["results"][number]>;
-}): RepositorySyncProgressDialogState | null => {
+const completeSyncProgressDialog = ({ dialog, repositories, repositoryIds, resultByRepositoryId }: { dialog: RepositorySyncProgressDialogState | null; repositories: RepositoryViewModel[]; repositoryIds: string[]; resultByRepositoryId: Map<string, Awaited<RepositoriesSyncResult>["results"][number]> }): RepositorySyncProgressDialogState | null => {
   if (!repositoryIds.length) {
     return dialog;
   }
 
   const targetRepositoryIdSet = new Set(repositoryIds);
   const repositoriesById = new Map(repositories.map((repository) => [repository.id, repository]));
-  const baseDialog =
-    dialog ??
-    createSyncProgressDialog(
-      repositoryIds
-        .map((repositoryId) => repositoriesById.get(repositoryId))
-        .filter((repository): repository is RepositoryViewModel => Boolean(repository))
-    );
+  const baseDialog = dialog ?? createSyncProgressDialog(repositoryIds.map((repositoryId) => repositoriesById.get(repositoryId)).filter((repository): repository is RepositoryViewModel => Boolean(repository)));
   const ensuredRepositories = ensureSyncProgressRepositories(
     baseDialog.repositories,
-    repositoryIds
-      .map((repositoryId) => repositoriesById.get(repositoryId))
-      .filter((repository): repository is RepositoryViewModel => Boolean(repository))
+    repositoryIds.map((repositoryId) => repositoriesById.get(repositoryId)).filter((repository): repository is RepositoryViewModel => Boolean(repository))
   );
-  const nextRepositories: RepositorySyncProgressRepository[] = ensuredRepositories.map(
-    (repository) => {
-      if (!targetRepositoryIdSet.has(repository.repositoryId)) {
-        return repository;
-      }
-
-      const result = resultByRepositoryId.get(repository.repositoryId);
-      const didFail = isFailedSyncResult(result);
-      const fallbackItems = buildProgressItemsFromRepository(
-        repositoriesById.get(repository.repositoryId)
-      );
-      const items = repository.items.length ? repository.items : fallbackItems;
-
-      return {
-        ...repository,
-        items: items.map(
-          (item): RepositorySyncProgressItem => ({
-            ...item,
-            status: didFail && item.status !== "completed" ? "failed" : "completed"
-          })
-        )
-      };
+  const nextRepositories: RepositorySyncProgressRepository[] = ensuredRepositories.map((repository) => {
+    if (!targetRepositoryIdSet.has(repository.repositoryId)) {
+      return repository;
     }
-  );
-  const hasFailure = repositoryIds.some((repositoryId) =>
-    isFailedSyncResult(resultByRepositoryId.get(repositoryId))
-  );
+
+    const result = resultByRepositoryId.get(repository.repositoryId);
+    const didFail = isFailedSyncResult(result);
+    const fallbackItems = buildProgressItemsFromRepository(repositoriesById.get(repository.repositoryId));
+    const items = repository.items.length ? repository.items : fallbackItems;
+
+    return {
+      ...repository,
+      items: items.map(
+        (item): RepositorySyncProgressItem => ({
+          ...item,
+          status: didFail && item.status !== "completed" ? "failed" : "completed"
+        })
+      )
+    };
+  });
+  const hasFailure = repositoryIds.some((repositoryId) => isFailedSyncResult(resultByRepositoryId.get(repositoryId)));
 
   return {
     ...baseDialog,
@@ -888,10 +779,7 @@ const completeSyncProgressDialog = ({
   };
 };
 
-const failSyncProgressDialog = (
-  dialog: RepositorySyncProgressDialogState | null,
-  repositories: RepositoryViewModel[]
-): RepositorySyncProgressDialogState => {
+const failSyncProgressDialog = (dialog: RepositorySyncProgressDialogState | null, repositories: RepositoryViewModel[]): RepositorySyncProgressDialogState => {
   const targetRepositoryIdSet = new Set(repositories.map((repository) => repository.id));
   const baseDialog = dialog ?? createSyncProgressDialog(repositories);
   const ensuredRepositories = ensureSyncProgressRepositories(baseDialog.repositories, repositories);
@@ -917,10 +805,7 @@ const failSyncProgressDialog = (
   };
 };
 
-const ensureSyncProgressRepositories = (
-  currentRepositories: RepositorySyncProgressRepository[],
-  repositories: Array<Pick<RepositoryViewModel, "id" | "name">>
-): RepositorySyncProgressRepository[] => {
+const ensureSyncProgressRepositories = (currentRepositories: RepositorySyncProgressRepository[], repositories: Array<Pick<RepositoryViewModel, "id" | "name">>): RepositorySyncProgressRepository[] => {
   return repositories.reduce((nextRepositories, repository) => {
     if (nextRepositories.some((item) => item.repositoryId === repository.id)) {
       return nextRepositories;
@@ -942,9 +827,7 @@ const upsertSyncProgressRepository = (
     repositoryName: string;
   }
 ): RepositorySyncProgressRepository[] => {
-  const repositoryIndex = repositories.findIndex(
-    (repository) => repository.repositoryId === repositoryId
-  );
+  const repositoryIndex = repositories.findIndex((repository) => repository.repositoryId === repositoryId);
 
   if (repositoryIndex === -1) {
     return [
@@ -968,10 +851,7 @@ const upsertSyncProgressRepository = (
   );
 };
 
-const upsertSyncProgressItem = (
-  items: RepositorySyncProgressItem[],
-  item: RepositorySyncProgressItem
-): RepositorySyncProgressItem[] => {
+const upsertSyncProgressItem = (items: RepositorySyncProgressItem[], item: RepositorySyncProgressItem): RepositorySyncProgressItem[] => {
   if (!items.some((currentItem) => currentItem.id === item.id)) {
     return [...items, item];
   }
@@ -979,9 +859,7 @@ const upsertSyncProgressItem = (
   return items.map((currentItem) => (currentItem.id === item.id ? item : currentItem));
 };
 
-const buildProgressItemsFromRepository = (
-  repository: RepositoryViewModel | undefined
-): RepositorySyncProgressItem[] => {
+const buildProgressItemsFromRepository = (repository: RepositoryViewModel | undefined): RepositorySyncProgressItem[] => {
   const scan = repository?.lastSyncSummary?.scan;
 
   if (!scan) {
@@ -1001,10 +879,7 @@ const buildProgressItemsFromRepository = (
   return Array.from(itemsById.values());
 };
 
-const clearProgressItemCompletionTimeout = (
-  itemId: string,
-  timeoutIds: Map<string, number>
-): void => {
+const clearProgressItemCompletionTimeout = (itemId: string, timeoutIds: Map<string, number>): void => {
   const timeoutId = timeoutIds.get(itemId);
 
   if (typeof timeoutId !== "number") {
@@ -1024,10 +899,7 @@ const clearSyncProgressFinishTimeout = (timeoutRef: { current: number | null }):
   timeoutRef.current = null;
 };
 
-const clearSyncProgressTimeouts = (
-  itemCompletionTimeoutIds: Map<string, number>,
-  finishTimeoutRef: { current: number | null }
-): void => {
+const clearSyncProgressTimeouts = (itemCompletionTimeoutIds: Map<string, number>, finishTimeoutRef: { current: number | null }): void => {
   itemCompletionTimeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
   itemCompletionTimeoutIds.clear();
   clearSyncProgressFinishTimeout(finishTimeoutRef);
@@ -1037,17 +909,7 @@ const getRemainingSyncProgressDuration = (startedAt: number, now: number): numbe
   return Math.max(0, MIN_SYNC_PROGRESS_ITEM_DURATION_MS - (now - startedAt));
 };
 
-const getRemainingSyncProgressDurationForRepositories = ({
-  itemRepositoryIds,
-  itemStartedAt,
-  now,
-  repositoryIds
-}: {
-  itemRepositoryIds: Map<string, string>;
-  itemStartedAt: Map<string, number>;
-  now: number;
-  repositoryIds: string[];
-}): number => {
+const getRemainingSyncProgressDurationForRepositories = ({ itemRepositoryIds, itemStartedAt, now, repositoryIds }: { itemRepositoryIds: Map<string, string>; itemStartedAt: Map<string, number>; now: number; repositoryIds: string[] }): number => {
   const repositoryIdSet = new Set(repositoryIds);
   let remainingDuration = 0;
 
@@ -1058,17 +920,12 @@ const getRemainingSyncProgressDurationForRepositories = ({
       return;
     }
 
-    remainingDuration = Math.max(
-      remainingDuration,
-      getRemainingSyncProgressDuration(startedAt, now)
-    );
+    remainingDuration = Math.max(remainingDuration, getRemainingSyncProgressDuration(startedAt, now));
   });
 
   return remainingDuration;
 };
 
-const isFailedSyncResult = (
-  result: Awaited<RepositoriesSyncResult>["results"][number] | undefined
-): boolean => {
+const isFailedSyncResult = (result: Awaited<RepositoriesSyncResult>["results"][number] | undefined): boolean => {
   return Boolean(result?.error || result?.status === "failed");
 };

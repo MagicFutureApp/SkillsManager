@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createDbClient } from "../client";
-import {
-  agentTargets,
-  installInstances,
-  repositories,
-  skillTargetPreferences,
-  skillUnits,
-  skillVersions
-} from "../schema";
+import { agentTargets, installInstances, repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";
 import { createDistributionRepository } from "./distributionRepository";
 
 describe("createDistributionRepository", () => {

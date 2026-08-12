@@ -67,9 +67,7 @@ export const agentTargets = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
   },
-  (table) => [
-    uniqueIndex("agent_targets_type_normalized_path_uq").on(table.type, table.normalizedPath)
-  ]
+  (table) => [uniqueIndex("agent_targets_type_normalized_path_uq").on(table.type, table.normalizedPath)]
 );
 
 export const skillTargetPreferences = sqliteTable(
@@ -84,12 +82,7 @@ export const skillTargetPreferences = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
   },
-  (table) => [
-    uniqueIndex("skill_target_preferences_skill_target_uq").on(
-      table.skillUnitId,
-      table.agentTargetId
-    )
-  ]
+  (table) => [uniqueIndex("skill_target_preferences_skill_target_uq").on(table.skillUnitId, table.agentTargetId)]
 );
 
 export const installInstances = sqliteTable(
@@ -107,9 +100,7 @@ export const installInstances = sqliteTable(
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
     lastError: text("last_error")
   },
-  (table) => [
-    uniqueIndex("install_instances_skill_target_uq").on(table.skillUnitId, table.agentTargetId)
-  ]
+  (table) => [uniqueIndex("install_instances_skill_target_uq").on(table.skillUnitId, table.agentTargetId)]
 );
 
 export const appSettings = sqliteTable("app_settings", {

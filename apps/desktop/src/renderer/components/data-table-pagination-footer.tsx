@@ -1,13 +1,5 @@
 import { DataTableCell, DataTableFixedFooter, DataTableRow } from "@/components/data-table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious
-} from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 import type { PaginationState } from "@/lib/pagination";
 import React from "react";
@@ -20,12 +12,7 @@ type DataTablePaginationFooterProps = {
   pagination: PaginationState;
 };
 
-export const DataTablePaginationFooter = ({
-  colSpan,
-  labelKeyPrefix,
-  onPageChange,
-  pagination
-}: DataTablePaginationFooterProps) => {
+export const DataTablePaginationFooter = ({ colSpan, labelKeyPrefix, onPageChange, pagination }: DataTablePaginationFooterProps) => {
   const { t } = useTranslation();
   const paginationPages = getPaginationPageItems(pagination.currentPage, pagination.totalPages);
 
@@ -46,10 +33,7 @@ export const DataTablePaginationFooter = ({
               })}
             </p>
             {pagination.totalPages > 1 ? (
-              <Pagination
-                aria-label={t(`${labelKeyPrefix}.ariaLabel`)}
-                className="mx-0 w-auto justify-end"
-              >
+              <Pagination aria-label={t(`${labelKeyPrefix}.ariaLabel`)} className="mx-0 w-auto justify-end">
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious
@@ -58,9 +42,7 @@ export const DataTablePaginationFooter = ({
                       aria-label={t(`${labelKeyPrefix}.previous`)}
                       aria-disabled={!pagination.hasPreviousPage}
                       tabIndex={pagination.hasPreviousPage ? undefined : -1}
-                      className={cn(
-                        !pagination.hasPreviousPage && "pointer-events-none opacity-50"
-                      )}
+                      className={cn(!pagination.hasPreviousPage && "pointer-events-none opacity-50")}
                       onClick={(event) => {
                         event.preventDefault();
 
@@ -138,13 +120,7 @@ const getPaginationPageItems = (currentPage: number, totalPages: number): Pagina
       return items;
     }
 
-    items.push(
-      page - previousPage === 2
-        ? previousPage + 1
-        : items.includes("ellipsis-left")
-          ? "ellipsis-right"
-          : "ellipsis-left"
-    );
+    items.push(page - previousPage === 2 ? previousPage + 1 : items.includes("ellipsis-left") ? "ellipsis-right" : "ellipsis-left");
     items.push(page);
 
     return items;

@@ -1,19 +1,5 @@
-import type {
-  RepositoryApiRecord,
-  RepositoryConfig,
-  RepositoryLastSync,
-  RepositoryProviderName,
-  RepositoryScanStatus,
-  RepositoryScanSummary,
-  RepositorySyncSummary
-} from "../../../../core/repositories/repository-api";
-import {
-  buildRepositoryCachePath,
-  formatRepositoryDateTime,
-  normalizeDiscoveryEntries,
-  normalizeRepositoryScanSummary,
-  parseRepositorySyncSummaryJson
-} from "../../../../core/repositories/repository-utils";
+import type { RepositoryApiRecord, RepositoryConfig, RepositoryLastSync, RepositoryProviderName, RepositoryScanStatus, RepositoryScanSummary, RepositorySyncSummary } from "../../../../core/repositories/repository-api";
+import { buildRepositoryCachePath, formatRepositoryDateTime, normalizeDiscoveryEntries, normalizeRepositoryScanSummary, parseRepositorySyncSummaryJson } from "../../../../core/repositories/repository-utils";
 
 export type RepositoryProviderFilter = RepositoryProviderName | "all";
 export type RepositorySort = "name" | "provider" | "status" | "skills";
@@ -76,23 +62,11 @@ export const repositoryProviderOptions: Array<{
   { label: "skills.sh", value: "skills.sh" }
 ];
 
-const visibleRepositoryProviderNames = new Set<RepositoryProviderFilter>([
-  "all",
-  "GitHub",
-  "Local"
-]);
+const visibleRepositoryProviderNames = new Set<RepositoryProviderFilter>(["all", "GitHub", "Local"]);
 
-export const visibleRepositoryProviderOptions = repositoryProviderOptions.filter((option) =>
-  visibleRepositoryProviderNames.has(option.value)
-);
+export const visibleRepositoryProviderOptions = repositoryProviderOptions.filter((option) => visibleRepositoryProviderNames.has(option.value));
 
-export const repositoryStatusOptions: RepositoryStatusFilter[] = [
-  "all",
-  "pending",
-  "ready",
-  "review",
-  "failed"
-];
+export const repositoryStatusOptions: RepositoryStatusFilter[] = ["all", "pending", "ready", "review", "failed"];
 
 export const adaptRepositoryRecord = (record: RepositoryApiRecord): RepositoryViewModel => {
   const config = parseRepositoryConfig(record.configJson);
@@ -106,9 +80,7 @@ export const adaptRepositoryRecord = (record: RepositoryApiRecord): RepositoryVi
     lastScanLabel: config.lastScanLabel,
     lastScanTime: formatRepositoryDateTime(record.lastSync?.finishedAt),
     lastSync: record.lastSync,
-    lastSyncSummary: record.lastSync
-      ? parseRepositorySyncSummaryJson(record.lastSync.summaryJson)
-      : null,
+    lastSyncSummary: record.lastSync ? parseRepositorySyncSummaryJson(record.lastSync.summaryJson) : null,
     name: record.name,
     note: config.note,
     patterns: config.patterns,
@@ -130,30 +102,12 @@ export const createDefaultRepositories = (): RepositoryViewModel[] => {
   return [];
 };
 
-export const filterRepositories = ({
-  provider,
-  query,
-  repositories,
-  sort,
-  status
-}: {
-  provider: RepositoryProviderFilter;
-  query: string;
-  repositories: RepositoryViewModel[];
-  sort: RepositorySort;
-  status: RepositoryStatusFilter;
-}): RepositoryViewModel[] => {
+export const filterRepositories = ({ provider, query, repositories, sort, status }: { provider: RepositoryProviderFilter; query: string; repositories: RepositoryViewModel[]; sort: RepositorySort; status: RepositoryStatusFilter }): RepositoryViewModel[] => {
   const normalizedQuery = query.trim().toLowerCase();
   const visible = repositories.filter((repository) => {
-    const searchable = [repository.name, repository.remoteUrl, repository.note]
-      .join(" ")
-      .toLowerCase();
+    const searchable = [repository.name, repository.remoteUrl, repository.note].join(" ").toLowerCase();
 
-    return (
-      (!normalizedQuery || searchable.includes(normalizedQuery)) &&
-      (provider === "all" || repository.provider === provider) &&
-      (status === "all" || repository.status === status)
-    );
+    return (!normalizedQuery || searchable.includes(normalizedQuery)) && (provider === "all" || repository.provider === provider) && (status === "all" || repository.status === status);
   });
 
   return [...visible].sort((first, second) => {
@@ -177,13 +131,7 @@ export const filterRepositories = ({
   });
 };
 
-export const buildRepositoryFromForm = ({
-  formValues,
-  index
-}: {
-  formValues: RepositoryFormValues;
-  index: number;
-}): RepositoryViewModel => {
+export const buildRepositoryFromForm = ({ formValues, index }: { formValues: RepositoryFormValues; index: number }): RepositoryViewModel => {
   return {
     branch: formValues.branch || "main",
     cachePath: formValues.cachePath || buildRepositoryCachePath(formValues.name),
@@ -217,14 +165,7 @@ const providerIdByName: Record<RepositoryProviderName, string> = {
 };
 
 const isProviderName = (value: unknown): value is RepositoryProviderName => {
-  return (
-    value === "Bitbucket" ||
-    value === "Gitea" ||
-    value === "GitHub" ||
-    value === "GitLab" ||
-    value === "Local" ||
-    value === "skills.sh"
-  );
+  return value === "Bitbucket" || value === "Gitea" || value === "GitHub" || value === "GitLab" || value === "Local" || value === "skills.sh";
 };
 
 const isScanStatus = (value: unknown): value is RepositoryScanStatus => {
@@ -237,21 +178,13 @@ const parseRepositoryConfig = (configJson: string): RepositoryConfig => {
 
     return {
       enabled: typeof parsed.enabled === "boolean" ? parsed.enabled : defaultConfig.enabled,
-      lastScanLabel:
-        typeof parsed.lastScanLabel === "string"
-          ? parsed.lastScanLabel
-          : defaultConfig.lastScanLabel,
+      lastScanLabel: typeof parsed.lastScanLabel === "string" ? parsed.lastScanLabel : defaultConfig.lastScanLabel,
       note: typeof parsed.note === "string" ? parsed.note : defaultConfig.note,
-      patterns: Array.isArray(parsed.patterns)
-        ? parsed.patterns.filter((pattern): pattern is string => typeof pattern === "string")
-        : defaultConfig.patterns,
+      patterns: Array.isArray(parsed.patterns) ? parsed.patterns.filter((pattern): pattern is string => typeof pattern === "string") : defaultConfig.patterns,
       priority: typeof parsed.priority === "number" ? parsed.priority : defaultConfig.priority,
-      providerName: isProviderName(parsed.providerName)
-        ? parsed.providerName
-        : defaultConfig.providerName,
+      providerName: isProviderName(parsed.providerName) ? parsed.providerName : defaultConfig.providerName,
       scan: normalizeRepositoryScanSummary(parsed.scan, defaultConfig.scan),
-      skillUnits:
-        typeof parsed.skillUnits === "number" ? parsed.skillUnits : defaultConfig.skillUnits,
+      skillUnits: typeof parsed.skillUnits === "number" ? parsed.skillUnits : defaultConfig.skillUnits,
       status: isScanStatus(parsed.status) ? parsed.status : defaultConfig.status
     };
   } catch {

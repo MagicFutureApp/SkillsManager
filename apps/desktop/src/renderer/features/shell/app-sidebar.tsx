@@ -19,25 +19,11 @@ type AppSidebarProps = {
   onNavigate: (routeId: AppRouteId) => void;
 };
 
-export const AppSidebar = ({
-  activeRouteId,
-  appVersion,
-  badgeCounts = {},
-  isAutoCollapsed,
-  isCollapsed,
-  onNavigate
-}: AppSidebarProps) => {
+export const AppSidebar = ({ activeRouteId, appVersion, badgeCounts = {}, isAutoCollapsed, isCollapsed, onNavigate }: AppSidebarProps) => {
   const { t } = useTranslation();
-  const activeNavigationItem = shellNavigationGroups
-    .flatMap((group) => group.items)
-    .find((item) => item.routeId === activeRouteId);
-  const activeNavigationDescription = activeNavigationItem?.descriptionKey
-    ? t(activeNavigationItem.descriptionKey)
-    : appVersion
-      ? t("shell.navigationDescriptions.versionLabel", { version: appVersion })
-      : null;
-  const shouldShowActiveNavigationDescription =
-    activeRouteId === "settings" && Boolean(activeNavigationDescription);
+  const activeNavigationItem = shellNavigationGroups.flatMap((group) => group.items).find((item) => item.routeId === activeRouteId);
+  const activeNavigationDescription = activeNavigationItem?.descriptionKey ? t(activeNavigationItem.descriptionKey) : appVersion ? t("shell.navigationDescriptions.versionLabel", { version: appVersion }) : null;
+  const shouldShowActiveNavigationDescription = activeRouteId === "settings" && Boolean(activeNavigationDescription);
 
   const logoContent = (
     <>
@@ -52,21 +38,10 @@ export const AppSidebar = ({
   );
 
   return (
-    <aside
-      className={cn(
-        "flex min-h-[calc(100svh-44px)] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,padding]",
-        isCollapsed ? "gap-4 px-3 py-4" : "gap-6 px-4 py-5"
-      )}
-      aria-label={t("shell.navigation.mainNavigation")}
-      data-auto-collapsed={isAutoCollapsed}
-      data-collapsed={isCollapsed}
-    >
+    <aside className={cn("flex min-h-[calc(100svh-44px)] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,padding]", isCollapsed ? "gap-4 px-3 py-4" : "gap-6 px-4 py-5")} aria-label={t("shell.navigation.mainNavigation")} data-auto-collapsed={isAutoCollapsed} data-collapsed={isCollapsed}>
       {isCollapsed ? (
         <Tooltip>
-          <TooltipTrigger
-            className="flex min-h-10 items-center justify-center rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            aria-label={APP_META.title}
-          >
+          <TooltipTrigger className="flex min-h-10 items-center justify-center rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50" aria-label={APP_META.title}>
             {logoContent}
           </TooltipTrigger>
           <TooltipContent side="right" align="center" className="flex flex-col items-start gap-0.5">
@@ -91,20 +66,7 @@ export const AppSidebar = ({
                 const shouldShowBadge = badgeCount > 0;
 
                 const button = (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className={cn(
-                      "h-9 rounded-lg text-sm font-normal",
-                      isCollapsed
-                        ? "relative size-9 justify-center px-0"
-                        : "justify-between px-2.5",
-                      isActive && "bg-primary/10 font-semibold text-primary hover:bg-primary/10"
-                    )}
-                    aria-label={isCollapsed ? label : undefined}
-                    aria-current={isActive ? "page" : undefined}
-                    onClick={() => onNavigate(item.routeId as AppRouteId)}
-                  >
+                  <Button type="button" variant="ghost" className={cn("h-9 rounded-lg text-sm font-normal", isCollapsed ? "relative size-9 justify-center px-0" : "justify-between px-2.5", isActive && "bg-primary/10 font-semibold text-primary hover:bg-primary/10")} aria-label={isCollapsed ? label : undefined} aria-current={isActive ? "page" : undefined} onClick={() => onNavigate(item.routeId as AppRouteId)}>
                     {isCollapsed ? (
                       <Icon aria-hidden="true" />
                     ) : (
@@ -114,14 +76,7 @@ export const AppSidebar = ({
                       </span>
                     )}
                     {shouldShowBadge ? (
-                      <Badge
-                        variant="secondary"
-                        aria-hidden="true"
-                        className={cn(
-                          isCollapsed &&
-                            "absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px] leading-none"
-                        )}
-                      >
+                      <Badge variant="secondary" aria-hidden="true" className={cn(isCollapsed && "absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px] leading-none")}>
                         {badgeCount}
                       </Badge>
                     ) : null}

@@ -3,17 +3,13 @@ export type SkillMetadataSnapshot = {
   tags?: unknown;
 };
 
-export const parseSkillMetadataSnapshot = (
-  metadataSnapshotJson: string
-): { skillKey: string; tags: string[] } => {
+export const parseSkillMetadataSnapshot = (metadataSnapshotJson: string): { skillKey: string; tags: string[] } => {
   try {
     const parsed = JSON.parse(metadataSnapshotJson) as SkillMetadataSnapshot;
 
     return {
       skillKey: typeof parsed.skillKey === "string" ? parsed.skillKey : "",
-      tags: Array.isArray(parsed.tags)
-        ? parsed.tags.filter((tag): tag is string => typeof tag === "string")
-        : []
+      tags: Array.isArray(parsed.tags) ? parsed.tags.filter((tag): tag is string => typeof tag === "string") : []
     };
   } catch {
     return { skillKey: "", tags: [] };

@@ -2,24 +2,9 @@ import { asc, count, eq, inArray } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
 import { isBuiltInTargetType } from "../../core/targets/target-api";
-import type {
-  RegisteredTargetRecord,
-  RegisteredTargetStatus,
-  SystemTargetRecord,
-  TargetRegistrationScope,
-  TargetScanCandidate,
-  TargetScanRecord,
-  TargetSkillPreference,
-  TargetSkillSelection
-} from "../../core/targets/target-api";
+import type { RegisteredTargetRecord, RegisteredTargetStatus, SystemTargetRecord, TargetRegistrationScope, TargetScanCandidate, TargetScanRecord, TargetSkillPreference, TargetSkillSelection } from "../../core/targets/target-api";
 import type { createDbClient } from "../client";
-import {
-  agentTargets,
-  installInstances,
-  repositories,
-  skillTargetPreferences,
-  skillUnits
-} from "../schema";
+import { agentTargets, installInstances, repositories, skillTargetPreferences, skillUnits } from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
 
@@ -129,9 +114,7 @@ export const createTargetRepository = (db: DbClient) => {
       }));
     },
 
-    async listInstalledSkillFilesForTargets(
-      targetIds: string[]
-    ): Promise<TargetInstalledSkillFile[]> {
+    async listInstalledSkillFilesForTargets(targetIds: string[]): Promise<TargetInstalledSkillFile[]> {
       const normalizedTargetIds = normalizeTargetIds(targetIds);
 
       if (!normalizedTargetIds.length) {
@@ -194,20 +177,13 @@ export const createTargetRepository = (db: DbClient) => {
       }
 
       db.transaction((tx) => {
-        tx.delete(installInstances)
-          .where(inArray(installInstances.agentTargetId, deletableTargetIds))
-          .run();
-        tx.delete(skillTargetPreferences)
-          .where(inArray(skillTargetPreferences.agentTargetId, deletableTargetIds))
-          .run();
+        tx.delete(installInstances).where(inArray(installInstances.agentTargetId, deletableTargetIds)).run();
+        tx.delete(skillTargetPreferences).where(inArray(skillTargetPreferences.agentTargetId, deletableTargetIds)).run();
         tx.delete(agentTargets).where(inArray(agentTargets.id, deletableTargetIds)).run();
       });
     },
 
-    async updateCustomDirectoryTarget(
-      target: UpdateCustomDirectoryTargetInput,
-      updatedAt = new Date()
-    ): Promise<void> {
+    async updateCustomDirectoryTarget(target: UpdateCustomDirectoryTargetInput, updatedAt = new Date()): Promise<void> {
       const targetRows = await db
         .select({
           id: agentTargets.id,
@@ -240,25 +216,15 @@ export const createTargetRepository = (db: DbClient) => {
         .where(eq(agentTargets.id, target.id));
     },
 
-    async registerCustomDirectoryTarget(
-      target: RegisterCustomDirectoryTargetInput,
-      registeredAt = new Date()
-    ): Promise<void> {
+    async registerCustomDirectoryTarget(target: RegisterCustomDirectoryTargetInput, registeredAt = new Date()): Promise<void> {
       await upsertCustomDirectoryTarget(db, target, "global", registeredAt);
     },
 
-    async registerIndependentDirectoryTarget(
-      target: RegisterCustomDirectoryTargetInput,
-      registeredAt = new Date()
-    ): Promise<void> {
+    async registerIndependentDirectoryTarget(target: RegisterCustomDirectoryTargetInput, registeredAt = new Date()): Promise<void> {
       await upsertCustomDirectoryTarget(db, target, "independent", registeredAt);
     },
 
-    async registerIndependentDirectoryTargetForSkill(
-      target: RegisterCustomDirectoryTargetInput,
-      skillUnitId: string,
-      registeredAt = new Date()
-    ): Promise<void> {
+    async registerIndependentDirectoryTargetForSkill(target: RegisterCustomDirectoryTargetInput, skillUnitId: string, registeredAt = new Date()): Promise<void> {
       db.transaction((tx) => {
         upsertCustomDirectoryTargetInTransaction(tx, target, "independent", registeredAt);
 
@@ -282,10 +248,7 @@ export const createTargetRepository = (db: DbClient) => {
       });
     },
 
-    async saveScannedTargets(
-      targets: (SystemTargetRecord | TargetScanRecord)[],
-      scannedAt = new Date()
-    ): Promise<void> {
+    async saveScannedTargets(targets: (SystemTargetRecord | TargetScanRecord)[], scannedAt = new Date()): Promise<void> {
       for (const target of targets) {
         await db
           .insert(agentTargets)
@@ -324,12 +287,7 @@ const normalizeTargetIds = (targetIds: string[]): string[] => {
   return Array.from(new Set(targetIds.map((targetId) => targetId.trim()).filter(Boolean)));
 };
 
-const upsertCustomDirectoryTarget = async (
-  db: DbClient,
-  target: RegisterCustomDirectoryTargetInput,
-  scope: TargetRegistrationScope,
-  registeredAt: Date
-): Promise<void> => {
+const upsertCustomDirectoryTarget = async (db: DbClient, target: RegisterCustomDirectoryTargetInput, scope: TargetRegistrationScope, registeredAt: Date): Promise<void> => {
   await db
     .insert(agentTargets)
     .values(buildCustomDirectoryTargetValues(target, scope, registeredAt))
@@ -339,12 +297,7 @@ const upsertCustomDirectoryTarget = async (
     });
 };
 
-const upsertCustomDirectoryTargetInTransaction = (
-  tx: Parameters<DbClient["transaction"]>[0] extends (tx: infer Tx) => unknown ? Tx : never,
-  target: RegisterCustomDirectoryTargetInput,
-  scope: TargetRegistrationScope,
-  registeredAt: Date
-): void => {
+const upsertCustomDirectoryTargetInTransaction = (tx: Parameters<DbClient["transaction"]>[0] extends (tx: infer Tx) => unknown ? Tx : never, target: RegisterCustomDirectoryTargetInput, scope: TargetRegistrationScope, registeredAt: Date): void => {
   tx.insert(agentTargets)
     .values(buildCustomDirectoryTargetValues(target, scope, registeredAt))
     .onConflictDoUpdate({
@@ -354,11 +307,7 @@ const upsertCustomDirectoryTargetInTransaction = (
     .run();
 };
 
-const buildCustomDirectoryTargetValues = (
-  target: RegisterCustomDirectoryTargetInput,
-  scope: TargetRegistrationScope,
-  registeredAt: Date
-): AgentTargetInsert => {
+const buildCustomDirectoryTargetValues = (target: RegisterCustomDirectoryTargetInput, scope: TargetRegistrationScope, registeredAt: Date): AgentTargetInsert => {
   return {
     createdAt: registeredAt,
     enabled: true,
@@ -372,11 +321,7 @@ const buildCustomDirectoryTargetValues = (
   };
 };
 
-const buildCustomDirectoryTargetConflictSet = (
-  target: RegisterCustomDirectoryTargetInput,
-  scope: TargetRegistrationScope,
-  registeredAt: Date
-): Partial<AgentTargetInsert> => {
+const buildCustomDirectoryTargetConflictSet = (target: RegisterCustomDirectoryTargetInput, scope: TargetRegistrationScope, registeredAt: Date): Partial<AgentTargetInsert> => {
   return {
     enabled: true,
     name: target.name,
@@ -396,21 +341,8 @@ const normalizeScope = (scope: string): TargetRegistrationScope => {
   return "global";
 };
 
-const normalizeStatus = ({
-  detectionStatus,
-  enabled
-}: {
-  detectionStatus: string | null;
-  enabled: boolean;
-}): RegisteredTargetStatus => {
-  if (
-    detectionStatus === "app-missing" ||
-    detectionStatus === "path-missing" ||
-    detectionStatus === "not-writable" ||
-    detectionStatus === "not-directory" ||
-    detectionStatus === "scan-error" ||
-    detectionStatus === "missing"
-  ) {
+const normalizeStatus = ({ detectionStatus, enabled }: { detectionStatus: string | null; enabled: boolean }): RegisteredTargetStatus => {
+  if (detectionStatus === "app-missing" || detectionStatus === "path-missing" || detectionStatus === "not-writable" || detectionStatus === "not-directory" || detectionStatus === "scan-error" || detectionStatus === "missing") {
     return detectionStatus;
   }
 

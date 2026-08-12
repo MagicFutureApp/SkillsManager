@@ -43,11 +43,7 @@ export const DiscoverPage = () => {
         onRetry={state.refetch}
         onSelectSkill={setDetailSkill}
       />
-      <SkillDetailDialog
-        skill={detailSkill}
-        onClose={() => setDetailSkill(null)}
-        onOpenExternal={openExternal}
-      />
+      <SkillDetailDialog skill={detailSkill} onClose={() => setDetailSkill(null)} onOpenExternal={openExternal} />
     </main>
   );
 };

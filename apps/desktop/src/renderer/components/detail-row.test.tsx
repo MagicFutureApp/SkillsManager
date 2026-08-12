@@ -20,14 +20,7 @@ describe("DetailRow", () => {
   it("renders an open action when provided", () => {
     const handleOpen = vi.fn();
 
-    render(
-      <DetailRow
-        label="Remote URL"
-        value="https://github.com/example/repo"
-        openLabel="Open https://github.com/example/repo"
-        onOpen={handleOpen}
-      />
-    );
+    render(<DetailRow label="Remote URL" value="https://github.com/example/repo" openLabel="Open https://github.com/example/repo" onOpen={handleOpen} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Open https://github.com/example/repo" }));
 

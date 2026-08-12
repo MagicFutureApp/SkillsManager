@@ -1,11 +1,5 @@
 import { isBuiltInTargetType } from "../../../../core/targets/target-api";
-import type {
-  RegisteredTargetStatus,
-  RegisteredTargetRecord,
-  TargetRegistrationScope,
-  TargetScanIssue,
-  TargetSkillSelection
-} from "../../../../core/targets/target-api";
+import type { RegisteredTargetStatus, RegisteredTargetRecord, TargetRegistrationScope, TargetScanIssue, TargetSkillSelection } from "../../../../core/targets/target-api";
 
 export type TargetStatus = RegisteredTargetStatus;
 export type TargetScope = TargetRegistrationScope;
@@ -26,23 +20,11 @@ export type TargetViewModel = {
   type: string;
 };
 
-export const adaptTargets = ({
-  registeredTargets
-}: {
-  registeredTargets: RegisteredTargetRecord[];
-}): TargetViewModel[] => {
+export const adaptTargets = ({ registeredTargets }: { registeredTargets: RegisteredTargetRecord[] }): TargetViewModel[] => {
   return registeredTargets.map(adaptRegisteredTarget);
 };
 
-export const filterTargets = ({
-  query,
-  sort,
-  targets
-}: {
-  query: string;
-  sort: TargetSort;
-  targets: TargetViewModel[];
-}): TargetViewModel[] => {
+export const filterTargets = ({ query, sort, targets }: { query: string; sort: TargetSort; targets: TargetViewModel[] }): TargetViewModel[] => {
   const normalizedQuery = query.trim().toLowerCase();
   const visible = targets.filter((target) => {
     const searchable = getTargetSearchText(target);
@@ -64,10 +46,7 @@ export const filterTargets = ({
     }
 
     if (sort === "scope") {
-      return (
-        scopePriority[first.scope] - scopePriority[second.scope] ||
-        first.name.localeCompare(second.name)
-      );
+      return scopePriority[first.scope] - scopePriority[second.scope] || first.name.localeCompare(second.name);
     }
 
     return first.name.localeCompare(second.name);
@@ -91,14 +70,7 @@ const adaptRegisteredTarget = (target: RegisteredTargetRecord): TargetViewModel 
 };
 
 const getTargetSearchText = (target: TargetViewModel): string => {
-  return [
-    target.name,
-    target.normalizedPath,
-    target.path,
-    ...target.selectedSkills.map((skill) => `${skill.id} ${skill.name} ${skill.repository}`)
-  ]
-    .join(" ")
-    .toLowerCase();
+  return [target.name, target.normalizedPath, target.path, ...target.selectedSkills.map((skill) => `${skill.id} ${skill.name} ${skill.repository}`)].join(" ").toLowerCase();
 };
 
 const scopePriority: Record<TargetScope, number> = {

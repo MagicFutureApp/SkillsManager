@@ -26,10 +26,7 @@ export const getInstalledElectronVersion = () => {
   return electronPackage.version;
 };
 
-export const createElectronRebuildInvocation = (
-  electronVersion: string,
-  platform: NodeJS.Platform = process.platform
-): ElectronRebuildInvocation => ({
+export const createElectronRebuildInvocation = (electronVersion: string, platform: NodeJS.Platform = process.platform): ElectronRebuildInvocation => ({
   command: platform === "win32" ? "pnpm.cmd" : "pnpm",
   args: ["rebuild", "better-sqlite3"],
   env: {

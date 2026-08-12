@@ -3,10 +3,7 @@
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 
-import {
-  createElectronRebuildInvocation,
-  getInstalledElectronVersion
-} from "./rebuild-better-sqlite3-for-electron";
+import { createElectronRebuildInvocation, getInstalledElectronVersion } from "./rebuild-better-sqlite3-for-electron";
 
 const require = createRequire(import.meta.url);
 
