@@ -63,7 +63,7 @@ describe("scanSkillDirectory minimatch interop regression", () => {
     // minimatch v10 package uses locally.
     vi.doMock("minimatch", () => ({ minimatch: realMinimatch, __esModule: true }));
 
-    const { scanSkillDirectory } = await import("./skill-scanner");
+    const { scanSkillDirectory } = await import("./skill-scanner.js");
 
     const skills = await scanSkillDirectory(rootPath, DISCOVERY_ENTRIES);
 
@@ -91,7 +91,7 @@ describe("scanSkillDirectory minimatch interop regression", () => {
     // pick up `.default` here.
     vi.doMock("minimatch", () => ({ default: realMinimatch, minimatch: undefined }));
 
-    const { scanSkillDirectory } = await import("./skill-scanner");
+    const { scanSkillDirectory } = await import("./skill-scanner.js");
 
     // If the fix regressed, this call throws because the resolved minimatch is not a function.
     const skills = await scanSkillDirectory(rootPath, DISCOVERY_ENTRIES);
