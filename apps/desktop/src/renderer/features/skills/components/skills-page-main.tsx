@@ -13,9 +13,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
-import React from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 
 import {
   getDistributionTitleKey,
@@ -26,6 +27,7 @@ import {
 } from "./skills-page-data";
 import { Field } from "./skills-page-controls";
 import { useSkillsPageContext } from "./skills-page-context";
+import React from "react";
 
 const skillTableColumns = {
   actions: "w-18 text-center",
@@ -63,6 +65,7 @@ export const SkillsPageMain = () => {
     <div className="flex h-full min-h-0 flex-col">
       <SkillsDistributionToast
         message={page.distributionNoticeVisible ? distributionStatus : null}
+        onDismiss={page.dismissDistributionNotice}
       />
       <header className="mb-6">
         <div className="flex items-center justify-between gap-4 max-[860px]:items-start">
@@ -158,7 +161,25 @@ export const SkillsPageMain = () => {
   );
 };
 
-const SkillsDistributionToast = ({ message }: { message: string | null }) => {
+const SkillsDistributionToast = ({
+  message,
+  onDismiss
+}: {
+  message: string | null;
+  onDismiss: () => void;
+}) => {
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!message) {
+      return;
+    }
+
+    const timerId = window.setTimeout(onDismiss, 5000);
+
+    return () => window.clearTimeout(timerId);
+  }, [message, onDismiss]);
+
   if (!message || typeof document === "undefined") {
     return null;
   }
@@ -167,9 +188,17 @@ const SkillsDistributionToast = ({ message }: { message: string | null }) => {
     <div
       role="status"
       data-testid="skills-distribution-toast"
-      className="pointer-events-none fixed right-6 top-16 z-[60] max-w-sm rounded-lg border border-border bg-card px-4 py-3 text-sm leading-5 text-card-foreground shadow-lg"
+      className="pointer-events-auto fixed right-6 top-16 z-[60] flex max-w-sm items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm leading-5 text-card-foreground shadow-lg"
     >
-      {message}
+      <span className="min-w-0 flex-1">{message}</span>
+      <button
+        type="button"
+        aria-label={t("skills.actions.close")}
+        onClick={onDismiss}
+        className="grid size-5 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <X aria-hidden="true" className="size-3.5" />
+      </button>
     </div>,
     document.body
   );

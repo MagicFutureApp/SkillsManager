@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   DistributionExecuteInput,
@@ -35,6 +35,7 @@ export const useSkillsPageState = () => {
   const [distributionNoticeKey, setDistributionNoticeKey] = useState<string | null>(null);
   const [distributionExecuteResult, setDistributionExecuteResult] =
     useState<DistributionExecuteResult | null>(null);
+  const [distributionNoticeDismissed, setDistributionNoticeDismissed] = useState(false);
   const [distributionPreview, setDistributionPreview] = useState<DistributionPreviewResult | null>(
     null
   );
@@ -223,7 +224,12 @@ export const useSkillsPageState = () => {
   const showDistributionNotice = (key: string) => {
     setDistributionExecuteResult(null);
     setDistributionNoticeKey(key);
+    setDistributionNoticeDismissed(false);
   };
+
+  const dismissDistributionNotice = useCallback(() => {
+    setDistributionNoticeDismissed(true);
+  }, []);
 
   const startDistribution = async (
     skillUnitIds: string[],
@@ -355,7 +361,10 @@ export const useSkillsPageState = () => {
       scheduleDistributionExecutionCompletion({
         getResultStatuses: () =>
           createResultDistributionExecutionItemStatuses(previewItems, result.items),
-        onFinish: () => setDistributionExecuteResult(result),
+        onFinish: () => {
+          setDistributionExecuteResult(result);
+          setDistributionNoticeDismissed(false);
+        },
         previewItems,
         startedAt
       });
@@ -608,7 +617,8 @@ export const useSkillsPageState = () => {
     distributionExecutionItemStatuses,
     distributionExecuteResult,
     distributionNoticeKey,
-    distributionNoticeVisible: Boolean(distributionNoticeKey || distributionExecuteResult),
+    distributionNoticeVisible:
+      Boolean(distributionNoticeKey || distributionExecuteResult) && !distributionNoticeDismissed,
     distributionPreview,
     distributionRuntimeOverwriteResolutions,
     isDistributionExecuting,
@@ -629,6 +639,7 @@ export const useSkillsPageState = () => {
     visibleSomeChecked,
     closeDistributionConfirmDialog,
     closeTargetRemovalDialog,
+    dismissDistributionNotice,
     confirmTargetRemoval,
     executeCurrentDistribution,
     selectAllVisible,

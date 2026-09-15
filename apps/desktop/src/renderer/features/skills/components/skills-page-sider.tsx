@@ -314,8 +314,8 @@ const DistributionConfirmationDialog = ({
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogPortal>
         <DialogBackdrop />
-        <DialogPopup>
-          <div className="mb-5 flex items-start justify-between gap-4">
+        <DialogPopup className="flex flex-col overflow-hidden p-0">
+          <div className="flex flex-shrink-0 items-start justify-between gap-4 p-5">
             <div>
               <DialogTitle>{t("skills.distribution.confirmTitle")}</DialogTitle>
               <DialogDescription>
@@ -323,14 +323,15 @@ const DistributionConfirmationDialog = ({
               </DialogDescription>
             </div>
             <DialogClose
-              disabled={isExecuting}
+              disabled={isExecuting || executionFinished}
               render={<Button type="button" variant="outline" size="sm" />}
             >
               {t("skills.actions.close")}
             </DialogClose>
           </div>
 
-          <div className="grid gap-2">
+          <div className="min-h-0 flex-1 overflow-y-auto px-5">
+            <div className="grid gap-2">
             {items.map((item) => {
               const resolution =
                 conflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite";
@@ -429,12 +430,15 @@ const DistributionConfirmationDialog = ({
                 </div>
               );
             })}
+            </div>
           </div>
 
-          <div className="mt-5 flex justify-end gap-2">
-            <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
-              {t("skills.actions.cancel")}
-            </Button>
+          <div className="flex flex-shrink-0 justify-end gap-2 p-5">
+            {!executionFinished && (
+              <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
+                {t("skills.actions.cancel")}
+              </Button>
+            )}
             <Button
               type="button"
               disabled={isExecuting}
