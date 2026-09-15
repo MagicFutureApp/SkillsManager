@@ -11,6 +11,7 @@ import {
   DataTableRow
 } from "@/components/data-table";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
+import { Globe } from "lucide-react";
 import { Trash2 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -109,18 +110,32 @@ export const TargetList = () => {
                 {t("targets.table.skillCount", { count: target.skillCount })}
               </DataTableCell>
               <DataTableCell className={targetTableColumns.actions}>
-                {target.deletable ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={page.isDeletingTargets}
-                    aria-label={t("targets.actions.deleteTarget", { name: target.name })}
-                    onClick={() => page.openDeleteDialog([target.id])}
-                  >
-                    <Trash2 aria-hidden="true" />
-                  </Button>
-                ) : null}
+                <span className="flex items-center justify-end gap-1">
+                  {target.deletable && target.scope === "independent" ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={page.isConvertingTarget}
+                      aria-label={t("targets.actions.convertToGlobal", { name: target.name })}
+                      onClick={() => page.openConvertDialog(target.id)}
+                    >
+                      <Globe aria-hidden="true" />
+                    </Button>
+                  ) : null}
+                  {target.deletable ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={page.isDeletingTargets}
+                      aria-label={t("targets.actions.deleteTarget", { name: target.name })}
+                      onClick={() => page.openDeleteDialog([target.id])}
+                    >
+                      <Trash2 aria-hidden="true" />
+                    </Button>
+                  ) : null}
+                </span>
               </DataTableCell>
             </DataTableRow>
           ))

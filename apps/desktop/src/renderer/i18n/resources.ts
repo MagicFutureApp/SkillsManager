@@ -182,6 +182,8 @@ export const resources = {
           deleteSelected: "删除",
           deleteTarget: "删除 {{name}}",
           editTarget: "编辑",
+          convertToGlobal: "转为全局",
+          convertToGlobalTarget: "将 {{name}} 转为全局目标",
           scan: "扫描",
           rescan: "重新扫描"
         },
@@ -266,6 +268,17 @@ export const resources = {
           options: "删除目标选项",
           target: "目标",
           title: "删除目标"
+        },
+        convertDialog: {
+          cancel: "取消",
+          close: "关闭",
+          confirm: "转为全局",
+          description: "转为全局后，该目标将能够与多个技能关联。此前在 Skills 页面与该目标勾选关联的技能关系将予以保留。",
+          keptRelationships: "已保留与 {{count}} 个技能的勾选关系。",
+          noRelationships: "该目标此前未与任何技能建立勾选关系。",
+          target: "目标",
+          title: "转为全局目标",
+          willKeepRelationships: "将保留与 {{count}} 个技能的勾选关系。"
         },
         editDialog: {
           cancel: "取消",

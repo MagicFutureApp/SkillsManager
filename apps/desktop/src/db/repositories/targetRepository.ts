@@ -240,6 +240,40 @@ export const createTargetRepository = (db: DbClient) => {
         .where(eq(agentTargets.id, target.id));
     },
 
+    async convertTargetToGlobal(
+      targetId: string,
+      convertedAt = new Date()
+    ): Promise<void> {
+      const targetRows = await db
+        .select({
+          id: agentTargets.id,
+          type: agentTargets.type
+        })
+        .from(agentTargets)
+        .where(eq(agentTargets.id, targetId));
+      const existingTarget = targetRows[0];
+
+      if (!existingTarget) {
+        throw new Error("Target not found.");
+      }
+
+      if (isBuiltInTargetType(existingTarget.type)) {
+        throw new Error("System built-in targets cannot be edited.");
+      }
+
+      // Keep existing skill_target_preferences so the per-skill checkbox
+      // relationships are preserved and the conversion stays reversible.
+      db.transaction((tx) => {
+        tx.update(agentTargets)
+          .set({
+            scope: "global",
+            updatedAt: convertedAt
+          })
+          .where(eq(agentTargets.id, targetId))
+          .run();
+      });
+    },
+
     async registerCustomDirectoryTarget(
       target: RegisterCustomDirectoryTargetInput,
       registeredAt = new Date()

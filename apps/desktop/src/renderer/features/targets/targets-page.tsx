@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { TargetsPageProvider } from "./components/targets-page-context";
+import { TargetsConvertDialog } from "./components/targets-convert-dialog";
 import { TargetsDeleteDialog } from "./components/targets-delete-dialog";
 import { TargetsEditDialog } from "./components/targets-edit-dialog";
 import { TargetsPageMain } from "./components/targets-page-main";
@@ -26,6 +27,7 @@ export const TargetsPage = () => {
       <TargetsPageModal />
       <TargetsEditDialog />
       <TargetsDeleteDialog />
+      <TargetsConvertDialog />
       <TargetsScanLoadingDialog />
       <TargetsScanIssuesDialog />
     </TargetsPageProvider>

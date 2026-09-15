@@ -30,6 +30,7 @@ import type {
 import type {
   AddCustomDirectoryTargetInput as MainAddCustomDirectoryTargetInput,
   AddSkillDirectoryTargetInput as MainAddSkillDirectoryTargetInput,
+  ConvertTargetToGlobalInput as MainConvertTargetToGlobalInput,
   DeleteTargetsInput as MainDeleteTargetsInput,
   SelectedTargetDirectoryResolution as MainSelectedTargetDirectoryResolution,
   TargetDirectoryAgentOption as MainTargetDirectoryAgentOption,
@@ -72,6 +73,7 @@ export type UpdateSkillTargetPreferenceResult = MainUpdateSkillTargetPreferenceR
 export type AddSkillDirectoryTargetInput = MainAddSkillDirectoryTargetInput;
 export type AddCustomDirectoryTargetInput = MainAddCustomDirectoryTargetInput;
 export type DeleteTargetsInput = MainDeleteTargetsInput;
+export type ConvertTargetToGlobalInput = MainConvertTargetToGlobalInput;
 export type SelectedTargetDirectoryResolution = MainSelectedTargetDirectoryResolution;
 export type TargetDirectoryAgentOption = MainTargetDirectoryAgentOption;
 export type UpdateCustomDirectoryTargetInput = MainUpdateCustomDirectoryTargetInput;
@@ -125,6 +127,9 @@ declare global {
         input: UpdateCustomDirectoryTargetInput
       ) => Promise<TargetsListResult>;
       deleteTargets?: (input: DeleteTargetsInput) => Promise<TargetsListResult>;
+      convertTargetToGlobal?: (
+        input: ConvertTargetToGlobalInput
+      ) => Promise<TargetsListResult>;
       rescanTargets?: () => Promise<TargetsRescanResult>;
       openExternalUrl?: (url: string) => Promise<void>;
       openRepositoryLocation?: (location: string) => Promise<void>;

@@ -51,6 +51,10 @@ export type DeleteTargetsInput = {
   targetIds: string[];
 };
 
+export type ConvertTargetToGlobalInput = {
+  targetId: string;
+};
+
 export type UpdateCustomDirectoryTargetInput = {
   name: string;
   targetId: string;
@@ -302,6 +306,26 @@ export const deleteTargets = async (
   return getTargets(db);
 };
 
+export const convertTargetToGlobal = async (
+  db: DbClient,
+  input: ConvertTargetToGlobalInput,
+  operations: AddCustomDirectoryTargetOperations = {
+    now: () => new Date()
+  }
+): Promise<TargetsListResult> => {
+  const targetId = input.targetId.trim();
+
+  if (!targetId) {
+    throw new Error("Target is required.");
+  }
+
+  const targetRepository = createTargetRepository(db);
+
+  await targetRepository.convertTargetToGlobal(targetId, operations.now());
+
+  return getTargets(db);
+};
+
 export const updateCustomDirectoryTarget = async (
   db: DbClient,
   input: UpdateCustomDirectoryTargetInput,
@@ -403,6 +427,12 @@ export const registerTargetsIpc = (db: DbProvider): void => {
     "targets:delete",
     (_event, input: DeleteTargetsInput): Promise<TargetsListResult> => {
       return deleteTargets(resolveDb(db), input);
+    }
+  );
+  ipcMain.handle(
+    "targets:convertToGlobal",
+    (_event, input: ConvertTargetToGlobalInput): Promise<TargetsListResult> => {
+      return convertTargetToGlobal(resolveDb(db), input);
     }
   );
 };

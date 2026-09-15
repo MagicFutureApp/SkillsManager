@@ -276,6 +276,67 @@ describe("createTargetRepository", () => {
     ]);
   });
 
+  it("converts an independent target to global and keeps its skill bindings", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-21T00:00:00.000Z");
+    const convertedAt = new Date("2026-06-25T00:00:00.000Z");
+
+    await db.insert(agentTargets).values({
+      createdAt,
+      enabled: true,
+      id: "target-independent",
+      name: "Independent target",
+      normalizedPath: "/Users/test/indie/.codex/skills",
+      path: "/Users/test/indie/.codex/skills",
+      scope: "independent",
+      type: "custom-directory",
+      updatedAt: createdAt
+    });
+    await db.insert(skillTargetPreferences).values({
+      agentTargetId: "target-independent",
+      createdAt,
+      enabled: true,
+      id: "pref-1",
+      skillUnitId: "skill-1",
+      updatedAt: createdAt
+    });
+
+    await createTargetRepository(db).convertTargetToGlobal("target-independent", convertedAt);
+
+    const targets = await db.select().from(agentTargets);
+    const preferences = await db.select().from(skillTargetPreferences);
+
+    expect(targets).toMatchObject([
+      {
+        id: "target-independent",
+        scope: "global",
+        updatedAt: convertedAt
+      }
+    ]);
+    expect(preferences).toHaveLength(0);
+  });
+
+  it("refuses to convert a built-in target to global", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-21T00:00:00.000Z");
+
+    await db.insert(agentTargets).values({
+      createdAt,
+      enabled: true,
+      id: "system-codex",
+      name: "Codex",
+      normalizedPath: "/Users/test/.codex/skills",
+      path: "/Users/test/.codex/skills",
+      scope: "global",
+      type: "codex",
+      updatedAt: createdAt
+    });
+
+    await expect(
+      createTargetRepository(db).convertTargetToGlobal("system-codex")
+    ).rejects.toThrow(/built-in/i);
+  });
+
   it("counts registered targets independently of list pagination", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-21T00:00:00.000Z");

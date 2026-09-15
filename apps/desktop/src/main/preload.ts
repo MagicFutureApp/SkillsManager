@@ -32,6 +32,7 @@ import type {
 import type {
   AddCustomDirectoryTargetInput,
   AddSkillDirectoryTargetInput,
+  ConvertTargetToGlobalInput,
   DeleteTargetsInput,
   SelectedTargetDirectoryResolution,
   UpdateCustomDirectoryTargetInput,
@@ -103,6 +104,8 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ipcRenderer.invoke("targets:updateCustomDirectory", input) as Promise<TargetsListResult>,
   deleteTargets: (input: DeleteTargetsInput) =>
     ipcRenderer.invoke("targets:delete", input) as Promise<TargetsListResult>,
+  convertTargetToGlobal: (input: ConvertTargetToGlobalInput) =>
+    ipcRenderer.invoke("targets:convertToGlobal", input) as Promise<TargetsListResult>,
   rescanTargets: () => ipcRenderer.invoke("targets:rescan") as Promise<TargetsRescanResult>,
   openExternalUrl: (url: string) =>
     ipcRenderer.invoke("settings:openExternalUrl", url) as Promise<void>,

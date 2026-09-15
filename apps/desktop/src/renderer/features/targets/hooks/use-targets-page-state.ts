@@ -44,6 +44,12 @@ export const useTargetsPageState = () => {
   const [isDeletingTargets, setIsDeletingTargets] = useState(false);
   const [isEditTargetDialogOpen, setIsEditTargetDialogOpen] = useState(false);
   const [isSavingEditTarget, setIsSavingEditTarget] = useState(false);
+  const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
+  const [isConvertingTarget, setIsConvertingTarget] = useState(false);
+  const [convertTargetError, setConvertTargetError] = useState("");
+  const [pendingConvertTargetId, setPendingConvertTargetId] = useState<string | null>(null);
+  const [isConvertSuccess, setIsConvertSuccess] = useState(false);
+  const [convertedSkillCount, setConvertedSkillCount] = useState(0);
   const [customTargetAgentDirectoryName, setCustomTargetAgentDirectoryNameValue] = useState("");
   const [pendingTargetAgentDirectory, setPendingTargetAgentDirectory] =
     useState<PendingTargetAgentDirectory | null>(null);
@@ -444,6 +450,57 @@ export const useTargetsPageState = () => {
     };
   }, []);
 
+  const openConvertDialog = (targetId: string) => {
+    if (!targets.some((target) => target.id === targetId && target.deletable)) {
+      return;
+    }
+
+    setConvertTargetError("");
+    setPendingConvertTargetId(targetId);
+    setIsConvertDialogOpen(true);
+  };
+
+  const closeConvertDialog = () => {
+    if (isConvertingTarget) {
+      return;
+    }
+
+    setConvertTargetError("");
+    setIsConvertDialogOpen(false);
+    setPendingConvertTargetId(null);
+  };
+
+  const convertTargetToGlobal = async () => {
+    const targetId = pendingConvertTargetId;
+
+    if (!targetId) {
+      closeConvertDialog();
+      return;
+    }
+
+    const target = targets.find((item) => item.id === targetId);
+
+    if (!target || !window.skillsManager?.convertTargetToGlobal) {
+      setConvertTargetError("转为全局暂不可用。");
+      return;
+    }
+
+    setConvertTargetError("");
+    setIsConvertingTarget(true);
+
+    try {
+      const result = await window.skillsManager.convertTargetToGlobal({ targetId });
+
+      applyTargetsResult(result, targetId);
+      setConvertedSkillCount(target.skillCount ?? 0);
+      setIsConvertSuccess(true);
+    } catch (error) {
+      setConvertTargetError(error instanceof Error ? error.message : "转为全局失败。");
+    } finally {
+      setIsConvertingTarget(false);
+    }
+  };
+
   const filteredTargets = useMemo(() => {
     return filterTargets({ query, sort, targets });
   }, [query, sort, targets]);
@@ -492,6 +549,10 @@ export const useTargetsPageState = () => {
   const pendingDeleteTargets = pendingDeleteTargetIds
     .map((targetId) => targets.find((target) => target.id === targetId))
     .filter((target): target is TargetViewModel => Boolean(target));
+  const pendingConvertTarget =
+    (pendingConvertTargetId &&
+      (targets.find((target) => target.id === pendingConvertTargetId) ?? null)) ||
+    null;
   const copySelectedTargetPath = () => {
     if (!selectedTarget) {
       return;
@@ -516,12 +577,17 @@ export const useTargetsPageState = () => {
     isDeleteDialogOpen,
     isDeletingTargets,
     isEditTargetDialogOpen,
+    isConvertDialogOpen,
+    isConvertingTarget,
+    isConvertSuccess,
+    convertedSkillCount,
     isCustomTargetAgentDirectorySelected: selectedTargetAgentType === customTargetAgentType,
     isRefreshingTargets,
     isSavingEditTarget,
     customTargetAgentDirectoryName,
     pendingTargetAgentDirectory,
     pendingDeleteTargets,
+    pendingConvertTarget,
     pagination,
     query,
     scanIssues,
@@ -535,10 +601,14 @@ export const useTargetsPageState = () => {
     visibleSomeChecked,
     closeDeleteDialog,
     closeEditTargetDialog,
+    closeConvertDialog,
+    convertTargetError,
+    convertTargetToGlobal,
     copySelectedTargetPath,
     confirmDeleteTargets,
     openAddTargetDialog: addTargetDialog.openAddTargetDialog,
     openCheckedDeleteDialog,
+    openConvertDialog,
     openDeleteDialog,
     openEditTargetDialog,
     refreshTargets,
