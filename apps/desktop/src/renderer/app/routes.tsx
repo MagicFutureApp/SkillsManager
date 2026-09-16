@@ -1,17 +1,16 @@
-import { createRoute, createRootRoute, Navigate, Outlet } from "@tanstack/react-router";
-import React from "react";
+import { createRootRoute, createRoute, redirect } from "@tanstack/react-router";
 
 import { AppShell } from "@/features/shell/app-shell";
-import { ProvidersPage } from "@/features/providers/providers-page";
-import { RepositoriesPage } from "@/features/repositories/repositories-page";
-import { SettingsPage } from "@/features/settings/settings-page";
-import { SkillsPage } from "@/features/skills/skills-page";
-import { TargetsPage } from "@/features/targets/targets-page";
+
+import { KeepAlivePages } from "./keep-alive-pages";
+import type { AppRouteId } from "./route-config";
+import { routePathById } from "./route-config";
+import React from "react";
 
 export const rootRoute = createRootRoute({
   component: () => (
     <AppShell>
-      <Outlet />
+      <KeepAlivePages />
     </AppShell>
   )
 });
@@ -19,44 +18,24 @@ export const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => <Navigate to="/skills" replace />
+  beforeLoad: () => {
+    throw redirect({ replace: true, to: routePathById.skills });
+  }
 });
 
-const providersRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/providers",
-  component: ProvidersPage
-});
+const createPageRoute = <TPath extends string>(path: TPath) => {
+  return createRoute({
+    getParentRoute: () => rootRoute,
+    path
+  });
+};
 
-const repositoriesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/repositories",
-  component: RepositoriesPage
-});
+const pageRoutes = {
+  providers: createPageRoute(routePathById.providers),
+  repositories: createPageRoute(routePathById.repositories),
+  skills: createPageRoute(routePathById.skills),
+  targets: createPageRoute(routePathById.targets),
+  settings: createPageRoute(routePathById.settings)
+} satisfies Record<AppRouteId, unknown>;
 
-const skillsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/skills",
-  component: SkillsPage
-});
-
-const targetsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/targets",
-  component: TargetsPage
-});
-
-const settingsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/settings",
-  component: SettingsPage
-});
-
-export const routeTree = rootRoute.addChildren([
-  indexRoute,
-  providersRoute,
-  repositoriesRoute,
-  skillsRoute,
-  targetsRoute,
-  settingsRoute
-]);
+export const routeTree = rootRoute.addChildren([indexRoute, ...Object.values(pageRoutes)]);

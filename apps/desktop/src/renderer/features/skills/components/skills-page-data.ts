@@ -102,7 +102,7 @@ export const getSelectedSkillsDistributionState = (
     return "no-selection";
   }
 
-  return selectedSkills.every((skill) => getSkillDistributionState(skill) === "ready")
+  return selectedSkills.some((skill) => getSkillDistributionState(skill) === "ready")
     ? "ready"
     : "no-targets";
 };

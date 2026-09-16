@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { routeIdByPath, routePathById } from "@/app/route-config";
+import { getActiveRouteId, routePathById } from "@/app/route-config";
 import type { AppHealth, AppInfo } from "@/global";
 import { useShellStore } from "@/stores/shell-store";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ export const AppShell = ({ children }: AppShellProps) => {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const activeRouteId = routeIdByPath[location.pathname] ?? "skills";
+  const activeRouteId = getActiveRouteId(location.pathname);
   const isSidebarAutoCollapsed = useShellStore((state) => state.isSidebarAutoCollapsed);
   const setActiveRouteId = useShellStore((state) => state.setActiveRouteId);
   const setSidebarAutoCollapsedByWidth = useShellStore(

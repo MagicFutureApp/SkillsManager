@@ -315,7 +315,7 @@ const DistributionConfirmationDialog = ({
       <DialogPortal>
         <DialogBackdrop />
         <DialogPopup className="flex flex-col overflow-hidden p-0">
-          <div className="flex flex-shrink-0 items-start justify-between gap-4 p-5">
+          <div className="flex shrink-0 items-start justify-between gap-4 p-5">
             <div>
               <DialogTitle>{t("skills.distribution.confirmTitle")}</DialogTitle>
               <DialogDescription>
@@ -433,7 +433,7 @@ const DistributionConfirmationDialog = ({
             </div>
           </div>
 
-          <div className="flex flex-shrink-0 justify-end gap-2 p-5">
+          <div className="flex shrink-0 justify-end gap-2 p-5">
             {!executionFinished && (
               <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
                 {t("skills.actions.cancel")}
