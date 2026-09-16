@@ -669,6 +669,9 @@ describe("RepositoriesPage", () => {
 
     fireEvent.click(getRepositorySyncButton("Team skills repository"));
 
+    const dialog = await screen.findByRole("dialog", { name: "同步进度" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "开始同步" }));
+
     await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
     expect(listRepositories).toHaveBeenCalledTimes(2);
     expect(
@@ -677,6 +680,36 @@ describe("RepositoriesPage", () => {
       )
     ).toBeInTheDocument();
     expect(screen.getByLabelText("选择 Team skills repository")).not.toBeChecked();
+  });
+
+  it("asks for confirmation before syncing and cancels without starting", async () => {
+    const syncRepositories = vi.fn().mockResolvedValue({ results: [] });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories: vi.fn().mockResolvedValue({ repositories: repositoryApiRecordsFixture }),
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+
+    fireEvent.click(getRepositorySyncButton("Team skills repository"));
+
+    const dialog = await screen.findByRole("dialog", { name: "同步进度" });
+    expect(
+      within(dialog).getByRole("button", { name: "开始同步" })
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "取消" })).toBeInTheDocument();
+    expect(syncRepositories).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "取消" }));
+
+    expect(screen.queryByRole("dialog", { name: "同步进度" })).not.toBeInTheDocument();
+    expect(syncRepositories).not.toHaveBeenCalled();
   });
 
   it("shows the last persisted sync status on the row sync icon", async () => {
@@ -794,6 +827,8 @@ describe("RepositoriesPage", () => {
     await renderRepositoriesPage();
 
     fireEvent.click(getRepositorySyncButton("Team skills repository"));
+    const confirmDialog = await screen.findByRole("dialog", { name: "同步进度" });
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "开始同步" }));
     await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
     vi.useFakeTimers();
 
@@ -887,7 +922,7 @@ describe("RepositoriesPage", () => {
     });
 
     expect(within(dialog).getByText("同步完成。")).toBeInTheDocument();
-    const doneButton = within(dialog).getByRole("button", { name: "确定" });
+    const doneButton = within(dialog).getByRole("button", { name: "确认" });
     expect(doneButton).toBeInTheDocument();
     fireEvent.click(doneButton);
     expect(screen.queryByRole("dialog", { name: "同步进度" })).not.toBeInTheDocument();
@@ -920,6 +955,8 @@ describe("RepositoriesPage", () => {
     await renderRepositoriesPage();
 
     fireEvent.click(getRepositorySyncButton("Team skills repository"));
+    const confirmDialog = await screen.findByRole("dialog", { name: "同步进度" });
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "开始同步" }));
     await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
     vi.useFakeTimers();
 
@@ -1006,6 +1043,9 @@ describe("RepositoriesPage", () => {
     await renderRepositoriesPage();
 
     fireEvent.click(getRepositorySyncButton("Team skills repository"));
+    const firstDialog = await screen.findByRole("dialog", { name: "同步进度" });
+    fireEvent.click(within(firstDialog).getByRole("button", { name: "开始同步" }));
+
     await screen.findByLabelText(
       "Team skills repository 正在同步。正在复制或拉取来源，并扫描 SKILL.md。缓存目录 ~/.skills-manager/cache/team-skills"
     );
@@ -1015,6 +1055,9 @@ describe("RepositoriesPage", () => {
     expect(screen.getByRole("button", { name: "同步" })).toBeEnabled();
 
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
+
+    const secondDialog = await screen.findByRole("dialog", { name: "同步进度" });
+    fireEvent.click(within(secondDialog).getByRole("button", { name: "开始同步" }));
 
     await waitFor(() => expect(syncRepositories).toHaveBeenCalledTimes(2));
     expect(syncRepositories).toHaveBeenNthCalledWith(1, ["team-skills"]);
@@ -1145,6 +1188,9 @@ describe("RepositoriesPage", () => {
 
     fireEvent.click(screen.getByLabelText("选择 Team skills repository"));
     fireEvent.click(screen.getByRole("button", { name: "同步" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "同步进度" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "开始同步" }));
 
     expect(
       await screen.findByLabelText(`Team skills repository 同步失败。${friendlyMessage}`)

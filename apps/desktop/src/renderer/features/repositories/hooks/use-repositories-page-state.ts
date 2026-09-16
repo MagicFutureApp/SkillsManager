@@ -47,7 +47,7 @@ export type RepositorySyncProgressRepository = {
 export type RepositorySyncProgressDialogState = {
   id: number;
   repositories: RepositorySyncProgressRepository[];
-  status: "completed" | "failed" | "syncing";
+  status: "completed" | "failed" | "pending" | "syncing";
 };
 
 const MIN_SYNC_PROGRESS_ITEM_DURATION_MS = 1000;
@@ -261,10 +261,20 @@ export const useRepositoriesPageState = () => {
       return;
     }
 
-    await executeSyncRepositories(targetRepositories);
+    openSyncConfirmDialog(targetRepositories);
   };
 
-  const executeSyncRepositories = async (targetRepositories: RepositoryViewModel[]) => {
+  const openSyncConfirmDialog = (targetRepositories: RepositoryViewModel[]) => {
+    setSyncProgressDialog(createSyncConfirmDialog(targetRepositories));
+  };
+
+  const startSyncProgress = async (repositoryIds: string[]) => {
+    const targetRepositories = getSyncTargetRepositories(repositoryIds);
+
+    await runSyncRepositories(targetRepositories);
+  };
+
+  const runSyncRepositories = async (targetRepositories: RepositoryViewModel[]) => {
     if (!targetRepositories.length) {
       return;
     }
@@ -367,7 +377,7 @@ export const useRepositoriesPageState = () => {
     const targetRepositories = getSyncTargetRepositories(pendingLocalSyncRepositoryIds);
 
     setPendingLocalSyncRepositoryIds([]);
-    await executeSyncRepositories(targetRepositories);
+    await runSyncRepositories(targetRepositories);
   };
 
   const closeLocalSyncConfirmDialog = () => {
@@ -707,6 +717,7 @@ export const useRepositoriesPageState = () => {
     setStatusFilter,
     syncCheckedRepositories,
     syncRepository,
+    startSyncProgress,
     toggleRepositoryChecked,
     toggleRepositoryEnabled
   };
@@ -767,6 +778,16 @@ const createSyncProgressDialog = (
     id: Date.now(),
     repositories: repositories.map(createSyncProgressRepository),
     status: "syncing"
+  };
+};
+
+const createSyncConfirmDialog = (
+  repositories: Array<Pick<RepositoryViewModel, "id" | "name">>
+): RepositorySyncProgressDialogState => {
+  return {
+    id: Date.now(),
+    repositories: repositories.map(createSyncProgressRepository),
+    status: "pending"
   };
 };
 

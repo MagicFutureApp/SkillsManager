@@ -458,9 +458,12 @@ export const resources = {
           title: "本地路径同步确认"
         },
         syncProgress: {
+          cancel: "取消",
           close: "关闭",
           completedDescription: "同步完成。",
-          done: "确定",
+          done: "确认",
+          pendingDescription: "即将同步以下来源，点击「开始同步」继续。",
+          start: "开始同步",
           completedItem: "{{name}} 完成",
           empty: "等待扫描到 Skills 后显示逐项进度。",
           failedDescription: "同步失败。请检查来源状态后重试。",
@@ -954,9 +957,13 @@ export const resources = {
           title: "Local path sync confirmation"
         },
         syncProgress: {
+          cancel: "Cancel",
           close: "Close",
           completedDescription: "Sync completed.",
-          done: "OK",
+          done: "Confirm",
+          pendingDescription:
+            "The following sources will be synced. Click \"Start sync\" to continue.",
+          start: "Start sync",
           completedItem: "{{name}} completed",
           empty: "Per-skill progress appears after skills are discovered.",
           failedDescription: "Sync failed. Check the source status and retry.",

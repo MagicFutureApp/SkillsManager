@@ -23,11 +23,26 @@ export const RepositoriesPageSyncProgressDialog = () => {
   }
 
   const description =
-    progress.status === "completed"
-      ? t("repositories.syncProgress.completedDescription")
-      : progress.status === "failed"
-        ? t("repositories.syncProgress.failedDescription")
-        : t("repositories.syncProgress.syncingDescription");
+    progress.status === "pending"
+      ? t("repositories.syncProgress.pendingDescription")
+      : progress.status === "completed"
+        ? t("repositories.syncProgress.completedDescription")
+        : progress.status === "failed"
+          ? t("repositories.syncProgress.failedDescription")
+          : t("repositories.syncProgress.syncingDescription");
+
+  const isPending = progress.status === "pending";
+  const isSyncing = progress.status === "syncing";
+  const isDone = progress.status === "completed" || progress.status === "failed";
+  const primaryButtonLabel = isDone
+    ? t("repositories.syncProgress.done")
+    : t("repositories.syncProgress.start");
+  const primaryButtonDisabled = isSyncing;
+  const onPrimaryClick = isPending
+    ? () => page.startSyncProgress(progress.repositories.map((repository) => repository.repositoryId))
+    : isDone
+      ? page.closeSyncProgressDialog
+      : undefined;
 
   return (
     <Dialog open={Boolean(progress)} modal={false}>
@@ -43,8 +58,10 @@ export const RepositoriesPageSyncProgressDialog = () => {
                 <Check aria-hidden="true" className="size-5 text-success" />
               ) : progress.status === "failed" ? (
                 <X aria-hidden="true" className="size-5 text-destructive" />
-              ) : (
+              ) : isSyncing ? (
                 <LoaderCircle aria-hidden="true" className="size-5 animate-spin text-muted-foreground" />
+              ) : (
+                <LoaderCircle aria-hidden="true" className="size-5 text-muted-foreground" />
               )}
             </div>
             <div className="min-w-0">
@@ -115,19 +132,22 @@ export const RepositoriesPageSyncProgressDialog = () => {
             ))}
           </div>
 
-          {progress.status === "failed" || progress.status === "completed" ? (
-            <div className="mt-4 flex justify-end">
-              {progress.status === "completed" ? (
-                <Button type="button" onClick={page.closeSyncProgressDialog}>
-                  {t("repositories.syncProgress.done")}
-                </Button>
-              ) : (
-                <Button type="button" variant="outline" onClick={page.closeSyncProgressDialog}>
-                  {t("repositories.syncProgress.close")}
-                </Button>
-              )}
+          {isPending ? (
+            <div className="mt-4 flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={page.closeSyncProgressDialog}>
+                {t("repositories.syncProgress.cancel")}
+              </Button>
+              <Button type="button" onClick={onPrimaryClick}>
+                {primaryButtonLabel}
+              </Button>
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-4 flex justify-end">
+              <Button type="button" disabled={primaryButtonDisabled} onClick={onPrimaryClick}>
+                {primaryButtonLabel}
+              </Button>
+            </div>
+          )}
         </DialogPopup>
       </DialogPortal>
     </Dialog>
