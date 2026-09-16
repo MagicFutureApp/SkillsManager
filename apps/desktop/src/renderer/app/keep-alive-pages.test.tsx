@@ -13,7 +13,7 @@ import {
   skillApiRecordsFixture
 } from "@/test/api-fixtures";
 
-import { getKeepAlivePageTestId } from "./keep-alive-pages";
+import { KEEP_ALIVE_ENABLED, getKeepAlivePageTestId } from "./keep-alive-pages";
 import { router } from "./router";
 
 const targetsFixture: TargetsListResult = {
@@ -30,6 +30,19 @@ const renderApp = async () => {
       </TooltipProvider>
     </I18nextProvider>
   );
+};
+
+const searchSkills = async (keyword: string) => {
+  await screen.findByLabelText("搜索技能");
+  fireEvent.change(screen.getByLabelText("搜索技能"), { target: { value: keyword } });
+
+  return screen.getByTestId(getKeepAlivePageTestId("skills"));
+};
+
+const navigateTo = async (to: "/skills" | "/targets") => {
+  await act(async () => {
+    await router.navigate({ to });
+  });
 };
 
 describe("KeepAlivePages", () => {
@@ -55,50 +68,60 @@ describe("KeepAlivePages", () => {
     await router.navigate({ replace: true, to: "/skills" });
   });
 
-  it("keeps visited page state mounted when switching tabs", async () => {
-    await renderApp();
-    await screen.findByLabelText("搜索技能");
+  // 两组用例互斥，由 `KEEP_ALIVE_ENABLED` 决定哪一组生效，翻开关即换覆盖目标。
+  describe.runIf(KEEP_ALIVE_ENABLED)("keep-alive 开启", () => {
+    it("keeps visited page state mounted when switching tabs", async () => {
+      await renderApp();
+      const skillsPage = await searchSkills("Release Notes");
 
-    fireEvent.change(screen.getByLabelText("搜索技能"), { target: { value: "Release Notes" } });
+      expect(skillsPage).not.toHaveAttribute("hidden");
+      expect(screen.queryByTestId(getKeepAlivePageTestId("targets"))).not.toBeInTheDocument();
 
-    const skillsPage = screen.getByTestId(getKeepAlivePageTestId("skills"));
+      await navigateTo("/targets");
 
-    expect(skillsPage).not.toHaveAttribute("hidden");
-    expect(screen.queryByTestId(getKeepAlivePageTestId("targets"))).not.toBeInTheDocument();
+      expect(screen.getByTestId(getKeepAlivePageTestId("skills"))).toBe(skillsPage);
+      expect(skillsPage).toHaveAttribute("hidden");
+      expect(screen.getByTestId(getKeepAlivePageTestId("targets"))).not.toHaveAttribute("hidden");
+      expect(screen.getByRole("complementary", { name: "目标详情" })).toBeInTheDocument();
 
-    await act(async () => {
-      await router.navigate({ to: "/targets" });
+      await navigateTo("/skills");
+
+      expect(screen.getByTestId(getKeepAlivePageTestId("skills"))).toBe(skillsPage);
+      expect(skillsPage).not.toHaveAttribute("hidden");
+      expect(screen.getByLabelText("搜索技能")).toHaveValue("Release Notes");
     });
 
-    expect(screen.getByTestId(getKeepAlivePageTestId("skills"))).toBe(skillsPage);
-    expect(skillsPage).toHaveAttribute("hidden");
-    expect(screen.getByTestId(getKeepAlivePageTestId("targets"))).not.toHaveAttribute("hidden");
-    expect(screen.getByRole("complementary", { name: "目标详情" })).toBeInTheDocument();
+    it("loads each visited page once and keeps it mounted afterwards", async () => {
+      await renderApp();
+      await screen.findByLabelText("搜索技能");
 
-    await act(async () => {
-      await router.navigate({ to: "/skills" });
+      expect(window.skillsManager?.listSkills).toHaveBeenCalledTimes(1);
+      expect(window.skillsManager?.listTargets).toHaveBeenCalledTimes(1);
+
+      await navigateTo("/targets");
+      await navigateTo("/skills");
+
+      expect(window.skillsManager?.listSkills).toHaveBeenCalledTimes(1);
     });
-
-    expect(screen.getByTestId(getKeepAlivePageTestId("skills"))).toBe(skillsPage);
-    expect(skillsPage).not.toHaveAttribute("hidden");
-    expect(screen.getByLabelText("搜索技能")).toHaveValue("Release Notes");
   });
 
-  it("loads each visited page once and keeps it mounted afterwards", async () => {
-    await renderApp();
-    await screen.findByLabelText("搜索技能");
+  describe.runIf(!KEEP_ALIVE_ENABLED)("keep-alive 短路口", () => {
+    it("unmounts the previous page instead of keeping it hidden", async () => {
+      await renderApp();
+      const skillsPage = await searchSkills("Release Notes");
 
-    expect(window.skillsManager?.listSkills).toHaveBeenCalledTimes(1);
-    expect(window.skillsManager?.listTargets).toHaveBeenCalledTimes(1);
+      await navigateTo("/targets");
 
-    await act(async () => {
-      await router.navigate({ to: "/targets" });
+      expect(screen.queryByTestId(getKeepAlivePageTestId("skills"))).not.toBeInTheDocument();
+      expect(screen.getByTestId(getKeepAlivePageTestId("targets"))).toBeInTheDocument();
+      expect(screen.getByRole("complementary", { name: "目标详情" })).toBeInTheDocument();
+
+      await navigateTo("/skills");
+      await screen.findByLabelText("搜索技能");
+
+      expect(screen.getByTestId(getKeepAlivePageTestId("skills"))).not.toBe(skillsPage);
+      expect(screen.getByLabelText("搜索技能")).toHaveValue("");
+      expect(window.skillsManager?.listSkills).toHaveBeenCalledTimes(2);
     });
-
-    await act(async () => {
-      await router.navigate({ to: "/skills" });
-    });
-
-    expect(window.skillsManager?.listSkills).toHaveBeenCalledTimes(1);
   });
 });
