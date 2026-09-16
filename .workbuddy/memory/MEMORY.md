@@ -15,7 +15,15 @@
 ## 工作规则
 
 - 默认不 commit / push，除非用户当轮明确要求（见用户级 MEMORY.md）。
+- **`.workbuddy/memory` 下的记忆文件改动例外：每次随当轮代码改动一起提交**，无需单独确认（用户 2026-09-16 明确要求）。
 - 改动前先 `git status --short` 确认用户已有改动，不要覆盖。
+
+## renderer 页面渲染：keep-alive 开关
+
+- `renderer/app/keep-alive-pages.tsx` 是 root 的渲染出口（**没有 `<Outlet/>`**，子路由只保留 `path`，`/` 靠 `beforeLoad` 抛 `redirect`）。
+- 行为由模块常量 **`KEEP_ALIVE_ENABLED`** 控制：`true` = 首次访问才挂载、之后只切 `hidden`（保留页面局部状态）；**当前 `false` = 短路口**，只渲染 `activeRouteId`，切 Tab 即卸载，等价改造前行为（用户 2026-09-16 要求暂时短路，架构保留）。
+- 对应测试按该常量分流：`keep-alive-pages.test.tsx` 用 `describe.runIf(KEEP_ALIVE_ENABLED)` / `runIf(!KEEP_ALIVE_ENABLED)` 分成两个互斥 describe，翻开关即换覆盖目标。改这个能力时先看这里，别以为漏了测试。
+- 短路的原因是可接受的语义代价：keep-alive 开启后页面数据不再自动刷新（无 window focus 重取）、隐藏页的 effect/定时器仍在跑、portal 弹窗不随 `hidden` 容器卸载。
 
 ## 模块格式（ESM）
 
