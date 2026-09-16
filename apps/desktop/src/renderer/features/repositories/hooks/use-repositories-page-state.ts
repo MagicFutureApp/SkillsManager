@@ -152,20 +152,6 @@ export const useRepositoriesPageState = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (syncProgressDialog?.status !== "completed") {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setSyncProgressDialog((currentDialog) =>
-        currentDialog?.id === syncProgressDialog.id ? null : currentDialog
-      );
-    }, 3000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [syncProgressDialog?.id, syncProgressDialog?.status]);
-
   const filteredRepositories = useMemo(() => {
     return filterRepositories({
       provider: providerFilter,

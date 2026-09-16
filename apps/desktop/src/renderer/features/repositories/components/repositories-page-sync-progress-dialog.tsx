@@ -7,7 +7,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { LoaderCircle } from "lucide-react";
+import { Check, LoaderCircle, X } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -22,7 +22,6 @@ export const RepositoriesPageSyncProgressDialog = () => {
     return null;
   }
 
-  const isSyncing = progress.status === "syncing";
   const description =
     progress.status === "completed"
       ? t("repositories.syncProgress.completedDescription")
@@ -40,10 +39,13 @@ export const RepositoriesPageSyncProgressDialog = () => {
               aria-label={t("repositories.syncProgress.title")}
               className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted"
             >
-              <LoaderCircle
-                aria-hidden="true"
-                className={cn("size-5 text-muted-foreground", isSyncing && "animate-spin")}
-              />
+              {progress.status === "completed" ? (
+                <Check aria-hidden="true" className="size-5 text-success" />
+              ) : progress.status === "failed" ? (
+                <X aria-hidden="true" className="size-5 text-destructive" />
+              ) : (
+                <LoaderCircle aria-hidden="true" className="size-5 animate-spin text-muted-foreground" />
+              )}
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-lg">{t("repositories.syncProgress.title")}</DialogTitle>
@@ -81,15 +83,24 @@ export const RepositoriesPageSyncProgressDialog = () => {
                             role="status"
                             aria-label={itemAriaLabel}
                             className={cn(
-                              "flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground",
-                              item.status === "failed" && "text-destructive",
-                              itemIsSyncing && "text-primary"
+                              "flex size-7 shrink-0 items-center justify-center rounded-lg",
+                              item.status === "completed"
+                                ? "text-success"
+                                : item.status === "failed"
+                                  ? "text-destructive"
+                                  : "text-primary"
                             )}
                           >
-                            <LoaderCircle
-                              aria-hidden="true"
-                              className={cn("size-4", itemIsSyncing && "animate-spin")}
-                            />
+                            {item.status === "completed" ? (
+                              <Check aria-hidden="true" className="size-4" />
+                            ) : item.status === "failed" ? (
+                              <X aria-hidden="true" className="size-4" />
+                            ) : (
+                              <LoaderCircle
+                                aria-hidden="true"
+                                className={cn("size-4", itemIsSyncing && "animate-spin")}
+                              />
+                            )}
                           </span>
                         </li>
                       );
@@ -104,11 +115,17 @@ export const RepositoriesPageSyncProgressDialog = () => {
             ))}
           </div>
 
-          {progress.status === "failed" ? (
+          {progress.status === "failed" || progress.status === "completed" ? (
             <div className="mt-4 flex justify-end">
-              <Button type="button" variant="outline" onClick={page.closeSyncProgressDialog}>
-                {t("repositories.syncProgress.close")}
-              </Button>
+              {progress.status === "completed" ? (
+                <Button type="button" onClick={page.closeSyncProgressDialog}>
+                  {t("repositories.syncProgress.done")}
+                </Button>
+              ) : (
+                <Button type="button" variant="outline" onClick={page.closeSyncProgressDialog}>
+                  {t("repositories.syncProgress.close")}
+                </Button>
+              )}
             </div>
           ) : null}
         </DialogPopup>

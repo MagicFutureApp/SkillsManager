@@ -887,9 +887,9 @@ describe("RepositoriesPage", () => {
     });
 
     expect(within(dialog).getByText("同步完成。")).toBeInTheDocument();
-    await act(async () => {
-      vi.advanceTimersByTime(3000);
-    });
+    const doneButton = within(dialog).getByRole("button", { name: "确定" });
+    expect(doneButton).toBeInTheDocument();
+    fireEvent.click(doneButton);
     expect(screen.queryByRole("dialog", { name: "同步进度" })).not.toBeInTheDocument();
   }, 10000);
 

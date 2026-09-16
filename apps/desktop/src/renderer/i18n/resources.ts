@@ -460,6 +460,7 @@ export const resources = {
         syncProgress: {
           close: "关闭",
           completedDescription: "同步完成。",
+          done: "确定",
           completedItem: "{{name}} 完成",
           empty: "等待扫描到 Skills 后显示逐项进度。",
           failedDescription: "同步失败。请检查来源状态后重试。",
@@ -955,6 +956,7 @@ export const resources = {
         syncProgress: {
           close: "Close",
           completedDescription: "Sync completed.",
+          done: "OK",
           completedItem: "{{name}} completed",
           empty: "Per-skill progress appears after skills are discovered.",
           failedDescription: "Sync failed. Check the source status and retry.",
