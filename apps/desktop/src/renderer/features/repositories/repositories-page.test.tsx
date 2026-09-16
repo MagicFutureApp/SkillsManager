@@ -928,6 +928,123 @@ describe("RepositoriesPage", () => {
     expect(screen.queryByRole("dialog", { name: "同步进度" })).not.toBeInTheDocument();
   }, 10000);
 
+  it("keeps the dialog completed when late progress events arrive after the sync result", async () => {
+    let progressCallback: RepositorySyncProgressCallback = () => undefined;
+    let resolveSync: (value: RepositoriesSyncResult) => void = () => undefined;
+    const syncRepositories = vi.fn(
+      () =>
+        new Promise<RepositoriesSyncResult>((resolve) => {
+          resolveSync = resolve;
+        })
+    );
+    const onRepositorySyncProgress = vi.fn((callback: RepositorySyncProgressCallback) => {
+      progressCallback = callback;
+      return vi.fn();
+    });
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      onRepositorySyncProgress,
+      platform: "win32",
+      syncRepositories
+    } as unknown as NonNullable<typeof window.skillsManager>;
+    await renderRepositoriesPage();
+
+    fireEvent.click(getRepositorySyncButton("Team skills repository"));
+    const confirmDialog = await screen.findByRole("dialog", { name: "同步进度" });
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "开始同步" }));
+    await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
+    vi.useFakeTimers();
+
+    act(() => {
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Review Bot",
+          skillKey: "review-bot",
+          skillUnitId: "team-skills__review-bot"
+        },
+        status: "syncing"
+      });
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Design Helper",
+          skillKey: "design-helper",
+          skillUnitId: "team-skills__design-helper"
+        },
+        status: "syncing"
+      });
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Review Bot",
+          skillKey: "review-bot",
+          skillUnitId: "team-skills__review-bot"
+        },
+        status: "completed"
+      });
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+      resolveSync({
+        results: [
+          {
+            commitSha: "8f2c91a",
+            repositoryId: "team-skills",
+            scan: { added: 1, changed: 1, removed: 0, warnings: 0 },
+            skillUnits: 12,
+            status: "ready"
+          }
+        ]
+      });
+    });
+
+    const dialog = screen.getByRole("dialog", { name: "同步进度" });
+    expect(within(dialog).getByText("同步完成。")).toBeInTheDocument();
+
+    act(() => {
+      // 模拟 IPC 乱序：同步结果先到，迟到的逐项完成事件后到。
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Design Helper",
+          skillKey: "design-helper",
+          skillUnitId: "team-skills__design-helper"
+        },
+        status: "completed"
+      });
+      progressCallback({
+        repositoryId: "team-skills",
+        repositoryName: "Team skills repository",
+        skill: {
+          name: "Late Arrival",
+          skillKey: "late-arrival",
+          skillUnitId: "team-skills__late-arrival"
+        },
+        status: "syncing"
+      });
+    });
+
+    expect(within(dialog).getByText("同步完成。")).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "确认" })).toBeEnabled();
+    expect(within(dialog).queryByText("Late Arrival")).not.toBeInTheDocument();
+  }, 10000);
+
   it("keeps a completed skill loader spinning for at least one second", async () => {
     let progressCallback: RepositorySyncProgressCallback = () => undefined;
     const syncRepositories = vi.fn(

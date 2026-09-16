@@ -805,6 +805,13 @@ const upsertSyncProgressEvent = (
   dialog: RepositorySyncProgressDialogState | null,
   event: RepositoriesSyncProgressEvent
 ): RepositorySyncProgressDialogState => {
+  // 进度事件（IPC send）与同步结果（invoke 返回）之间没有顺序保证，逐项完成的
+  // 延迟定时器也可能晚于整体完成触发。弹窗一旦进入终态或尚未开始，迟到事件
+  // 必须忽略，否则会把已完成/待确认的弹窗永久拉回 syncing。
+  if (dialog && dialog.status !== "syncing") {
+    return dialog;
+  }
+
   const nextDialog =
     dialog ??
     createSyncProgressDialog([
