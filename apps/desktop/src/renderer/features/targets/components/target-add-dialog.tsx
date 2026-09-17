@@ -1,14 +1,5 @@
-import { Form } from "@base-ui/react/form";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogClose,
-  DialogDescription,
-  DialogPopup,
-  DialogPortal,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Modal } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import React from "react";
@@ -26,10 +17,6 @@ type TargetAddDialogProps = {
 export const TargetAddDialog = ({ description, state, title }: TargetAddDialogProps) => {
   const { t } = useTranslation();
 
-  if (!state.isAddTargetDialogOpen) {
-    return null;
-  }
-
   const submitForm = () => {
     void state.saveAddTarget();
   };
@@ -42,74 +29,54 @@ export const TargetAddDialog = ({ description, state, title }: TargetAddDialogPr
   });
 
   return (
-    <Dialog
+    <Modal
       open={state.isAddTargetDialogOpen}
-      onOpenChange={(nextOpen) => !nextOpen && state.closeAddTargetDialog()}
+      onClose={state.closeAddTargetDialog}
+      title={title}
+      description={description}
+      error={errorMessage}
+      onSubmit={submitForm}
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={state.isSavingTarget}
+            onClick={state.closeAddTargetDialog}
+          >
+            {t("targets.modal.cancel")}
+          </Button>
+          <Button type="submit" disabled={state.isSavingTarget}>
+            {t("targets.modal.save")}
+          </Button>
+        </>
+      }
     >
-      <DialogPortal>
-        <DialogBackdrop />
-        <DialogPopup>
-          <Form onFormSubmit={submitForm}>
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <DialogTitle>{title}</DialogTitle>
-                <DialogDescription>{description}</DialogDescription>
-              </div>
-              <DialogClose
-                render={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={state.isSavingTarget}
-                  />
-                }
-              >
-                {t("targets.modal.close")}
-              </DialogClose>
-            </div>
+      <div className="grid gap-3">
+        <TargetDirectorySelector
+          customAgentDirectoryName={state.customTargetAgentDirectoryName}
+          disabled={state.isSavingTarget}
+          isCustomAgentDirectorySelected={state.isCustomTargetAgentDirectorySelected}
+          onBrowse={() => void state.selectTargetPath()}
+          onCustomAgentDirectoryNameChange={state.setCustomTargetAgentDirectoryName}
+          onSelectAgentDirectoryOption={state.selectTargetAgentDirectoryOption}
+          onSelectCustomAgentDirectoryOption={state.selectCustomTargetAgentDirectoryOption}
+          path={state.addTargetPath}
+          pathLabel={t("targets.modal.path")}
+          pendingDirectory={state.pendingTargetAgentDirectory}
+          selectedAgentType={state.selectedTargetAgentType}
+        />
 
-            <div className="grid gap-3">
-              <TargetDirectorySelector
-                customAgentDirectoryName={state.customTargetAgentDirectoryName}
-                disabled={state.isSavingTarget}
-                isCustomAgentDirectorySelected={state.isCustomTargetAgentDirectorySelected}
-                onBrowse={() => void state.selectTargetPath()}
-                onCustomAgentDirectoryNameChange={state.setCustomTargetAgentDirectoryName}
-                onSelectAgentDirectoryOption={state.selectTargetAgentDirectoryOption}
-                onSelectCustomAgentDirectoryOption={state.selectCustomTargetAgentDirectoryOption}
-                path={state.addTargetPath}
-                pathLabel={t("targets.modal.path")}
-                pendingDirectory={state.pendingTargetAgentDirectory}
-                selectedAgentType={state.selectedTargetAgentType}
-              />
-
-              <Field>
-                <FieldLabel>{t("targets.modal.name")}</FieldLabel>
-                <Input
-                  disabled={state.isSavingTarget}
-                  value={state.addTargetName}
-                  onValueChange={state.setPendingTargetName}
-                />
-              </Field>
-            </div>
-
-            {errorMessage ? <p className="mt-3 text-sm text-destructive">{errorMessage}</p> : null}
-
-            <div className="mt-4 flex justify-end gap-2">
-              <DialogClose
-                render={<Button type="button" variant="outline" disabled={state.isSavingTarget} />}
-              >
-                {t("targets.modal.cancel")}
-              </DialogClose>
-              <Button type="submit" disabled={state.isSavingTarget}>
-                {t("targets.modal.save")}
-              </Button>
-            </div>
-          </Form>
-        </DialogPopup>
-      </DialogPortal>
-    </Dialog>
+        <Field>
+          <FieldLabel>{t("targets.modal.name")}</FieldLabel>
+          <Input
+            disabled={state.isSavingTarget}
+            value={state.addTargetName}
+            onValueChange={state.setPendingTargetName}
+          />
+        </Field>
+      </div>
+    </Modal>
   );
 };
 

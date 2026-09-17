@@ -13,7 +13,6 @@ export const RepositoriesPageModal = () => {
         branch: t("repositories.modal.branch"),
         browseLocalPath: t("repositories.modal.browseLocalPath"),
         cancel: t("repositories.modal.cancel"),
-        close: t("repositories.modal.close"),
         editDescription: t("repositories.modal.editDescription"),
         editTitle: t("repositories.modal.editTitle"),
         name: t("repositories.modal.name"),

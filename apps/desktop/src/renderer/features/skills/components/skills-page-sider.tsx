@@ -1,15 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogClose,
-  DialogDescription,
-  DialogPopup,
-  DialogPortal,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Modal } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle2, CircleMinus, LoaderCircle } from "lucide-react";
@@ -183,98 +175,86 @@ const SkillTargetRemovalDialog = ({
   const canRemoveTargetPreference = removal.targetScope === "independent";
 
   return (
-    <Dialog open={Boolean(removal)} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogPortal>
-        <DialogBackdrop />
-        <DialogPopup>
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <DialogTitle>{t("skills.targetRemoval.title")}</DialogTitle>
-              <DialogDescription>{t("skills.targetRemoval.description")}</DialogDescription>
-            </div>
-            <DialogClose
+    <Modal
+      open={Boolean(removal)}
+      onClose={onClose}
+      title={t("skills.targetRemoval.title")}
+      description={t("skills.targetRemoval.description")}
+      closeDisabled={isExecuting}
+      footer={
+        <>
+          <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
+            {t("skills.targetRemoval.cancel")}
+          </Button>
+          <Button
+            type="button"
+            disabled={isExecuting}
+            onClick={() =>
+              onConfirm({
+                deleteInstalledFiles,
+                removeTargetPreference: canRemoveTargetPreference && removeTarget
+              })
+            }
+          >
+            {isExecuting ? (
+              <>
+                <LoaderCircle aria-hidden="true" className="animate-spin" />
+                {t("skills.targetRemoval.removing")}
+              </>
+            ) : (
+              t("skills.targetRemoval.confirm")
+            )}
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-2 rounded-lg border border-border bg-background px-3 py-2.5">
+        <div>
+          <span className="text-xs font-semibold text-muted-foreground">
+            {t("skills.targetRemoval.skill")}
+          </span>
+          <p className="mt-0.5 break-words text-sm font-medium leading-5">
+            {removal.skillName}
+          </p>
+        </div>
+        <div>
+          <span className="text-xs font-semibold text-muted-foreground">
+            {t("skills.targetRemoval.target")}
+          </span>
+          <p className="mt-0.5 break-words text-sm font-medium leading-5">{targetName}</p>
+          <p className="mt-0.5 break-all font-mono text-xs leading-5 text-muted-foreground">
+            {removal.targetPath}
+          </p>
+        </div>
+      </div>
+
+      <div
+        role="group"
+        aria-label={t("skills.targetRemoval.options")}
+        className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2"
+      >
+        {canRemoveTargetPreference ? (
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Checkbox
+              checked={removeTarget}
               disabled={isExecuting}
-              render={<Button type="button" variant="outline" size="sm" />}
-            >
-              {t("skills.actions.close")}
-            </DialogClose>
+              aria-label={t("skills.targetRemoval.removeTarget")}
+              onCheckedChange={(nextChecked) => setRemoveTarget(Boolean(nextChecked))}
+            />
+            <span>{t("skills.targetRemoval.removeTarget")}</span>
           </div>
-
-          <div className="grid gap-2 rounded-lg border border-border bg-background px-3 py-2.5">
-            <div>
-              <span className="text-xs font-semibold text-muted-foreground">
-                {t("skills.targetRemoval.skill")}
-              </span>
-              <p className="mt-0.5 break-words text-sm font-medium leading-5">
-                {removal.skillName}
-              </p>
-            </div>
-            <div>
-              <span className="text-xs font-semibold text-muted-foreground">
-                {t("skills.targetRemoval.target")}
-              </span>
-              <p className="mt-0.5 break-words text-sm font-medium leading-5">{targetName}</p>
-              <p className="mt-0.5 break-all font-mono text-xs leading-5 text-muted-foreground">
-                {removal.targetPath}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div
-              role="group"
-              aria-label={t("skills.targetRemoval.options")}
-              className="flex flex-wrap items-center gap-x-4 gap-y-2"
-            >
-              {canRemoveTargetPreference ? (
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Checkbox
-                    checked={removeTarget}
-                    disabled={isExecuting}
-                    aria-label={t("skills.targetRemoval.removeTarget")}
-                    onCheckedChange={(nextChecked) => setRemoveTarget(Boolean(nextChecked))}
-                  />
-                  <span>{t("skills.targetRemoval.removeTarget")}</span>
-                </div>
-              ) : null}
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Checkbox
-                  checked={deleteInstalledFiles}
-                  disabled={isExecuting}
-                  aria-label={t("skills.targetRemoval.deleteSkillFiles")}
-                  onCheckedChange={(nextChecked) => setDeleteInstalledFiles(Boolean(nextChecked))}
-                />
-                <span>{t("skills.targetRemoval.deleteSkillFiles")}</span>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
-                {t("skills.targetRemoval.cancel")}
-              </Button>
-              <Button
-                type="button"
-                disabled={isExecuting}
-                onClick={() =>
-                  onConfirm({
-                    deleteInstalledFiles,
-                    removeTargetPreference: canRemoveTargetPreference && removeTarget
-                  })
-                }
-              >
-                {isExecuting ? (
-                  <>
-                    <LoaderCircle aria-hidden="true" className="animate-spin" />
-                    {t("skills.targetRemoval.removing")}
-                  </>
-                ) : (
-                  t("skills.targetRemoval.confirm")
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogPopup>
-      </DialogPortal>
-    </Dialog>
+        ) : null}
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Checkbox
+            checked={deleteInstalledFiles}
+            disabled={isExecuting}
+            aria-label={t("skills.targetRemoval.deleteSkillFiles")}
+            onCheckedChange={(nextChecked) => setDeleteInstalledFiles(Boolean(nextChecked))}
+          />
+          <span>{t("skills.targetRemoval.deleteSkillFiles")}</span>
+        </div>
+      </div>
+    </Modal>
   );
 };
 
@@ -311,154 +291,139 @@ const DistributionConfirmationDialog = ({
   });
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogPortal>
-        <DialogBackdrop />
-        <DialogPopup className="flex flex-col overflow-hidden p-0">
-          <div className="flex shrink-0 items-start justify-between gap-4 p-5">
-            <div>
-              <DialogTitle>{t("skills.distribution.confirmTitle")}</DialogTitle>
-              <DialogDescription>
-                {t("skills.distribution.confirmDescription", { count: items.length })}
-              </DialogDescription>
-            </div>
-            <DialogClose
-              disabled={isExecuting || executionFinished}
-              render={<Button type="button" variant="outline" size="sm" />}
-            >
-              {t("skills.actions.close")}
-            </DialogClose>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto px-5">
-            <div className="grid gap-2">
-            {items.map((item) => {
-              const resolution =
-                conflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite";
-              const allowedResolutions = item.allowedResolutions ?? ["overwrite", "skip"];
-              const executionStatus = executionItemStatuses[item.id];
-              const showRuntimeOverwriteControl = canOverwriteRuntimeConflict(executionStatus);
-
-              return (
-                <div
-                  key={item.id}
-                  data-testid={`distribution-preview-item-${item.id}`}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 rounded-lg border border-border bg-background px-3 py-2"
-                >
-                  <strong
-                    className="col-start-1 row-start-1 block min-w-0 truncate text-sm leading-5"
-                    title={item.targetName}
-                  >
-                    {item.targetName}
-                  </strong>
-                  <p
-                    className="col-start-1 row-start-2 min-w-0 truncate font-mono text-xs leading-4 text-muted-foreground"
-                    title={item.targetPath}
-                  >
-                    {item.targetPath}
-                  </p>
-                  <div
-                    data-testid={`distribution-status-slot-${item.id}`}
-                    className="col-start-2 row-start-1 flex h-6 w-24 items-center justify-end gap-2"
-                  >
-                    {executionStatus ? (
-                      <DistributionItemExecutionIcon
-                        name={item.targetName}
-                        status={executionStatus}
-                      />
-                    ) : (
-                      <span aria-hidden="true" className="size-6" />
-                    )}
-                    <Badge variant={getDistributionActionBadgeVariant(item.action)}>
-                      {t(`skills.distribution.actions.${item.action}`)}
-                    </Badge>
-                  </div>
-                  <div
-                    data-testid={`runtime-overwrite-slot-${item.id}`}
-                    className="col-start-2 row-start-2 flex h-5 w-24 items-center justify-end"
-                  >
-                    {showRuntimeOverwriteControl ? (
-                      <label className="flex h-5 cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs font-medium text-red-500">
-                        <Checkbox
-                          checked={runtimeOverwriteResolutions[item.id] ?? false}
-                          aria-label={t("skills.distribution.runtimeOverwriteAria", {
-                            name: item.targetName
-                          })}
-                          disabled={isExecuting}
-                          onCheckedChange={(nextChecked) =>
-                            onRuntimeOverwriteResolutionChange(item.id, nextChecked)
-                          }
-                        />
-                        {t("skills.distribution.runtimeOverwrite")}
-                      </label>
-                    ) : null}
-                  </div>
-                  {item.reason ? (
-                    <p className="col-span-2 row-start-3 text-xs leading-5 text-muted-foreground">
-                      {item.reason}
-                    </p>
-                  ) : null}
-                  {item.action === "conflict" ? (
-                    <label className="col-span-2 grid gap-1 text-xs font-semibold text-muted-foreground">
-                      {t("skills.distribution.conflictResolution")}
-                      <select
-                        aria-label={t("skills.distribution.conflictResolutionAria", {
-                          skill: item.skillName,
-                          target: item.targetName
-                        })}
-                        className="h-9 rounded-lg border border-input bg-background px-2 text-sm font-normal text-foreground outline-none focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                        disabled={isExecuting}
-                        value={resolution}
-                        onChange={(event) =>
-                          onConflictResolutionChange(
-                            item.id,
-                            event.currentTarget.value === "skip" ? "skip" : "overwrite"
-                          )
-                        }
-                      >
-                        {allowedResolutions.includes("overwrite") ? (
-                          <option value="overwrite">
-                            {t("skills.distribution.resolutions.overwrite")}
-                          </option>
-                        ) : null}
-                        {allowedResolutions.includes("skip") ? (
-                          <option value="skip">{t("skills.distribution.resolutions.skip")}</option>
-                        ) : null}
-                      </select>
-                    </label>
-                  ) : null}
-                </div>
-              );
-            })}
-            </div>
-          </div>
-
-          <div className="flex shrink-0 justify-end gap-2 p-5">
-            {!executionFinished && (
-              <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
-                {t("skills.actions.cancel")}
-              </Button>
-            )}
-            <Button
-              type="button"
-              disabled={isExecuting}
-              onClick={executionFinished && !hasRuntimeOverwriteSelection ? onClose : onConfirm}
-            >
-              {isExecuting ? (
-                <>
-                  <LoaderCircle aria-hidden="true" className="animate-spin" />
-                  {t("skills.distribution.executingAction")}
-                </>
-              ) : executionFinished ? (
-                t("skills.distribution.doneAction")
-              ) : (
-                t("skills.distribution.confirmAction")
-              )}
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t("skills.distribution.confirmTitle")}
+      description={t("skills.distribution.confirmDescription", { count: items.length })}
+      closeDisabled={isExecuting || executionFinished}
+      footer={
+        <>
+          {!executionFinished && (
+            <Button type="button" variant="outline" disabled={isExecuting} onClick={onClose}>
+              {t("skills.actions.cancel")}
             </Button>
-          </div>
-        </DialogPopup>
-      </DialogPortal>
-    </Dialog>
+          )}
+          <Button
+            type="button"
+            disabled={isExecuting}
+            onClick={executionFinished && !hasRuntimeOverwriteSelection ? onClose : onConfirm}
+          >
+            {isExecuting ? (
+              <>
+                <LoaderCircle aria-hidden="true" className="animate-spin" />
+                {t("skills.distribution.executingAction")}
+              </>
+            ) : executionFinished ? (
+              t("skills.distribution.doneAction")
+            ) : (
+              t("skills.distribution.confirmAction")
+            )}
+          </Button>
+        </>
+      }
+    >
+      <div className="grid gap-2">
+        {items.map((item) => {
+          const resolution =
+            conflictResolutions[item.id] ?? item.defaultResolution ?? "overwrite";
+          const allowedResolutions = item.allowedResolutions ?? ["overwrite", "skip"];
+          const executionStatus = executionItemStatuses[item.id];
+          const showRuntimeOverwriteControl = canOverwriteRuntimeConflict(executionStatus);
+
+          return (
+            <div
+              key={item.id}
+              data-testid={`distribution-preview-item-${item.id}`}
+              className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 rounded-lg border border-border bg-background px-3 py-2"
+            >
+              <strong
+                className="col-start-1 row-start-1 block min-w-0 truncate text-sm leading-5"
+                title={item.targetName}
+              >
+                {item.targetName}
+              </strong>
+              <p
+                className="col-start-1 row-start-2 min-w-0 truncate font-mono text-xs leading-4 text-muted-foreground"
+                title={item.targetPath}
+              >
+                {item.targetPath}
+              </p>
+              <div
+                data-testid={`distribution-status-slot-${item.id}`}
+                className="col-start-2 row-start-1 flex h-6 w-24 items-center justify-end gap-2"
+              >
+                {executionStatus ? (
+                  <DistributionItemExecutionIcon
+                    name={item.targetName}
+                    status={executionStatus}
+                  />
+                ) : (
+                  <span aria-hidden="true" className="size-6" />
+                )}
+                <Badge variant={getDistributionActionBadgeVariant(item.action)}>
+                  {t(`skills.distribution.actions.${item.action}`)}
+                </Badge>
+              </div>
+              <div
+                data-testid={`runtime-overwrite-slot-${item.id}`}
+                className="col-start-2 row-start-2 flex h-5 w-24 items-center justify-end"
+              >
+                {showRuntimeOverwriteControl ? (
+                  <label className="flex h-5 cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs font-medium text-red-500">
+                    <Checkbox
+                      checked={runtimeOverwriteResolutions[item.id] ?? false}
+                      aria-label={t("skills.distribution.runtimeOverwriteAria", {
+                        name: item.targetName
+                      })}
+                      disabled={isExecuting}
+                      onCheckedChange={(nextChecked) =>
+                        onRuntimeOverwriteResolutionChange(item.id, nextChecked)
+                      }
+                    />
+                    {t("skills.distribution.runtimeOverwrite")}
+                  </label>
+                ) : null}
+              </div>
+              {item.reason ? (
+                <p className="col-span-2 row-start-3 text-xs leading-5 text-muted-foreground">
+                  {item.reason}
+                </p>
+              ) : null}
+              {item.action === "conflict" ? (
+                <label className="col-span-2 grid gap-1 text-xs font-semibold text-muted-foreground">
+                  {t("skills.distribution.conflictResolution")}
+                  <select
+                    aria-label={t("skills.distribution.conflictResolutionAria", {
+                      skill: item.skillName,
+                      target: item.targetName
+                    })}
+                    className="h-9 rounded-lg border border-input bg-background px-2 text-sm font-normal text-foreground outline-none focus:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    disabled={isExecuting}
+                    value={resolution}
+                    onChange={(event) =>
+                      onConflictResolutionChange(
+                        item.id,
+                        event.currentTarget.value === "skip" ? "skip" : "overwrite"
+                      )
+                    }
+                  >
+                    {allowedResolutions.includes("overwrite") ? (
+                      <option value="overwrite">
+                        {t("skills.distribution.resolutions.overwrite")}
+                      </option>
+                    ) : null}
+                    {allowedResolutions.includes("skip") ? (
+                      <option value="skip">{t("skills.distribution.resolutions.skip")}</option>
+                    ) : null}
+                  </select>
+                </label>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </Modal>
   );
 };
 

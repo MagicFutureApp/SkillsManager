@@ -23,6 +23,14 @@
 - 行为由模块常量 `KEEP_ALIVE_ENABLED` 控制：`true` = 仅首次挂载、之后切 `hidden`（保留局部状态）；**当前 `false` = 短路**，只渲染 `activeRouteId`，切 Tab 即卸载（用户 2026-09-16 要求暂时短路，架构保留）。
 - 对应测试 `keep-alive-pages.test.tsx` 用 `describe.runIf(KEEP_ALIVE_ENABLED)` / `runIf(!KEEP_ALIVE_ENABLED)` 分流，翻开关即换覆盖目标。
 
+## 统一弹窗组件 Modal
+
+- 全应用**唯一**弹窗出口：`renderer/components/ui/dialog.tsx` 的 `Modal`（`Dialog` 系列原语仍导出但仅作底层）。props：`title` / `description` / `icon` / `footer` / `error` / `onSubmit`（有则包 Base UI `Form`，回车提交）/ `closeLabel` / `closeDisabled` / `showClose`（默认 true，按钮文案默认 `common.close`）/ `size: "default"|"sm"` / `backdrop` / `modal` / `role: "dialog"|"alertdialog"` / 三个 `*ClassName`。结构：header(p-5, shrink-0) + body(`min-h-10 flex-1 overflow-y-auto px-5`) + footer(`shrink-0 justify-end`)，弹窗外壳 `max-h-[78svh]`（≈70-80% 高，`dialog.tsx:39`）。
+- **宽度（用户 2026-09-17 定稿）**：**所有弹窗统一 650-680px，没有档位**。`min-w-[650px]` + `max-w-[680px]` + `w-[calc(100vw-48px)]` 全部写死在 `DialogPopup` 外壳基类（`dialog.tsx:39`）。`size?: "default"|"sm"` 这个 prop **已删除**（原 sm→`max-w-[400px]`，用户看了 400px 的「删除来源」确认框觉得难看，要求统一最小宽 650）；原先刻意收窄的 `repositories-page-sync-progress-dialog`(520) / `targets-scan-loading-dialog`(360) 的 `min-w/max-w` 覆盖也一并移除，随大流变 650-680。要再改宽度只能走 `className`（tailwind-merge 可覆盖 min-w/max-w）。
+- 约定：任何新弹窗一律走 `Modal`，**不要再引 `alert-dialog.tsx`（已删除）或自绘 Dialog/DialogPopup**。确认类弹窗传 `role="alertdialog"`（Base UI DialogPopup 支持手动 role 覆盖，保住 `getByRole("alertdialog", …)` 断言）；无右上角关闭按钮传 `showClose={false}`；需要头固定/列表滚动/脚固定时直接用 Modal 三段结构，或 `headerClassName`/`bodyClassName`/`footerClassName` 微调（`className` 走 tailwind-merge 可覆盖 `min-w`/`max-w`/`justify-*`）。
+- 已迁移：Repositories(4) + Targets(6) + Skills(2) + Settings(1) 全部走 `Modal`。对应验收测试 `components/ui/modal.test.tsx`（5 例，含宽度 650-680）+ 修正后的 `dialog.test.tsx`（几何断言 `max-h-[78svh]` + `min-w-[650px] max-w-[680px]`）。
+- **vitest 必须 app 内跑**：`vitest.config.ts` 在 `apps/desktop` 内，从仓库根跑单文件会报 `Cannot find package '@/components/...'` 别名解析失败；须 `Push-Location apps/desktop` 后 `& "..\..\node_modules\.bin\vitest.CMD" run <app 内相对路径>`。
+
 ## 模块格式（ESM）
 
 - 四个 app 均 ESM；desktop 主进程 + preload 已切 ESM（`package.json` 带 `"type":"module"`）。主进程用 **esbuild 打包**（`build:main` = `tsc -p tsconfig.main.json --noEmit` + `esbuild src/main/index.ts --bundle --format=esm --platform=node --packages=external`；`build:preload` 打包 `preload.mts`→`preload.mjs`，`--external:electron`）。主进程/核心/DB 相对 import **不带 `.js` 后缀**（esbuild 解析），无 `__dirname` 用 `import.meta.dirname`，需 `require` 用 `createRequire(import.meta.url)`。

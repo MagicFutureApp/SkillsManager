@@ -1,11 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogDescription,
-  DialogPopup,
-  DialogPortal,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Modal } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Check, LoaderCircle, X } from "lucide-react";
 import React from "react";
@@ -45,111 +39,116 @@ export const RepositoriesPageSyncProgressDialog = () => {
       : undefined;
 
   return (
-    <Dialog open={Boolean(progress)} modal={false}>
-      <DialogPortal>
-        <DialogPopup className="max-w-[520px]">
-          <div className="flex items-start gap-3">
-            <div
-              role="status"
-              aria-label={t("repositories.syncProgress.title")}
-              className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted"
-            >
-              {progress.status === "completed" ? (
-                <Check aria-hidden="true" className="size-5 text-success" />
-              ) : progress.status === "failed" ? (
-                <X aria-hidden="true" className="size-5 text-destructive" />
-              ) : isSyncing ? (
-                <LoaderCircle aria-hidden="true" className="size-5 animate-spin text-muted-foreground" />
-              ) : (
-                <LoaderCircle aria-hidden="true" className="size-5 text-muted-foreground" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <DialogTitle className="text-lg">{t("repositories.syncProgress.title")}</DialogTitle>
-              <DialogDescription>{description}</DialogDescription>
-            </div>
-          </div>
-
-          <div className="mt-4 max-h-72 overflow-auto rounded-lg border border-border">
-            {progress.repositories.map((repository) => (
-              <section
-                key={repository.repositoryId}
-                className="border-b border-border last:border-b-0"
-              >
-                <h3 className="truncate bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">
-                  {repository.repositoryName}
-                </h3>
-                {repository.items.length ? (
-                  <ul>
-                    {repository.items.map((item) => {
-                      const itemIsSyncing = item.status === "syncing";
-                      const itemAriaLabel =
-                        item.status === "completed"
-                          ? t("repositories.syncProgress.completedItem", { name: item.name })
-                          : item.status === "failed"
-                            ? t("repositories.syncProgress.failedItem", { name: item.name })
-                            : t("repositories.syncProgress.syncingItem", { name: item.name });
-
-                      return (
-                        <li
-                          key={item.id}
-                          className="flex min-h-10 items-center justify-between gap-3 px-3 py-2"
-                        >
-                          <span className="min-w-0 truncate text-sm">{item.name}</span>
-                          <span
-                            role="status"
-                            aria-label={itemAriaLabel}
-                            className={cn(
-                              "flex size-7 shrink-0 items-center justify-center rounded-lg",
-                              item.status === "completed"
-                                ? "text-success"
-                                : item.status === "failed"
-                                  ? "text-destructive"
-                                  : "text-primary"
-                            )}
-                          >
-                            {item.status === "completed" ? (
-                              <Check aria-hidden="true" className="size-4" />
-                            ) : item.status === "failed" ? (
-                              <X aria-hidden="true" className="size-4" />
-                            ) : (
-                              <LoaderCircle
-                                aria-hidden="true"
-                                className={cn("size-4", itemIsSyncing && "animate-spin")}
-                              />
-                            )}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : (
-                  <p className="px-3 py-3 text-sm text-muted-foreground">
-                    {t("repositories.syncProgress.empty")}
-                  </p>
-                )}
-              </section>
-            ))}
-          </div>
-
-          {isPending ? (
-            <div className="mt-4 flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={page.closeSyncProgressDialog}>
-                {t("repositories.syncProgress.cancel")}
-              </Button>
-              <Button type="button" onClick={onPrimaryClick}>
-                {primaryButtonLabel}
-              </Button>
-            </div>
+    <Modal
+      open={Boolean(progress)}
+      onClose={page.closeSyncProgressDialog}
+      backdrop={false}
+      modal={false}
+      showClose={false}
+      title={t("repositories.syncProgress.title")}
+      description={description}
+      icon={
+        <span
+          role="status"
+          aria-label={t("repositories.syncProgress.title")}
+          className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted"
+        >
+          {progress.status === "completed" ? (
+            <Check aria-hidden="true" className="size-5 text-success" />
+          ) : progress.status === "failed" ? (
+            <X aria-hidden="true" className="size-5 text-destructive" />
           ) : (
-            <div className="mt-4 flex justify-end">
-              <Button type="button" disabled={primaryButtonDisabled} onClick={onPrimaryClick}>
-                {primaryButtonLabel}
-              </Button>
-            </div>
+            <LoaderCircle
+              aria-hidden="true"
+              className={cn("size-5 text-muted-foreground", isSyncing && "animate-spin")}
+            />
           )}
-        </DialogPopup>
-      </DialogPortal>
-    </Dialog>
+        </span>
+      }
+      footer={
+        isPending ? (
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={page.closeSyncProgressDialog}
+            >
+              {t("repositories.syncProgress.cancel")}
+            </Button>
+            <Button type="button" onClick={onPrimaryClick}>
+              {primaryButtonLabel}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex justify-end">
+            <Button type="button" disabled={primaryButtonDisabled} onClick={onPrimaryClick}>
+              {primaryButtonLabel}
+            </Button>
+          </div>
+        )
+      }
+    >
+      <div className="mt-4 max-h-72 overflow-auto rounded-lg border border-border">
+        {progress.repositories.map((repository) => (
+          <section
+            key={repository.repositoryId}
+            className="border-b border-border last:border-b-0"
+          >
+            <h3 className="truncate bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">
+              {repository.repositoryName}
+            </h3>
+            {repository.items.length ? (
+              <ul>
+                {repository.items.map((item) => {
+                  const itemIsSyncing = item.status === "syncing";
+                  const itemAriaLabel =
+                    item.status === "completed"
+                      ? t("repositories.syncProgress.completedItem", { name: item.name })
+                      : item.status === "failed"
+                        ? t("repositories.syncProgress.failedItem", { name: item.name })
+                        : t("repositories.syncProgress.syncingItem", { name: item.name });
+
+                  return (
+                    <li
+                      key={item.id}
+                      className="flex min-h-10 items-center justify-between gap-3 px-3 py-2"
+                    >
+                      <span className="min-w-0 truncate text-sm">{item.name}</span>
+                      <span
+                        role="status"
+                        aria-label={itemAriaLabel}
+                        className={cn(
+                          "flex size-7 shrink-0 items-center justify-center rounded-lg",
+                          item.status === "completed"
+                            ? "text-success"
+                            : item.status === "failed"
+                              ? "text-destructive"
+                              : "text-primary"
+                        )}
+                      >
+                        {item.status === "completed" ? (
+                          <Check aria-hidden="true" className="size-4" />
+                        ) : item.status === "failed" ? (
+                          <X aria-hidden="true" className="size-4" />
+                        ) : (
+                          <LoaderCircle
+                            aria-hidden="true"
+                            className={cn("size-4", itemIsSyncing && "animate-spin")}
+                          />
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="px-3 py-3 text-sm text-muted-foreground">
+                {t("repositories.syncProgress.empty")}
+              </p>
+            )}
+          </section>
+        ))}
+      </div>
+    </Modal>
   );
 };

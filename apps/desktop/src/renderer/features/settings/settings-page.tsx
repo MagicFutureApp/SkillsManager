@@ -1,15 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import { Modal } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -669,25 +660,28 @@ export const SettingsPage = () => {
         <div className="grid max-w-4xl gap-5">{activeSettingsSection}</div>
       </main>
 
-      <AlertDialog
+      <Modal
         open={isResetDialogOpen}
-        onOpenChange={(nextOpen) => {
+        onClose={() => {
           if (!isResetting) {
-            setIsResetDialogOpen(nextOpen);
+            setIsResetDialogOpen(false);
           }
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>重建本地数据库？</AlertDialogTitle>
-            <AlertDialogDescription>
-              会清空本地索引、来源、Skills 和应用设置，但不会删除已安装到 agent
-              目标目录的文件，也不会清空本地缓存目录。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isResetting}>取消</AlertDialogCancel>
-            <AlertDialogAction
+        title="重建本地数据库？"
+        description="会清空本地索引、来源、Skills 和应用设置，但不会删除已安装到 agent 目标目录的文件，也不会清空本地缓存目录。"
+        role="alertdialog"
+        showClose={false}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isResetting}
+              onClick={() => setIsResetDialogOpen(false)}
+            >
+              取消
+            </Button>
+            <Button
               type="button"
               variant="destructive"
               disabled={isResetting}
@@ -695,10 +689,10 @@ export const SettingsPage = () => {
             >
               <RotateCcw aria-hidden="true" />
               确认重建
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </>
+        }
+      />
     </div>
   );
 };

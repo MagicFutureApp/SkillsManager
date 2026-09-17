@@ -3,6 +3,9 @@ import type { SupportedLocale } from "../../core/i18n/locale";
 export const resources = {
   "zh-CN": {
     translation: {
+      common: {
+        close: "关闭"
+      },
       shell: {
         navigation: {
           workspace: "工作区",
@@ -244,7 +247,6 @@ export const resources = {
           agentTypeDescription: "未找到 skills 目录，请选择要使用哪一种 agent 目录。",
           browse: "浏览",
           cancel: "取消",
-          close: "关闭",
           customAgentFolder: "自定义文件夹",
           customAgentFolderPlaceholder: "例如 .cursor",
           customAgentFolderRequiredError: "请填写自定义文件夹名称。",
@@ -261,7 +263,6 @@ export const resources = {
         deleteDialog: {
           batchSummary: "将删除 {{count}} 个目标。",
           cancel: "取消",
-          close: "关闭",
           confirm: "确认删除",
           deleteSkillFiles: "删除技能文件",
           description: "默认只删除目标记录。勾选后会同时删除目标目录中对应的 Skills 文件。",
@@ -282,7 +283,6 @@ export const resources = {
         },
         editDialog: {
           cancel: "取消",
-          close: "关闭",
           description: "只更新这个目标的已选择目录和名称。",
           name: "名称",
           path: "已选择目录",
@@ -459,7 +459,6 @@ export const resources = {
         },
         syncProgress: {
           cancel: "取消",
-          close: "关闭",
           completedDescription: "同步完成。",
           done: "确认",
           pendingDescription: "即将同步以下来源，点击「开始同步」继续。",
@@ -477,7 +476,6 @@ export const resources = {
           browseLocalPath: "浏览",
           cachePath: "缓存目录",
           cancel: "取消",
-          close: "关闭",
           editDescription: "修改来源注册信息。保存不会立即同步或写入目标目录。",
           editTitle: "编辑来源",
           name: "名称",
@@ -502,6 +500,9 @@ export const resources = {
   },
   "en-US": {
     translation: {
+      common: {
+        close: "Close"
+      },
       shell: {
         navigation: {
           workspace: "Workspace",
@@ -751,7 +752,6 @@ export const resources = {
             "No skills directory was found. Choose which agent directory to normalize into.",
           browse: "Browse",
           cancel: "Cancel",
-          close: "Close",
           customAgentFolder: "Custom folder",
           customAgentFolderPlaceholder: "For example .cursor",
           customAgentFolderRequiredError: "Custom folder name is required.",
@@ -768,7 +768,6 @@ export const resources = {
         deleteDialog: {
           batchSummary: "{{count}} targets will be deleted.",
           cancel: "Cancel",
-          close: "Close",
           confirm: "Delete",
           deleteSkillFiles: "Delete skill files",
           description:
@@ -779,7 +778,6 @@ export const resources = {
         },
         editDialog: {
           cancel: "Cancel",
-          close: "Close",
           description: "Only the selected directory and name for this target will be updated.",
           name: "Name",
           path: "Selected directory",
@@ -958,7 +956,6 @@ export const resources = {
         },
         syncProgress: {
           cancel: "Cancel",
-          close: "Close",
           completedDescription: "Sync completed.",
           done: "Confirm",
           pendingDescription:
@@ -977,7 +974,6 @@ export const resources = {
           browseLocalPath: "Browse",
           cachePath: "Cache path",
           cancel: "Cancel",
-          close: "Close",
           editDescription: "Update source registration. Saving does not sync or write targets.",
           editTitle: "Edit source",
           name: "Name",

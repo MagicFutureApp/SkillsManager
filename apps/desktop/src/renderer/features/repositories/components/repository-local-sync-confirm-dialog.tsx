@@ -1,13 +1,5 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/dialog";
 import React from "react";
 
 type RepositoryLocalSyncConfirmDialogProps = {
@@ -28,22 +20,24 @@ export const RepositoryLocalSyncConfirmDialog = ({
   onClose,
   onConfirm
 }: RepositoryLocalSyncConfirmDialogProps) => {
-  if (!open) {
-    return null;
-  }
-
   return (
-    <AlertDialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{copy.title}</AlertDialogTitle>
-          <AlertDialogDescription>{copy.description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{copy.cancel}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>{copy.confirm}</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Modal
+      open={open}
+      onClose={onClose}
+      role="alertdialog"
+      showClose={false}
+      title={copy.title}
+      description={copy.description}
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={onClose}>
+            {copy.cancel}
+          </Button>
+          <Button type="button" onClick={onConfirm}>
+            {copy.confirm}
+          </Button>
+        </>
+      }
+    />
   );
 };

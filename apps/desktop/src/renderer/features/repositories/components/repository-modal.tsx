@@ -1,14 +1,5 @@
-import { Form } from "@base-ui/react/form";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogClose,
-  DialogDescription,
-  DialogPopup,
-  DialogPortal,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Modal } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/input";
 import { toErrorMessage } from "@/lib/errors";
@@ -28,7 +19,6 @@ type RepositoryModalProps = {
     branch: string;
     browseLocalPath: string;
     cancel: string;
-    close: string;
     editDescription: string;
     editTitle: string;
     name: string;
@@ -124,10 +114,6 @@ export const RepositoryModal = ({
     };
   }, [editingRepository, open, values.remoteUrl]);
 
-  if (!open) {
-    return null;
-  }
-
   const updateValue = (key: keyof RepositoryFormValues, value: string) => {
     touchedFieldsRef.current = new Set(touchedFieldsRef.current).add(key);
     setValues((currentValues) => ({ ...currentValues, [key]: value }));
@@ -206,106 +192,89 @@ export const RepositoryModal = ({
       }));
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogPortal>
-        <DialogBackdrop />
-        <DialogPopup>
-          <Form onFormSubmit={submitForm}>
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div>
-                <DialogTitle>{editingRepository ? copy.editTitle : copy.newTitle}</DialogTitle>
-                <DialogDescription>
-                  {editingRepository ? copy.editDescription : copy.newDescription}
-                </DialogDescription>
-              </div>
-              <DialogClose
-                render={<Button type="button" variant="outline" size="sm" disabled={isSaving} />}
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={editingRepository ? copy.editTitle : copy.newTitle}
+      description={editingRepository ? copy.editDescription : copy.newDescription}
+      error={error || saveError}
+      onSubmit={submitForm}
+      footer={
+        <>
+          <Button type="button" variant="outline" disabled={isSaving} onClick={onClose}>
+            {copy.cancel}
+          </Button>
+          <Button type="submit" disabled={isSaving}>
+            {copy.save}
+          </Button>
+        </>
+      }
+    >
+      <div className="grid grid-cols-2 gap-3">
+        <RepositoryField label={copy.remoteUrl} span>
+          <div className="flex gap-2">
+            <Input
+              className="min-w-0 flex-1"
+              disabled={isSaving}
+              value={values.remoteUrl}
+              onValueChange={(value) => updateValue("remoteUrl", value)}
+            />
+            {!editingRepository ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10"
+                disabled={isSaving || !window.skillsManager?.selectLocalRepositoryPath}
+                onClick={() => void browseLocalPath()}
               >
-                {copy.close}
-              </DialogClose>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <RepositoryField label={copy.remoteUrl} span>
-                <div className="flex gap-2">
-                  <Input
-                    className="min-w-0 flex-1"
-                    disabled={isSaving}
-                    value={values.remoteUrl}
-                    onValueChange={(value) => updateValue("remoteUrl", value)}
-                  />
-                  {!editingRepository ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-10"
-                      disabled={isSaving || !window.skillsManager?.selectLocalRepositoryPath}
-                      onClick={() => void browseLocalPath()}
-                    >
-                      <FolderOpen data-icon="inline-start" />
-                      {copy.browseLocalPath}
-                    </Button>
-                  ) : null}
-                </div>
-                {sourceInspectionMessage ? (
-                  <FieldDescription>{sourceInspectionMessage}</FieldDescription>
-                ) : null}
-              </RepositoryField>
-              <RepositoryField label={copy.name}>
-                <Input
-                  disabled={isSaving}
-                  value={values.name}
-                  onValueChange={(value) => updateValue("name", value)}
-                />
-              </RepositoryField>
-              <RepositoryField label={copy.provider}>
-                <Select
-                  disabled={isSaving}
-                  value={values.provider}
-                  options={providerOptions}
-                  onValueChange={(value) => updateValue("provider", value)}
-                />
-              </RepositoryField>
-              <RepositoryField label={copy.branch}>
-                <Input
-                  disabled={isSaving}
-                  value={values.branch}
-                  onValueChange={(value) => updateValue("branch", value)}
-                />
-              </RepositoryField>
-              <RepositoryField label={copy.patterns} span>
-                <Input
-                  disabled={isSaving}
-                  placeholder={copy.patternsPlaceholder}
-                  value={values.patterns}
-                  onValueChange={(value) => updateValue("patterns", value)}
-                />
-              </RepositoryField>
-              <RepositoryField label={copy.note} span>
-                <Textarea
-                  disabled={isSaving}
-                  value={values.note}
-                  onValueChange={(value) => updateValue("note", value)}
-                />
-              </RepositoryField>
-            </div>
-
-            {error || saveError ? (
-              <p className="mt-3 text-sm text-destructive">{error || saveError}</p>
-            ) : null}
-
-            <div className="mt-4 flex justify-end gap-2">
-              <DialogClose render={<Button type="button" variant="outline" disabled={isSaving} />}>
-                {copy.cancel}
-              </DialogClose>
-              <Button type="submit" disabled={isSaving}>
-                {copy.save}
+                <FolderOpen data-icon="inline-start" />
+                {copy.browseLocalPath}
               </Button>
-            </div>
-          </Form>
-        </DialogPopup>
-      </DialogPortal>
-    </Dialog>
+            ) : null}
+          </div>
+          {sourceInspectionMessage ? (
+            <FieldDescription>{sourceInspectionMessage}</FieldDescription>
+          ) : null}
+        </RepositoryField>
+        <RepositoryField label={copy.name}>
+          <Input
+            disabled={isSaving}
+            value={values.name}
+            onValueChange={(value) => updateValue("name", value)}
+          />
+        </RepositoryField>
+        <RepositoryField label={copy.provider}>
+          <Select
+            disabled={isSaving}
+            value={values.provider}
+            options={providerOptions}
+            onValueChange={(value) => updateValue("provider", value)}
+          />
+        </RepositoryField>
+        <RepositoryField label={copy.branch}>
+          <Input
+            disabled={isSaving}
+            value={values.branch}
+            onValueChange={(value) => updateValue("branch", value)}
+          />
+        </RepositoryField>
+        <RepositoryField label={copy.patterns} span>
+          <Input
+            disabled={isSaving}
+            placeholder={copy.patternsPlaceholder}
+            value={values.patterns}
+            onValueChange={(value) => updateValue("patterns", value)}
+          />
+        </RepositoryField>
+        <RepositoryField label={copy.note} span>
+          <Textarea
+            disabled={isSaving}
+            value={values.note}
+            onValueChange={(value) => updateValue("note", value)}
+          />
+        </RepositoryField>
+      </div>
+    </Modal>
   );
 };
 
