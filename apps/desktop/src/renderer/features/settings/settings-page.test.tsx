@@ -1,9 +1,12 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
+import { I18nextProvider } from "react-i18next";
 
 import { SettingsPage } from "./settings-page";
 import { GITHUB_TOKEN_HELP_URL, OFFICIAL_SITE_URL } from "../../../core/app-constants";
+import { createI18nInstance } from "@/i18n/react-i18n";
+import { ToastHost, toast } from "@/components/ui/toast";
 
 describe("SettingsPage", () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
@@ -28,6 +31,7 @@ describe("SettingsPage", () => {
         writeText
       }
     });
+    toast.clear();
 
     window.skillsManager = {
       clearGitHubToken: vi.fn().mockResolvedValue({
@@ -352,7 +356,14 @@ describe("SettingsPage", () => {
   });
 
   it("shows copyable local cache and database paths", async () => {
-    render(<SettingsPage />);
+    const i18n = await createI18nInstance("zh-CN");
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <SettingsPage />
+      </I18nextProvider>
+    );
+    render(<ToastHost />);
 
     await screen.findByRole("main");
     clickSettingsNavigationLink("本地存储");
@@ -370,6 +381,7 @@ describe("SettingsPage", () => {
 
     fireEvent.click(copyPathButtons[0]);
     expect(writeText).toHaveBeenCalledWith("/Users/andrew/.skills-manager/cache");
+    expect(await screen.findByText("已复制到剪贴板")).toBeInTheDocument();
 
     fireEvent.click(copyPathButtons[1]);
     expect(writeText).toHaveBeenCalledWith(

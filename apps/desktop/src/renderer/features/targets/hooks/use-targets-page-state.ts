@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   adaptTargets,
@@ -10,6 +11,8 @@ import {
 import type { RegisteredTargetRecord } from "../../../../core/targets/target-api";
 import type { TargetDirectoryAgentOption, TargetsListResult } from "@/global";
 import { useDataStore } from "@/stores/data-store";
+import { copyToClipboard } from "@/lib/clipboard";
+import { toast } from "@/components/ui/toast";
 import {
   clampPageNumber,
   createPaginationState,
@@ -35,6 +38,7 @@ type TargetsResultLike = {
 const minimumRescanLoadingMs = 2000;
 
 export const useTargetsPageState = () => {
+  const { t } = useTranslation();
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [deleteError, setDeleteError] = useState("");
   const [editTargetError, setEditTargetError] = useState("");
@@ -583,12 +587,18 @@ export const useTargetsPageState = () => {
     (pendingConvertTargetId &&
       (targets.find((target) => target.id === pendingConvertTargetId) ?? null)) ||
     null;
-  const copySelectedTargetPath = () => {
+  const copySelectedTargetPath = async () => {
     if (!selectedTarget) {
       return;
     }
 
-    void navigator.clipboard?.writeText(selectedTarget.path);
+    const copied = await copyToClipboard(selectedTarget.path);
+
+    if (copied) {
+      toast.success(t("common.copied"));
+    } else {
+      toast.error(t("common.copyFailed"));
+    }
   };
 
   const setTargetsPage = (pageNumber: number) => {

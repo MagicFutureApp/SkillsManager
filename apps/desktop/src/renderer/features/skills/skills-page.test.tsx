@@ -5,6 +5,7 @@ import { I18nextProvider } from "react-i18next";
 
 import { PageLayout } from "@/components/layout/page-layout";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ToastHost, toast } from "@/components/ui/toast";
 import { SkillsPage } from "./skills-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import { skillApiRecordsFixture } from "@/test/api-fixtures";
@@ -300,6 +301,7 @@ const renderSkillsPage = async ({
       <I18nextProvider i18n={i18n}>
         <TooltipProvider>
           <SkillsPage />
+          <ToastHost />
         </TooltipProvider>
       </I18nextProvider>
     ),
@@ -330,16 +332,18 @@ const getSkillsPageHeader = () => {
 };
 
 const expectDistributionToast = (message: string) => {
-  const toast = screen.getByTestId("skills-distribution-toast");
+  const toasts = screen.getAllByTestId("app-toast");
+  const toast = toasts.find((node) => node.textContent?.includes(message));
 
-  expect(toast).toHaveClass("fixed", "z-[60]");
-  expect(toast).toHaveTextContent(message);
+  expect(toast).toBeDefined();
+  expect(toast).toHaveClass("rounded-lg", "border", "shadow-lg");
   expect(within(getSkillsPageHeader()).queryByText(message)).not.toBeInTheDocument();
 };
 
 describe("SkillsPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
+    toast.clear();
     // 每个用例从 idle 开始：Skills 页面挂载时由数据桶按 status 去重加载，
     // 避免复用上一个用例留下的 ready 状态而读不到本用例的 fixture 数据。
     useDataStore.getState().reset();

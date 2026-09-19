@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   DistributionExecuteInput,
@@ -26,15 +26,14 @@ import {
 } from "../components/skills-page-data";
 import { useTargetAddDialogState } from "../../targets/hooks/use-target-add-dialog-state";
 import { useDataStore } from "@/stores/data-store";
+import { useTranslation } from "react-i18next";
+import { toast } from "@/components/ui/toast";
 
 export const useSkillsPageState = () => {
+  const { t } = useTranslation();
   const distributionExecutionTimerIdsRef = useRef<number[]>([]);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const [distributionNoticeKey, setDistributionNoticeKey] = useState<string | null>(null);
-  const [distributionExecuteResult, setDistributionExecuteResult] =
-    useState<DistributionExecuteResult | null>(null);
-  const [distributionNoticeDismissed, setDistributionNoticeDismissed] = useState(false);
   const [distributionPreview, setDistributionPreview] = useState<DistributionPreviewResult | null>(
     null
   );
@@ -211,14 +210,8 @@ export const useSkillsPageState = () => {
   };
 
   const showDistributionNotice = (key: string) => {
-    setDistributionExecuteResult(null);
-    setDistributionNoticeKey(key);
-    setDistributionNoticeDismissed(false);
+    toast.info(t(key));
   };
-
-  const dismissDistributionNotice = useCallback(() => {
-    setDistributionNoticeDismissed(true);
-  }, []);
 
   const startDistribution = async (
     skillUnitIds: string[],
@@ -239,8 +232,6 @@ export const useSkillsPageState = () => {
     }
 
     setIsDistributionPreviewLoading(true);
-    setDistributionExecuteResult(null);
-    setDistributionNoticeKey(null);
     setDistributionExecutionItemStatuses({});
     setDistributionRuntimeOverwriteResolutions({});
     clearDistributionExecutionTimers();
@@ -325,8 +316,6 @@ export const useSkillsPageState = () => {
     }
 
     setIsDistributionExecuting(true);
-    setDistributionExecuteResult(null);
-    setDistributionNoticeKey(null);
     clearDistributionExecutionTimers();
 
     const startedAt = Date.now();
@@ -351,8 +340,7 @@ export const useSkillsPageState = () => {
         getResultStatuses: () =>
           createResultDistributionExecutionItemStatuses(previewItems, result.items),
         onFinish: () => {
-          setDistributionExecuteResult(result);
-          setDistributionNoticeDismissed(false);
+          toast.info(t("skills.actions.distributionCompletedStatus", result.summary));
         },
         previewItems,
         startedAt
@@ -468,7 +456,6 @@ export const useSkillsPageState = () => {
     }
 
     setIsTargetRemovalExecuting(true);
-    setDistributionNoticeKey(null);
 
     try {
       await removeSkillTargetPreference({
@@ -531,10 +518,6 @@ export const useSkillsPageState = () => {
     distributionConflictResolutions,
     distributionConfirmDialogOpen,
     distributionExecutionItemStatuses,
-    distributionExecuteResult,
-    distributionNoticeKey,
-    distributionNoticeVisible:
-      Boolean(distributionNoticeKey || distributionExecuteResult) && !distributionNoticeDismissed,
     distributionPreview,
     distributionRuntimeOverwriteResolutions,
     isDistributionExecuting,
@@ -555,7 +538,6 @@ export const useSkillsPageState = () => {
     visibleSomeChecked,
     closeDistributionConfirmDialog,
     closeTargetRemovalDialog,
-    dismissDistributionNotice,
     confirmTargetRemoval,
     executeCurrentDistribution,
     selectAllVisible,

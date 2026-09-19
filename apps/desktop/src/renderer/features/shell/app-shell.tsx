@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import skillsManagerMark from "../../assets/skills-manager-mark.svg";
 import { AppSidebar } from "./app-sidebar";
 import { APP_META } from "../../../core/app-constants";
+import { ToastHost } from "@/components/ui/toast";
 
 type AppShellProps = React.PropsWithChildren;
 
@@ -126,6 +127,7 @@ export const AppShell = ({ children }: AppShellProps) => {
             </div>
           ) : null}
           {children}
+          <ToastHost />
           {health ? (
             <dl className="sr-only">
               <div className="flex gap-1">

@@ -4,7 +4,9 @@ export const resources = {
   "zh-CN": {
     translation: {
       common: {
-        close: "关闭"
+        close: "关闭",
+        copied: "已复制到剪贴板",
+        copyFailed: "复制失败，请重试"
       },
       shell: {
         dataLoadFailed: "数据加载失败，技能与目标可能为空。请重试。",
@@ -504,7 +506,9 @@ export const resources = {
   "en-US": {
     translation: {
       common: {
-        close: "Close"
+        close: "Close",
+        copied: "Copied to clipboard",
+        copyFailed: "Copy failed. Please try again."
       },
       shell: {
         dataLoadFailed: "Failed to load data. Skills and targets may be empty. Please retry.",

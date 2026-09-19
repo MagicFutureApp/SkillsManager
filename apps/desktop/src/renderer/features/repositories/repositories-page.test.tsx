@@ -8,6 +8,7 @@ import { createI18nInstance } from "@/i18n/react-i18n";
 import type { RepositoriesSyncResult } from "@/global";
 import { providerApiRecordsFixture, repositoryApiRecordsFixture } from "@/test/api-fixtures";
 import { useDataStore } from "@/stores/data-store";
+import { ToastHost, toast } from "@/components/ui/toast";
 
 type RepositorySyncProgressCallback = (event: {
   repositoryId: string;
@@ -118,6 +119,7 @@ const createPagedRepositoryRecords = (count: number) =>
 describe("RepositoriesPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
+    toast.clear();
   });
 
   afterEach(() => {
@@ -228,6 +230,23 @@ describe("RepositoriesPage", () => {
     expect(
       within(screen.getByLabelText("来源详情")).queryByText("元数据变更")
     ).not.toBeInTheDocument();
+  });
+
+  it("copies the selected repository cache path and shows a success toast", async () => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn().mockResolvedValue(undefined) }
+    });
+
+    await renderRepositoriesPage();
+    render(<ToastHost />);
+
+    const detail = screen.getByLabelText("来源详情");
+    const copyCacheButton = within(detail).getByRole("button", { name: "复制缓存路径" });
+    fireEvent.click(copyCacheButton);
+
+    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalled());
+    expect(await screen.findByText("已复制到剪贴板")).toBeInTheDocument();
   });
 
   it("filters sources by provider and status", async () => {

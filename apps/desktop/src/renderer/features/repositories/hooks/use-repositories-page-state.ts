@@ -21,7 +21,10 @@ import {
   type PaginationState
 } from "@/lib/pagination";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useDataStore } from "@/stores/data-store";
+import { copyToClipboard } from "@/lib/clipboard";
+import { toast } from "@/components/ui/toast";
 
 export type RepositorySyncState =
   | {
@@ -54,6 +57,7 @@ export type RepositorySyncProgressDialogState = {
 const MIN_SYNC_PROGRESS_ITEM_DURATION_MS = 1000;
 
 export const useRepositoriesPageState = () => {
+  const { t } = useTranslation();
   const [repositories, setRepositories] = useState<RepositoryViewModel[]>(() =>
     createDefaultRepositories()
   );
@@ -645,7 +649,13 @@ export const useRepositoriesPageState = () => {
       selectedRepository.cachePath
     );
 
-    void navigator.clipboard?.writeText(absolutePath ?? selectedRepository.cachePath);
+    const copied = await copyToClipboard(absolutePath ?? selectedRepository.cachePath);
+
+    if (copied) {
+      toast.success(t("common.copied"));
+    } else {
+      toast.error(t("common.copyFailed"));
+    }
   };
 
   const openRepositoryLocation = (location: string) => {

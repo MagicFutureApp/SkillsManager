@@ -13,10 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { shouldIgnoreRowSelection } from "@/lib/row-selection";
-import { useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
 
 import {
   getDistributionTitleKey,
@@ -45,11 +42,6 @@ export const SkillsPageMain = () => {
   const selectedDistributionReady = page.checkedDistributionState === "ready";
   const selectedSyncTitle = t(getDistributionTitleKey(page.checkedDistributionState, "selected"));
   const syncLabel = t("skills.actions.sync");
-  const distributionStatus = page.distributionExecuteResult
-    ? t("skills.actions.distributionCompletedStatus", page.distributionExecuteResult.summary)
-    : page.distributionNoticeKey
-      ? t(page.distributionNoticeKey)
-      : null;
   const sortOptions: SelectOption<SkillSort>[] = [
     { value: "name", label: t("skills.filters.sortName") },
     { value: "repository", label: t("skills.filters.sortRepository") }
@@ -63,10 +55,6 @@ export const SkillsPageMain = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <SkillsDistributionToast
-        message={page.distributionNoticeVisible ? distributionStatus : null}
-        onDismiss={page.dismissDistributionNotice}
-      />
       <header className="mb-6">
         <div className="flex items-center justify-between gap-4 max-[860px]:items-start">
           <div className="min-w-0">
@@ -158,49 +146,6 @@ export const SkillsPageMain = () => {
         />
       </DataTableFixed>
     </div>
-  );
-};
-
-const SkillsDistributionToast = ({
-  message,
-  onDismiss
-}: {
-  message: string | null;
-  onDismiss: () => void;
-}) => {
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    if (!message) {
-      return;
-    }
-
-    const timerId = window.setTimeout(onDismiss, 5000);
-
-    return () => window.clearTimeout(timerId);
-  }, [message, onDismiss]);
-
-  if (!message || typeof document === "undefined") {
-    return null;
-  }
-
-  return createPortal(
-    <div
-      role="status"
-      data-testid="skills-distribution-toast"
-      className="pointer-events-auto fixed right-6 top-16 z-[60] flex max-w-sm items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm leading-5 text-card-foreground shadow-lg"
-    >
-      <span className="min-w-0 flex-1">{message}</span>
-      <button
-        type="button"
-        aria-label={t("skills.actions.close")}
-        onClick={onDismiss}
-        className="grid size-5 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <X aria-hidden="true" className="size-3.5" />
-      </button>
-    </div>,
-    document.body
   );
 };
 

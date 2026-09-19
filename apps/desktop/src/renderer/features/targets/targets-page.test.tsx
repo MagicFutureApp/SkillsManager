@@ -7,6 +7,7 @@ import { createI18nInstance } from "@/i18n/react-i18n";
 import { TargetsPage } from "./targets-page";
 import type { TargetsListResult, TargetsRescanResult } from "@/global";
 import { useDataStore } from "@/stores/data-store";
+import { ToastHost, toast } from "@/components/ui/toast";
 
 type SkillsManagerApi = NonNullable<Window["skillsManager"]>;
 
@@ -378,6 +379,7 @@ describe("TargetsPage", () => {
     // 每个用例从 idle 开始：Targets 页面挂载时由数据桶按 status 去重加载，
     // 避免复用上一个用例留下的 ready 状态而读不到本用例的 fixture 数据。
     useDataStore.getState().reset();
+    toast.clear();
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
@@ -469,8 +471,14 @@ describe("TargetsPage", () => {
     expect(detailPath).toBeInTheDocument();
     expect(detailPath).toHaveClass("break-all");
     expect(detailPath).not.toHaveClass("truncate");
+    render(<ToastHost />);
     fireEvent.click(within(detail).getByRole("button", { name: "复制目标" }));
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("/Users/test/project/.codex/skills");
+    await waitFor(() =>
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        "/Users/test/project/.codex/skills"
+      )
+    );
+    expect(await screen.findByText("已复制到剪贴板")).toBeInTheDocument();
     const identityCard = within(detail)
       .getByRole("heading", { name: "Local project" })
       .closest("section");
@@ -489,6 +497,26 @@ describe("TargetsPage", () => {
     expect(within(detail).queryByText("技能目录")).not.toBeInTheDocument();
     expect(within(detail).queryByText("安装目录")).not.toBeInTheDocument();
     expect(within(detail).queryByText("CLI 路径")).not.toBeInTheDocument();
+  });
+
+  it("shows a failure toast when copying the target path is rejected", async () => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: vi.fn().mockRejectedValue(new Error("denied"))
+      }
+    });
+
+    await renderTargetsPage();
+    render(<ToastHost />);
+
+    const detail = await screen.findByLabelText("目标详情");
+    fireEvent.click(within(detail).getByRole("button", { name: "复制目标" }));
+
+    const failureToast = await screen.findByTestId("app-toast");
+
+    expect(failureToast).toHaveTextContent("复制失败，请重试");
+    expect(failureToast).toHaveAttribute("data-toast-type", "error");
   });
 
   it("labels the scan action as initial scan when no targets are registered", async () => {

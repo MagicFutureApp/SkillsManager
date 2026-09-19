@@ -20,11 +20,14 @@ import {
   RotateCcw
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { AppInfo, AppSettingsResult, AppStoragePathsResult, LatestReleaseInfo } from "@/global";
 import { GITHUB_TOKEN_HELP_URL, OFFICIAL_SITE_URL } from "../../../core/app-constants";
 import { createShiftPressSequenceHandler } from "../../../core/keyboard/shift-press-sequence";
 import { LatestReleaseHint } from "./components/latest-release-hint";
 import { useDataStore } from "@/stores/data-store";
+import { copyToClipboard } from "@/lib/clipboard";
+import { toast } from "@/components/ui/toast";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type StorageStatus = "loading" | "idle" | "resetting" | "reset" | "error";
@@ -86,6 +89,7 @@ const resetSettingsWindowScroll = () => {
 };
 
 export const SettingsPage = () => {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<AppSettingsResult>({
     distribution: { autoDistributeOnSync: false },
     github: { hasToken: false }
@@ -316,8 +320,14 @@ export const SettingsPage = () => {
       });
   };
 
-  const copyPath = (value: string) => {
-    void navigator.clipboard?.writeText(value);
+  const copyPath = async (value: string) => {
+    const copied = await copyToClipboard(value);
+
+    if (copied) {
+      toast.success(t("common.copied"));
+    } else {
+      toast.error(t("common.copyFailed"));
+    }
   };
 
   const openOfficialSite = () => {
