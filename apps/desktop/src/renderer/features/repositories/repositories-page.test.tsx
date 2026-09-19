@@ -7,6 +7,7 @@ import { RepositoriesPage } from "./repositories-page";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import type { RepositoriesSyncResult } from "@/global";
 import { providerApiRecordsFixture, repositoryApiRecordsFixture } from "@/test/api-fixtures";
+import { useDataStore } from "@/stores/data-store";
 
 type RepositorySyncProgressCallback = (event: {
   repositoryId: string;
@@ -1940,5 +1941,170 @@ describe("RepositoriesPage", () => {
     expect(screen.getByLabelText("Source filters")).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "Source details" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
+  });
+
+  it("refreshes the shared skill bucket after a successful sync so the Skills page sees new skills", async () => {
+    const skillA = {
+      description: "Alpha",
+      entry: "skills/alpha/SKILL.md",
+      id: "skill-alpha",
+      name: "alpha",
+      repository: "Team skills repository",
+      skillId: "skills-alpha",
+      status: "ready",
+      tags: [],
+      targets: [],
+      version: "8f2c91a"
+    };
+    const skillB = {
+      description: "Beta",
+      entry: "skills/beta/SKILL.md",
+      id: "skill-beta",
+      name: "beta",
+      repository: "Team skills repository",
+      skillId: "skills-beta",
+      status: "ready",
+      tags: [],
+      targets: [],
+      version: "21ab9d0"
+    };
+    // 第一次拉取（预热共享桶）只返回 A；同步成功后 refresh() 重新拉取返回 A、B。
+    const listSkills = vi
+      .fn()
+      .mockResolvedValueOnce({ skills: [skillA] })
+      .mockResolvedValueOnce({ skills: [skillA, skillB] });
+    const listTargets = vi.fn().mockResolvedValue({ registeredTargets: [] });
+    const syncRepositories = vi.fn().mockResolvedValue({
+      results: [
+        {
+          commitSha: "8f2c91a",
+          repositoryId: "team-skills",
+          scan: { added: 1, changed: 0, removed: 0, warnings: 0 },
+          skillUnits: 13,
+          status: "ready"
+        }
+      ]
+    });
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      platform: "win32",
+      syncRepositories
+    };
+    await renderRepositoriesPage();
+    // renderRepositoriesPage 重建 window.skillsManager 时不会透传 listSkills / listTargets，需在其后挂载。
+    window.skillsManager.listSkills = listSkills;
+    window.skillsManager.listTargets = listTargets;
+
+    // 预热共享桶：此时只有 skillA。
+    await act(async () => {
+      await useDataStore.getState().reset();
+      await useDataStore.getState().loadSharedPageData();
+    });
+    expect(useDataStore.getState().skills.map((skill) => skill.id)).toEqual(["skill-alpha"]);
+
+    // 触发一次同步；同步成功后 hook 应调用 refresh() 重新拉取共享桶（P0-1 修复 + R2 覆盖）。
+    fireEvent.click(getRepositorySyncButton("Team skills repository"));
+    const dialog = await screen.findByRole("dialog", { name: "同步进度" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "开始同步" }));
+
+    await waitFor(() => expect(syncRepositories).toHaveBeenCalledWith(["team-skills"]));
+    // 共享桶应已重拉并包含同步后新增的 skillB。
+    await waitFor(() =>
+      expect(useDataStore.getState().skills.map((skill) => skill.id)).toEqual([
+        "skill-alpha",
+        "skill-beta"
+      ])
+    );
+
+    await act(async () => {
+      useDataStore.getState().reset();
+    });
+  });
+
+  it("refreshes the shared skill bucket after toggling a source enabled so the Skills page reflects the change", async () => {
+    const skillA = {
+      description: "Alpha",
+      entry: "skills/alpha/SKILL.md",
+      id: "skill-alpha",
+      name: "alpha",
+      repository: "Team skills repository",
+      skillId: "skills-alpha",
+      status: "ready",
+      tags: [],
+      targets: [],
+      version: "8f2c91a"
+    };
+    const skillB = {
+      description: "Beta",
+      entry: "skills/beta/SKILL.md",
+      id: "skill-beta",
+      name: "beta",
+      repository: "skills.sh market index",
+      skillId: "skills-beta",
+      status: "ready",
+      tags: [],
+      targets: [],
+      version: "21ab9d0"
+    };
+    // 预热（来源禁用）只返回 A；启用来源后 refresh() 重新拉取返回 A、B（R8）。
+    const listSkills = vi
+      .fn()
+      .mockResolvedValueOnce({ skills: [skillA] })
+      .mockResolvedValueOnce({ skills: [skillA, skillB] });
+    const listTargets = vi.fn().mockResolvedValue({ registeredTargets: [] });
+    // persistRepositoryEnabled 内部调用 updateRepository；resolve 后走成功分支的 refresh()。
+    const updateRepository = vi.fn().mockResolvedValue(repositoryApiRecordsFixture[3]);
+    const listRepositories = vi
+      .fn()
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture })
+      .mockResolvedValueOnce({ repositories: repositoryApiRecordsFixture });
+
+    window.skillsManager = {
+      ...(window.skillsManager ?? {}),
+      getHealth: vi.fn().mockResolvedValue({ status: "ok" }),
+      getInfo: vi.fn().mockResolvedValue({ name: "Skills Manager", version: "0.1.0" }),
+      getLocale: vi.fn().mockResolvedValue("zh-CN"),
+      listProviders: vi.fn().mockResolvedValue({ providers: providerApiRecordsFixture }),
+      listRepositories,
+      platform: "win32",
+      updateRepository
+    };
+    await renderRepositoriesPage();
+    // renderRepositoriesPage 重建 window.skillsManager 时不透传 listSkills / listTargets，需在其后挂载。
+    window.skillsManager.listSkills = listSkills;
+    window.skillsManager.listTargets = listTargets;
+
+    // 预热共享桶：此时来源禁用，只有 skillA。
+    await act(async () => {
+      await useDataStore.getState().reset();
+      await useDataStore.getState().loadSharedPageData();
+    });
+    expect(useDataStore.getState().skills.map((skill) => skill.id)).toEqual(["skill-alpha"]);
+
+    // 通过表格开关启用来源；成功分支应调用 refresh() 重新拉取共享桶（R8 修复）。
+    fireEvent.click(screen.getByRole("switch", { name: "启用 skills.sh market index" }));
+    await waitFor(() => expect(updateRepository).toHaveBeenCalled());
+
+    // 共享桶应已重拉并包含启用来源后的 skillB。
+    await waitFor(() =>
+      expect(useDataStore.getState().skills.map((skill) => skill.id)).toEqual([
+        "skill-alpha",
+        "skill-beta"
+      ])
+    );
+
+    await act(async () => {
+      useDataStore.getState().reset();
+    });
   });
 });

@@ -198,6 +198,73 @@ describe("createSkillRepository", () => {
     });
   });
 
+  it("excludes targets whose preference is enabled but the target itself is disabled (R12)", async () => {
+    const db = createDbClient(":memory:");
+    const createdAt = new Date("2026-06-14T00:00:00.000Z");
+
+    await db.insert(providers).values({
+      configJson: "{}",
+      createdAt,
+      id: "github",
+      name: "GitHub",
+      type: "github",
+      updatedAt: createdAt
+    });
+    await db.insert(repositories).values({
+      configJson: "{}",
+      createdAt,
+      defaultBranch: "main",
+      id: "repo-1",
+      lastScannedCommitSha: "abcdef123456",
+      localCachePath: "~/.skills-manager/cache/team-skills",
+      name: "Team skills",
+      providerId: "github",
+      remoteUrl: "git@github.com:team/skills.git",
+      updatedAt: createdAt
+    });
+    await db.insert(skillUnits).values({
+      createdAt,
+      discoveryMethod: "convention",
+      entryPath: "skills/review-bot/SKILL.md",
+      id: "skill-1",
+      name: "Review Bot",
+      repositoryId: "repo-1",
+      rootPath: "skills/review-bot",
+      status: "ready",
+      updatedAt: createdAt
+    });
+    await db.insert(skillVersions).values({
+      commitSha: "abcdef123456",
+      createdAt,
+      id: "version-1",
+      metadataSnapshotJson: JSON.stringify({ skillKey: "skills-review-bot", tags: [] }),
+      skillUnitId: "skill-1"
+    });
+    // 目标自身被扫描为不可用（path-missing 等），enabled=false，但偏好仍为 enabled=true。
+    await db.insert(agentTargets).values({
+      createdAt,
+      enabled: false,
+      detectionStatus: "path-missing",
+      id: "target-codex",
+      name: "Codex",
+      normalizedPath: "/Users/test/.codex/skills",
+      path: "/Users/test/.codex/skills",
+      scope: "global",
+      type: "codex",
+      updatedAt: createdAt
+    });
+
+    const repository = createSkillRepository(db);
+
+    await repository.setTargetPreference({
+      agentTargetId: "target-codex",
+      enabled: true,
+      skillUnitId: "skill-1"
+    });
+    // 偏好启用但目标自身禁用时，list() 必须排除该 target（与分发口径 countEnabledTargetPreferences 一致）。
+    await expect(repository.list()).resolves.toMatchObject([{ targets: [] }]);
+  });
+
   it("hides skills from disabled repositories", async () => {
     const db = createDbClient(":memory:");
     const createdAt = new Date("2026-06-14T00:00:00.000Z");

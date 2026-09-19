@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
 import type {
@@ -8,7 +8,7 @@ import type {
 } from "../../core/skills/skill-api";
 import { parseSkillMetadataSnapshot, toSkillKey } from "../../core/skills/skill-utils";
 import type { createDbClient } from "../client";
-import { repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";
+import { agentTargets, repositories, skillTargetPreferences, skillUnits, skillVersions } from "../schema";
 
 type DbClient = ReturnType<typeof createDbClient>;
 
@@ -103,6 +103,10 @@ export const createSkillRepository = (db: DbClient) => {
   };
 };
 
+// 只返回「技能→目标偏好启用 且 目标自身启用」的配对。后者由 agent_targets.enabled 决定
+// （扫描状态 path-missing / not-writable / app-missing 等会令其 false），与真正分发时的
+// countEnabledTargetPreferences（innerJoin agentTargets 并同时要求两个 enabled）口径一致，
+// 从而根治「启动路径不 prune、UI 显示含 disabled target 而分发时排除」的口径分裂（R12）。
 const getEnabledTargetsBySkillId = async (db: DbClient): Promise<Map<string, string[]>> => {
   const rows = await db
     .select({
@@ -110,7 +114,8 @@ const getEnabledTargetsBySkillId = async (db: DbClient): Promise<Map<string, str
       targetId: skillTargetPreferences.agentTargetId
     })
     .from(skillTargetPreferences)
-    .where(eq(skillTargetPreferences.enabled, true))
+    .innerJoin(agentTargets, eq(agentTargets.id, skillTargetPreferences.agentTargetId))
+    .where(and(eq(skillTargetPreferences.enabled, true), eq(agentTargets.enabled, true)))
     .orderBy(asc(skillTargetPreferences.agentTargetId));
   const targetsBySkillId = new Map<string, string[]>();
 

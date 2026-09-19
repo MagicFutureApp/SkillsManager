@@ -7,7 +7,7 @@ describe("createI18nInstance", () => {
     const i18n = await createI18nInstance("zh-CN");
 
     expect(i18n.t("shell.navigation.workspace")).toBe("工作区");
-    expect(i18n.t("skills.actions.addSkill")).toBe("新增");
+    expect(i18n.t("skills.actions.addSyncTarget")).toBe("新增目标");
     expect(i18n.t("skills.actions.editSkill")).toBe("编辑");
   });
 
@@ -15,7 +15,6 @@ describe("createI18nInstance", () => {
     const i18n = await createI18nInstance("zh-CN");
 
     const sortLabels = [
-      i18n.t("skills.filters.sortRecommended"),
       i18n.t("skills.filters.sortName"),
       i18n.t("skills.filters.sortRepository"),
       i18n.t("providers.filters.sortPriority"),
@@ -30,7 +29,6 @@ describe("createI18nInstance", () => {
     ];
 
     expect(sortLabels).toEqual([
-      "推荐",
       "名称",
       "仓库",
       "优先",
@@ -50,6 +48,6 @@ describe("createI18nInstance", () => {
     const i18n = await createI18nInstance("en-US");
 
     expect(i18n.t("shell.navigation.workspace")).toBe("Workspace");
-    expect(i18n.t("skills.actions.addSkill")).toBe("Add skill");
+    expect(i18n.t("skills.actions.addSyncTarget")).toBe("Add target");
   });
 });

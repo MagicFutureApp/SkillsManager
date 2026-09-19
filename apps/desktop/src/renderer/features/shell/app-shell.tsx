@@ -2,20 +2,23 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { getActiveRouteId, routePathById } from "@/app/route-config";
 import type { AppHealth, AppInfo } from "@/global";
 import { useShellStore } from "@/stores/shell-store";
+import { useDataStore } from "@/stores/data-store";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import skillsManagerMark from "../../assets/skills-manager-mark.svg";
 import { AppSidebar } from "./app-sidebar";
 import { APP_META } from "../../../core/app-constants";
-import type { ShellNavigationBadgeCounts } from "./shell-navigation";
 
 type AppShellProps = React.PropsWithChildren;
 
 export const AppShell = ({ children }: AppShellProps) => {
-  const [badgeCounts, setBadgeCounts] = useState<ShellNavigationBadgeCounts>({});
+  const badgeCounts = useDataStore((state) => state.badgeCounts);
+  const dataStoreStatus = useDataStore((state) => state.status);
   const [health, setHealth] = useState<AppHealth | null>(null);
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
+  const [dataLoadErrorDismissed, setDataLoadErrorDismissed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const activeRouteId = getActiveRouteId(location.pathname);
@@ -25,6 +28,7 @@ export const AppShell = ({ children }: AppShellProps) => {
     (state) => state.setSidebarAutoCollapsedByWidth
   );
   const shouldCollapseSidebar = isSidebarAutoCollapsed;
+  const { t } = useTranslation();
   const isMacOs = health?.platform === "darwin";
 
   useEffect(() => {
@@ -50,12 +54,15 @@ export const AppShell = ({ children }: AppShellProps) => {
   }, []);
 
   useEffect(() => {
-    const skillsManager = window.skillsManager;
-
-    void skillsManager?.getNavigationBadgeCounts?.().then((result) => {
-      setBadgeCounts(result.counts);
-    });
+    useDataStore.getState().refreshBadgeCounts();
   }, []);
+
+  // 数据加载错误解除（status 离开 error）后，重置错误条的手动关闭状态，下次出错重新展示（R38）。
+  useEffect(() => {
+    if (dataStoreStatus !== "error") {
+      setDataLoadErrorDismissed(false);
+    }
+  }, [dataStoreStatus]);
 
   return (
     <>
@@ -93,6 +100,31 @@ export const AppShell = ({ children }: AppShellProps) => {
           className="h-[calc(100svh-44px)] min-w-0 overflow-y-auto"
           data-testid="app-shell-content"
         >
+          {dataStoreStatus === "error" && !dataLoadErrorDismissed ? (
+            <div
+              className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive"
+              role="alert"
+            >
+              <span>{t("shell.dataLoadFailed")}</span>
+              <span className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="rounded-md border border-destructive/50 px-2 py-1 text-xs font-medium hover:bg-destructive/20"
+                  onClick={() => useDataStore.getState().refresh()}
+                >
+                  {t("shell.retry")}
+                </button>
+                <button
+                  type="button"
+                  aria-label={t("common.close")}
+                  className="rounded-md border border-destructive/50 px-2 py-1 text-xs font-medium hover:bg-destructive/20"
+                  onClick={() => setDataLoadErrorDismissed(true)}
+                >
+                  {t("common.close")}
+                </button>
+              </span>
+            </div>
+          ) : null}
           {children}
           {health ? (
             <dl className="sr-only">

@@ -15,6 +15,7 @@ import {
 
 import { KEEP_ALIVE_ENABLED, getKeepAlivePageTestId } from "./keep-alive-pages";
 import { router } from "./router";
+import { useDataStore } from "@/stores/data-store";
 
 const targetsFixture: TargetsListResult = {
   registeredTargets: []
@@ -65,6 +66,10 @@ describe("KeepAlivePages", () => {
       platform: "win32"
     };
 
+    // 重置跨 tab 共享的数据桶，保证每个用例都是从 idle 状态由页面挂载触发加载，
+    // 而不是复用上一个用例留下的 ready 状态（否则 listSkills/listTargets 不会被再次调用）。
+    useDataStore.getState().reset();
+
     await router.navigate({ replace: true, to: "/skills" });
   });
 
@@ -72,7 +77,7 @@ describe("KeepAlivePages", () => {
   describe.runIf(KEEP_ALIVE_ENABLED)("keep-alive 开启", () => {
     it("keeps visited page state mounted when switching tabs", async () => {
       await renderApp();
-      const skillsPage = await searchSkills("Release Notes");
+      const skillsPage = await searchSkills("Review Bot");
 
       expect(skillsPage).not.toHaveAttribute("hidden");
       expect(screen.queryByTestId(getKeepAlivePageTestId("targets"))).not.toBeInTheDocument();
@@ -88,7 +93,7 @@ describe("KeepAlivePages", () => {
 
       expect(screen.getByTestId(getKeepAlivePageTestId("skills"))).toBe(skillsPage);
       expect(skillsPage).not.toHaveAttribute("hidden");
-      expect(screen.getByLabelText("搜索技能")).toHaveValue("Release Notes");
+      expect(screen.getByLabelText("搜索技能")).toHaveValue("Review Bot");
     });
 
     it("loads each visited page once and keeps it mounted afterwards", async () => {
@@ -103,12 +108,49 @@ describe("KeepAlivePages", () => {
 
       expect(window.skillsManager?.listSkills).toHaveBeenCalledTimes(1);
     });
+
+    it("keeps page UI state while reflecting data mutated on another tab", async () => {
+      await renderApp();
+      const skillsPage = await searchSkills("Review Bot");
+
+      await navigateTo("/targets");
+
+      // 模拟另一个 tab（Targets）对共享数据桶的 mutation：新增一个 target。
+      act(() => {
+        useDataStore.getState().setRegisteredTargets([
+          {
+            createdAt: "2026-06-21T00:00:00.000Z",
+            enabled: true,
+            id: "codex",
+            name: "Codex",
+            normalizedPath: "/Users/test/.codex/skills",
+            path: "/Users/test/.codex/skills",
+            scanMessage: null,
+            selectedSkills: [],
+            skillPreferences: [],
+            skillCount: 0,
+            scope: "global",
+            status: "registered",
+            type: "codex",
+            updatedAt: "2026-06-21T00:00:00.000Z"
+          }
+        ]);
+      });
+
+      await navigateTo("/skills");
+
+      // 保留自身 UI 状态（查询词）。
+      expect(skillsPage).not.toHaveAttribute("hidden");
+      expect(screen.getByLabelText("搜索技能")).toHaveValue("Review Bot");
+      // 反映其它 tab 改动后的最新数据，而非停留在旧快照。
+      expect(screen.getByLabelText("选择 Codex")).toBeInTheDocument();
+    });
   });
 
   describe.runIf(!KEEP_ALIVE_ENABLED)("keep-alive 短路口", () => {
     it("unmounts the previous page instead of keeping it hidden", async () => {
       await renderApp();
-      const skillsPage = await searchSkills("Release Notes");
+      const skillsPage = await searchSkills("Review Bot");
 
       await navigateTo("/targets");
 

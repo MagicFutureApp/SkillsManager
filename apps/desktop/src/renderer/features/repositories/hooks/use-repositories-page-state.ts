@@ -21,6 +21,7 @@ import {
   type PaginationState
 } from "@/lib/pagination";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useDataStore } from "@/stores/data-store";
 
 export type RepositorySyncState =
   | {
@@ -313,6 +314,15 @@ export const useRepositoriesPageState = () => {
 
       setSelectedRepositoryId(nextSelectedRepositoryId);
       setRepositories(nextRepositories);
+      // 同步成功意味着底层技能数据可能已变化（新增 / 更新技能）；强制刷新共享数据桶，
+      // 让被 keep-alive 保活、不会重挂载的 Skills 页也能反映最新快照（修复 P0-1 功能回归）。
+      // 仅当存在「非失败且非跳过」的成功项时才刷新，避免全量失败时多付一次 listSkills + listTargets IPC（R7）。
+      const hasSuccessfulSync = syncResult.results.some(
+        (result) => !result.error && result.status !== "skipped"
+      );
+      if (hasSuccessfulSync) {
+        void useDataStore.getState().refresh();
+      }
       finishSyncProgressDialog({
         repositories: nextRepositories,
         repositoryIds: targetRepositoryIds,
@@ -456,6 +466,9 @@ export const useRepositoriesPageState = () => {
       .then(loadRepositories)
       .then((nextRepositories) => {
         setRepositories(nextRepositories);
+        // 启用/停用会改变 listSkills 过滤结果（isSkillSourceEnabled 读 repositoryConfigJson.enabled）；
+        // 强制刷新共享桶，让被 keep-alive 保活的 Skills 页反映最新技能集合（R8，P0-1 同类回归）。
+        void useDataStore.getState().refresh();
       })
       .catch(() => {
         updateRepository(repositoryId, (currentRepository) => ({
@@ -579,6 +592,9 @@ export const useRepositoriesPageState = () => {
         const nextRepositories = await loadRepositories();
 
         setRepositories(nextRepositories);
+        // 编辑来源（remoteUrl / branch / patterns）会改变下次扫描命中的技能集合；
+        // 强制刷新共享数据桶，与同步路径保持一致，避免保活页展示过期技能（R1 同类回归）。
+        void useDataStore.getState().refresh();
         setSelectedRepositoryId(repositoryId);
         setIsModalOpen(false);
         setEditingRepositoryId(null);
@@ -605,6 +621,8 @@ export const useRepositoriesPageState = () => {
         const nextRepositories = await loadRepositories();
 
         setRepositories(nextRepositories);
+        // 新建来源使 repositories 徽标计数 +1；刷新侧边栏徽标，保持与列表一致（R13）。
+        void useDataStore.getState().refreshBadgeCounts();
         setSelectedRepositoryId(createdRepository?.id ?? nextRepositories[0]?.id ?? null);
         setIsModalOpen(false);
         setEditingRepositoryId(null);
@@ -655,6 +673,9 @@ export const useRepositoriesPageState = () => {
       const nextRepositories = await loadRepositories();
 
       setRepositories(nextRepositories);
+      // 删除来源会在 DB 层级联删掉该来源下的技能，但共享数据桶仍持有旧快照。
+      // 强制刷新，让被 keep-alive 保活、不会重挂载的 Skills 页也能反映删除结果（修复 R1 同类回归）。
+      void useDataStore.getState().refresh();
       setCheckedIds((currentIds) => {
         const nextIds = new Set(currentIds);
         nextIds.delete(deletePreview.repositoryId);

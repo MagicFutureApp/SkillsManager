@@ -6,6 +6,7 @@ import { I18nextProvider } from "react-i18next";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import { TargetsPage } from "./targets-page";
 import type { TargetsListResult, TargetsRescanResult } from "@/global";
+import { useDataStore } from "@/stores/data-store";
 
 type SkillsManagerApi = NonNullable<Window["skillsManager"]>;
 
@@ -374,6 +375,9 @@ const selectOption = async (label: string, optionName: string) => {
 describe("TargetsPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
+    // 每个用例从 idle 开始：Targets 页面挂载时由数据桶按 status 去重加载，
+    // 避免复用上一个用例留下的 ready 状态而读不到本用例的 fixture 数据。
+    useDataStore.getState().reset();
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {

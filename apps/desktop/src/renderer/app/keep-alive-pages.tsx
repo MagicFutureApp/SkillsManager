@@ -21,15 +21,16 @@ const pageComponentById: Record<AppRouteId, React.ComponentType> = {
 export const getKeepAlivePageTestId = (routeId: AppRouteId) => `keep-alive-page-${routeId}`;
 
 /**
- * Keep-alive 开关。当前为 `false`，即「短路口」：只渲染当前激活页面，切换 Tab 时上一个
- * 页面照常卸载，行为与改造前的 `<Outlet/>` 等价。
+ * Keep-alive 开关。当前为 `true`：切换 Tab 时页面首次访问才挂载，之后只切 `hidden`
+ * 可见性，从而保留页面内的筛选、分页、选中项和滚动位置等局部状态；同时因为 Skills 与
+ * Targets 共享 `data-store`，被保活（隐藏但常驻）的页面在其它 Tab 发生增删改后仍能渲染
+ * 出最新数据。
  *
- * 这里刻意保留完整架构，只短路最后的复用逻辑：`KeepAlivePages` 仍是 root 的渲染出口、
- * 路由侧改动、`routeIds` 顺序与 `data-testid` 约定都不变，翻回 `true` 即恢复「切换 Tab
- * 保留页面状态」（首次访问才挂载、之后只切 `hidden` 可见性）。两种行为都有测试覆盖，
- * 见 `keep-alive-pages.test.tsx` 中按该常量分流的两个 describe。
+ * 完整架构仍保留：翻回 `false` 即恢复「短路口」（只渲染当前激活页面、切换即卸载，行为与
+ * 改造前的 `<Outlet/>` 等价）。两种行为都有测试覆盖，见 `keep-alive-pages.test.tsx` 中
+ * 按该常量分流的两个 describe。
  */
-export const KEEP_ALIVE_ENABLED = false;
+export const KEEP_ALIVE_ENABLED = true;
 
 /**
  * 页面渲染出口。`KEEP_ALIVE_ENABLED` 为 `true` 时按需挂载页面并在路由切换后保持挂载：

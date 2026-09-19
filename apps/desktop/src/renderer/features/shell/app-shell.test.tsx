@@ -1,9 +1,10 @@
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
 
 import { useShellStore } from "@/stores/shell-store";
+import { useDataStore } from "@/stores/data-store";
 import { createI18nInstance } from "@/i18n/react-i18n";
 import type { AppHealth } from "@/global";
 import type { TargetsListResult } from "@/global";
@@ -283,5 +284,30 @@ describe("AppShell", () => {
         "true"
       );
     });
+  });
+
+  it("shows a sticky, dismissable error banner when data load fails (R38)", async () => {
+    useDataStore.setState({ status: "error" });
+
+    await renderAppShell(
+      <AppShell>
+        <div>Shell content</div>
+      </AppShell>
+    );
+
+    const banner = screen.getByRole("alert");
+    expect(banner).toHaveTextContent("数据加载失败");
+    // 错误条应吸顶，滚动时不随内容下推（R38）。
+    expect(banner).toHaveClass("sticky", "top-0");
+    expect(screen.getByRole("button", { name: "重试" })).toBeInTheDocument();
+
+    // 关闭按钮隐藏错误条。
+    act(() => {
+      fireEvent.click(screen.getByLabelText("关闭"));
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    // 复位，避免影响其它用例。
+    useDataStore.setState({ status: "idle" });
   });
 });

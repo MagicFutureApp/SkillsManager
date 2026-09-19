@@ -9,6 +9,7 @@ import {
 } from "../components/targets-page-data";
 import type { RegisteredTargetRecord } from "../../../../core/targets/target-api";
 import type { TargetDirectoryAgentOption, TargetsListResult } from "@/global";
+import { useDataStore } from "@/stores/data-store";
 import {
   clampPageNumber,
   createPaginationState,
@@ -62,16 +63,28 @@ export const useTargetsPageState = () => {
   const [scanIssues, setScanIssues] = useState<TargetIssue[]>([]);
   const [selectedTargetAgentType, setSelectedTargetAgentType] = useState<string | null>(null);
   const [sort, setSort] = useState<TargetSort>("name");
-  const [targets, setTargets] = useState<TargetViewModel[]>([]);
+  const registeredTargets = useDataStore((state) => state.registeredTargets);
+  const targets = useMemo(() => adaptTargets({ registeredTargets }), [registeredTargets]);
 
   const applyTargetsResult = (result?: TargetsResultLike, preferredTargetId?: string | null) => {
+    // 与写桶解耦：无论 result 是否为空都先标记「目标已加载完成」，避免早退分支跳过置位、
+    // 导致界面在首次加载拿到空结果时卡在加载态（R16）。result 为空时的写桶保护仍保留在下方早退。
+    setHasLoadedTargets(true);
+
+    // 防御：result 为空时若直接写桶会把共享桶的目标写空、并连带 prune 掉所有 skill.targets
+    // （测试 mock 不全时尤甚）。无数据时早退，不污染全局状态（R11）。
+    if (!result) {
+      return;
+    }
+
+    // 单一数据源：先把 IPC 结果写入共享桶，本地校验再读桶里派生出的 registeredTargets，
+    // 避免「入参 result 做校验」与「页面渲染读 store」分叉（P1-4）。
+    useDataStore.getState().setRegisteredTargets(result?.registeredTargets ?? []);
     const nextTargets = adaptTargets({
-      registeredTargets: result?.registeredTargets ?? []
+      registeredTargets: useDataStore.getState().registeredTargets
     });
     const nextTargetIds = new Set(nextTargets.map((target) => target.id));
 
-    setTargets(nextTargets);
-    setHasLoadedTargets(true);
     setCheckedIds((currentIds) => {
       const nextIds = new Set<string>();
 
@@ -136,6 +149,10 @@ export const useTargetsPageState = () => {
         rescanResult ?? (await window.skillsManager?.listTargets?.());
 
       applyTargetsResult(result);
+      // pruneSkillTargets 是「写时裁剪」、只删不补：target 因扫描状态（path-missing 等）变为 enabled=false
+      // 时被剥掉的 id，需靠 listSkills 重拉才能加回。rescan 只重拉 listTargets、不重拉 listSkills，
+      // 故这里补一次 refreshSkills() 仅重供货 skill.targets，不覆盖刚 rescan 得到的 registeredTargets（R10②）。
+      void useDataStore.getState().refreshSkills();
       nextScanIssues = rescanResult?.scanIssues ?? [];
     } finally {
       await waitForMinimumElapsedTime(loadingStartedAt, minimumRescanLoadingMs);
@@ -436,15 +453,28 @@ export const useTargetsPageState = () => {
 
   useEffect(() => {
     let isMounted = true;
-
-    void window.skillsManager?.listTargets?.().then((result) => {
+    void useDataStore.getState().loadSharedPageData().then(() => {
+      // 初始加载走共享数据桶；这里把桶里的数据灌回页面本地状态（hasLoadedTargets 置真）。
+      // 初始选中规则：优先选中 store 顺序首个 target（registeredTargets[0]）。
+      // 注意：loadSharedPageData 内的 zustand store.set 会先触发一次重渲染，
+      // 此时 selectedTargetId 仍为 null 而 visibleTargets 已就绪，下方「可见性归一化」effect
+      // 会把选中改成 visibleTargets[0]（按当前 sort 排序后的首个，未必是 registeredTargets[0]）。
+      // 因此这里必须显式传 preferredTargetId = registeredTargets[0]?.id，
+      // 由 applyTargetsResult 的 preferredTargetId 分支强制锚定初始选中，覆盖 effect 的归一化结果。
+      // （R3 复审曾误判 preferredTargetId 为死参数并建议删除，实测删除后初始选中回归为排序首个 target；保留之。）
       if (!isMounted) {
         return;
       }
-
-      applyTargetsResult(result);
+      const { registeredTargets, status } = useDataStore.getState();
+      // 仅当「目标侧也加载失败、桶内 registeredTargets 为空」时才跳过写回，避免 setRegisteredTargets([])
+      // 把 skills[].targets 剪空（R34）；若只是 skills 侧失败而目标已加载（loadSharedPageData 在失败侧
+      // 保留桶内目标），仍应把目标灌回页面并锚定初始选中。错误态重试由 AppShell 错误条统一提供。
+      if (registeredTargets.length === 0 && status !== "ready") {
+        setHasLoadedTargets(true);
+        return;
+      }
+      applyTargetsResult({ registeredTargets }, registeredTargets[0]?.id);
     });
-
     return () => {
       isMounted = false;
     };

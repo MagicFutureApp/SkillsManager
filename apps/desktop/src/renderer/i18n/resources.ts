@@ -7,6 +7,8 @@ export const resources = {
         close: "关闭"
       },
       shell: {
+        dataLoadFailed: "数据加载失败，技能与目标可能为空。请重试。",
+        retry: "重试",
         navigation: {
           workspace: "工作区",
           system: "系统",
@@ -46,6 +48,7 @@ export const resources = {
           distributionFailedStatus: "分发失败。",
           targetRemovalFailedStatus: "取消分发目标失败。请检查目标目录权限后重试。",
           targetRemovalUnavailableStatus: "取消分发目标接口暂不可用。",
+          targetPreferenceSyncFailedStatus: "更新分发目标偏好失败。请检查目标目录权限后重试。",
           distributionCompletedStatus:
             "分发完成：安装 {{installed}}，更新 {{updated}}，跳过 {{skipped}}，冲突 {{conflicts}}，阻止 {{blocked}}，失败 {{failed}}。",
           distributionPreviewFailedStatus: "分发预览失败。",
@@ -366,7 +369,7 @@ export const resources = {
           search: "搜索",
           searchPlaceholder: "搜索名称、URL 或备注",
           sort: "排序",
-          sortName: "来源",
+          sortName: "名称",
           sortPriority: "优先",
           sortProvider: "类型",
           sortSkills: "技能",
@@ -504,6 +507,8 @@ export const resources = {
         close: "Close"
       },
       shell: {
+        dataLoadFailed: "Failed to load data. Skills and targets may be empty. Please retry.",
+        retry: "Retry",
         navigation: {
           workspace: "Workspace",
           system: "System",
@@ -545,6 +550,8 @@ export const resources = {
           targetRemovalFailedStatus:
             "Failed to remove the distribution target. Check target permissions and try again.",
           targetRemovalUnavailableStatus: "Removing distribution targets is unavailable.",
+          targetPreferenceSyncFailedStatus:
+            "Failed to update the distribution target preference. Check target permissions and try again.",
           distributionCompletedStatus:
             "Distribution finished: installed {{installed}}, updated {{updated}}, skipped {{skipped}}, conflicts {{conflicts}}, blocked {{blocked}}, failed {{failed}}.",
           distributionPreviewFailedStatus: "Distribution preview failed.",
@@ -863,7 +870,7 @@ export const resources = {
           search: "Search",
           searchPlaceholder: "Search name, URL, or note",
           sort: "Sort",
-          sortName: "Source",
+          sortName: "Name",
           sortPriority: "Sync priority",
           sortProvider: "Type",
           sortSkills: "Skills",

@@ -14,6 +14,7 @@ import type {
   TargetsListResult
 } from "@/global";
 import type { SkillApiRecord } from "../../../core/skills/skill-api";
+import { useDataStore } from "@/stores/data-store";
 
 const mockDescriptionOverflow = (overflowingText: string) => {
   const clientHeightSpy = vi
@@ -339,6 +340,9 @@ const expectDistributionToast = (message: string) => {
 describe("SkillsPage", () => {
   beforeEach(() => {
     window.skillsManager = undefined;
+    // 每个用例从 idle 开始：Skills 页面挂载时由数据桶按 status 去重加载，
+    // 避免复用上一个用例留下的 ready 状态而读不到本用例的 fixture 数据。
+    useDataStore.getState().reset();
   });
 
   afterEach(() => {
@@ -486,7 +490,7 @@ describe("SkillsPage", () => {
     expect(within(screen.getByRole("main")).queryByText("状态")).not.toBeInTheDocument();
     expect(within(screen.getByRole("main")).queryByText("8f2c91a")).not.toBeInTheDocument();
     expect(within(screen.getByRole("main")).queryByText("ready")).not.toBeInTheDocument();
-    expect(within(screen.getByLabelText("技能详情")).getByText("8f2c91a")).toBeInTheDocument();
+    expect(within(screen.getByLabelText("技能详情")).getByText("v8f2c91a")).toBeInTheDocument();
     expect(within(screen.getByLabelText("技能详情")).getByText("Review Bot")).toBeInTheDocument();
     expect(
       within(screen.getByLabelText("技能详情")).getByText(

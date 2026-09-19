@@ -24,6 +24,7 @@ import type { AppInfo, AppSettingsResult, AppStoragePathsResult, LatestReleaseIn
 import { GITHUB_TOKEN_HELP_URL, OFFICIAL_SITE_URL } from "../../../core/app-constants";
 import { createShiftPressSequenceHandler } from "../../../core/keyboard/shift-press-sequence";
 import { LatestReleaseHint } from "./components/latest-release-hint";
+import { useDataStore } from "@/stores/data-store";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type StorageStatus = "loading" | "idle" | "resetting" | "reset" | "error";
@@ -385,6 +386,10 @@ export const SettingsPage = () => {
         setStatus("idle");
         setStorageStatus("reset");
         setIsResetDialogOpen(false);
+        // 主进程已重建 DB 连接（resetLocalDatabase 内部 close+recreate），
+        // 这里复位共享数据桶并重新拉取，使 Skills/Targets 页面反映重置后的空数据，而非陈旧快照（R9）。
+        useDataStore.getState().reset();
+        void useDataStore.getState().loadSharedPageData();
       })
       .catch((unknownError: unknown) => {
         setStorageError(toErrorMessage(unknownError) || "重建本地数据库失败。");

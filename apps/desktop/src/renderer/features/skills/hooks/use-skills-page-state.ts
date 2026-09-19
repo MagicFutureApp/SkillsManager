@@ -15,18 +15,17 @@ import {
   type PaginationState
 } from "@/lib/pagination";
 import {
-  adaptSkillRecord,
   adaptTargetOption,
   filterSkills,
   getSkillRepositoryOptions,
   getTargetOptionsForSkill,
   getSelectedSkillsDistributionState,
-  type Skill,
   type SkillRepositoryFilter,
   type SkillSort,
   type TargetOption
 } from "../components/skills-page-data";
 import { useTargetAddDialogState } from "../../targets/hooks/use-target-add-dialog-state";
+import { useDataStore } from "@/stores/data-store";
 
 export const useSkillsPageState = () => {
   const distributionExecutionTimerIdsRef = useRef<number[]>([]);
@@ -57,10 +56,13 @@ export const useSkillsPageState = () => {
   const [isDistributionExecuting, setIsDistributionExecuting] = useState(false);
   const [isDistributionPreviewLoading, setIsDistributionPreviewLoading] = useState(false);
   const [isTargetRemovalExecuting, setIsTargetRemovalExecuting] = useState(false);
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const skills = useDataStore((state) => state.skills);
+  const registeredTargets = useDataStore((state) => state.registeredTargets);
+  const targetOptions = useMemo(() => {
+    return registeredTargets.filter((target) => target.enabled).map(adaptTargetOption);
+  }, [registeredTargets]);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [sort, setSort] = useState<SkillSort>("name");
-  const [targetOptions, setTargetOptions] = useState<TargetOption[]>([]);
 
   const clearDistributionExecutionTimers = () => {
     distributionExecutionTimerIdsRef.current.forEach((timerId) => window.clearTimeout(timerId));
@@ -68,20 +70,7 @@ export const useSkillsPageState = () => {
   };
 
   useEffect(() => {
-    let isMounted = true;
-
-    void loadSkillsPageData().then(({ skills: nextSkills, targetOptions: nextTargetOptions }) => {
-      if (!isMounted) {
-        return;
-      }
-
-      setSkills(nextSkills);
-      setTargetOptions(nextTargetOptions);
-    });
-
-    return () => {
-      isMounted = false;
-    };
+    void useDataStore.getState().loadSharedPageData();
   }, []);
 
   useEffect(() => {
@@ -415,7 +404,7 @@ export const useSkillsPageState = () => {
     distributionExecutionTimerIdsRef.current.push(completeTimerId, finishTimerId);
   };
 
-  const toggleSkillTargetPreference = (skillId: string, targetId: string, enabled: boolean) => {
+  const toggleSkillTargetPreference = async (skillId: string, targetId: string, enabled: boolean) => {
     if (!enabled) {
       const skill = skills.find((currentSkill) => currentSkill.id === skillId);
       const target = targetOptions.find((currentTarget) => currentTarget.id === targetId);
@@ -435,40 +424,20 @@ export const useSkillsPageState = () => {
       return;
     }
 
-    setSkills((currentSkills) => {
-      return currentSkills.map((skill) => {
-        if (skill.id !== skillId) {
-          return skill;
-        }
+    const store = useDataStore.getState();
+    // 乐观写本地；IPC 失败则回滚并提示，避免 UI 勾选态与真实状态不符（R27）。
+    store.toggleSkillTargetPreferenceLocally(skillId, targetId, enabled);
 
-        const nextTargets = enabled
-          ? Array.from(new Set([...skill.targets, targetId]))
-          : skill.targets.filter((id) => id !== targetId);
-
-        return {
-          ...skill,
-          targets: nextTargets
-        };
+    try {
+      await window.skillsManager?.setSkillTargetPreference?.({
+        agentTargetId: targetId,
+        enabled,
+        skillUnitId: skillId
       });
-    });
-    setTargetOptions((currentTargets) => {
-      return currentTargets.map((target) => {
-        if (target.id !== targetId || target.skillPreferenceIds.includes(skillId)) {
-          return target;
-        }
-
-        return {
-          ...target,
-          skillPreferenceIds: [...target.skillPreferenceIds, skillId]
-        };
-      });
-    });
-
-    void window.skillsManager?.setSkillTargetPreference?.({
-      agentTargetId: targetId,
-      enabled,
-      skillUnitId: skillId
-    });
+    } catch {
+      store.toggleSkillTargetPreferenceLocally(skillId, targetId, !enabled);
+      showDistributionNotice("skills.actions.targetPreferenceSyncFailedStatus");
+    }
   };
 
   const closeTargetRemovalDialog = () => {
@@ -530,39 +499,11 @@ export const useSkillsPageState = () => {
     skillId: string;
     targetId: string;
   }) => {
-    setSkills((currentSkills) => {
-      return currentSkills.map((skill) => {
-        if (skill.id !== skillId) {
-          return skill;
-        }
-
-        return {
-          ...skill,
-          targets: skill.targets.filter((id) => id !== targetId)
-        };
-      });
-    });
-    setTargetOptions((currentTargets) => {
-      return currentTargets.map((target) => {
-        if (target.id !== targetId) {
-          return target;
-        }
-
-        return {
-          ...target,
-          selectedSkillIds: target.selectedSkillIds.filter((id) => id !== skillId),
-          skillPreferenceIds: removeTargetPreference
-            ? target.skillPreferenceIds.filter((id) => id !== skillId)
-            : target.skillPreferenceIds.includes(skillId)
-              ? target.skillPreferenceIds
-              : [...target.skillPreferenceIds, skillId]
-        };
-      });
-    });
+    useDataStore.getState().removeSkillTargetLocally({ removeTargetPreference, skillId, targetId });
   };
 
   const applySkillTargetsResult = (
-    result: TargetsListResult,
+    result: TargetsListResult | undefined,
     {
       existingTargetIds,
       skillId
@@ -571,32 +512,7 @@ export const useSkillsPageState = () => {
       skillId: string;
     }
   ) => {
-    const nextTargets = (result.registeredTargets ?? [])
-      .filter((target) => target.enabled)
-      .map(adaptTargetOption);
-    const nextSelectedSkillTargets = nextTargets
-      .filter((target) => {
-        if (target.scope === "global") {
-          return existingTargetIds.includes(target.id);
-        }
-
-        return target.selectedSkillIds.includes(skillId);
-      })
-      .map((target) => target.id);
-
-    setTargetOptions(nextTargets);
-    setSkills((currentSkills) => {
-      return currentSkills.map((skill) => {
-        if (skill.id !== skillId) {
-          return skill;
-        }
-
-        return {
-          ...skill,
-          targets: nextSelectedSkillTargets
-        };
-      });
-    });
+    useDataStore.getState().applySkillTargetsResult(result, { existingTargetIds, skillId });
   };
 
   const addSyncTargetForSelectedSkill = () => {
@@ -660,23 +576,6 @@ export const useSkillsPageState = () => {
 };
 
 export type SkillsPageState = ReturnType<typeof useSkillsPageState>;
-
-const loadSkillsPageData = async (): Promise<{
-  skills: Skill[];
-  targetOptions: TargetOption[];
-}> => {
-  const [skillsResult, targetsResult] = await Promise.all([
-    window.skillsManager?.listSkills?.(),
-    window.skillsManager?.listTargets?.()
-  ]);
-
-  return {
-    skills: (skillsResult?.skills ?? []).map(adaptSkillRecord),
-    targetOptions: (targetsResult?.registeredTargets ?? [])
-      .filter((target) => target.enabled)
-      .map(adaptTargetOption)
-  };
-};
 
 type DistributionConflictResolution = NonNullable<
   DistributionPreviewResult["items"][number]["defaultResolution"]

@@ -11,7 +11,7 @@ export type ShellNavigationItem = {
   icon: LucideIcon;
 };
 
-export type ShellNavigationBadgeCounts = Partial<Record<ShellNavigationItem["routeId"], number>>;
+export type { ShellNavigationBadgeCounts } from "@/stores/skill-data";
 
 export type ShellNavigationGroup = {
   labelKey: string;

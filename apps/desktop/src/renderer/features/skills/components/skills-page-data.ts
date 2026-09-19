@@ -1,25 +1,14 @@
-import type { SkillApiRecord, SkillApiStatus } from "../../../../core/skills/skill-api";
-import type {
-  RegisteredTargetRecord,
-  TargetRegistrationScope
-} from "../../../../core/targets/target-api";
+import type { SkillApiStatus } from "../../../../core/skills/skill-api";
+import { type Skill, type TargetOption, adaptTargetOption } from "@/stores/skill-data";
+
+// 与 store 共享的领域类型 / 适配器集中定义在 `@/stores/skill-data`，这里 re-export 以兼容既有导入方。
+// 注：`adaptSkillRecord` 仅由 store 直接从 `@/stores/skill-data` 使用，此处不再 re-export（R6 死代码清理）。
+export type { Skill, TargetOption };
+export { adaptTargetOption };
 
 export type SkillStatus = SkillApiStatus;
 export type SkillRepositoryFilter = string;
 export type SkillSort = "name" | "repository";
-
-export type Skill = {
-  id: string;
-  skillId: string;
-  name: string;
-  repository: string;
-  version: string;
-  entry: string;
-  description: string;
-  status: SkillStatus;
-  targets: string[];
-  tags: string[];
-};
 
 export type SkillFilterInput = {
   query: string;
@@ -30,41 +19,6 @@ export type SkillFilterInput = {
 
 export type SkillDistributionState = "no-selection" | "no-targets" | "ready";
 export type SkillDistributionScope = "selected" | "single";
-
-export type TargetOption = {
-  id: string;
-  name: string;
-  path: string;
-  scope: TargetRegistrationScope;
-  selectedSkillIds: string[];
-  skillPreferenceIds: string[];
-};
-
-export const adaptSkillRecord = (record: SkillApiRecord): Skill => {
-  return {
-    description: record.description,
-    entry: record.entry,
-    id: record.id,
-    name: record.name,
-    repository: record.repository,
-    skillId: record.skillId,
-    status: record.status,
-    tags: record.tags,
-    targets: record.targets,
-    version: record.version
-  };
-};
-
-export const adaptTargetOption = (record: RegisteredTargetRecord): TargetOption => {
-  return {
-    id: record.id,
-    name: record.name,
-    path: record.path,
-    scope: record.scope,
-    selectedSkillIds: record.selectedSkills.map((skill) => skill.id),
-    skillPreferenceIds: record.skillPreferences.map((skill) => skill.id)
-  };
-};
 
 export const getTargetOptionsForSkill = (
   targets: TargetOption[],
