@@ -980,6 +980,23 @@ describe("TargetsPage", () => {
     ]);
   });
 
+  it("opens the convert-to-global dialog when clicking the 独立 scope badge", async () => {
+    const convertTargetToGlobal = vi
+      .fn()
+      .mockResolvedValue(targetsFixture);
+    renderTargetsPage({ managerOverrides: { convertTargetToGlobal } });
+
+    const independentBadge = await screen.findByText("独立");
+    expect(independentBadge.tagName).toBe("BUTTON");
+
+    fireEvent.click(independentBadge);
+
+    expect(
+      await screen.findByRole("heading", { name: "转为全局目标" })
+    ).toBeInTheDocument();
+    expect(convertTargetToGlobal).not.toHaveBeenCalled();
+  });
+
   it("shows agent type confirmation for a detected agent target path", async () => {
     const selectTargetDirectory = vi.fn().mockResolvedValue("/Users/test/project");
     const resolveSelectedTargetDirectory = vi.fn().mockResolvedValue({

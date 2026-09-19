@@ -4,13 +4,38 @@ import { useTranslation } from "react-i18next";
 
 import type { TargetScope, TargetStatus } from "./targets-page-data";
 
-export const TargetScopeBadge = ({ scope }: { scope: TargetScope }) => {
+export const TargetScopeBadge = ({
+  scope,
+  name,
+  onConvert
+}: {
+  scope: TargetScope;
+  name?: string;
+  onConvert?: () => void;
+}) => {
   const { t } = useTranslation();
+
+  if (scope === "independent" && onConvert) {
+    return (
+      <button
+        type="button"
+        onClick={onConvert}
+        aria-label={t("targets.actions.convertToGlobal", { name: name ?? t("targets.scope.independent") })}
+        title={t("targets.actions.convertToGlobalTarget", { name: name ?? t("targets.scope.independent") })}
+        className={cn(
+          "inline-flex min-h-6 w-max cursor-pointer items-center rounded-full border px-2 font-mono text-xs transition-colors",
+          scopeClassName[scope]
+        )}
+      >
+        {t("targets.scope.independent")}
+      </button>
+    );
+  }
 
   return (
     <span
       className={cn(
-        "inline-flex min-h-6 w-max items-center rounded-full border px-2 font-mono text-xs",
+        "inline-flex min-h-6 w-max cursor-default items-center rounded-full border px-2 font-mono text-xs",
         scopeClassName[scope]
       )}
     >
