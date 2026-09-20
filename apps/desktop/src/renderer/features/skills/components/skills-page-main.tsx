@@ -159,7 +159,6 @@ const SkillTableRow = ({ skill }: { skill: Skill }) => {
 
   return (
     <DataTableRow
-      className="cursor-pointer"
       selected={skill.id === selectedSkill?.id}
       onClick={(event) => {
         if (shouldIgnoreRowSelection(event)) {

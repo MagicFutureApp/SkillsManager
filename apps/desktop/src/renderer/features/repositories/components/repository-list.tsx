@@ -104,7 +104,6 @@ export const RepositoryList = ({
           repositories.map((repository) => (
             <DataTableRow
               key={repository.id}
-              className="cursor-pointer"
               selected={repository.id === selectedRepositoryId}
               onClick={(event) => {
                 if (shouldIgnoreRowSelection(event)) {

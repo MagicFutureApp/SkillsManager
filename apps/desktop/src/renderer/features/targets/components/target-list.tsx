@@ -66,7 +66,6 @@ export const TargetList = () => {
           page.visibleTargets.map((target) => (
             <DataTableRow
               key={target.id}
-              className="cursor-pointer"
               selected={target.id === page.selectedTargetId}
               onClick={(event) => {
                 if (shouldIgnoreRowSelection(event)) {

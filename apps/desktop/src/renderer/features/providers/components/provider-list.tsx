@@ -56,7 +56,6 @@ export const ProviderList = ({
           providers.map((provider) => (
             <DataTableRow
               key={provider.id}
-              className="cursor-pointer"
               selected={provider.id === selectedProviderId}
               onClick={(event) => {
                 if (shouldIgnoreRowSelection(event)) {
