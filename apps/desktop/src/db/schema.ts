@@ -117,3 +117,32 @@ export const appSettings = sqliteTable("app_settings", {
   valueJson: text("value_json").notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
 });
+
+/** best-100 agent skills rankings, cached locally from the cache-manager Worker. */
+export const best100Skills = sqliteTable("best_100_skills", {
+  rank: integer("rank").notNull(),
+  skill: text("skill").notNull(),
+  skillKey: text("skill_key").primaryKey().notNull(),
+  platform: text("platform"),
+  vendor: text("vendor"),
+  sourceSkillssh: text("source_skillssh"),
+  slugClawhub: text("slug_clawhub"),
+  url: text("url"),
+  repoUrl: text("repo_url"),
+  install: text("install"),
+  match: text("match"),
+  description: text("description"),
+  descriptionZh: text("description_zh"),
+  installsSkillssh: text("installs_skillssh"),
+  downloadsClawhub: text("downloads_clawhub"),
+  downloadsSkillhubCn: text("downloads_skillhub_cn"),
+  wis: text("wis"),
+  popularity: text("popularity"),
+  momentum: text("momentum"),
+  buzz: text("buzz"),
+  maintenance: text("maintenance"),
+  trust: text("trust"),
+  coverage: text("coverage"),
+  anomaly: text("anomaly"),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
+});

@@ -2,6 +2,7 @@ import { useRouterState } from "@tanstack/react-router";
 import React, { useEffect, useState } from "react";
 
 import { ProvidersPage } from "@/features/providers/providers-page";
+import { RecommendedPage } from "@/features/recommended/recommended-page";
 import { RepositoriesPage } from "@/features/repositories/repositories-page";
 import { SettingsPage } from "@/features/settings/settings-page";
 import { SkillsPage } from "@/features/skills/skills-page";
@@ -15,6 +16,7 @@ const pageComponentById: Record<AppRouteId, React.ComponentType> = {
   repositories: RepositoriesPage,
   skills: SkillsPage,
   targets: TargetsPage,
+  recommended: RecommendedPage,
   settings: SettingsPage
 };
 

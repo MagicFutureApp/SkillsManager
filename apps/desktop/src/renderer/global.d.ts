@@ -39,6 +39,15 @@ import type {
   TargetsRescanResult as MainTargetsRescanResult
 } from "../main/ipc/targets";
 import type {
+  Best100Settings as MainBest100Settings,
+  Best100SettingsResult as MainBest100SettingsResult,
+  Best100StatusResult as MainBest100StatusResult,
+  Best100SearchInput as MainBest100SearchInput,
+  Best100SearchResult as MainBest100SearchResult,
+  Best100SkillRecord as MainBest100SkillRecord,
+  Best100SyncState as MainBest100SyncState
+} from "../main/ipc/best-100";
+import type {
   CreateRepositoryInput as CoreCreateRepositoryInput,
   DeleteRepositoryResult as CoreDeleteRepositoryResult,
   RepositoryApiRecord as CoreRepositoryApiRecord,
@@ -79,6 +88,13 @@ export type TargetDirectoryAgentOption = MainTargetDirectoryAgentOption;
 export type UpdateCustomDirectoryTargetInput = MainUpdateCustomDirectoryTargetInput;
 export type TargetsListResult = MainTargetsListResult;
 export type TargetsRescanResult = MainTargetsRescanResult;
+export type Best100Settings = MainBest100Settings;
+export type Best100SettingsResult = MainBest100SettingsResult;
+export type Best100StatusResult = MainBest100StatusResult;
+export type Best100SearchInput = MainBest100SearchInput;
+export type Best100SearchResult = MainBest100SearchResult;
+export type Best100SyncState = MainBest100SyncState;
+export type Best100SkillRecord = MainBest100SkillRecord;
 export type CreateRepositoryInput = CoreCreateRepositoryInput;
 export type UpdateRepositoryInput = CoreUpdateRepositoryInput;
 export type DeleteRepositoryResult = CoreDeleteRepositoryResult;
@@ -127,9 +143,7 @@ declare global {
         input: UpdateCustomDirectoryTargetInput
       ) => Promise<TargetsListResult>;
       deleteTargets?: (input: DeleteTargetsInput) => Promise<TargetsListResult>;
-      convertTargetToGlobal?: (
-        input: ConvertTargetToGlobalInput
-      ) => Promise<TargetsListResult>;
+      convertTargetToGlobal?: (input: ConvertTargetToGlobalInput) => Promise<TargetsListResult>;
       rescanTargets?: () => Promise<TargetsRescanResult>;
       openExternalUrl?: (url: string) => Promise<void>;
       openRepositoryLocation?: (location: string) => Promise<void>;
@@ -148,6 +162,13 @@ declare global {
         selectedPath: string
       ) => Promise<SelectedTargetDirectoryResolution>;
       syncRepositories?: (repositoryIds: string[]) => Promise<RepositoriesSyncResult>;
+      best100Fetch?: () => Promise<Best100SyncState>;
+      best100Search?: (input: Best100SearchInput) => Promise<Best100SearchResult>;
+      best100GetStatus?: () => Promise<Best100StatusResult>;
+      best100GetSettings?: () => Promise<Best100SettingsResult>;
+      best100UpdateSettings?: (
+        input: Best100Settings
+      ) => Promise<Best100SettingsResult>;
       platform: RuntimePlatform;
     };
   }

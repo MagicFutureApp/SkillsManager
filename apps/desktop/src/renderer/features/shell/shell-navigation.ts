@@ -1,4 +1,4 @@
-import { GitBranch, MonitorCog, Package, PlugZap, Settings, Target } from "lucide-react";
+import { GitBranch, MonitorCog, Package, PlugZap, Settings, Star, Target } from "lucide-react";
 
 import type { AppRouteId } from "@/app/route-config";
 import type { LucideIcon } from "lucide-react";
@@ -22,6 +22,12 @@ export const shellNavigationGroups: ShellNavigationGroup[] = [
   {
     labelKey: "shell.navigation.workspace",
     items: [
+      {
+        routeId: "recommended",
+        labelKey: "recommended.navigation",
+        descriptionKey: "recommended.navigationDescription",
+        icon: Star
+      },
       {
         routeId: "providers",
         labelKey: "shell.navigation.providers",

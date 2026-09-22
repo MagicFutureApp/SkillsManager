@@ -1,0 +1,21 @@
+{
+  "name": "@skills-manager/cache-manager",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker (Hono + Workers KV) that caches best-100 agent skills rankings for Skills Manager.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260920.1",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.2.0"
+  }
+}

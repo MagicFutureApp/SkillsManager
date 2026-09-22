@@ -71,6 +71,8 @@ jobs:
         run: pnpm run ${{ matrix.command }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          SKILLS_MANAGER_CACHE_SYNC_TOKEN: ${{ secrets.SKILLS_MANAGER_CACHE_SYNC_TOKEN }}
+          BEST_100_DEFAULT_API_BASE: ${{ secrets.BEST_100_DEFAULT_API_BASE }}
 
       - name: Upload installer
         uses: actions/upload-artifact@v7

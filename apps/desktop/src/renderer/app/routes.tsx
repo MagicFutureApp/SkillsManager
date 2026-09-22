@@ -19,7 +19,7 @@ const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   beforeLoad: () => {
-    throw redirect({ replace: true, to: routePathById.skills });
+    throw redirect({ replace: true, to: routePathById.recommended });
   }
 });
 
@@ -35,6 +35,7 @@ const pageRoutes = {
   repositories: createPageRoute(routePathById.repositories),
   skills: createPageRoute(routePathById.skills),
   targets: createPageRoute(routePathById.targets),
+  recommended: createPageRoute(routePathById.recommended),
   settings: createPageRoute(routePathById.settings)
 } satisfies Record<AppRouteId, unknown>;
 

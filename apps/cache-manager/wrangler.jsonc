@@ -1,0 +1,21 @@
+{
+  "name": "skills-manager-cache-manager",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "SkillsCacheManager",
+      "id": "a57b13b829274e71910da0621ce5a09e"
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "30,40,50 0 * * *",
+      "0,10,20 1 * * *"
+    ]
+  }
+}

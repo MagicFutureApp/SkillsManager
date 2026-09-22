@@ -11,6 +11,7 @@ import { registerRepositoriesIpc } from "./ipc/repositories.js";
 import { registerSettingsIpc } from "./ipc/settings.js";
 import { registerSkillsIpc } from "./ipc/skills.js";
 import { registerTargetsIpc } from "./ipc/targets.js";
+import { fetchBest100, registerBest100Ipc } from "./ipc/best-100.js";
 import { getMainMessages } from "./i18n/main-messages.js";
 import { registerShiftDevToolsShortcut } from "./shift-devtools-shortcut.js";
 import { createTrayIconImage } from "./tray-icon.js";
@@ -188,7 +189,15 @@ void app
     registerSettingsIpc(dbRuntime);
     registerSkillsIpc(dbRuntime.getDb);
     registerTargetsIpc(dbRuntime.getDb);
+    registerBest100Ipc(dbRuntime.getDb);
     await createMainWindow();
+
+    // 每日启动客户端时拉取 best-100 数据（UTC 01:00-01:40 窗口由 Worker 侧负责，
+    // 客户端在启动时触发一次；失败按 scheduler 内部 10 分钟间隔重试，最多 4 次后停止并记录）。
+    void fetchBest100(dbRuntime.getDb()).catch((error: unknown) => {
+      console.error("Failed to start best-100 sync.", error);
+    });
+
     createTray();
 
     app.on("activate", () => {

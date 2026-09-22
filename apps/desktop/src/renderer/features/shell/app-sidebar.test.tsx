@@ -131,8 +131,8 @@ describe("AppSidebar", () => {
     const visibleButtons = screen.getAllByRole("button").filter((button) => button !== null);
     const navigationButtons = visibleButtons.filter((button) => button.closest("nav"));
 
-    expect(navigationButtons).toHaveLength(4);
-    expect(sidebar.querySelectorAll("nav button svg")).toHaveLength(4);
+    expect(navigationButtons).toHaveLength(5);
+    expect(sidebar.querySelectorAll("nav button svg")).toHaveLength(5);
   });
 });
 
@@ -142,6 +142,12 @@ describe("shellNavigationGroups", () => {
       group.items.filter((item) => !item.hidden).map((item) => item.routeId)
     );
 
-    expect(visibleRouteIds).toEqual(["repositories", "skills", "targets", "settings"]);
+    expect(visibleRouteIds).toEqual([
+      "recommended",
+      "repositories",
+      "skills",
+      "targets",
+      "settings"
+    ]);
   });
 });

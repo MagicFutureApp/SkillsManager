@@ -178,6 +178,84 @@ export const resources = {
           }
         }
       },
+      recommended: {
+        pageLabel: "Recommended",
+        heading: "推荐技能",
+        description:
+          "来自 best-100 的 agent 技能排行榜。支持本地搜索，并可通过 GitHub 链接直接安装。",
+        empty: "暂无推荐数据。请在右侧配置 Worker API 地址并点击「同步」。",
+        navigation: "推荐",
+        navigationDescription: "浏览 best-100 推荐技能并直接安装。",
+        actions: {
+          sync: "同步",
+          syncAria: "从 Worker 同步 best-100 数据",
+          syncing: "同步中",
+          install: "在 GitHub 打开",
+          installAria: "在 GitHub 打开 {{name}}",
+          copyInstall: "复制安装命令",
+          copyInstallAria: "复制 {{name}} 的安装命令",
+          openMarket: "在 skills.sh 打开",
+          openMarketAria: "在 skills.sh 打开 {{name}}"
+        },
+        filters: {
+          ariaLabel: "推荐筛选",
+          search: "搜索",
+          searchPlaceholder: "搜索名称、厂商或描述",
+          sort: "排序",
+          sortRank: "排名",
+          sortName: "名称",
+          sortWis: "评分"
+        },
+        pagination: {
+          ariaLabel: "推荐分页",
+          next: "下一页",
+          pageAriaLabel: "第 {{page}} 页",
+          previous: "上一页",
+          range: "{{start}}-{{end}} / {{total}}"
+        },
+        table: {
+          rank: "排名",
+          skill: "技能",
+          vendor: "厂商",
+          platform: "平台",
+          wis: "评分",
+          actions: "操作"
+        },
+        detail: {
+          ariaLabel: "技能详情",
+          emptyTitle: "请选择推荐技能",
+          rank: "排名",
+          vendor: "厂商",
+          platform: "平台",
+          source: "来源",
+          installs: "安装量",
+          downloadsClawhub: "ClawHub 下载",
+          downloadsSkillhubCn: "SkillHub CN 下载",
+          score: "评分",
+          description: "描述",
+          installCommand: "安装命令",
+          noInstallCommand: "暂无安装命令"
+        },
+        sync: {
+          title: "数据源与同步",
+          statusLabel: "同步状态",
+          configured: "已配置",
+          unconfigured: "未配置 API 地址",
+          idle: "等待同步",
+          success: "同步成功",
+          failed: "同步失败",
+          attempts: "尝试次数",
+          lastAttempt: "最近尝试",
+          lastSuccess: "最近成功",
+          lastError: "最近错误",
+          apiUrlLabel: "Worker API 地址",
+          apiUrlPlaceholder: "https://<subdomain>.workers.dev",
+          apiUrlSaved: "已保存 API 地址。",
+          apiUrlRequired: "请填写 Worker API 地址。",
+          notConfiguredHint: "未配置 Worker API 地址，无法同步数据。",
+          save: "保存"
+        }
+      },
       targets: {
         pageLabel: "Targets",
         heading: "目标管理",
@@ -279,7 +357,8 @@ export const resources = {
           cancel: "取消",
           close: "关闭",
           confirm: "转为全局",
-          description: "转为全局后，该目标将能够与多个技能关联。此前在 Skills 页面与该目标勾选关联的技能关系将予以保留。",
+          description:
+            "转为全局后，该目标将能够与多个技能关联。此前在 Skills 页面与该目标勾选关联的技能关系将予以保留。",
           keptRelationships: "已保留与 {{count}} 个技能的勾选关系。",
           noRelationships: "该目标此前未与任何技能建立勾选关系。",
           target: "目标",
@@ -688,6 +767,84 @@ export const resources = {
           }
         }
       },
+      recommended: {
+        pageLabel: "Recommended",
+        heading: "Recommended Skills",
+        description:
+          "Agent skills from the best-100 ranking. Search locally and install through GitHub links.",
+        empty: "No recommended data yet. Configure the Worker API URL on the right and click Sync.",
+        navigation: "Recommended",
+        navigationDescription: "Browse best-100 skills and install them directly.",
+        actions: {
+          sync: "Sync",
+          syncAria: "Sync best-100 data from the Worker",
+          syncing: "Syncing",
+          install: "Open on GitHub",
+          installAria: "Open {{name}} on GitHub",
+          copyInstall: "Copy install command",
+          copyInstallAria: "Copy the install command for {{name}}",
+          openMarket: "Open on skills.sh",
+          openMarketAria: "Open {{name}} on skills.sh"
+        },
+        filters: {
+          ariaLabel: "Recommended filters",
+          search: "Search",
+          searchPlaceholder: "Search name, vendor, or description",
+          sort: "Sort",
+          sortRank: "Rank",
+          sortName: "Name",
+          sortWis: "Score"
+        },
+        pagination: {
+          ariaLabel: "Recommended pagination",
+          next: "Next",
+          pageAriaLabel: "Page {{page}}",
+          previous: "Previous",
+          range: "{{start}}-{{end}} / {{total}}"
+        },
+        table: {
+          rank: "Rank",
+          skill: "Skill",
+          vendor: "Vendor",
+          platform: "Platform",
+          wis: "Score",
+          actions: "Actions"
+        },
+        detail: {
+          ariaLabel: "Skill details",
+          emptyTitle: "Select a recommended skill",
+          rank: "Rank",
+          vendor: "Vendor",
+          platform: "Platform",
+          source: "Source",
+          installs: "Installs",
+          downloadsClawhub: "ClawHub downloads",
+          downloadsSkillhubCn: "SkillHub CN downloads",
+          score: "Score",
+          description: "Description",
+          installCommand: "Install command",
+          noInstallCommand: "No install command"
+        },
+        sync: {
+          title: "Data source & sync",
+          statusLabel: "Sync status",
+          configured: "Configured",
+          unconfigured: "API URL not configured",
+          idle: "Waiting to sync",
+          success: "Sync succeeded",
+          failed: "Sync failed",
+          attempts: "Attempts",
+          lastAttempt: "Last attempt",
+          lastSuccess: "Last success",
+          lastError: "Last error",
+          apiUrlLabel: "Worker API URL",
+          apiUrlPlaceholder: "https://<subdomain>.workers.dev",
+          apiUrlSaved: "Worker API URL saved.",
+          apiUrlRequired: "Enter the Worker API URL.",
+          notConfiguredHint: "Worker API URL is not configured, so data cannot be synced.",
+          save: "Save"
+        }
+      },
       targets: {
         pageLabel: "Targets",
         heading: "Manage targets",
@@ -970,7 +1127,7 @@ export const resources = {
           completedDescription: "Sync completed.",
           done: "Confirm",
           pendingDescription:
-            "The following sources will be synced. Click \"Start sync\" to continue.",
+            'The following sources will be synced. Click "Start sync" to continue.',
           start: "Start sync",
           completedItem: "{{name}} completed",
           empty: "Per-skill progress appears after skills are discovered.",

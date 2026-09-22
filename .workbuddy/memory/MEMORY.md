@@ -5,6 +5,8 @@
 - better-sqlite3 ABI=Electron41(ABI145)非 Node → Node 跑 DB 测试必红（技术债）。DB 层靠 tsc+既有用例佐证，别换 Node。
 - PowerShell `Remove-Item <junction> -Force` 递归删目标；拆 junction 用 `(Get-Item <link>).Delete()`。
 - vitest 须在 apps/desktop 内跑；`--fileParallelism=false` 避免 act 警告交叉。prettier --check 因 CRLF 大量误报，别当改动格式问题。
+- **本沙箱 tsc/vitest 必 OOM（2026-09-20 实测）**：V8 "Fatal process out of memory: Zone"，MAIN/RENDERER_EXIT=3。跑前设 `NODE_OPTIONS="--max-old-space-size=8192"`；vitest 加 `--pool=threads`（worker fork 也 OOM）。`cd X && tsc; echo $?` 中若 cd 失败会短路，使 $? 误报 0——务必用绝对 `-p` 路径 + 显式 `echo "EXIT=$?"` 复核。
+- **Bash 工具路径陷阱**：`cd /d/code/...` 报 "null directory" 失败；用相对 `cd apps/desktop` 或绝对 `D:/code/...`。git 用 `git -C D:/code/skills-manager`（勿用 `/d/...`）。`tail`/`cat`/`mkdir` 不可用，用 managed node 直跑 + Glob/Read 替代。
 
 ## 工作规则
 - 默认不 commit/push（见用户级 MEMORY.md）。改前 `git status --short` 确认不覆盖用户改动。

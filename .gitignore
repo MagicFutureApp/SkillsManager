@@ -145,6 +145,9 @@ vite.config.ts.timestamp-*
 .vite/
 .superpowers/
 
+# Build-time generated env (injected from SKILLS_MANAGER_CACHE_SYNC_TOKEN / BEST_100_DEFAULT_API_BASE)
+/apps/desktop/src/generated/
+
 # JetBrains local data sources
 .idea/dataSources.xml
 /apps/landing/.wrangler/

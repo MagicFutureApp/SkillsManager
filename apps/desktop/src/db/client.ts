@@ -118,5 +118,33 @@ const ensureDbSchema = (sqlite: Database.Database): void => {
       created_at integer NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS best_100_skills (
+      rank integer NOT NULL,
+      skill text NOT NULL,
+      skill_key text PRIMARY KEY NOT NULL,
+      platform text,
+      vendor text,
+      source_skillssh text,
+      slug_clawhub text,
+      url text,
+      repo_url text,
+      install text,
+      match text,
+      description text,
+      description_zh text,
+      installs_skillssh text,
+      downloads_clawhub text,
+      downloads_skillhub_cn text,
+      wis text,
+      popularity text,
+      momentum text,
+      buzz text,
+      maintenance text,
+      trust text,
+      coverage text,
+      anomaly text,
+      updated_at integer NOT NULL
+    );
+
   `);
 };

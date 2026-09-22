@@ -7,6 +7,9 @@
   "license": "AGPL-3.0",
   "scripts": {
     "dev": "pnpm --filter @skills-manager/desktop run dev",
+    "dev:cache": "pnpm --filter @skills-manager/cache-manager run dev",
+    "dev:desktop": "pnpm --filter @skills-manager/desktop run dev",
+    "dev:test": "pnpm --parallel --filter @skills-manager/cache-manager --filter @skills-manager/desktop run dev",
     "electron:version": "pnpm --filter @skills-manager/desktop run electron:version",
     "rebuild:better-sqlite3": "pnpm --filter @skills-manager/desktop run rebuild:better-sqlite3",
     "build:main": "pnpm --filter @skills-manager/desktop run build:main",
