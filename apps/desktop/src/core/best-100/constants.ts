@@ -1,6 +1,3 @@
-/** Local Settings key that stores the cache-manager Worker base URL. */
-export const BEST_100_SETTINGS_KEY = "best100";
-
 /** Local Settings key that persists the daily sync attempt state. */
 export const BEST_100_SYNC_STATE_KEY = "best100.sync";
 
@@ -21,9 +18,8 @@ import { BUILD_ENV } from "../../generated/build-env";
 export const BEST_100_SYNC_TOKEN = BUILD_ENV.best100SyncToken;
 
 /**
- * Default Worker base URL baked into the app from BEST_100_DEFAULT_API_BASE. The
- * user can still override it per-install in Settings. Falls back to the local
- * wrangler dev instance when built without the env var set.
+ * Default Worker base URL baked into the app from BEST_100_DEFAULT_API_BASE.
+ * Falls back to the local wrangler dev instance when built without the env var set.
  */
 export const BEST_100_DEFAULT_API_BASE = BUILD_ENV.best100ApiBase;
 

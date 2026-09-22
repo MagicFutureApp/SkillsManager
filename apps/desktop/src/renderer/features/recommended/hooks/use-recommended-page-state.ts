@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { copyToClipboard } from "@/lib/clipboard";
-import { toErrorMessage } from "@/lib/errors";
 import { createPaginationState, DEFAULT_PAGE_SIZE, type PaginationState } from "@/lib/pagination";
 import { toast } from "@/components/ui/toast";
 import { useTranslation } from "react-i18next";
 
 import type {
   Best100SearchInput,
-  Best100Settings,
-  Best100SettingsResult,
   Best100SkillRecord,
   Best100StatusResult
 } from "@/global";
@@ -17,8 +14,6 @@ import type {
 type RecommendedSort = NonNullable<Best100SearchInput["sort"]>;
 
 const SEARCH_DEBOUNCE_MS = 250;
-
-const emptySettings: Best100Settings = { apiBaseUrl: "" };
 
 export const useRecommendedPageState = () => {
   const { t } = useTranslation();
@@ -32,11 +27,7 @@ export const useRecommendedPageState = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<Best100SkillRecord | null>(null);
-  const [settings, setSettings] = useState<Best100Settings>(emptySettings);
   const [status, setStatus] = useState<Best100StatusResult | null>(null);
-  const [apiUrlDraft, setApiUrlDraft] = useState("");
-  const [apiUrlStatus, setApiUrlStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [apiUrlError, setApiUrlError] = useState("");
   const isInitialMount = useRef(true);
 
   const loadResults = useCallback(
@@ -94,19 +85,9 @@ export const useRecommendedPageState = () => {
     void loadResults(debouncedQuery, sort, currentPage);
   }, [debouncedQuery, sort, currentPage, loadResults]);
 
-  // 初次加载：读取设置、同步状态与首屏数据。
+  // 初次加载：读取同步状态与首屏数据。
   useEffect(() => {
     let isCurrent = true;
-
-    void window.skillsManager
-      ?.best100GetSettings?.()
-      .then((next: Best100SettingsResult) => {
-        if (!isCurrent) return;
-
-        setSettings(next);
-        setApiUrlDraft(next.apiBaseUrl);
-      })
-      .catch(() => {});
 
     void window.skillsManager
       ?.best100GetStatus?.()
@@ -153,10 +134,8 @@ export const useRecommendedPageState = () => {
 
     try {
       const state = await fetch();
-      const nextSettings = await window.skillsManager?.best100GetSettings?.();
       const nextStatus = await window.skillsManager?.best100GetStatus?.();
 
-      if (nextSettings) setSettings(nextSettings);
       if (nextStatus) setStatus(nextStatus);
 
       await loadResults(debouncedQuery, sort, 1);
@@ -174,37 +153,6 @@ export const useRecommendedPageState = () => {
       setIsSyncing(false);
     }
   }, [t, debouncedQuery, sort, loadResults]);
-
-  const saveApiUrl = useCallback(async () => {
-    const update = window.skillsManager?.best100UpdateSettings;
-
-    if (!update) {
-      setApiUrlError(t("recommended.sync.apiUrlRequired"));
-      setApiUrlStatus("error");
-      return;
-    }
-
-    const normalized = apiUrlDraft.trim();
-
-    if (!normalized) {
-      setApiUrlError(t("recommended.sync.apiUrlRequired"));
-      setApiUrlStatus("error");
-      return;
-    }
-
-    setApiUrlStatus("saving");
-    setApiUrlError("");
-
-    try {
-      const next = await update({ apiBaseUrl: normalized });
-
-      setSettings(next);
-      setApiUrlStatus("saved");
-    } catch (unknownError: unknown) {
-      setApiUrlError(toErrorMessage(unknownError) || t("recommended.sync.apiUrlRequired"));
-      setApiUrlStatus("error");
-    }
-  }, [apiUrlDraft, t]);
 
   const installSkill = useCallback(
     async (record: Best100SkillRecord) => {
@@ -266,9 +214,6 @@ export const useRecommendedPageState = () => {
   };
 
   return {
-    apiUrlDraft,
-    apiUrlError,
-    apiUrlStatus,
     currentPage,
     isLoading,
     isSearching,
@@ -277,16 +222,13 @@ export const useRecommendedPageState = () => {
     pagination,
     query,
     selectedSkill,
-    settings,
     sort,
     status,
     total,
     copyInstallCommand,
     installSkill,
     openMarket,
-    saveApiUrl,
     selectSkill,
-    setApiUrlDraft,
     setQuery,
     setSkillsPage,
     setSort,

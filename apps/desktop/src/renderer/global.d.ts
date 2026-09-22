@@ -39,8 +39,6 @@ import type {
   TargetsRescanResult as MainTargetsRescanResult
 } from "../main/ipc/targets";
 import type {
-  Best100Settings as MainBest100Settings,
-  Best100SettingsResult as MainBest100SettingsResult,
   Best100StatusResult as MainBest100StatusResult,
   Best100SearchInput as MainBest100SearchInput,
   Best100SearchResult as MainBest100SearchResult,
@@ -88,8 +86,6 @@ export type TargetDirectoryAgentOption = MainTargetDirectoryAgentOption;
 export type UpdateCustomDirectoryTargetInput = MainUpdateCustomDirectoryTargetInput;
 export type TargetsListResult = MainTargetsListResult;
 export type TargetsRescanResult = MainTargetsRescanResult;
-export type Best100Settings = MainBest100Settings;
-export type Best100SettingsResult = MainBest100SettingsResult;
 export type Best100StatusResult = MainBest100StatusResult;
 export type Best100SearchInput = MainBest100SearchInput;
 export type Best100SearchResult = MainBest100SearchResult;
@@ -165,10 +161,6 @@ declare global {
       best100Fetch?: () => Promise<Best100SyncState>;
       best100Search?: (input: Best100SearchInput) => Promise<Best100SearchResult>;
       best100GetStatus?: () => Promise<Best100StatusResult>;
-      best100GetSettings?: () => Promise<Best100SettingsResult>;
-      best100UpdateSettings?: (
-        input: Best100Settings
-      ) => Promise<Best100SettingsResult>;
       platform: RuntimePlatform;
     };
   }

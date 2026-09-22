@@ -248,12 +248,8 @@ export const resources = {
           lastAttempt: "最近尝试",
           lastSuccess: "最近成功",
           lastError: "最近错误",
-          apiUrlLabel: "Worker API 地址",
-          apiUrlPlaceholder: "https://<subdomain>.workers.dev",
-          apiUrlSaved: "已保存 API 地址。",
           apiUrlRequired: "请填写 Worker API 地址。",
           notConfiguredHint: "未配置 Worker API 地址，无法同步数据。",
-          save: "保存"
         }
       },
       targets: {
@@ -837,12 +833,8 @@ export const resources = {
           lastAttempt: "Last attempt",
           lastSuccess: "Last success",
           lastError: "Last error",
-          apiUrlLabel: "Worker API URL",
-          apiUrlPlaceholder: "https://<subdomain>.workers.dev",
-          apiUrlSaved: "Worker API URL saved.",
           apiUrlRequired: "Enter the Worker API URL.",
           notConfiguredHint: "Worker API URL is not configured, so data cannot be synced.",
-          save: "Save"
         }
       },
       targets: {

@@ -40,8 +40,6 @@ import type {
   TargetsRescanResult
 } from "./ipc/targets";
 import type {
-  Best100Settings,
-  Best100SettingsResult,
   Best100StatusResult,
   Best100SearchInput,
   Best100SearchResult,
@@ -145,13 +143,6 @@ contextBridge.exposeInMainWorld("skillsManager", {
     ipcRenderer.invoke("best100:search", input) as Promise<Best100SearchResult>,
   best100GetStatus: () =>
     ipcRenderer.invoke("best100:getStatus") as Promise<Best100StatusResult>,
-  best100GetSettings: () =>
-    ipcRenderer.invoke("best100:getSettings") as Promise<Best100SettingsResult>,
-  best100UpdateSettings: (input: Best100Settings) =>
-    ipcRenderer.invoke(
-      "best100:updateSettings",
-      input
-    ) as Promise<Best100SettingsResult>,
   onRepositorySyncProgress: (callback: (event: RepositoriesSyncProgressEvent) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, progress: RepositoriesSyncProgressEvent) =>
       callback(progress);

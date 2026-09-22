@@ -1,7 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Copy, ExternalLink, Store } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import React from "react";
@@ -168,32 +166,6 @@ const RecommendedSyncPanel = () => {
             <p className="mt-1 break-all text-xs leading-5 text-destructive">{state.lastError}</p>
           </div>
         ) : null}
-      </div>
-
-      <div className="mt-4 grid gap-3">
-        <Field>
-          <FieldLabel>{t("recommended.sync.apiUrlLabel")}</FieldLabel>
-          <Input
-            type="url"
-            value={page.apiUrlDraft}
-            placeholder={t("recommended.sync.apiUrlPlaceholder")}
-            disabled={page.apiUrlStatus === "saving"}
-            onValueChange={page.setApiUrlDraft}
-          />
-        </Field>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            disabled={page.apiUrlStatus === "saving"}
-            onClick={() => void page.saveApiUrl()}
-          >
-            {t("recommended.sync.save")}
-          </Button>
-        </div>
-        {page.apiUrlStatus === "saved" ? (
-          <p className="text-sm text-muted-foreground">{t("recommended.sync.apiUrlSaved")}</p>
-        ) : null}
-        {page.apiUrlError ? <p className="text-sm text-destructive">{page.apiUrlError}</p> : null}
       </div>
     </section>
   );
