@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Store } from "lucide-react";
+import { LoaderCircle, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import React from "react";
 
@@ -49,6 +49,7 @@ export const RecommendedPageSider = () => {
   }
 
   const skill = selectedSkill;
+  const sourceLink = page.resolveSkillLink(skill);
 
   return (
     <>
@@ -60,46 +61,38 @@ export const RecommendedPageSider = () => {
         <div className="mt-4 flex flex-wrap gap-2">
           <Button
             type="button"
-            disabled={!skill.repoUrl && !skill.url}
-            title={t("recommended.actions.installAria", { name: skill.skill })}
-            aria-label={t("recommended.actions.installAria", { name: skill.skill })}
-            onClick={() => void page.installSkill(skill)}
+            disabled={page.isSyncing}
+            title={t("recommended.actions.syncAria")}
+            aria-label={t("recommended.actions.syncAria")}
+            onClick={() => void page.syncNow()}
           >
-            <ExternalLink aria-hidden="true" />
-            {t("recommended.actions.install")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!skill.install}
-            title={t("recommended.actions.copyInstallAria", { name: skill.skill })}
-            aria-label={t("recommended.actions.copyInstallAria", { name: skill.skill })}
-            onClick={() => void page.copyInstallCommand(skill)}
-          >
-            <Copy aria-hidden="true" />
-            {t("recommended.actions.copyInstall")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!skill.url}
-            title={t("recommended.actions.openMarketAria", { name: skill.skill })}
-            aria-label={t("recommended.actions.openMarketAria", { name: skill.skill })}
-            onClick={() => void page.openMarket(skill)}
-          >
-            <Store aria-hidden="true" />
-            {t("recommended.actions.openMarket")}
+            {page.isSyncing ? (
+              <>
+                <LoaderCircle aria-hidden="true" className="animate-spin" />
+                {t("recommended.actions.syncing")}
+              </>
+            ) : (
+              <>
+                <RefreshCw aria-hidden="true" />
+                {t("recommended.actions.sync")}
+              </>
+            )}
           </Button>
         </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section className="min-w-0 rounded-xl border border-border bg-card p-4">
         <h3 className="font-semibold">{t("recommended.detail.ariaLabel")}</h3>
         <div className="mt-3 grid gap-2">
           <DetailRow label={t("recommended.detail.rank")} value={String(skill.rank || "--")} />
           <DetailRow label={t("recommended.detail.vendor")} value={skill.vendor} />
           <DetailRow label={t("recommended.detail.platform")} value={skill.platform} />
-          <DetailRow label={t("recommended.detail.source")} value={skill.sourceSkillssh} />
+          <DetailRow
+            label={t("recommended.detail.source")}
+            value={sourceLink ?? skill.sourceSkillssh ?? undefined}
+            link={sourceLink ?? undefined}
+            onLinkClick={sourceLink ? () => void page.openExternal(sourceLink) : undefined}
+          />
           <DetailRow label={t("recommended.detail.installs")} value={skill.installsSkillssh} />
           <DetailRow
             label={t("recommended.detail.downloadsClawhub")}
@@ -111,16 +104,6 @@ export const RecommendedPageSider = () => {
           />
           <DetailRow label={t("recommended.detail.score")} value={skill.wis} />
         </div>
-        {skill.install ? (
-          <div className="mt-3 rounded-lg border border-border bg-muted/40 p-2">
-            <span className="text-xs font-semibold text-muted-foreground">
-              {t("recommended.detail.installCommand")}
-            </span>
-            <p className="mt-1 break-all font-mono text-xs leading-5 text-foreground">
-              {skill.install}
-            </p>
-          </div>
-        ) : null}
       </section>
 
       <RecommendedSyncPanel />
@@ -175,21 +158,37 @@ const DetailRow = ({
   hidden,
   hiddenLabel,
   label,
+  link,
+  onLinkClick,
   value
 }: {
   hidden?: boolean;
   hiddenLabel?: string;
   label: string;
+  link?: string;
+  onLinkClick?: () => void;
   value?: string | null;
 }) => {
   if (hidden) {
     return null;
   }
 
+  const isLink = Boolean(link && onLinkClick && value);
+
   return (
-    <div className="rounded-lg border border-border bg-muted/40 p-2">
+    <div className="min-w-0 rounded-lg border border-border bg-muted/40 p-2">
       <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-      <p className="mt-1 break-words text-sm">{value || hiddenLabel || "--"}</p>
+      {isLink ? (
+        <button
+          type="button"
+          className="mt-1 block w-full min-w-0 break-all text-left text-sm text-primary underline-offset-2 hover:underline focus-visible:underline"
+          onClick={onLinkClick}
+        >
+          {value}
+        </button>
+      ) : (
+        <p className="mt-1 min-w-0 break-words text-sm">{value || hiddenLabel || "--"}</p>
+      )}
     </div>
   );
 };

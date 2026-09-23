@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { copyToClipboard } from "@/lib/clipboard";
 import { createPaginationState, DEFAULT_PAGE_SIZE, type PaginationState } from "@/lib/pagination";
 import { toast } from "@/components/ui/toast";
 import { useTranslation } from "react-i18next";
@@ -154,60 +153,25 @@ export const useRecommendedPageState = () => {
     }
   }, [t, debouncedQuery, sort, loadResults]);
 
-  const installSkill = useCallback(
-    async (record: Best100SkillRecord) => {
-      const open = window.skillsManager?.openExternalUrl;
-      const targetUrl = record.repoUrl || record.url;
+  const openExternal = useCallback(async (targetUrl: string) => {
+    const open = window.skillsManager?.openExternalUrl;
 
-      if (!open || !targetUrl) {
-        toast.error(t("recommended.sync.failed"));
-        return;
-      }
+    if (!open || !targetUrl) {
+      toast.error(t("recommended.sync.failed"));
+      return;
+    }
 
-      try {
-        await open(targetUrl);
-      } catch {
-        toast.error(t("recommended.sync.failed"));
-      }
-    },
-    [t]
-  );
+    try {
+      await open(targetUrl);
+    } catch {
+      toast.error(t("recommended.sync.failed"));
+    }
+  }, [t]);
 
-  const copyInstallCommand = useCallback(
-    async (record: Best100SkillRecord) => {
-      if (!record.install) {
-        toast.error(t("recommended.detail.noInstallCommand"));
-        return;
-      }
-
-      const copied = await copyToClipboard(record.install);
-
-      if (copied) {
-        toast.success(t("common.copied"));
-      } else {
-        toast.error(t("common.copyFailed"));
-      }
-    },
-    [t]
-  );
-
-  const openMarket = useCallback(
-    async (record: Best100SkillRecord) => {
-      const open = window.skillsManager?.openExternalUrl;
-
-      if (!open || !record.url) {
-        toast.error(t("recommended.sync.failed"));
-        return;
-      }
-
-      try {
-        await open(record.url);
-      } catch {
-        toast.error(t("recommended.sync.failed"));
-      }
-    },
-    [t]
-  );
+  // 来源链接优先级：仓库 → 主页 → 来源页。
+  const resolveSkillLink = useCallback((record: Best100SkillRecord): string | null => {
+    return record.repoUrl || record.url || record.sourceSkillssh || null;
+  }, []);
 
   const selectSkill = (record: Best100SkillRecord) => {
     setSelectedSkill(record);
@@ -225,9 +189,8 @@ export const useRecommendedPageState = () => {
     sort,
     status,
     total,
-    copyInstallCommand,
-    installSkill,
-    openMarket,
+    openExternal,
+    resolveSkillLink,
     selectSkill,
     setQuery,
     setSkillsPage,

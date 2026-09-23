@@ -10,7 +10,7 @@ import {
 } from "@/components/data-table";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, RefreshCw } from "lucide-react";
 import { Select, type SelectOption } from "@/components/ui/select";
 import { DataTablePaginationFooter } from "@/components/data-table-pagination-footer";
 import { useTranslation } from "react-i18next";
@@ -179,15 +179,20 @@ const RecommendedTableRow = ({ skill }: { skill: Best100SkillRecord }) => {
         <Button
           type="button"
           size="sm"
-          title={t("recommended.actions.installAria", { name: skill.skill })}
-          aria-label={t("recommended.actions.installAria", { name: skill.skill })}
-          disabled={!skill.repoUrl && !skill.url}
+          disabled={page.isSyncing}
+          title={t("recommended.actions.syncAria")}
+          aria-label={t("recommended.actions.syncAria")}
           onClick={(event) => {
             event.stopPropagation();
-            void page.installSkill(skill);
+            void page.syncNow();
           }}
         >
-          {t("recommended.actions.install")}
+          {page.isSyncing ? (
+            <LoaderCircle aria-hidden="true" className="animate-spin" />
+          ) : (
+            <RefreshCw aria-hidden="true" />
+          )}
+          {page.isSyncing ? t("recommended.actions.syncing") : t("recommended.actions.sync")}
         </Button>
       </DataTableCell>
     </DataTableRow>

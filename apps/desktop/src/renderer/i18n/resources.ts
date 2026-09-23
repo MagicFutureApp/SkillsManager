@@ -189,13 +189,7 @@ export const resources = {
         actions: {
           sync: "同步",
           syncAria: "从 Worker 同步 best-100 数据",
-          syncing: "同步中",
-          install: "在 GitHub 打开",
-          installAria: "在 GitHub 打开 {{name}}",
-          copyInstall: "复制安装命令",
-          copyInstallAria: "复制 {{name}} 的安装命令",
-          openMarket: "在 skills.sh 打开",
-          openMarketAria: "在 skills.sh 打开 {{name}}"
+          syncing: "同步中"
         },
         filters: {
           ariaLabel: "推荐筛选",
@@ -232,9 +226,7 @@ export const resources = {
           downloadsClawhub: "ClawHub 下载",
           downloadsSkillhubCn: "SkillHub CN 下载",
           score: "评分",
-          description: "描述",
-          installCommand: "安装命令",
-          noInstallCommand: "暂无安装命令"
+          description: "描述"
         },
         sync: {
           title: "数据源与同步",
@@ -774,13 +766,7 @@ export const resources = {
         actions: {
           sync: "Sync",
           syncAria: "Sync best-100 data from the Worker",
-          syncing: "Syncing",
-          install: "Open on GitHub",
-          installAria: "Open {{name}} on GitHub",
-          copyInstall: "Copy install command",
-          copyInstallAria: "Copy the install command for {{name}}",
-          openMarket: "Open on skills.sh",
-          openMarketAria: "Open {{name}} on skills.sh"
+          syncing: "Syncing"
         },
         filters: {
           ariaLabel: "Recommended filters",
@@ -817,9 +803,7 @@ export const resources = {
           downloadsClawhub: "ClawHub downloads",
           downloadsSkillhubCn: "SkillHub CN downloads",
           score: "Score",
-          description: "Description",
-          installCommand: "Install command",
-          noInstallCommand: "No install command"
+          description: "Description"
         },
         sync: {
           title: "Data source & sync",
