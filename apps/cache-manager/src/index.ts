@@ -2,6 +2,8 @@ import { ExecutionContext, Hono } from "hono";
 
 import { readStore } from "./lib/kv";
 import { runScheduledFetch, type WorkerEnv } from "./lib/scheduler";
+import { createDefaultMeta, getBest100SourceUrl } from "./lib/source";
+import { renderAdminPage } from "./lib/admin-page";
 
 type Bindings = WorkerEnv & {
   SKILLS_MANAGER_CACHE_ADMIN_TOKEN?: string;
@@ -76,7 +78,7 @@ app.get("/api/status", async (context) => {
   return context.json(store?.meta ?? { status: "idle" });
 });
 
-const isAuthorized = (context: import("hono").Context<{ Bindings: Bindings }>): boolean => {
+const isAdminAuthorized = (context: import("hono").Context<{ Bindings: Bindings }>): boolean => {
   const expectedToken = context.env.SKILLS_MANAGER_CACHE_ADMIN_TOKEN;
 
   if (!expectedToken) {
@@ -100,19 +102,61 @@ const isSyncAuthorized = (
   }
 
   const authorization = context.req.header("authorization");
-  const provided =
-    authorization?.startsWith("Bearer ")
-      ? authorization.slice(7)
-      : context.req.header("x-sync-token");
+  const provided = authorization?.startsWith("Bearer ")
+    ? authorization.slice(7)
+    : context.req.header("x-sync-token");
 
   return provided === expectedToken;
 };
 
 app.post("/api/refresh", async (context) => {
-  if (!isAuthorized(context)) {
+  if (!isAdminAuthorized(context)) {
     return context.json({ error: "unauthorized" }, 401);
   }
 
+  const meta = await runScheduledFetch(context.env, { force: true });
+
+  return context.json({ meta });
+});
+
+// ---------------------------------------------------------------------------
+// Admin dashboard: controls the *overall* cache (not a single consumer app).
+// The HTML shell is public; every /admin/api/* call requires the admin token.
+// ---------------------------------------------------------------------------
+
+app.get("/admin", (context) => {
+  return context.html(renderAdminPage());
+});
+
+app.use("/admin/api/*", async (context, next) => {
+  if (context.req.method === "OPTIONS") {
+    return next();
+  }
+
+  if (!isAdminAuthorized(context)) {
+    return context.json({ error: "unauthorized" }, 401);
+  }
+
+  await next();
+});
+
+app.get("/admin/api/status", async (context) => {
+  const store = await readStore(context.env);
+
+  return context.json(store?.meta ?? createDefaultMeta(getBest100SourceUrl()));
+});
+
+app.get("/admin/api/best-100", async (context) => {
+  const store = await readStore(context.env);
+
+  if (!store || !store.csv) {
+    return context.json({ error: "not_found", message: "Data has not been fetched yet." }, 404);
+  }
+
+  return context.json(store);
+});
+
+app.post("/admin/api/refresh", async (context) => {
   const meta = await runScheduledFetch(context.env, { force: true });
 
   return context.json({ meta });
