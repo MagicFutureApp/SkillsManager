@@ -28,22 +28,14 @@ export type Best100StatusResult = {
 };
 
 /**
- * Resolves the default Worker API base URL for the recommended-skills sync.
- *
- * Precedence:
- * 1. In dev (electron launched with VITE_DEV_SERVER_URL, i.e. `pnpm dev`),
- *    point at the local wrangler dev instance so the desktop and cache-manager
- *    share one local test environment without manual configuration.
- * 2. Otherwise use the build-injected BEST_100_DEFAULT_API_BASE, which CI sets to
- *    the deployed Worker URL (and dev builds fall back to http://localhost:8787).
- *
- * The base URL is fixed at build time; there is no per-install override.
+ * Returns the Worker API base URL for the recommended-skills sync. The value is
+ * baked in at build time from the BEST_100_DEFAULT_API_BASE env var (see
+ * scripts/generate-build-env.mjs) and is required — the build fails if it is
+ * missing, so there is no code-level default. In local dev that env var is set to
+ * the wrangler dev address (http://localhost:8787) via apps/desktop/.env.
  */
 const resolveDefaultApiBase = (): string => {
-  const isDev =
-    Boolean(process.env.VITE_DEV_SERVER_URL) || process.env.NODE_ENV === "development";
-
-  return isDev ? "http://localhost:8787" : BEST_100_DEFAULT_API_BASE;
+  return BEST_100_DEFAULT_API_BASE;
 };
 
 const readSyncState = async (db: DbClient): Promise<Best100SyncState | null> => {

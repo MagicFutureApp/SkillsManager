@@ -4,10 +4,10 @@ export const BEST_100_SYNC_STATE_KEY = "best100.sync";
 /** Worker endpoint that returns the raw best-100 CSV. */
 export const BEST_100_API_PATH = "/api/best-100.csv";
 
-// Values below are injected at build time from environment variables via
+// Values below are injected at build time from required environment variables via
 // scripts/generate-build-env.mjs (see src/generated/build-env.ts). They are NOT
-// hardcoded here so production bundles carry the configured secret/endpoint and
-// dev builds fall back to the local wrangler instance.
+// hardcoded here so production bundles carry the configured secret/endpoint; the
+// build fails if either env var is missing (no dev fallback).
 import { BUILD_ENV } from "../../generated/build-env";
 
 /**
@@ -19,7 +19,8 @@ export const BEST_100_SYNC_TOKEN = BUILD_ENV.best100SyncToken;
 
 /**
  * Default Worker base URL baked into the app from BEST_100_DEFAULT_API_BASE.
- * Falls back to the local wrangler dev instance when built without the env var set.
+ * Must be provided via env at build time (see scripts/generate-build-env.mjs);
+ * the build aborts if it is missing, so there is no code-level default.
  */
 export const BEST_100_DEFAULT_API_BASE = BUILD_ENV.best100ApiBase;
 
