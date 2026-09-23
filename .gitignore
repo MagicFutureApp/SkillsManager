@@ -149,7 +149,7 @@ vite.config.ts.timestamp-*
 /apps/desktop/src/generated/
 
 # JetBrains local data sources
-.idea/dataSources.xml
+.idea/
 /apps/landing/.wrangler/
 /apps/cache-manager/.wrangler/
 .dev.vars
