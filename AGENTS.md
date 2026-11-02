@@ -178,6 +178,48 @@ pnpm run format:check
 - 使用已有 i18n 资源，不要把新 UI 文案散落在组件内部，除非当前文件已有同样模式。
 - Copy-only 分发文案避免 `dry-run`、`plan`、`计划`；使用 `预览分发`、`分发`、`分发结果`。
 
+## 分支命名与提交规范
+
+创建分支和写 commit message 时遵守以下约定，对人和 AI agent 同时生效。完整说明见根目录 `CONTRIBUTING.md`。
+
+分支名前缀：
+
+| 前缀        | 用途                   | 示例                          |
+| ----------- | ---------------------- | ----------------------------- |
+| `feature/`  | 新功能开发             | `feature/skill-search-filter` |
+| `fix/`      | 缺陷修复               | `fix/macos-gatekeeper-block`  |
+| `hotfix/`   | 线上紧急修复           | `hotfix/1.2.1-launch-crash`   |
+| `docs/`     | 仅文档变更             | `docs/update-readme`          |
+| `refactor/` | 不改变外部行为的重构   | `refactor/preload-esm`        |
+| `chore/`    | 依赖、构建、配置等杂项 | `chore/bump-electron`         |
+| `release/`  | 发版准备               | `release/1.3.0`               |
+
+分支规则：
+
+- 前缀后接简短英文描述，全小写，单词之间用连字符 `-`，不用下划线或空格。
+- 从当前集成分支切出（当前为 `dev-best100`）；合并回集成分支后删除该分支。
+- 一个分支只做一件事，不混入多类无关改动。
+- commit type 使用 Conventional Commits 的 `feat`，分支前缀使用 `feature/`，两者不强制同名。
+
+Commit message 使用 Conventional Commits，格式为 `<type>(<scope>): <subject>`：
+
+- `type` 取值：`feat`、`fix`、`docs`、`style`、`refactor`、`perf`、`test`、`build`、`ci`、`chore`、`revert`。
+- `scope` 可选，标明影响范围，例如 `desktop`、`landing`、`main`、`preload`、`renderer`、`core`、`db`。
+- `subject` 使用英文祈使句，首字母小写，结尾不加句号，建议不超过 72 字符。
+- 需要补充说明时，在空行后写 body。
+- 破坏性变更：type 后加 `!`，并在 footer 写 `BREAKING CHANGE: <说明>`。
+- 一个 commit 只做一个逻辑变更。
+
+示例：
+
+```text
+feat(desktop): add skill search filter
+fix(preload): resolve ESM import path on Windows
+chore!: drop Node 16 support
+
+BREAKING CHANGE: requires Node 18+
+```
+
 ## Git 与安全边界
 
 - 不要执行破坏性 Git 或文件系统操作，除非用户明确要求并确认范围。
